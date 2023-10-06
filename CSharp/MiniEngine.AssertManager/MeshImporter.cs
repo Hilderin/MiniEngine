@@ -79,7 +79,7 @@ namespace MiniEngine.AssertManager
             {
                 if (assmat.GetMaterialTexture(type, 0, out TextureSlot assTexture))
                 {
-                    return new Texture2D(Path.Combine(_workingDirectory, assTexture.FilePath));
+                    return new AssetManager().GetTexture2DFromFile(Path.Combine(_workingDirectory, assTexture.FilePath));
                 }
             }
             return null;

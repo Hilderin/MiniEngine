@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MiniEngine.AssertManager;
 using MiniEngine.OpenGL;
 using MiniEngine.PrimitiveMeshes;
 
@@ -37,7 +38,7 @@ namespace MiniEngine.Tutorials
 
             _camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
 
-            _texture = new Texture2D(@"C:\Projects\ogldev\Content\bricks.jpg");
+            _texture = new AssetManager().GetTexture2DFromFile(@"C:\Projects\ogldev\Content\bricks.jpg");
 
             _cube = new CubeMesh();
             _pyramid = new PyramidMesh();

@@ -1453,7 +1453,17 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glCopyTexSubImage2D(uint target, int level, int xoffset, int yoffset, int x, int y, int width, int height);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glCullFace(uint mode);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDeleteLists(uint list, int range);
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDeleteTextures(int n, uint[] textures);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDeleteTextures(int n, uint* textures);
+
+
+        /// <summary>
+        /// Delete texture id
+        /// </summary>
+        public static void glDeleteTextures(uint textureid)
+        {
+            glDeleteTextures(1, &textureid);
+        }
+
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDepthFunc(uint func);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDepthMask(byte flag);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDepthRange(double zNear, double zFar);

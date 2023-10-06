@@ -336,7 +336,6 @@ namespace MiniEngine.OpenGL
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void glActiveTextureHandler(uint textureUnit);
 
-
         /// <summary>
         ///     Select active texture unit.
         /// </summary>
