@@ -38,9 +38,10 @@ namespace MiniEngine
         {
             // Inverse local-to-world transformation using transpose
             // (assuming uniform scaling)
-            Matrix3 WorldToLocal = Matrix4.Transpose(ref worldMatrix);
+            Matrix3 WorldToLocal = worldMatrix;
 
-
+            WorldToLocal.Transpose();
+            
             CalculatedDiffuseDirection = WorldToLocal * DiffuseDirection;
 
             CalculatedDiffuseDirection.Normalize();

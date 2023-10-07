@@ -45,7 +45,7 @@ namespace MiniEngine.Tutorials
                 m.AmbientColor = Color3.White;
 
             _renderingContext.AmbientIntensity = 0.8f;
-            _renderingContext.DiffuseColor = Color3.Red;
+            _renderingContext.DiffuseColor = Color3.White;
         }
 
 
@@ -117,7 +117,7 @@ namespace MiniEngine.Tutorials
             _renderingContext.WVPMatrix = _camera.GetMatrix() * worldMatrix;
 
             
-            _renderingContext.DiffuseDirection = new Vector3(1.0f, 0f, 0f);
+            _renderingContext.DiffuseDirection = new Vector3(1.0f, 1.0f, 0f);
             _renderingContext.CalculateDiffuseDirection(ref worldMatrix);
             _renderingContext.CameraLocalPosition = _camera.GetLocalPositionForWorldTransform(worldTransform);
 
