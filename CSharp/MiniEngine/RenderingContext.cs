@@ -21,6 +21,11 @@ namespace MiniEngine
         public Vector3 CalculatedDiffuseDirection = Vector3.Down;
         public Color3 MaterialDiffuseColor = Color3.White;
 
+        /// <summary>
+        /// Camera local position in the local space for the current world transform of the object that is rendering
+        /// </summary>
+        public Vector3 CameraLocalPosition = Vector3.Zero;
+
 
 
 

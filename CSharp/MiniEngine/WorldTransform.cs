@@ -146,6 +146,22 @@ namespace MiniEngine
 
         }
 
+        /// <summary>
+        /// Get the revert translation matrix
+        /// </summary>
+        public Matrix4 GetReversedTranslationMatrix()
+        {
+            return Matrix4.CreateTranslationMatrix(-Location.X, -Location.Y, -Location.Z);
+        }
+
+        /// <summary>
+        /// Get the revert rotation matrix
+        /// </summary>
+        public Matrix4 GetReversedRotationMatrix()
+        {
+            return Matrix4.CreateRotationMatrixXYZ(-Rotation.X, -Rotation.Y, -Rotation.Z);
+        }
+
 
 
     }

@@ -10,7 +10,7 @@ using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Tutorials
 {
-    internal unsafe class Tutorial_Lights : IDisposable
+    internal unsafe class Tutorial_SpecularLighting : IDisposable
     {
         private float translation = 0.0f;
         //private float deltaTransalation = 0.01f;
@@ -19,14 +19,13 @@ namespace MiniEngine.Tutorials
         //private float deltaScale = 0.005f;
 
         private float rotation = 0.0f;
-        private float deltaRotation = 0.03f;
+        private float deltaRotation = 0.001f;
 
         private Camera _camera = new Camera();
 
         private Mesh _currentMesh;
 
         private RenderingContext _renderingContext = new RenderingContext();
-        private WorldTransform _worldTransformDirectionalLight = new WorldTransform();
 
 
         public void Init()
@@ -36,7 +35,10 @@ namespace MiniEngine.Tutorials
 
             _camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
 
-            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\box.obj", new MeshImportationParameters() { InverseFaces = true });
+            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
+            {
+                Scale = 6f
+            });
 
 
             foreach (Material m in _currentMesh.Materials)
@@ -44,8 +46,6 @@ namespace MiniEngine.Tutorials
 
             _renderingContext.AmbientIntensity = 0.8f;
             _renderingContext.DiffuseColor = Color3.Red;
-
-            _worldTransformDirectionalLight.RotateY(Math.DegToRad(90f));
         }
 
 
@@ -98,12 +98,7 @@ namespace MiniEngine.Tutorials
             //    deltaScale *= -1.0f;
             //}
 
-            //rotation += deltaRotation;
-
-            //_worldTransformDirectionalLight.RotateY(0.1f);
-            
-            _renderingContext.DiffuseDirection = _worldTransformDirectionalLight.Forward;
-
+            rotation += deltaRotation;
             //if ((rotation >= LMath.PiOver2) || (rotation <= -LMath.PiOver2))
             //{
             //    deltaRotation *= -1.0f;
@@ -121,9 +116,10 @@ namespace MiniEngine.Tutorials
             //_renderingContext.AmbientIntensity = 2f;
             _renderingContext.WVPMatrix = _camera.GetMatrix() * worldMatrix;
 
-
-            //_renderingContext.DiffuseDirection = new Vector3(1.0f, 0f, 0f);
+            
+            _renderingContext.DiffuseDirection = new Vector3(1.0f, 0f, 0f);
             _renderingContext.CalculateDiffuseDirection(ref worldMatrix);
+            _renderingContext.CameraLocalPosition = _camera.GetLocalPositionForWorldTransform(worldTransform);
 
             _currentMesh.Render(_renderingContext);
         }

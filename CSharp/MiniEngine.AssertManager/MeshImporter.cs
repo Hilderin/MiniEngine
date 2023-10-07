@@ -17,18 +17,28 @@ namespace MiniEngine.AssertManager
         private string _workingDirectory = null;
         private Mesh _mesh = null;
 
+        private Matrix3 _transformMatrix = Matrix3.Identity;
+
         /// <summary>
         /// Import a mesh from file
         /// </summary>
-        public Mesh GetMeshFromFile(string path, bool inverseFaces)
+        public Mesh GetMeshFromFile(string path, MeshImportationParameters parameters = null)
         {
+            if (parameters == null)
+                parameters = MeshImportationParameters.Default;
+
             _workingDirectory = Path.GetDirectoryName(path);
 
             using (AssimpContext context = new AssimpContext())
             {
                 PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.MakeLeftHanded;
-                if (!inverseFaces)
+                if (!parameters.InverseFaces)
                     postProcessSteps = postProcessSteps | PostProcessSteps.FlipWindingOrder;
+
+                if (parameters.Scale != 1f)
+                    _transformMatrix = Matrix3.FromScaling(new Vector3(parameters.Scale));
+                //context.Scale = parameters.Scale;
+
 
                 Scene scene = context.ImportFile(path, postProcessSteps);
 
@@ -64,7 +74,7 @@ namespace MiniEngine.AssertManager
             material.Diffuse = GetTexture(TextureType.Diffuse, assmat);
 
             //Specular texture...
-            material.Specular = GetTexture(TextureType.Specular, assmat);
+            material.Specular = GetTexture(TextureType.Shininess, assmat);
 
             //Ambient color...
             if(assmat.HasColorAmbient)
@@ -111,7 +121,7 @@ namespace MiniEngine.AssertManager
 
             for (int i = 0; i < mesh.Vertices.Count; i++)
             {
-                positions[i] = new Vector3(mesh.Vertices[i].X, mesh.Vertices[i].Y, mesh.Vertices[i].Z);
+                positions[i] = _transformMatrix * new Vector3(mesh.Vertices[i].X, mesh.Vertices[i].Y, mesh.Vertices[i].Z);
 
                 if (mesh.HasNormals)
                     normals[i] = new Vector3(mesh.Normals[i].X, mesh.Normals[i].Y, mesh.Normals[i].Z);

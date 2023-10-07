@@ -10,9 +10,9 @@ namespace MiniEngine.AssertManager
         /// <summary>
         /// Import a mesh from file
         /// </summary>
-        public Mesh GetMeshFromFile(string path, bool inverseFaces)
+        public Mesh GetMeshFromFile(string path, MeshImportationParameters parameters = null)
         {
-            return new MeshImporter().GetMeshFromFile(path, inverseFaces);
+            return new MeshImporter().GetMeshFromFile(path, parameters);
 
         }
 

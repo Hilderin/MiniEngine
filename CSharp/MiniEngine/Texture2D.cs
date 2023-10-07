@@ -87,7 +87,7 @@ namespace MiniEngine
         }
 
         /// <summary>
-        /// Load an image in the texture
+        /// Load an RGB image in the texture
         /// </summary>
         public void SetDataRGB(int width, int height, byte[] data)
         {
@@ -95,6 +95,38 @@ namespace MiniEngine
 
             //  Tell OpenGL where the texture data is.
             GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, width, height, 0, GL.GL_BGR, GL.GL_UNSIGNED_BYTE, data);
+            GL.CheckError();
+
+            FinalizeOpenGL();
+
+
+        }
+
+        /// <summary>
+        /// Load a red mask in the texture
+        /// </summary>
+        public void SetDataRed(int width, int height, IntPtr data)
+        {
+            PrepareOpenGL();
+
+            //  Tell OpenGL where the texture data is.
+            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RED, width, height, 0, GL.GL_RED, GL.GL_UNSIGNED_BYTE, data);
+            GL.CheckError();
+
+            FinalizeOpenGL();
+
+
+        }
+
+        /// <summary>
+        /// Load a red mask in the texture
+        /// </summary>
+        public void SetDataRed(int width, int height, byte[] data)
+        {
+            PrepareOpenGL();
+
+            //  Tell OpenGL where the texture data is.
+            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RED, width, height, 0, GL.GL_BGR, GL.GL_UNSIGNED_BYTE, data);
             GL.CheckError();
 
             FinalizeOpenGL();

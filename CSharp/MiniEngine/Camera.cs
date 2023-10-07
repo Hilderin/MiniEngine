@@ -36,7 +36,9 @@ namespace MiniEngine
         /// </summary>
         public float FarZ = 100.0f;
 
-
+        /// <summary>
+        /// Get the Camera matrix
+        /// </summary>
         public Matrix4 GetCameraMatrix()
         {
             //UVN...
@@ -60,17 +62,43 @@ namespace MiniEngine
             return cameraMatrix * translationMatrix;
         }
 
+        /// <summary>
+        /// Get the projection matrix
+        /// </summary>
         public Matrix4 GetProjectionMatrix()
         {
             return Matrix4.CreateProjection(FOV, Context.Current.ClientSize.X, Context.Current.ClientSize.Y, NearZ, FarZ);
         }
 
-
+        /// <summary>
+        /// Get the matrix for the camera (projection * camera matrices)
+        /// </summary>
+        /// <returns></returns>
         public override Matrix4 GetMatrix()
         {
             return GetProjectionMatrix() * GetCameraMatrix();
         }
 
+
+        /// <summary>
+        /// Calculate the location position from a world transform
+        /// </summary>
+        public Vector3 GetLocalPositionForWorldTransform(WorldTransform worldTransform)
+        {
+
+            Matrix4 cameraToLocalTranslation = worldTransform.GetReversedTranslationMatrix();
+
+            Matrix4 cameraToLocalRotation = worldTransform.GetReversedRotationMatrix();
+
+            Matrix4 cameraToLocalTransformation = cameraToLocalRotation * cameraToLocalTranslation;
+
+            Vector4 cameraWorldPos = new Vector4(this.Location, 1.0f);
+
+            Vector4 CameraLocalPos = cameraToLocalTransformation * cameraWorldPos;
+
+            return CameraLocalPos;
+
+        }
 
     }
 }

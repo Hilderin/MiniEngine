@@ -11,8 +11,8 @@ namespace MiniEngine
         /// <summary>
         /// Identity matrix
         /// </summary>
-        private static Matrix4 _identity = new Matrix4(1.0f, 0.0f, 0.0f, 0.0f, 
-                                                       0.0f, 1.0f, 0.0f, 0.0f, 
+        private static Matrix4 _identity = new Matrix4(1.0f, 0.0f, 0.0f, 0.0f,
+                                                       0.0f, 1.0f, 0.0f, 0.0f,
                                                        0.0f, 0.0f, 1.0f, 0.0f,
                                                        0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -25,80 +25,80 @@ namespace MiniEngine
         /// </summary>
         public float M11;
 
-		/// <summary>
-		/// A first row and second column value.
-		/// </summary>
-		public float M12;
+        /// <summary>
+        /// A first row and second column value.
+        /// </summary>
+        public float M12;
 
-		/// <summary>
-		/// A first row and third column value.
-		/// </summary>
-		public float M13;
+        /// <summary>
+        /// A first row and third column value.
+        /// </summary>
+        public float M13;
 
-		/// <summary>
-		/// A first row and fourth column value.
-		/// </summary>
-		public float M14;
+        /// <summary>
+        /// A first row and fourth column value.
+        /// </summary>
+        public float M14;
 
-		/// <summary>
-		/// A second row and first column value.
-		/// </summary>
-		public float M21;
+        /// <summary>
+        /// A second row and first column value.
+        /// </summary>
+        public float M21;
 
-		/// <summary>
-		/// A second row and second column value.
-		/// </summary>
-		public float M22;
+        /// <summary>
+        /// A second row and second column value.
+        /// </summary>
+        public float M22;
 
-		/// <summary>
-		/// A second row and third column value.
-		/// </summary>
-		public float M23;
+        /// <summary>
+        /// A second row and third column value.
+        /// </summary>
+        public float M23;
 
-		/// <summary>
-		/// A second row and fourth column value.
-		/// </summary>
-		public float M24;
+        /// <summary>
+        /// A second row and fourth column value.
+        /// </summary>
+        public float M24;
 
-		/// <summary>
-		/// A third row and first column value.
-		/// </summary>
-		public float M31;
+        /// <summary>
+        /// A third row and first column value.
+        /// </summary>
+        public float M31;
 
-		/// <summary>
-		/// A third row and second column value.
-		/// </summary>
-		public float M32;
+        /// <summary>
+        /// A third row and second column value.
+        /// </summary>
+        public float M32;
 
-		/// <summary>
-		/// A third row and third column value.
-		/// </summary>
-		public float M33;
+        /// <summary>
+        /// A third row and third column value.
+        /// </summary>
+        public float M33;
 
-		/// <summary>
-		/// A third row and fourth column value.
-		/// </summary>
-		public float M34;
+        /// <summary>
+        /// A third row and fourth column value.
+        /// </summary>
+        public float M34;
 
-		/// <summary>
-		/// A fourth row and first column value.
-		/// </summary>
-		public float M41;
+        /// <summary>
+        /// A fourth row and first column value.
+        /// </summary>
+        public float M41;
 
-		/// <summary>
-		/// A fourth row and second column value.
-		/// </summary>
-		public float M42;
+        /// <summary>
+        /// A fourth row and second column value.
+        /// </summary>
+        public float M42;
 
-		/// <summary>
-		/// A fourth row and third column value.
-		/// </summary>
-		public float M43;
+        /// <summary>
+        /// A fourth row and third column value.
+        /// </summary>
+        public float M43;
 
-		/// <summary>
-		/// A fourth row and fourth column value.
-		/// </summary>
-		public float M44;
+        /// <summary>
+        /// A fourth row and fourth column value.
+        /// </summary>
+        public float M44;
 
         #endregion
 
@@ -237,7 +237,7 @@ namespace MiniEngine
         /// </summary>
         public static Matrix4 CreateRotationMatrixY(float angleRad)
         {
-            
+
             Matrix4 newMatrix = new Matrix4();
 
             float cos = Math.Cos(angleRad);
@@ -272,6 +272,14 @@ namespace MiniEngine
             newMatrix.M44 = 1.0f;
 
             return newMatrix;
+        }
+
+        /// <summary>
+        /// Create a rotation matrix on X, Y, Z
+        /// </summary>
+        public static Matrix4 CreateRotationMatrixXYZ(float angleRadX, float angleRadY, float angleRadZ)
+        {
+            return CreateRotationMatrixX(angleRadX) * CreateRotationMatrixY(angleRadY) * CreateRotationMatrixZ(angleRadZ);
         }
 
         /// <summary>
@@ -516,6 +524,22 @@ namespace MiniEngine
             m.M44 = 1.0f;
 
             return m;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Matrix4"/> that contains a multiplication a matrix by a vector
+        /// </summary>
+        /// <param name="matrix">Source <see cref="Matrix4"/>.</param>
+        /// <param name="vector">Source <see cref="Vector4"/>.</param>
+        /// <returns>Result of the matrix multiplication.</returns>
+        public static Vector4 operator *(Matrix4 m, Vector4 v)
+        {
+            return new Vector4(
+                m.M11 * v.X + m.M12 * v.Y + m.M13 * v.Z + m.M14 * v.W,
+                m.M21 * v.X + m.M12 * v.Y + m.M23 * v.Z + m.M24 * v.W,
+                m.M31 * v.X + m.M32 * v.Y + m.M33 * v.Z + m.M34 * v.W,
+                m.M41 * v.X + m.M42 * v.Y + m.M43 * v.Z + m.M44 * v.W
+            );
         }
 
         #endregion

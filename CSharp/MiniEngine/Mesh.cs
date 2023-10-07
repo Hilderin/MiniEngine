@@ -13,7 +13,9 @@ namespace MiniEngine
         private const int SHADER_TEX_COORD_LOCATION = 1;
         private const int SHADER_NORMAL_LOCATION = 2;
         private static uint SHADER_COLOR_TEXTURE_UNIT = GL.GL_TEXTURE0;
+        private static int SHADER_COLOR_TEXTURE_UNIT_INDEX = 0;
         private static uint SHADER_SPECULAR_EXPONENT_UNIT = GL.GL_TEXTURE6;
+        private static int SHADER_SPECULAR_EXPONENT_UNIT_INDEX = 6;
 
         private const int INDEX_BUFFER = 0;
         private const int POS_VB = 1;
@@ -307,17 +309,21 @@ namespace MiniEngine
                 Shader.Enable();
 
                 Shader.SetWVP(ref renderingContext.WVPMatrix);
-                Shader.SetSampler(0);
+                Shader.SetSampler(SHADER_COLOR_TEXTURE_UNIT_INDEX);
+                Shader.SetSamplerSpecular(SHADER_SPECULAR_EXPONENT_UNIT_INDEX);
 
                 Shader.SetAmbientColor(ref renderingContext.AmbientColor);                
                 Shader.SetAmbientIntensity(renderingContext.AmbientIntensity);
                 Shader.SetMaterialAmbientColor(ref mat.AmbientColor);
-
+                
                 Shader.SetDiffuseColor(ref renderingContext.DiffuseColor);
                 Shader.SetDiffuseIntensity(renderingContext.DiffuseIntensity);
                 Shader.SetDiffuseDirection(ref renderingContext.CalculatedDiffuseDirection);
                 Shader.SetMaterialDiffuseColor(ref mat.DiffuseColor);
-                
+
+                Shader.SetMaterialSpecularColor(ref mat.SpecularColor);
+                Shader.SetCameraLocalPos(ref renderingContext.CameraLocalPosition);
+
 
                 GL.glDrawElementsBaseVertex(GL.GL_TRIANGLES,
                                              _meshDatas[i].NumIndices,

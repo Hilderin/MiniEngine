@@ -18,6 +18,7 @@ namespace MiniEngine
         /// </summary>
         private int _wvpUniform;
         private int _samplerUniform;
+        private int _samplerSpecularUniform;
         private int _lightAmbientColorUniform;
         private int _lightAmbientIntensityUniform;
         private int _lightDiffuseColorUniform;
@@ -25,6 +26,8 @@ namespace MiniEngine
         private int _lightDiffuseDirectionUniform;
         private int _gMaterialAmbientColorUniform;
         private int _gMaterialDiffuseColorUniform;
+        private int _gMaterialSpecularColorUniform;
+        private int _gCameraLocalPos;
 
         /// <summary>
         /// Constructor
@@ -43,12 +46,14 @@ uniform mat4 gWVP;
 
 out vec2 TexCoord0;
 out vec3 Normal0;
+out vec3 LocalPos0;
 
 void main()
 {
     gl_Position = gWVP * vec4(Position, 1.0);
     TexCoord0 = TexCoord;
     Normal0 = Normal;
+    LocalPos0 = Position;
 }
 
 
@@ -61,6 +66,7 @@ void main()
 
 in vec2 TexCoord0;
 in vec3 Normal0;
+in vec3 LocalPos0;
 
 out vec4 FragColor;
 
@@ -77,11 +83,14 @@ struct Material
 {
     vec3 AmbientColor;
     vec3 DiffuseColor;
+    vec3 SpecularColor;
 };
 
 uniform Light gLight;
 uniform Material gMaterial;
 uniform sampler2D gSampler;
+uniform sampler2D gSamplerSpecular;
+uniform vec3 gCameraLocalPos;
 
 void main()
 {
@@ -89,19 +98,33 @@ void main()
                         gLight.AmbientIntensity *
                         vec4(gMaterial.AmbientColor, 1.0f);
 
-    float DiffuseFactor = dot(normalize(Normal0), -gLight.DiffuseDirection);
+    vec3 Normal = normalize(Normal0);
+
+    float DiffuseFactor = dot(Normal, -gLight.DiffuseDirection);
 
     vec4 DiffuseColor = vec4(0, 0, 0, 0);
+    vec4 SpecularColor = vec4(0, 0, 0, 0);
 
     if (DiffuseFactor > 0) {
         DiffuseColor = vec4(gLight.DiffuseColor, 1.0f) *
                        gLight.DiffuseIntensity *
                        vec4(gMaterial.DiffuseColor, 1.0f) *
                        DiffuseFactor;
+
+        vec3 PixelToCamera = normalize(gCameraLocalPos - LocalPos0);
+        vec3 LightReflect = normalize(reflect(gLight.DiffuseDirection, Normal));
+        float SpecularFactor = dot(PixelToCamera, LightReflect);
+        if (SpecularFactor > 0) {
+            float SpecularExponent = texture2D(gSamplerSpecular, TexCoord0).r * 255.0;
+            SpecularFactor = pow(SpecularFactor, SpecularExponent);
+            SpecularColor = vec4(gLight.AmbientColor, 1.0f) *
+                            vec4(gMaterial.SpecularColor, 1.0f) *
+                            SpecularFactor;
+        }
     }
 
     //FragColor = texture2D(gSampler, TexCoord0.xy) * (AmbientColor + DiffuseColor);
-    FragColor = texture2D(gSampler, TexCoord0.xy) * (AmbientColor + DiffuseColor);
+    FragColor = texture2D(gSampler, TexCoord0.xy) * (AmbientColor + DiffuseColor + SpecularColor);
 }
 
 ", ShaderType.Fragment);
@@ -110,6 +133,7 @@ void main()
 
             _wvpUniform = GetUniformLocation("gWVP");
             _samplerUniform = GetUniformLocation("gSampler");
+            _samplerSpecularUniform = GetUniformLocation("gSamplerSpecular");
             _lightAmbientColorUniform = GetUniformLocation("gLight.AmbientColor");
             _lightAmbientIntensityUniform = GetUniformLocation("gLight.AmbientIntensity");
 
@@ -119,6 +143,9 @@ void main()
 
             _gMaterialAmbientColorUniform = GetUniformLocation("gMaterial.AmbientColor");
             _gMaterialDiffuseColorUniform = GetUniformLocation("gMaterial.DiffuseColor");
+            _gMaterialSpecularColorUniform = GetUniformLocation("gMaterial.SpecularColor");
+
+            _gCameraLocalPos = GetUniformLocation("gCameraLocalPos");
 
         }
 
@@ -136,6 +163,14 @@ void main()
         public void SetSampler(int sampler)
         {
             SetUniform(_samplerUniform, sampler);
+        }
+
+        /// <summary>
+        /// Set the samplerSpecular
+        /// </summary>
+        public void SetSamplerSpecular(int samplerSpecular)
+        {
+            SetUniform(_samplerSpecularUniform, samplerSpecular);
         }
 
         /// <summary>
@@ -192,6 +227,22 @@ void main()
         public void SetMaterialDiffuseColor(ref Color3 color)
         {
             SetUniform(_gMaterialDiffuseColorUniform, color.R, color.G, color.B);
+        }
+
+        /// <summary>
+        /// Set the material Specular color
+        /// </summary>
+        public void SetMaterialSpecularColor(ref Color3 color)
+        {
+            SetUniform(_gMaterialSpecularColorUniform, color.R, color.G, color.B);
+        }
+
+        /// <summary>
+        /// Set the camera location position
+        /// </summary>
+        public void SetCameraLocalPos(ref Vector3 position)
+        {
+            SetUniform(_gCameraLocalPos, position.X, position.Y, position.Z);
         }
 
 

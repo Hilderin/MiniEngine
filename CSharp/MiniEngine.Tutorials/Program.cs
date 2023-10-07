@@ -20,7 +20,7 @@ namespace MiniEngine.Tutorials
 
                 using (Context context = new Context())
                 {
-                    var t = new Tutorial_Lights();
+                    var t = new Tutorial_SpecularLighting();
 
                     context.OpenWindow(WIDTH, HEIGHT, TITLE)
                            .CenterOnScreen()

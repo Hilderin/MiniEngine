@@ -44,16 +44,25 @@ namespace MiniEngine
         /// </summary>
         public const float PiMinusThreeQuarter = MathF.PI * -0.75f;
 
-        /// <summary>
-        /// The value we use to avoid floating point precision issues
-        /// http://sandervanrossen.blogspot.com/2009/12/realtime-csg-part-1.html
-        /// </summary>
-        public const float Epsilon = 0.00001f;
 
         /// <summary>
         /// Random object
         /// </summary>
         private static Random _random = new Random();
+
+        /// <summary>
+        /// Espilon
+        /// </summary>
+        private static float _epsilon = GetMachineEpsilonFloat();
+
+
+        /// <summary>
+        /// The value we use to avoid floating point precision issues
+        /// http://sandervanrossen.blogspot.com/2009/12/realtime-csg-part-1.html
+        /// </summary>
+        public static float Epsilon { get { return _epsilon; } }
+
+
 
         /// <summary>
         /// Calculate the cosine of a radian angle
@@ -248,6 +257,153 @@ namespace MiniEngine
 
             return index;
         }
+
+        /// <summary>
+		/// Linearly interpolates between two values.
+		/// </summary>
+		/// <param name="value1">Source value.</param>
+		/// <param name="value2">Source value.</param>
+		/// <param name="amount">
+		/// Value between 0 and 1 indicating the weight of value2.
+		/// </param>
+		/// <returns>Interpolated value.</returns>
+		/// <remarks>
+		/// This method performs the linear interpolation based on the following formula.
+		/// <c>value1 + (value2 - value1) * amount</c>
+		/// Passing amount a value of 0 will cause value1 to be returned, a value of 1 will
+		/// cause value2 to be returned.
+		/// </remarks>
+		public static float Lerp(float value1, float value2, float amount)
+        {
+            return value1 + (value2 - value1) * amount;
+        }
+
+        /// <summary>
+		/// Returns the greater of two values.
+		/// </summary>
+		/// <param name="value1">Source value.</param>
+		/// <param name="value2">Source value.</param>
+		/// <returns>The greater value.</returns>
+		public static float Max(float value1, float value2)
+        {
+            return value1 > value2 ? value1 : value2;
+        }
+
+        /// <summary>
+        /// Returns the lesser of two values.
+        /// </summary>
+        /// <param name="value1">Source value.</param>
+        /// <param name="value2">Source value.</param>
+        /// <returns>The lesser value.</returns>
+        public static float Min(float value1, float value2)
+        {
+            return value1 < value2 ? value1 : value2;
+        }
+
+        /// <summary>
+		/// Interpolates between two values using a cubic equation.
+		/// </summary>
+		/// <param name="value1">Source value.</param>
+		/// <param name="value2">Source value.</param>
+		/// <param name="amount">Weighting value.</param>
+		/// <returns>Interpolated value.</returns>
+		public static float SmoothStep(float value1, float value2, float amount)
+        {
+            /* It is expected that 0 < amount < 1.
+			 * If amount < 0, return value1.
+			 * If amount > 1, return value2.
+			 */
+            float result = Math.Clamp(amount, 0f, 1f);
+            result = Math.Hermite(value1, 0f, value2, 0f, result);
+
+            return result;
+        }
+
+        /// <summary>
+		/// Performs a Hermite spline interpolation.
+		/// </summary>
+		/// <param name="value1">Source position.</param>
+		/// <param name="tangent1">Source tangent.</param>
+		/// <param name="value2">Source position.</param>
+		/// <param name="tangent2">Source tangent.</param>
+		/// <param name="amount">Weighting factor.</param>
+		/// <returns>The result of the Hermite spline interpolation.</returns>
+		public static float Hermite(
+            float value1,
+            float tangent1,
+            float value2,
+            float tangent2,
+            float amount
+        )
+        {
+            /* All transformed to double not to lose precision
+			 * Otherwise, for high numbers of param:amount the result is NaN instead
+			 * of Infinity.
+			 */
+            double v1 = value1, v2 = value2, t1 = tangent1, t2 = tangent2, s = amount;
+            double result;
+            double sCubed = s * s * s;
+            double sSquared = s * s;
+
+            if (WithinEpsilon(amount, 0f))
+            {
+                result = value1;
+            }
+            else if (WithinEpsilon(amount, 1f))
+            {
+                result = value2;
+            }
+            else
+            {
+                result = (
+                    ((2 * v1 - 2 * v2 + t2 + t1) * sCubed) +
+                    ((3 * v2 - 3 * v1 - 2 * t1 - t2) * sSquared) +
+                    (t1 * s) +
+                    v1
+                );
+            }
+
+            return (float)result;
+        }
+
+        /// <summary>
+        /// Check if a
+        /// </summary>
+        /// <param name="floatA"></param>
+        /// <param name="floatB"></param>
+        /// <returns></returns>
+        public static bool WithinEpsilon(float floatA, float floatB)
+        {
+            return Math.Abs(floatA - floatB) < Epsilon;
+        }
+
+
+        #region Private Static Methods
+
+        /// <summary>
+        /// Find the current machine's Epsilon for the float data type.
+        /// (That is, the largest float, e,  where e == 0.0f is true.)
+        /// </summary>
+        private static float GetMachineEpsilonFloat()
+        {
+            float machineEpsilon = 1.0f;
+            float comparison;
+
+            /* Keep halving the working value of machineEpsilon until we get a number that
+			 * when added to 1.0f will still evaluate as equal to 1.0f.
+			 */
+            do
+            {
+                machineEpsilon *= 0.5f;
+                comparison = 1.0f + machineEpsilon;
+            }
+            while (comparison > 1.0f);
+
+            return machineEpsilon;
+        }
+
+        #endregion
+
 
     }
 }
