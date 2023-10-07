@@ -13,7 +13,7 @@ namespace MiniEngine
         /// </summary>
         private static Material _emptyMaterial = new Material()
         {
-            AmbiantColor = Color3.Magenta,
+            AmbientColor = Color3.Magenta,
             Diffuse = Texture2D.Empty
         };
 
@@ -25,9 +25,9 @@ namespace MiniEngine
 
 
         /// <summary>
-        /// Ambiant color: the color used when ambient light hits the material
+        /// Ambient color: the color used when ambient light hits the material
         /// </summary>
-        public Color3 AmbiantColor = Color3.White;
+        public Color3 AmbientColor = Color3.White;
 
         /// <summary>
         /// Diffuse color: the color used when diffuse light hits the material

@@ -307,10 +307,17 @@ namespace MiniEngine
                 Shader.Enable();
 
                 Shader.SetWVP(ref renderingContext.WVPMatrix);
-                Shader.SetAmbiantColor(ref renderingContext.AmbiantColor);
                 Shader.SetSampler(0);
+
+                Shader.SetAmbientColor(ref renderingContext.AmbientColor);                
                 Shader.SetAmbientIntensity(renderingContext.AmbientIntensity);
-                Shader.SetMaterialAmbientColor(ref mat.AmbiantColor);
+                Shader.SetMaterialAmbientColor(ref mat.AmbientColor);
+
+                Shader.SetDiffuseColor(ref renderingContext.DiffuseColor);
+                Shader.SetDiffuseIntensity(renderingContext.DiffuseIntensity);
+                Shader.SetDiffuseDirection(ref renderingContext.CalculatedDiffuseDirection);
+                Shader.SetMaterialDiffuseColor(ref mat.DiffuseColor);
+                
 
                 GL.glDrawElementsBaseVertex(GL.GL_TRIANGLES,
                                              _meshDatas[i].NumIndices,

@@ -46,6 +46,21 @@ namespace MiniEngine
         private static Color3 _black = new Color3(0f);
 
         /// <summary>
+        /// Red
+        /// </summary>
+        private static Color3 _red = new Color3(1f, 0f, 0f);
+
+        /// <summary>
+        /// Green
+        /// </summary>
+        private static Color3 _green = new Color3(0f, 1f, 0f);
+
+        /// <summary>
+        /// Blue
+        /// </summary>
+        private static Color3 _blue = new Color3(0f, 0f, 1f);
+
+        /// <summary>
         /// Magenta
         /// </summary>
         private static Color3 _magenta = new Color3(1f, 0f, 1f);
@@ -63,6 +78,21 @@ namespace MiniEngine
         /// Black color
         /// </summary>
         public static Color3 Black { get { return _black; } }
+
+        /// <summary>
+        /// Red color
+        /// </summary>
+        public static Color3 Red { get { return _red; } }
+
+        /// <summary>
+        /// Green color
+        /// </summary>
+        public static Color3 Green { get { return _green; } }
+
+        /// <summary>
+        /// Blue color
+        /// </summary>
+        public static Color3 Blue { get { return _blue; } }
 
         /// <summary>
         /// Magenta color

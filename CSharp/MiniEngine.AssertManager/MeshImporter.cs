@@ -20,13 +20,17 @@ namespace MiniEngine.AssertManager
         /// <summary>
         /// Import a mesh from file
         /// </summary>
-        public Mesh GetMeshFromFile(string path)
+        public Mesh GetMeshFromFile(string path, bool inverseFaces)
         {
             _workingDirectory = Path.GetDirectoryName(path);
 
             using (AssimpContext context = new AssimpContext())
             {
-                Scene scene = context.ImportFile(path, PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.GenerateSmoothNormals);
+                PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.MakeLeftHanded;
+                if (!inverseFaces)
+                    postProcessSteps = postProcessSteps | PostProcessSteps.FlipWindingOrder;
+
+                Scene scene = context.ImportFile(path, postProcessSteps);
 
                 _mesh = new Mesh(scene.MeshCount, scene.MaterialCount);
 
@@ -62,9 +66,9 @@ namespace MiniEngine.AssertManager
             //Specular texture...
             material.Specular = GetTexture(TextureType.Specular, assmat);
 
-            //Ambiant color...
+            //Ambient color...
             if(assmat.HasColorAmbient)
-                material.AmbiantColor = new Color3(assmat.ColorAmbient.R, assmat.ColorAmbient.G, assmat.ColorAmbient.B);
+                material.AmbientColor = new Color3(assmat.ColorAmbient.R, assmat.ColorAmbient.G, assmat.ColorAmbient.B);
 
             //Diffuse color...
             if (assmat.HasColorDiffuse)

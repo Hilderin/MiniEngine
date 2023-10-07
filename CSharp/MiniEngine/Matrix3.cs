@@ -672,6 +672,18 @@ namespace MiniEngine
         }
 
         /// <summary>
+        /// Performs matrix multiplication with a vector
+        /// </summary>
+        public static Vector3 operator *(Matrix3 m, Vector3 v)
+        {
+            return new Vector3(
+                m.M11 * v.X + m.M12 * v.Y + m.M13 * v.Z,
+                m.M21 * v.X + m.M22 * v.Y + m.M23 * v.Z,
+                m.M31 * v.X + m.M32 * v.Y + m.M33 * v.Z
+            );
+        }
+
+        /// <summary>
         /// Implicit conversion from a 4x4 matrix to a 3x3 matrix.
         /// </summary>
         /// <param name="mat">4x4 matrix</param>
@@ -738,14 +750,9 @@ namespace MiniEngine
         /// </summary>
         /// <returns>
         /// A <see cref="System.String"/> that represents this instance.
-        /// </returns>
-        public override String ToString()
+        public override string ToString()
         {
-            CultureInfo info = CultureInfo.CurrentCulture;
-            Object[] args = new object[] { M11.ToString(info), M12.ToString(info), M13.ToString(info),
-                M21.ToString(info), M22.ToString(info), M23.ToString(info),
-                M31.ToString(info), M32.ToString(info), M33.ToString(info)};
-            return String.Format(info, "{{[A1:{0} A2:{1} A3:{2}] [B1:{3} B2:{4} B3:{5}] [C1:{6} C2:{7} C3:{8}]}}", args);
+            return $@"[{M11}, {M12}, {M13}][{M21}, {M22}, {M23}][{M31}, {M32}, {M33}]";
         }
     }
 }

@@ -29,7 +29,7 @@ namespace MiniEngine
         /// <summary>
         /// Nearest Z
         /// </summary>
-        public float NearZ = 1.0f;
+        public float NearZ = 0.1f;
 
         /// <summary>
         /// Farest Z

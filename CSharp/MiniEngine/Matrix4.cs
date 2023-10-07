@@ -315,16 +315,60 @@ namespace MiniEngine
         }
 
 
+        /// <summary>
+		/// Swap the matrix rows and columns.
+		/// </summary>
+		/// <param name="matrix">The matrix for transposing operation.</param>
+		/// <returns>The new <see cref="Matrix4"/> which contains the transposing result.</returns>
+		public static Matrix4 Transpose(ref Matrix4 matrix)
+        {
+            Matrix4 ret;
+            Transpose(ref matrix, out ret);
+            return ret;
+        }
+
+        /// <summary>
+        /// Swap the matrix rows and columns.
+        /// </summary>
+        /// <param name="matrix">The matrix for transposing operation.</param>
+        /// <param name="result">The new <see cref="Matrix4"/> which contains the transposing result as an output parameter.</param>
+        public static void Transpose(ref Matrix4 matrix, out Matrix4 result)
+        {
+            Matrix4 ret;
+
+            ret.M11 = matrix.M11;
+            ret.M12 = matrix.M21;
+            ret.M13 = matrix.M31;
+            ret.M14 = matrix.M41;
+
+            ret.M21 = matrix.M12;
+            ret.M22 = matrix.M22;
+            ret.M23 = matrix.M32;
+            ret.M24 = matrix.M42;
+
+            ret.M31 = matrix.M13;
+            ret.M32 = matrix.M23;
+            ret.M33 = matrix.M33;
+            ret.M34 = matrix.M43;
+
+            ret.M41 = matrix.M14;
+            ret.M42 = matrix.M24;
+            ret.M43 = matrix.M34;
+            ret.M44 = matrix.M44;
+
+            result = ret;
+        }
+
         #endregion
 
 
         #region Opérations
 
         /// <summary>
-        /// Creates a new <see cref="Matrix"/> that contains a multiplication of two matrix.
+        /// Creates a new <see cref="Matrix4"/> that contains a multiplication of two matrix.
         /// </summary>
-        /// <param name="matrix1">Source <see cref="Matrix"/>.</param>
-        /// <param name="matrix2">Source <see cref="Matrix"/>.</param>
+        /// <param name="matrix1">Source <see cref="Matrix4"/>.</param>
+        /// <param name="matrix2">Source <see cref="Matrix4"/>.</param>
         /// <returns>Result of the matrix multiplication.</returns>
         public static Matrix4 operator *(Matrix4 matrix1, Matrix4 matrix2)
         {

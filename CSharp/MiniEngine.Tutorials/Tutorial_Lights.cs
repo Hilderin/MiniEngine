@@ -10,12 +10,12 @@ using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Tutorials
 {
-    internal unsafe class Tutorial_AmbiantColor  : IDisposable
+    internal unsafe class Tutorial_Lights : IDisposable
     {
         private float translation = 0.0f;
         //private float deltaTransalation = 0.01f;
 
-        private float scale = 0.01f;
+        private float scale = 1f;
         //private float deltaScale = 0.005f;
 
         private float rotation = 0.0f;
@@ -35,12 +35,14 @@ namespace MiniEngine.Tutorials
 
             _camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
 
-            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\spider.obj");
+            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\box.obj", true);
 
 
             foreach (Material m in _currentMesh.Materials)
-                m.AmbiantColor = Color3.White;
+                m.AmbientColor = Color3.White;
 
+            _renderingContext.AmbientIntensity = 0.8f;
+            _renderingContext.DiffuseColor = Color3.Red;
         }
 
 
@@ -59,8 +61,16 @@ namespace MiniEngine.Tutorials
                 _camera.Location.Y += 0.1f;
             if (Context.Current.Input.IsKeyPressed(Keys.E))
                 _camera.Location.Y -= 0.1f;
-
-
+            if (Context.Current.Input.IsKeyPressed(Keys.NumpadAdd))
+                _renderingContext.AmbientIntensity += 0.01f;
+            if (Context.Current.Input.IsKeyPressed(Keys.NumpadSubtract))
+                _renderingContext.AmbientIntensity -= 0.01f;
+            if (Context.Current.Input.IsKeyPressed(Keys.PageUp))
+                _renderingContext.DiffuseIntensity += 0.01f;
+            if (Context.Current.Input.IsKeyPressed(Keys.PageDown))
+                _renderingContext.DiffuseIntensity -= 0.01f;
+            _renderingContext.AmbientIntensity = Math.Clamp(_renderingContext.AmbientIntensity, 0f, 1f);
+            _renderingContext.DiffuseIntensity = Math.Clamp(_renderingContext.DiffuseIntensity, 0f, 1f);
 
             if (Context.Current.Input.IsJustMouseMoved)
             {
@@ -95,13 +105,17 @@ namespace MiniEngine.Tutorials
             WorldTransform worldTransform = new WorldTransform();
             worldTransform.Location = new Vector3(translation, translation, 2.0f);
             worldTransform.Scale = new Vector3(scale);
-            worldTransform.Rotation = new Vector3(rotation, rotation, rotation);
+            worldTransform.Rotation = new Vector3(0f, rotation, 0f);
 
             Matrix4 worldMatrix = worldTransform.GetMatrix();
 
             //_renderingContext.AmbiantColor = new Color3(1f, 0, 1f);
             //_renderingContext.AmbientIntensity = 2f;
             _renderingContext.WVPMatrix = _camera.GetMatrix() * worldMatrix;
+
+            
+            _renderingContext.DiffuseDirection = new Vector3(1.0f, 0f, 0f);
+            _renderingContext.CalculateDiffuseDirection(ref worldMatrix);
 
             _currentMesh.Render(_renderingContext);
         }
