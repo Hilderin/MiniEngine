@@ -33,6 +33,46 @@ namespace MiniEngine
     public struct Color3
     {
 
+        #region Private static members
+
+        /// <summary>
+        /// White
+        /// </summary>
+        private static Color3 _white = new Color3(1f);
+
+        /// <summary>
+        /// Black
+        /// </summary>
+        private static Color3 _black = new Color3(0f);
+
+        /// <summary>
+        /// Magenta
+        /// </summary>
+        private static Color3 _magenta = new Color3(1f, 0f, 1f);
+
+        #endregion
+
+        #region Public static properties
+
+        /// <summary>
+        /// White color
+        /// </summary>
+        public static Color3 White { get { return _white; } }
+
+        /// <summary>
+        /// Black color
+        /// </summary>
+        public static Color3 Black { get { return _black; } }
+
+        /// <summary>
+        /// Magenta color
+        /// </summary>
+        public static Color3 Magenta { get { return _magenta; } }
+
+        #endregion
+
+        #region Public properties
+
         /// <summary>
         /// Red component.
         /// </summary>
@@ -47,6 +87,10 @@ namespace MiniEngine
         /// Blue component.
         /// </summary>
         public float B;
+
+        #endregion
+
+        #region Public getter
 
         /// <summary>
         /// Gets or sets the component value at the specified zero-based index
@@ -88,6 +132,10 @@ namespace MiniEngine
             }
         }
 
+        #endregion
+
+        #region Constructors
+
         /// <summary>
         /// Constructs a Color.
         /// </summary>
@@ -113,17 +161,73 @@ namespace MiniEngine
             B = value;
         }
 
+        #endregion
+
+        #region Public methods
+
         /// <summary>
         /// Determines if the color is black, or close to being black.
         /// </summary>
         /// <returns>True if the color is black/nearly block, false otherwise.</returns>
         public bool IsBlack()
         {
-            float epsilon = 10e-3f;
-            return (float)Math.Abs(R) < epsilon
-                && (float)Math.Abs(G) < epsilon
-                && (float)Math.Abs(B) < epsilon;
+            return (float)Math.Abs(R) < Math.Epsilon
+                && (float)Math.Abs(G) < Math.Epsilon
+                && (float)Math.Abs(B) < Math.Epsilon;
         }
+
+
+        /// <summary>
+        /// Tests equality between this color and another color
+        /// </summary>
+        /// <param name="other">Color to test against</param>
+        /// <returns>True if components are equal</returns>
+        public bool Equals(Color3 other)
+        {
+            return (R == other.R) && (G == other.G) && (B == other.B);
+        }
+
+        /// <summary>
+        /// Tests equality between this color and another object.
+        /// </summary>
+        /// <param name="obj">Object to test against</param>
+        /// <returns>True if the object is a color and the components are equal</returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is Color3)
+            {
+                return Equals((Color3)obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return R.GetHashCode() + G.GetHashCode() + B.GetHashCode();
+        }
+
+        /// <summary>
+        /// Returns a <see cref="System.String"/> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String"/> that represents this instance.
+        /// </returns>
+        public override string ToString()
+        {
+            CultureInfo info = CultureInfo.CurrentCulture;
+            return String.Format(info, "{{R:{0} G:{1} B:{2}}}",
+                new Object[] { R.ToString(info), G.ToString(info), B.ToString(info) });
+        }
+
+        #endregion
+
+        #region Operators
 
         /// <summary>
         /// Adds the two colors together.
@@ -314,52 +418,7 @@ namespace MiniEngine
             return (a.R != b.R) || (a.G != b.G) || (a.B != b.B);
         }
 
-        /// <summary>
-        /// Tests equality between this color and another color
-        /// </summary>
-        /// <param name="other">Color to test against</param>
-        /// <returns>True if components are equal</returns>
-        public bool Equals(Color3 other)
-        {
-            return (R == other.R) && (G == other.G) && (B == other.B);
-        }
+        #endregion
 
-        /// <summary>
-        /// Tests equality between this color and another object.
-        /// </summary>
-        /// <param name="obj">Object to test against</param>
-        /// <returns>True if the object is a color and the components are equal</returns>
-        public override bool Equals(object obj)
-        {
-            if (obj is Color3)
-            {
-                return Equals((Color3)obj);
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
-        public override int GetHashCode()
-        {
-            return R.GetHashCode() + G.GetHashCode() + B.GetHashCode();
-        }
-
-        /// <summary>
-        /// Returns a <see cref="System.String"/> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String"/> that represents this instance.
-        /// </returns>
-        public override string ToString()
-        {
-            CultureInfo info = CultureInfo.CurrentCulture;
-            return String.Format(info, "{{R:{0} G:{1} B:{2}}}",
-                new Object[] { R.ToString(info), G.ToString(info), B.ToString(info) });
-        }
     }
 }

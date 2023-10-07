@@ -8,7 +8,7 @@ using MiniEngine.OpenGL;
 
 namespace MiniEngine.Tutorials
 {
-    internal unsafe class Tutorial11
+    internal unsafe class Tutorial_DrawElements
     {
 
         private uint VBO = 0;
@@ -142,7 +142,7 @@ namespace MiniEngine.Tutorials
 
             //GL.glUniform1f(_scaleLocation, scale);
             //GL.glUniformMatrix4fv(_transformationUniform, 1, true, m);
-            GL.glUniformMatrix4fv(_transformationUniform, transformMatrix);
+            GL.glUniformMatrix4fv(_transformationUniform, ref transformMatrix);
             GL.CheckError();
 
             //GL.glDrawArrays(GL.GL_TRIANGLES, 0, 3);

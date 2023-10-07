@@ -20,7 +20,7 @@ namespace MiniEngine.Tutorials
 
                 using (Context context = new Context())
                 {
-                    var t = new Tutorial18();
+                    var t = new Tutorial_CubePyramid();
 
                     context.OpenWindow(WIDTH, HEIGHT, TITLE)
                            .CenterOnScreen()

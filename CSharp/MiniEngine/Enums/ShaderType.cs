@@ -1,17 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MiniEngine.OpenGL;
 
 namespace MiniEngine
 {
     /// <summary>
-    /// Shader types
+    /// Shader type
     /// </summary>
-    public enum ShaderType
+    public enum ShaderType : uint
     {
-        Vertex,
-        Fragment
+        /// <summary>
+        /// Vertex shader
+        /// </summary>
+        Vertex = GL.GL_VERTEX_SHADER,
+
+        /// <summary>
+        /// Fragment shader
+        /// </summary>
+        Fragment = GL.GL_FRAGMENT_SHADER
     }
+
 }

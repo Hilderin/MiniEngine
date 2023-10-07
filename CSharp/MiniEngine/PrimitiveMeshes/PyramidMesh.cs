@@ -16,30 +16,34 @@ namespace MiniEngine.PrimitiveMeshes
         /// </summary>
         public PyramidMesh() : base()
         {
-            Vector2 t00 =  new Vector2(0.0f, 0.0f);
-            Vector2 t050 = new Vector2(0.5f, 0.0f);
-            Vector2 t10 =  new Vector2(1.0f, 0.0f);
-            Vector2 t051 = new Vector2(0.5f, 1.0f);
 
-            Vertex[] vertices = new Vertex[4];
-            vertices[0] = new Vertex(-1.0f, -1.0f, 0.5773f, t00);
-            vertices[1] = new Vertex(0.0f, -1.0f, -1.15475f, t050);
-            vertices[2] = new Vertex(1.0f, -1.0f, 0.5773f, t10);
-            vertices[3] = new Vertex(0.0f, 1.0f, 0.0f, t051);
+            Vector3[] positions = new Vector3[4];
+            positions[0] = new Vector3(-1.0f, -1.0f, 0.5773f);
+            positions[1] = new Vector3(0.0f, -1.0f, -1.15475f);
+            positions[2] = new Vector3(1.0f, -1.0f, 0.5773f);
+            positions[3] = new Vector3(0.0f, 1.0f, 0.0f);
 
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i].Color = new Vector3(Math.RandomFloat(0.0f, 1.0f), Math.RandomFloat(0.0f, 1.0f), Math.RandomFloat(0.0f, 1.0f));
-            }
+            Vector2[] texCoords = new Vector2[4];
+            texCoords[0] = new Vector2(0.0f, 0.0f);
+            texCoords[1] = new Vector2(0.5f, 0.0f);
+            texCoords[2] = new Vector2(1.0f, 0.0f);
+            texCoords[3] = new Vector2(0.5f, 1.0f);
 
-            SetVertices(vertices);
-
-            SetIndices(new int[] {
+            //Indices...
+            int[] indices = new int[] {
                               0, 3, 1,
                               1, 3, 2,
                               2, 3, 0,
                               0, 1, 2
-            });
+            };
+
+            //for (int i = 0; i < vertices.Length; i++)
+            //{
+            //    vertices[i].Color = new Vector3(Math.RandomFloat(0.0f, 1.0f), Math.RandomFloat(0.0f, 1.0f), Math.RandomFloat(0.0f, 1.0f));
+            //}
+
+            AddMeshData(positions, texCoords, new Vector3[positions.Length], indices, 0);
+
         }
     }
 }

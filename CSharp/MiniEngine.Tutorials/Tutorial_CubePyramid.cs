@@ -10,12 +10,12 @@ using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Tutorials
 {
-    internal unsafe class Tutorial18 : IDisposable
+    internal unsafe class Tutorial_CubePyramid : IDisposable
     {
         private float translation = 0.0f;
         //private float deltaTransalation = 0.01f;
 
-        private float scale = 0.01f;
+        private float scale = 1.0f;
         //private float deltaScale = 0.005f;
 
         private float rotation = 0.0f;
@@ -23,7 +23,13 @@ namespace MiniEngine.Tutorials
 
         private Camera _camera = new Camera();
 
-        private Mesh2 _currentMesh;
+
+        private Mesh _cube;
+        private Mesh _pyramid;
+        private Texture2D _texture;
+        private Mesh _currentMesh;
+
+        private RenderingContext _renderingContext = new RenderingContext();
 
         public void Init()
         {
@@ -32,8 +38,22 @@ namespace MiniEngine.Tutorials
 
             _camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
 
-            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\spider.obj");
+            _texture = new AssetManager().GetTexture2DFromFile(@"C:\Projects\ogldev\Content\bricks.jpg");
+            
+            Material mat = new Material()
+            {
+                Diffuse = _texture
+            };
 
+            _cube = new CubeMesh();
+            _cube.SetMaterial(mat, 0);
+
+            _pyramid = new PyramidMesh();
+            //_pyramid.SetMaterial(mat, 0);
+
+            _currentMesh = _pyramid;
+
+            
 
         }
 
@@ -53,7 +73,13 @@ namespace MiniEngine.Tutorials
                 _camera.Location.Y += 0.1f;
             if (Context.Current.Input.IsKeyPressed(Keys.E))
                 _camera.Location.Y -= 0.1f;
-
+            if (Context.Current.Input.IsJustKeyPressed(Keys.Space))
+            {
+                if (_currentMesh == _pyramid)
+                    _currentMesh = _cube;
+                else
+                    _currentMesh = _pyramid;
+            }
 
 
             if (Context.Current.Input.IsJustMouseMoved)
@@ -93,17 +119,18 @@ namespace MiniEngine.Tutorials
 
             Matrix4 worldMatrix = worldTransform.GetMatrix();
 
-            Matrix4 wvpMatrix = _camera.GetMatrix() * worldMatrix;
+            _renderingContext.WVPMatrix = _camera.GetMatrix() * worldMatrix;
 
-            
-            _currentMesh.Render(wvpMatrix);
+
+            _currentMesh.Render(_renderingContext);
         }
-
 
         public void Dispose()
         {
-            if (_currentMesh != null)
-                _currentMesh.Dispose();
+            if (_cube != null)
+                _cube.Dispose();
+            if (_pyramid != null)
+                _pyramid.Dispose();
         }
     }
 }

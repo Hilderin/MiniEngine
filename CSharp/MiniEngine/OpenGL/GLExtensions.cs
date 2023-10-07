@@ -308,6 +308,27 @@ namespace MiniEngine.OpenGL
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void glUniform1fHandler(int location, float v0);
 
+        /// <summary>
+        ///     Specify the value of 2 uniform variables for the current program object.
+        /// </summary>
+        /// <param name="location">Specifies the location of the uniform value to be modified.</param>
+        /// <param name="v0">The first value.</param>
+        /// <param name="v1">The second value.</param>
+        public static readonly glUniform2fHandler glUniform2f = GetDelegate<glUniform2fHandler>();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void glUniform2fHandler(int location, float v0, float v1);
+
+        // <summary>
+        ///     Specify the value of 3 uniform variables for the current program object.
+        /// </summary>
+        /// <param name="location">Specifies the location of the uniform value to be modified.</param>
+        /// <param name="v0">The first value.</param>
+        /// <param name="v1">The second value.</param>
+        /// <param name="v1">The third value.</param>
+        public static readonly glUniform3fHandler glUniform3f = GetDelegate<glUniform3fHandler>();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void glUniform3fHandler(int location, float v0, float v1, float v3);
+
 
         /// <summary>
         ///     Specify the value of a uniform variable for the current program object.

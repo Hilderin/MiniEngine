@@ -7,26 +7,23 @@ using MiniEngine.OpenGL;
 
 namespace MiniEngine
 {
+    
     /// <summary>
     /// Material
     /// </summary>
-    public class Shader: IDisposable
+    public class Shader     //: IDisposable
     {
 
         /// <summary>
         /// OpenGL program id
+        /// Static so we can reuse the same shader program
         /// </summary>
-        private uint _program = uint.MaxValue;
+        private static uint _program = uint.MaxValue;
 
         /// <summary>
-        /// Code for the vertex shader
+        /// Shaders
         /// </summary>
-        private string _vertexShaderCode;
-
-        /// <summary>
-        /// Code for the fragment shader
-        /// </summary>
-        private string _fragmentShaderCode;
+        private List<uint> _shaders = new List<uint>();
 
         /// <summary>
         /// Uniforms by name
@@ -34,40 +31,68 @@ namespace MiniEngine
         private Dictionary<string, int> _uniforms = new Dictionary<string, int>();
 
         /// <summary>
+        /// Indicate if the shader is compiled
+        /// </summary>
+        private bool _isCompiled = false;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public Shader()
+        {
+            
+        }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public Shader(string vertexShaderCode, string fragmentShaderCode)
         {
-            _vertexShaderCode = vertexShaderCode;
-            _fragmentShaderCode = fragmentShaderCode;
-
-            Compile();
+            Add(vertexShaderCode, ShaderType.Vertex);
+            Add(fragmentShaderCode, ShaderType.Fragment);
         }
 
+        /// <summary>
+        /// Activate the shader
+        /// </summary>
+        public void Enable()
+        {
+            if (!_isCompiled)
+                Compile();
+
+            GL.glUseProgram(_program);
+            GL.CheckError();
+        }
+
+        /// <summary>
+        /// Add shader code
+        /// </summary>
+        public void Add(string code, ShaderType shaderType)
+        {
+            if (_isCompiled)
+                throw new InvalidOperationException("Impossible to add additionnal shaders after it has been compiled.");
+
+            uint shader = GL.CreateShader((uint)shaderType, code);
+            GL.CheckError();
+
+            _shaders.Add(shader);
+        }
 
         /// <summary>
         /// Compile the material
         /// </summary>
-        internal void Compile()
+        private void Compile()
         {
             //Create the OpenGL program...
             _program = GL.glCreateProgram();
             GL.CheckError();
 
-            var vertex = GL.CreateShader(GL.GL_VERTEX_SHADER, _vertexShaderCode);
-            GL.CheckError();
-
-            var fragment = GL.CreateShader(GL.GL_FRAGMENT_SHADER, _fragmentShaderCode);
-            GL.CheckError();
-
-            _program = GL.glCreateProgram();
-            GL.CheckError();
-
-            GL.glAttachShader(_program, vertex);
-            GL.CheckError();
-
-            GL.glAttachShader(_program, fragment);
-            GL.CheckError();
+            //Attach shaders...
+            foreach (uint shader in _shaders)
+            {
+                GL.glAttachShader(_program, shader);
+                GL.CheckError();
+            }
 
             //Linking program...
             GL.glLinkProgram(_program);
@@ -81,15 +106,17 @@ namespace MiniEngine
             if (!GL.glGetProgramiv(_program, GL.GL_VALIDATE_STATUS))
                 throw new Exception($"Error validating program: {GL.glGetProgramInfoLog(_program)}");
 
+            //Delete shaders...
+            foreach (uint shader in _shaders)
+            {
+                GL.glDeleteShader(shader);
+                GL.CheckError();
+            }
 
-            GL.glDeleteShader(vertex);
-            GL.CheckError();
+            _shaders.Clear();
 
-            GL.glDeleteShader(fragment);
-            GL.CheckError();
-
-            GL.glUseProgram(_program);
-            GL.CheckError();
+            //It's compiled!
+            _isCompiled = true;
 
         }
 
@@ -98,8 +125,7 @@ namespace MiniEngine
         /// </summary>
         public void SetUniform(string uniformName, Matrix4 matrix)
         {
-            GL.glUniformMatrix4fv(GetUniformID(uniformName), matrix);
-            GL.CheckError();
+            SetUniform(GetUniformLocation(uniformName), ref matrix);
         }
 
         /// <summary>
@@ -107,30 +133,90 @@ namespace MiniEngine
         /// </summary>
         public void SetUniform(string uniformName, int v0)
         {
-            GL.glUniform1i(GetUniformID(uniformName), v0);
-            GL.CheckError();
+            SetUniform(GetUniformLocation(uniformName), v0);
         }
 
         /// <summary>
         /// Set uniform matrix
         /// </summary>
-        public void SetUniform(int uniformID, Matrix4 matrix)
+        public void SetUniform(int uniformID, ref Matrix4 matrix)
         {
-            GL.glUniformMatrix4fv(uniformID, matrix);
-            GL.CheckError();
+            if (uniformID >= 0)
+            {
+                GL.glUniformMatrix4fv(uniformID, ref matrix);
+                GL.CheckError();
+            }
+        }
+
+        /// <summary>
+        /// Set uniform 1 float
+        /// </summary>
+        public void SetUniform(string uniformName, float v0)
+        {
+            SetUniform(GetUniformLocation(uniformName), v0);
+        }
+
+        /// <summary>
+        /// Set uniform 1 int
+        /// </summary>
+        public void SetUniform(int uniformID, int v0)
+        {
+            if (uniformID >= 0)
+            {
+                GL.glUniform1i(uniformID, v0);
+                GL.CheckError();
+            }
+        }
+
+        /// <summary>
+        /// Set uniform 1 float
+        /// </summary>
+        public void SetUniform(int uniformID, float v0)
+        {
+            if (uniformID >= 0)
+            {
+                GL.glUniform1f(uniformID, v0);
+                GL.CheckError();
+            }
+        }
+        /// <summary>
+        /// Set uniform 2 floats
+        /// </summary>
+        public void SetUniform(int uniformID, float v0, float v1, float v2)
+        {
+            if (uniformID >= 0)
+            {
+                GL.glUniform3f(uniformID, v0, v1, v2);
+                GL.CheckError();
+            }
+        }
+
+        /// <summary>
+        /// Set uniform 3 floats
+        /// </summary>
+        public void SetUniform(int uniformID, float v0, float v1)
+        {
+            if (uniformID >= 0)
+            {
+                GL.glUniform2f(uniformID, v0, v1);
+                GL.CheckError();
+            }
         }
 
         /// <summary>
         /// Get the uniform id
         /// </summary>
-        public int GetUniformID(string name)
+        public int GetUniformLocation(string name)
         {
+            if (!_isCompiled)
+                Compile();
+
             int id;
             if (!_uniforms.TryGetValue(name, out id))
             {
                 id = GL.glGetUniformLocation(_program, name);
-                if (id == -1)
-                    throw new Exception($"Error getting uniform location of '{name}'");
+                //if (id == -1)
+                //    throw new Exception($"Error getting uniform location of '{name}'");
 
                 _uniforms.Add(name, id);
             }
@@ -138,19 +224,19 @@ namespace MiniEngine
             return id;
         }
 
-        /// <summary>
-        /// Dispose the shader
-        /// </summary>
-        public void Dispose()
-        {
-            if (_program != uint.MaxValue)
-            {
-                GL.glDeleteProgram(_program);
-                GL.CheckError();
+        ///// <summary>
+        ///// Dispose the shader
+        ///// </summary>
+        //public void Dispose()
+        //{
+        //    if (_program != uint.MaxValue)
+        //    {
+        //        GL.glDeleteProgram(_program);
+        //        GL.CheckError();
 
-                _program = uint.MaxValue;
-            }
+        //        _program = uint.MaxValue;
+        //    }
 
-        }
+        //}
     }
 }

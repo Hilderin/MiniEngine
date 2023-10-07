@@ -15,12 +15,12 @@ namespace MiniEngine.AssertManager
         //private List<Material> materials = new List<Material>();
 
         private string _workingDirectory = null;
-        private Mesh2 _mesh = null;
+        private Mesh _mesh = null;
 
         /// <summary>
         /// Import a mesh from file
         /// </summary>
-        public Mesh2 GetMeshFromFile(string path)
+        public Mesh GetMeshFromFile(string path)
         {
             _workingDirectory = Path.GetDirectoryName(path);
 
@@ -28,7 +28,7 @@ namespace MiniEngine.AssertManager
             {
                 Scene scene = context.ImportFile(path, PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.GenerateSmoothNormals);
 
-                _mesh = new Mesh2(scene.MeshCount, scene.MaterialCount);
+                _mesh = new Mesh(scene.MeshCount, scene.MaterialCount);
 
                 //Loading meshes.....
                 for (int i = 0; i < scene.MeshCount; i++)
@@ -44,9 +44,6 @@ namespace MiniEngine.AssertManager
 
 
             }
-
-            //All we need now is to init the mesh!
-            _mesh.Init();
 
             return _mesh;
 
@@ -64,6 +61,18 @@ namespace MiniEngine.AssertManager
 
             //Specular texture...
             material.Specular = GetTexture(TextureType.Specular, assmat);
+
+            //Ambiant color...
+            if(assmat.HasColorAmbient)
+                material.AmbiantColor = new Color3(assmat.ColorAmbient.R, assmat.ColorAmbient.G, assmat.ColorAmbient.B);
+
+            //Diffuse color...
+            if (assmat.HasColorDiffuse)
+                material.DiffuseColor = new Color3(assmat.ColorDiffuse.R, assmat.ColorDiffuse.G, assmat.ColorDiffuse.B);
+
+            //Specular color...
+            if (assmat.HasColorSpecular)
+                material.SpecularColor = new Color3(assmat.ColorSpecular.R, assmat.ColorSpecular.G, assmat.ColorSpecular.B);
 
             _mesh.SetMaterial(material, matIndex);
 
@@ -119,7 +128,7 @@ namespace MiniEngine.AssertManager
                 indices[indexIndice++] = mesh.Faces[i].Indices[2];
             }
 
-            _mesh.SetMeshData(positions, texCoords, normals, indices, mesh.MaterialIndex, meshIndex);
+            _mesh.AddMeshData(positions, texCoords, normals, indices, mesh.MaterialIndex);
 
         }
 

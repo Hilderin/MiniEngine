@@ -21,24 +21,27 @@ namespace MiniEngine.PrimitiveMeshes
             Vector2 t10 = new Vector2(1.0f, 0.0f);  // Bottom right
             Vector2 t11 = new Vector2(1.0f, 1.0f);  // Top right
 
-            Vertex[] vertices = new Vertex[8];
-            vertices[0] = new Vertex(0.5f, 0.5f, 0.5f, t00);
-            vertices[1] = new Vertex(-0.5f, 0.5f, -0.5f, t01);
-            vertices[2] = new Vertex(-0.5f, 0.5f, 0.5f, t10);
-            vertices[3] = new Vertex(0.5f, -0.5f, -0.5f, t11);
-            vertices[4] = new Vertex(-0.5f, -0.5f, -0.5f, t00);
-            vertices[5] = new Vertex(0.5f, 0.5f, -0.5f, t10);
-            vertices[6] = new Vertex(0.5f, -0.5f, 0.5f, t01);
-            vertices[7] = new Vertex(-0.5f, -0.5f, 0.5f, t11);
+            Vector3[] positions = new Vector3[8];
+            positions[0] = new Vector3(0.5f, 0.5f, 0.5f);
+            positions[1] = new Vector3(-0.5f, 0.5f, -0.5f);
+            positions[2] = new Vector3(-0.5f, 0.5f, 0.5f);
+            positions[3] = new Vector3(0.5f, -0.5f, -0.5f);
+            positions[4] = new Vector3(-0.5f, -0.5f, -0.5f);
+            positions[5] = new Vector3(0.5f, 0.5f, -0.5f);
+            positions[6] = new Vector3(0.5f, -0.5f, 0.5f);
+            positions[7] = new Vector3(-0.5f, -0.5f, 0.5f);
 
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i].Color = new Vector3(Math.RandomFloat(0.0f, 1.0f), Math.RandomFloat(0.0f, 1.0f), Math.RandomFloat(0.0f, 1.0f));
-            }
+            Vector2[] texCoords = new Vector2[8];
+            texCoords[0] = t00;
+            texCoords[1] = t01;
+            texCoords[2] = t10;
+            texCoords[3] = t11;
+            texCoords[4] = t00;
+            texCoords[5] = t10;
+            texCoords[6] = t01;
+            texCoords[7] = t11;
 
-            SetVertices(vertices);
-
-            SetIndices(new int[] {
+            int[] indices = new int[] {
                               0, 1, 2,
                               1, 3, 4,
                               5, 6, 3,
@@ -51,7 +54,10 @@ namespace MiniEngine.PrimitiveMeshes
                               7, 4, 3,
                               2, 1, 4,
                               0, 2, 7
-            });
+            };
+
+            AddMeshData(positions, texCoords, new Vector3[positions.Length], indices, 0);
+
         }
     }
 }

@@ -7,7 +7,7 @@ using MiniEngine.OpenGL;
 
 namespace MiniEngine.Tutorials
 {
-    internal unsafe class Tutorial09
+    internal unsafe class Tutorial_DrawArray
     {
 
         private uint VBO = 0;

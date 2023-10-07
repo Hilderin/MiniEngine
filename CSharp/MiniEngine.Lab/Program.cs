@@ -11,7 +11,7 @@ namespace MiniEngine.Lab
                 Stopwatch sw = Stopwatch.StartNew();
 
 
-                var lab = new Lab_StructMutableImmuatable();
+                var lab = new Lab_GenerateScan0WhitePixel();
 
                 lab.Test();
 

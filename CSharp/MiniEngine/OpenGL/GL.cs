@@ -2107,6 +2107,12 @@ namespace MiniEngine.OpenGL
         public static void glUniform1f(int location, float v0) => GLExtensions.glUniform1f(location, v0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void glUniform2f(int location, float v0, float v1) => GLExtensions.glUniform2f(location, v0, v1);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void glUniform3f(int location, float v0, float v1, float v2) => GLExtensions.glUniform3f(location, v0, v1, v2);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void glUniform1i(int location, int v0) => GLExtensions.glUniform1i(location, v0);
 
 
@@ -2132,13 +2138,13 @@ namespace MiniEngine.OpenGL
         /// <param name="count">Specifies the number of matrices that are to be modified.</param>
         /// <param name="transpose">Specifies whether to transpose the matrix as the values are loaded into the uniform variable.</param>
         /// <param name="values">An array of count values that will be used to update the specified uniform variable.</param>
-        public static void glUniformMatrix4fv(int location, Matrix4 matrix)
+        public static void glUniformMatrix4fv(int location, ref Matrix4 matrix)
         {
 
-            //fixed (float* value = &matrix.M11)
-            //{
-                GLExtensions.glUniformMatrix4fv(location, 1, true, &matrix.M11);
-            //}
+            fixed (float* value = &matrix.M11)
+            {
+                GLExtensions.glUniformMatrix4fv(location, 1, true, value);
+            }
         }
 
         /// <summary>

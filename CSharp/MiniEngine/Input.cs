@@ -51,9 +51,12 @@ namespace MiniEngine
         /// <summary>
         /// Set a state for a key
         /// </summary>
-        public void SetKeyState(Keys key, bool down)
+        public void SetKeyState(Keys key, bool pressed)
         {
-            _keyDown[(int)key] = down;
+            if(pressed && !_keyDown[(int)key])
+                _newlyPressedKeys.Add(key);
+
+            _keyDown[(int)key] = pressed;
         }
 
         /// <summary>
@@ -80,8 +83,6 @@ namespace MiniEngine
         /// </summary>
         public bool IsKeyPressed(Keys key)
         {
-            _newlyPressedKeys.Add(key);
-
             return _keyDown[(int)key];
         }
 

@@ -48,7 +48,7 @@ namespace MiniEngine
         /// The value we use to avoid floating point precision issues
         /// http://sandervanrossen.blogspot.com/2009/12/realtime-csg-part-1.html
         /// </summary>
-        public const float EPSILON = 0.00001f;
+        public const float Epsilon = 0.00001f;
 
         /// <summary>
         /// Random object
@@ -226,7 +226,7 @@ namespace MiniEngine
         {
             float diff = a - b;
 
-            float e = EPSILON;
+            float e = Epsilon;
 
             if (diff < e && diff > -e)
             {

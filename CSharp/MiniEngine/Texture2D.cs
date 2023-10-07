@@ -15,6 +15,19 @@ namespace MiniEngine
     /// </summary>
     public class Texture2D : IDisposable
     {
+        /// <summary>
+        /// Empty texture
+        /// </summary>
+        private static Texture2D _emptyTexture = new Texture2D();
+
+        /// <summary>
+        /// Empty texture
+        /// </summary>
+        public static Texture2D Empty { get { return _emptyTexture; } }
+
+        /// <summary>
+        /// Texture id OpenGL
+        /// </summary>
         private uint _textureid = uint.MaxValue;
 
         /// <summary>
@@ -30,7 +43,10 @@ namespace MiniEngine
         public void Bind(uint textureUnit)
         {
             if (_textureid == uint.MaxValue)
-                return;
+            {
+                //We dont have any texture, we will create an empty one...
+                SetDataRGB(1, 1, Ressources.Resources.PixelWhite);
+            }
 
             GL.glActiveTexture(textureUnit);
             GL.CheckError();
@@ -59,6 +75,39 @@ namespace MiniEngine
         /// </summary>
         public void SetDataRGB(int width, int height, IntPtr data)
         {
+            PrepareOpenGL();
+
+            //  Tell OpenGL where the texture data is.
+            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, width, height, 0, GL.GL_BGR, GL.GL_UNSIGNED_BYTE, data);
+            GL.CheckError();
+
+            FinalizeOpenGL();
+
+
+        }
+
+        /// <summary>
+        /// Load an image in the texture
+        /// </summary>
+        public void SetDataRGB(int width, int height, byte[] data)
+        {
+            PrepareOpenGL();
+
+            //  Tell OpenGL where the texture data is.
+            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, width, height, 0, GL.GL_BGR, GL.GL_UNSIGNED_BYTE, data);
+            GL.CheckError();
+
+            FinalizeOpenGL();
+
+
+        }
+
+
+        /// <summary>
+        /// Prepare before loading texture
+        /// </summary>
+        private void PrepareOpenGL()
+        {
             if (_textureid == uint.MaxValue)
             {
                 _textureid = GL.glGenTextures();
@@ -70,19 +119,14 @@ namespace MiniEngine
             GL.CheckError();
 
 
-            //            //  Tell OpenGL where the texture data is.
-            //#pragma warning disable CA1416 // Validate platform compatibility
-            //            BitmapData bitmapData = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-            //#pragma warning restore CA1416 // Validate platform compatibility
-            //#pragma warning disable CA1416 // Validate platform compatibility
-            //            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, image.Width, image.Height, 0, GL.GL_RGB, GL.GL_UNSIGNED_BYTE, bitmapData.Scan0);
-            //#pragma warning restore CA1416 // Validate platform compatibility
-            //            GL.CheckError();
+        }
 
-            //  Tell OpenGL where the texture data is.
-            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, width, height, 0, GL.GL_BGR, GL.GL_UNSIGNED_BYTE, data);
-            GL.CheckError();
 
+        /// <summary>
+        /// Finalize loading texture
+        /// </summary>
+        private void FinalizeOpenGL()
+        {
             //  Specify linear filtering.
             GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR);
             GL.CheckError();
@@ -102,8 +146,8 @@ namespace MiniEngine
             //Unbinding...
             GL.glBindTexture(GL.GL_TEXTURE_2D, 0);
             GL.CheckError();
-        }
 
+        }
 
 
 
