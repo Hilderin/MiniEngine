@@ -10,7 +10,7 @@ using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Tutorials
 {
-    internal unsafe class Tutorial_PointLights : IDisposable
+    internal unsafe class Tutorial_DirectionalLight : IDisposable
     {
        
         private Mesh _currentMesh;
@@ -46,16 +46,16 @@ namespace MiniEngine.Tutorials
 
             Renderer.AmbientLight.Intensity = 0.1f;
 
-            //Renderer.DirectionalLight = new DirectionalLight()
-            //{
-            //    Rotation = Rotator3.FromDegrees(45, 90, 0)
-            //};
-
-            Renderer.Add(new PointLight()
+            Renderer.DirectionalLight = new DirectionalLight()
             {
-                Location = new Vector3(-8.0f, 0f, 0f),
-                AttenuationLinear = 0.2f
-            });
+                Rotation = Rotator3.FromDegrees(45, -90, 0)
+            };
+
+            //Renderer.Add(new PointLight()
+            //{
+            //    Location = new Vector3(-8.0f, 0f, 0f),
+            //    AttenuationLinear = 0.2f
+            //});
 
 
             var terrainMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\box_terrain.obj", new MeshImportationParameters()

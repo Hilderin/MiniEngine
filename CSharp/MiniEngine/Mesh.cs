@@ -325,6 +325,7 @@ namespace MiniEngine
                 Shader.SetCameraLocalPos(ref renderingContext.CameraLocalPosition);
 
                 Shader.SetPointLights(renderingContext.PointLights, renderingContext.PointLightsCalulcatedLocalPositions);
+                Shader.SetSpotLights(renderingContext.SpotLights, renderingContext.SpotLightsCalulcatedLocalPositions, renderingContext.SpotLightsCalulcatedLocalDirections);
 
 
                 GL.glDrawElementsBaseVertex(GL.GL_TRIANGLES,

@@ -67,6 +67,7 @@ namespace MiniEngine
             if (MousePosition != position)
             {
                 //Calculate the diff and the deplacement vector...
+                //Debug.Print(position.ToString());
                 Vector2 movement = (position - MousePosition) / 200;
                 //movement.Normalize();
                 MouseMovement = movement;

@@ -1351,6 +1351,26 @@ namespace MiniEngine
             }
         }
 
+
+
+        /// <summary>
+        /// Calculate light direction from world matrix in local space
+        /// </summary>
+        public static Vector3 CalculateLocalDirection(ref Matrix4 worldMatrix, Vector3 direction)
+        {
+            // Inverse local-to-world transformation using transpose
+            // (assuming uniform scaling)
+            Matrix3 worldToLocal = worldMatrix;
+
+            worldToLocal.Transpose();
+
+            Vector3 calculatedDirection = worldToLocal * direction;
+
+            calculatedDirection.Normalize();
+
+            return calculatedDirection;
+        }
+
         #endregion
 
         #region Public Static Operators

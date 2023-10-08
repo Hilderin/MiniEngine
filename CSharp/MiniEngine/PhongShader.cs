@@ -29,7 +29,10 @@ namespace MiniEngine
         private int _gMaterialSpecularColorUniform;
         private int _gCameraLocalPosUniform;
         private int _gNumPointLightsUniform;
+        private int _gNumSpotLightsUniform;
+
         private PointLightUniform[] _pointLightUniforms = new PointLightUniform[Renderer.MAX_POINT_LIGHTS];
+        private SpotLightUniform[] _spotLightUniforms = new SpotLightUniform[Renderer.MAX_SPOT_LIGHTS];
 
         private struct PointLightUniform
         {
@@ -40,6 +43,19 @@ namespace MiniEngine
             public int AttenConstantUniform;
             public int AttenLinearUniform;
             public int AttenExpUniform;
+        }
+
+        private struct SpotLightUniform
+        {
+            public int ColorUniform;
+            public int AmbientIntensityUniform;
+            public int PositionUniform;
+            public int DiffuseIntensityUniform;
+            public int AttenConstantUniform;
+            public int AttenLinearUniform;
+            public int AttenExpUniform;
+            public int CutoffUniform;
+            public int DirectionUniform;
         }
 
         /// <summary>
@@ -76,6 +92,7 @@ void main()
             Add(@"#version 330
 
 const int MAX_POINT_LIGHTS = {MAX_POINT_LIGHTS};
+const int MAX_SPOT_LIGHTS = {MAX_SPOT_LIGHTS};
 
 in vec2 TexCoord0;
 in vec3 Normal0;
@@ -110,6 +127,12 @@ struct PointLight
     Attenuation Atten;
 };
 
+struct SpotLight
+{
+    PointLight Base;
+    vec3 Direction;
+    float Cutoff;
+};
 
 struct Material
 {
@@ -121,6 +144,8 @@ struct Material
 uniform DirectionalLight gDirectionalLight;
 uniform int gNumPointLights;
 uniform PointLight gPointLights[MAX_POINT_LIGHTS];
+uniform int gNumSpotLights;
+uniform SpotLight gSpotLights[MAX_SPOT_LIGHTS];
 uniform Material gMaterial;
 uniform sampler2D gSampler;
 uniform sampler2D gSamplerSpecularExponent;
@@ -165,48 +190,56 @@ vec4 CalcDirectionalLight(vec3 Normal)
     return CalcLightInternal(gDirectionalLight.Base, gDirectionalLight.Direction, Normal);
 }
 
-vec4 CalcPointLight(int Index, vec3 Normal)
+vec4 CalcPointLight(PointLight l, vec3 Normal)
 {
-    vec3 LightDirection = LocalPos0 - gPointLights[Index].LocalPos;
+    vec3 LightDirection = LocalPos0 - l.LocalPos;
     float Distance = length(LightDirection);
     LightDirection = normalize(LightDirection);
 
-    vec4 Color = CalcLightInternal(gPointLights[Index].Base, LightDirection, Normal);
-    float Attenuation =  gPointLights[Index].Atten.Constant +
-                         gPointLights[Index].Atten.Linear * Distance;
-    if(Attenuation == 0) {
-        return Color;
-    }
-    else 
-    {
-        return Color / Attenuation;
-    }
+    vec4 Color = CalcLightInternal(l.Base, LightDirection, Normal);
+    float Attenuation =  l.Atten.Constant +
+                         l.Atten.Linear * Distance +
+                         l.Atten.Exp * Distance * Distance;
+
+    return Color / Attenuation;
 }
 
+vec4 CalcSpotLight(SpotLight l, vec3 Normal)
+{
+    vec3 LightToPixel = normalize(LocalPos0 - l.Base.LocalPos);
+    float SpotFactor = dot(LightToPixel, l.Direction);
+
+    if (SpotFactor > l.Cutoff) {
+        vec4 Color = CalcPointLight(l.Base, Normal);
+        float SpotLightIntensity = (1.0 - (1.0 - SpotFactor)/(1.0 - l.Cutoff));
+        return Color * SpotLightIntensity;
+    }
+    else {
+        return vec4(0,0,0,0);
+    }
+}
 
 void main()
 {
     vec3 Normal = normalize(Normal0);
     vec4 TotalLight = CalcDirectionalLight(Normal);
 
-    for (int i = 0 ; i < gNumPointLights ; i++) {
-        TotalLight += CalcPointLight(i, Normal);
+    for (int i = 0 ;i < gNumPointLights ;i++) {
+        TotalLight += CalcPointLight(gPointLights[i], Normal);
+    }
+
+    for (int i = 0 ;i < gNumSpotLights ;i++) {
+        TotalLight += CalcSpotLight(gSpotLights[i], Normal);
     }
 
     FragColor = texture2D(gSampler, TexCoord0.xy) * TotalLight;
 }
 
 ".Replace("{MAX_POINT_LIGHTS}", Renderer.MAX_POINT_LIGHTS.ToString())
+ .Replace("{MAX_SPOT_LIGHTS}", Renderer.MAX_SPOT_LIGHTS.ToString())
 , ShaderType.Fragment);
 
 
-            //uniform DirectionalLight gDirectionalLight;
-            //uniform int gNumPointLights;
-            //uniform PointLight gPointLights[MAX_POINT_LIGHTS];
-            //uniform Material gMaterial;
-            //uniform sampler2D gSampler;
-            //uniform sampler2D gSamplerSpecularExponent;
-            //uniform vec3 gCameraLocalPos;
 
             _wvpUniform = GetUniformLocation("gWVP");
             _samplerUniform = GetUniformLocation("gSampler");
@@ -225,7 +258,8 @@ void main()
 
             _gCameraLocalPosUniform = GetUniformLocation("gCameraLocalPos");
             _gNumPointLightsUniform = GetUniformLocation("gNumPointLights");
-            
+            _gNumSpotLightsUniform = GetUniformLocation("gNumSpotLights");
+
 
             for (int i = 0; i < Renderer.MAX_POINT_LIGHTS; i++)
             {
@@ -236,6 +270,19 @@ void main()
                 _pointLightUniforms[i].AttenConstantUniform = GetUniformLocation(String.Format("gPointLights[{0}].Atten.Constant", i));
                 _pointLightUniforms[i].AttenLinearUniform = GetUniformLocation(String.Format("gPointLights[{0}].Atten.Linear", i));
                 _pointLightUniforms[i].AttenExpUniform = GetUniformLocation(String.Format("gPointLights[{0}].Atten.Exp", i));
+            }
+
+            for (int i = 0; i < Renderer.MAX_POINT_LIGHTS; i++)
+            {
+                _spotLightUniforms[i].ColorUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Base.Base.Color", i));
+                _spotLightUniforms[i].AmbientIntensityUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Base.Base.AmbientIntensity", i));
+                _spotLightUniforms[i].PositionUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Base.LocalPos", i));
+                _spotLightUniforms[i].DiffuseIntensityUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Base.Base.DiffuseIntensity", i));
+                _spotLightUniforms[i].AttenConstantUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Base.Atten.Constant", i));
+                _spotLightUniforms[i].AttenLinearUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Base.Atten.Linear", i));
+                _spotLightUniforms[i].AttenExpUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Base.Atten.Exp", i));
+                _spotLightUniforms[i].DirectionUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Direction", i));
+                _spotLightUniforms[i].CutoffUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Cutoff", i));
             }
 
         }
@@ -353,8 +400,8 @@ void main()
                     PointLight light = pointLights[i];
 
                     SetUniform(_pointLightUniforms[i].ColorUniform, light.Color.R, light.Color.G, light.Color.B);
-                    SetUniform(_pointLightUniforms[i].AmbientIntensityUniform, light.AmbientIntensity);
-                    SetUniform(_pointLightUniforms[i].DiffuseIntensityUniform, light.DiffuseIntensity);
+                    SetUniform(_pointLightUniforms[i].AmbientIntensityUniform, light.Intensity);
+                    SetUniform(_pointLightUniforms[i].DiffuseIntensityUniform, light.Intensity);
                     SetUniform(_pointLightUniforms[i].PositionUniform, calculatedLocalPosition[i].X, calculatedLocalPosition[i].Y, calculatedLocalPosition[i].Z);
                     SetUniform(_pointLightUniforms[i].AttenConstantUniform, light.AttenuationConstant);
                     SetUniform(_pointLightUniforms[i].AttenLinearUniform, light.AttenuationLinear);
@@ -366,6 +413,41 @@ void main()
             {
                 //No point lights...
                 SetUniform(_gNumPointLightsUniform, 0);
+            }
+        }
+
+        /// <summary>
+        /// Set the spot lights
+        /// </summary>
+        public void SetSpotLights(List<SpotLight> spotLights, Vector3[] calculatedLocalPosition, Vector3[] calculatedLocalDirection)
+        {
+
+            if (spotLights != null && spotLights.Count > 0)
+            {
+
+                SetUniform(_gNumSpotLightsUniform, spotLights.Count);
+
+
+                for (int i = 0; i < spotLights.Count; i++)
+                {
+                    SpotLight light = spotLights[i];
+
+                    SetUniform(_spotLightUniforms[i].ColorUniform, light.Color.R, light.Color.G, light.Color.B);
+                    SetUniform(_spotLightUniforms[i].AmbientIntensityUniform, light.Intensity);
+                    SetUniform(_spotLightUniforms[i].DiffuseIntensityUniform, light.Intensity);
+                    SetUniform(_spotLightUniforms[i].PositionUniform, calculatedLocalPosition[i].X, calculatedLocalPosition[i].Y, calculatedLocalPosition[i].Z);
+                    SetUniform(_spotLightUniforms[i].AttenConstantUniform, light.AttenuationConstant);
+                    SetUniform(_spotLightUniforms[i].AttenLinearUniform, light.AttenuationLinear);
+                    SetUniform(_spotLightUniforms[i].AttenExpUniform, light.AttenuationExponent);
+                    SetUniform(_spotLightUniforms[i].DirectionUniform, calculatedLocalDirection[i].X, calculatedLocalDirection[i].Y, calculatedLocalDirection[i].Z);
+                    SetUniform(_spotLightUniforms[i].CutoffUniform, light.Cutoff);
+
+                }
+            }
+            else
+            {
+                //No spot lights...
+                SetUniform(_gNumSpotLightsUniform, 0);
             }
         }
 

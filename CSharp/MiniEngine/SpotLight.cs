@@ -7,18 +7,11 @@ using System.Threading.Tasks;
 namespace MiniEngine
 {
     /// <summary>
-    /// Directional light
+    /// A Spotlight
     /// </summary>
-    public class DirectionalLight: WorldTransform
+    public class SpotLight: WorldTransform
     {
-        /// <summary>
-        /// Color of the light
-        /// </summary>
         public Color3 Color = Color3.White;
-
-        /// <summary>
-        /// Intensity of the light
-        /// </summary>
         public float Intensity = 1f;
 
         public float AttenuationConstant = 1f;
@@ -26,5 +19,8 @@ namespace MiniEngine
         public float AttenuationLinear = 0.2f;
 
         public float AttenuationExponent = 0f;
+
+        public float Cutoff = 20.0f;
+
     }
 }

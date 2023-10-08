@@ -18,7 +18,7 @@ namespace MiniEngine
 
         public Color3 DiffuseColor = Color3.White;
         public float DiffuseIntensity = 0f;
-        public Vector3 DiffuseDirection = Vector3.Down;
+        //public Vector3 DiffuseDirection = Vector3.Down;
         public Vector3 CalculatedDiffuseDirection = Vector3.Down;
 
         /// <summary>
@@ -29,33 +29,28 @@ namespace MiniEngine
         /// <summary>
         /// Point lights
         /// </summary>
-        public List<PointLight> PointLights = null;
+        public List<PointLight> PointLights = new List<PointLight>(Renderer.MAX_POINT_LIGHTS);
+
+        /// <summary>
+        /// Spot lights
+        /// </summary>
+        public List<SpotLight> SpotLights = new List<SpotLight>(Renderer.MAX_POINT_LIGHTS);
 
         /// <summary>
         /// Position of the point light in reference to the current mesh
         /// </summary>
         public Vector3[] PointLightsCalulcatedLocalPositions = new Vector3[Renderer.MAX_POINT_LIGHTS];
 
-
-
+        /// <summary>
+        /// Position of the spot light in reference to the current mesh
+        /// </summary>
+        public Vector3[] SpotLightsCalulcatedLocalPositions = new Vector3[Renderer.MAX_POINT_LIGHTS];
 
         /// <summary>
-        /// Calculate diffuse ligth direction from world matrix
+        /// Direction of the spot light in reference to the current mesh
         /// </summary>
-        /// <param name="worldMatrix"></param>
-        public void CalculateDiffuseDirection(ref Matrix4 worldMatrix)
-        {
-            // Inverse local-to-world transformation using transpose
-            // (assuming uniform scaling)
-            Matrix3 WorldToLocal = worldMatrix;
+        public Vector3[] SpotLightsCalulcatedLocalDirections = new Vector3[Renderer.MAX_POINT_LIGHTS];
 
-            WorldToLocal.Transpose();
-
-            CalculatedDiffuseDirection = WorldToLocal * this.DiffuseDirection;
-
-            CalculatedDiffuseDirection.Normalize();
-
-        }
 
     }
 }

@@ -18,6 +18,11 @@ namespace MiniEngine
         public const int MAX_POINT_LIGHTS = 2;
 
         /// <summary>
+        /// The maximum number of spot lights
+        /// </summary>
+        public const int MAX_SPOT_LIGHTS = 2;
+
+        /// <summary>
         /// Context
         /// </summary>
         private Context _context;
@@ -32,12 +37,6 @@ namespace MiniEngine
         /// </summary>
         private List<Mesh> _meshes = new List<Mesh>();
 
-        /// <summary>
-        /// Point lights
-        /// </summary>
-        private List<PointLight> _pointLights = new List<PointLight>();
-
-        
         /// <summary>
         /// Directional light
         /// </summary>
@@ -81,26 +80,49 @@ namespace MiniEngine
         /// <summary>
         /// Add a mesh to render
         /// </summary>
-        public Mesh AddMesh(Mesh mesh)
+        public void Add(Mesh mesh)
         {
             _meshes.Add(mesh);
-            return mesh;
+        }
+
+        /// <summary>
+        /// Remove a mesh
+        /// </summary>
+        public void Remove(Mesh mesh)
+        {
+            _meshes.Remove(mesh);
         }
 
         /// <summary>
         /// Add a point light to render
         /// </summary>
-        public void AddPointLight(PointLight pointLight)
+        public void Add(PointLight pointLight)
         {
-            _pointLights.Add(pointLight);
+            _renderingContext.PointLights.Add(pointLight);
         }
 
         /// <summary>
         /// Remove a point light to render
         /// </summary>
-        public void RemovePointLight(PointLight pointLight)
+        public void Remove(PointLight pointLight)
         {
-            _pointLights.Remove(pointLight);
+            _renderingContext.PointLights.Remove(pointLight);
+        }
+
+        /// <summary>
+        /// Add a spot light to render
+        /// </summary>
+        public void Add(SpotLight SpotLight)
+        {
+            _renderingContext.SpotLights.Add(SpotLight);
+        }
+
+        /// <summary>
+        /// Remove a spot light to render
+        /// </summary>
+        public void Remove(SpotLight SpotLight)
+        {
+            _renderingContext.SpotLights.Remove(SpotLight);
         }
 
 
@@ -143,8 +165,7 @@ namespace MiniEngine
                 {
                     _renderingContext.DiffuseColor = DirectionalLight.Color;
                     _renderingContext.DiffuseIntensity = DirectionalLight.Intensity;
-                    _renderingContext.DiffuseDirection = DirectionalLight.Backward;
-                    _renderingContext.CalculateDiffuseDirection(ref worldMatrix);
+                    _renderingContext.CalculatedDiffuseDirection = Vector3.CalculateLocalDirection(ref worldMatrix, DirectionalLight.Forward);
                 }
                 else
                 {
@@ -154,10 +175,18 @@ namespace MiniEngine
 
 
                 //Calculate the point lights in reference to the mesh
-                _renderingContext.PointLights = _pointLights;
-                for (int i = 0; i < _pointLights.Count; i++)
-                    _renderingContext.PointLightsCalulcatedLocalPositions[i] = mesh.GetLocalPosition(ref _pointLights[i].Location);
-                
+                for (int i = 0; i < _renderingContext.PointLights.Count; i++)
+                    _renderingContext.PointLightsCalulcatedLocalPositions[i] = mesh.GetLocalPosition(ref _renderingContext.PointLights[i].Location);
+
+                //Calculate the spot lights in reference to the mesh
+                for (int i = 0; i < _renderingContext.SpotLights.Count; i++)
+                {
+                    _renderingContext.SpotLightsCalulcatedLocalPositions[i] = mesh.GetLocalPosition(ref _renderingContext.SpotLights[i].Location);
+
+                    _renderingContext.SpotLightsCalulcatedLocalDirections[i] = Vector3.CalculateLocalDirection(ref worldMatrix, _renderingContext.SpotLights[i].Backward);
+
+                }
+
 
                 //And we render the mesh...
                 mesh.Render(_renderingContext);
@@ -165,8 +194,10 @@ namespace MiniEngine
             }
 
 
-        }
 
+
+
+        }
 
     }
 }

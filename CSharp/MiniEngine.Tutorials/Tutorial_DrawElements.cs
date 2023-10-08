@@ -132,7 +132,7 @@ namespace MiniEngine.Tutorials
             //                                     0.0f, 0.0f, 1.0f, 0.0f,
             //                                     0.0f, 0.0f, 0.0f, 1.0f);
 
-            Matrix4 rotationMatrix = Matrix4.CreateRotationMatrixY(rotation);
+            Matrix4 rotationMatrix = Matrix4.CreateRotationMatrixYaw(rotation);
             Matrix4 scaleMatrix = Matrix4.CreateScaleMatrix(scale, scale, scale);
             Matrix4 translationMatrix = Matrix4.CreateTranslationMatrix(translation, translation, 2.0f);
             Matrix4 projectionMatrix = Matrix4.CreateProjection(90.0f, Program.WIDTH, Program.HEIGHT, 1f, 100f);

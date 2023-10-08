@@ -10,14 +10,17 @@ using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Tutorials
 {
-    internal unsafe class Tutorial_PointLights : IDisposable
+    internal unsafe class Tutorial_SpotLights : IDisposable
     {
        
         private Mesh _currentMesh;
+        private SpotLight _spotLight;
 
         private Context Context = Context.Current;
         private Renderer Renderer = Context.Current.Renderer;
         private Camera Camera = Context.Current.Renderer.Camera;
+
+
 
         public void Init()
         {
@@ -26,22 +29,22 @@ namespace MiniEngine.Tutorials
 
             Renderer.Camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
 
-            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
-            {
-                Scale = 6f,
-                ResetMaterialAmbientColor = true
-            });
-            _currentMesh.Location = new Vector3(0f, 0f, 0.0f);
-            Renderer.Add(_currentMesh);
+            //_currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
+            //{
+            //    Scale = 6f,
+            //    ResetMaterialAmbientColor = true
+            //});
+            //_currentMesh.Location = new Vector3(0f, 0f, 0.0f);
+            //Renderer.Add(_currentMesh);
 
 
-            Mesh mesh2 = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
-            {
-                Scale = 3f,
-                ResetMaterialAmbientColor = true
-            });
-            mesh2.Location = new Vector3(2f, 2f, 4f);
-            Renderer.Add(mesh2);
+            //Mesh mesh2 = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
+            //{
+            //    Scale = 3f,
+            //    ResetMaterialAmbientColor = true
+            //});
+            //mesh2.Location = new Vector3(2f, 2f, 4f);
+            //Renderer.Add(mesh2);
 
 
             Renderer.AmbientLight.Intensity = 0.1f;
@@ -51,11 +54,14 @@ namespace MiniEngine.Tutorials
             //    Rotation = Rotator3.FromDegrees(45, 90, 0)
             //};
 
-            Renderer.Add(new PointLight()
+
+            _spotLight = new SpotLight()
             {
                 Location = new Vector3(-8.0f, 0f, 0f),
+                Rotation = Rotator3.FromDegrees(90, 0, 0),
                 AttenuationLinear = 0.2f
-            });
+            };
+            Renderer.Add(_spotLight);
 
 
             var terrainMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\box_terrain.obj", new MeshImportationParameters()
@@ -64,7 +70,7 @@ namespace MiniEngine.Tutorials
                 InverseFaces = false,
                 SmoothNormals = false
             });
-            terrainMesh.Location = new Vector3(0f, -1f, 0.0f);
+            terrainMesh.Location = new Vector3(0f, -4f, 0.0f);
             Renderer.Add(terrainMesh);
         }
 
@@ -99,9 +105,9 @@ namespace MiniEngine.Tutorials
                 Camera.RotateYaw(mouseMovement.X * 0.1f);
             }
 
-
+            //_spotLight.RotateY(0.01f);
             //_currentMesh.RotateY(0.01f);
-                        
+
         }
 
 

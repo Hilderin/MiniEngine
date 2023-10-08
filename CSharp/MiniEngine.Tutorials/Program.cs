@@ -20,7 +20,7 @@ namespace MiniEngine.Tutorials
 
                 using (Context context = new Context())
                 {
-                    var t = new Tutorial_PointLights();
+                    var t = new Tutorial_DirectionalLight();
 
                     context.OpenWindow(WIDTH, HEIGHT, TITLE)
                            .CenterOnScreen()

@@ -17,14 +17,9 @@ namespace MiniEngine
         public Color3 Color = Color3.White;
 
         /// <summary>
-        /// Ambient intensity of the light
+        /// Intensity of the light
         /// </summary>
-        public float AmbientIntensity = 0.3f;
-
-        /// <summary>
-        /// Diffuse intensity of the light
-        /// </summary>
-        public float DiffuseIntensity = 1f;
+        public float Intensity = 1f;
 
         public float AttenuationConstant = 1f;
 

@@ -214,7 +214,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a rotation matrix on X
         /// </summary>
-        public static Matrix4 CreateRotationMatrixX(float angleRad)
+        public static Matrix4 CreateRotationMatrixPitch(float angleRad)
         {
             Matrix4 newMatrix = new Matrix4();
 
@@ -235,7 +235,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a rotation matrix on Y
         /// </summary>
-        public static Matrix4 CreateRotationMatrixY(float angleRad)
+        public static Matrix4 CreateRotationMatrixYaw(float angleRad)
         {
 
             Matrix4 newMatrix = new Matrix4();
@@ -257,7 +257,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a rotation matrix on Z
         /// </summary>
-        public static Matrix4 CreateRotationMatrixZ(float angleRad)
+        public static Matrix4 CreateRotationMatrixRoll(float angleRad)
         {
             Matrix4 newMatrix = new Matrix4();
 
@@ -277,9 +277,9 @@ namespace MiniEngine
         /// <summary>
         /// Create a rotation matrix on X, Y, Z
         /// </summary>
-        public static Matrix4 CreateRotationMatrixXYZ(float angleRadX, float angleRadY, float angleRadZ)
+        public static Matrix4 CreateRotationMatrixPitchYawRoll(float angleRadPitch, float angleRadYaw, float angleRadRoll)
         {
-            return CreateRotationMatrixX(angleRadX) * CreateRotationMatrixY(angleRadY) * CreateRotationMatrixZ(angleRadZ);
+            return CreateRotationMatrixPitch(angleRadPitch) * CreateRotationMatrixYaw(angleRadYaw) * CreateRotationMatrixRoll(angleRadRoll);
         }
 
         /// <summary>
@@ -366,6 +366,7 @@ namespace MiniEngine
 
             result = ret;
         }
+
 
         #endregion
 

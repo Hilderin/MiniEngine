@@ -85,8 +85,8 @@ namespace MiniEngine.Tutorials
             if (Context.Current.Input.IsJustMouseMoved)
             {
                 Vector2 mouseMovement = Context.Current.Input.MouseMovement;
-                _camera.RotateX(mouseMovement.Y * 0.1f);
-                _camera.RotateY(mouseMovement.X * 0.1f);
+                _camera.RotatePitch(mouseMovement.Y * -0.1f);
+                _camera.RotateYaw(mouseMovement.X * 0.1f);
             }
             //_camera.RotateY(0.01f);
             //Debug.Print(Math.RadToDeg(_camera.Rotation.Y).ToString() + " => " + _camera.Forward.ToString());

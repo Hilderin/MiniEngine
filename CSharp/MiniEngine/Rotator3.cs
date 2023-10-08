@@ -14,9 +14,6 @@ namespace MiniEngine
 
         // These are NOT readonly, for weird performance reasons -flibit
         private static Rotator3 _zero = new Rotator3(0f, 0f, 0f);
-        private static Rotator3 _degree90X = new Rotator3(Math.DegToRad(90f), 0f, 0f);
-        private static Rotator3 _degree90Y = new Rotator3(0f, Math.DegToRad(90f), 0f);
-        private static Rotator3 _degree90Z = new Rotator3(0f, 0f, Math.DegToRad(90f));
 
         #endregion
 
@@ -24,44 +21,50 @@ namespace MiniEngine
 
         /// <summary>
         /// Rotation on X in radians
+        /// Negative angles = downward Pitch rotations. (Down)
+        /// Positive angles = upward Pitch rotations. (Up)
         /// </summary>
-        public float X;
+        public float Pitch;
 
         /// <summary>
         /// Rotation on Y in radians
+        /// Negative angles = leftward Yaw (Left)
+        /// Positive angles = rightward Yaw (Right)
         /// </summary>
-        public float Y;
+        public float Yaw;
 
         /// <summary>
         /// Rotation on Z in radians
+        /// Negative angles = counterclockwise Roll
+        /// Positive angles = clockwise Roll
         /// </summary>
-        public float Z;
+        public float Roll;
 
         /// <summary>
         /// Rotation on X in degrees
         /// </summary>
-        public float XDeg
+        public float PitchDegree
         {
-            get { return Math.RadToDeg(X); }
-            set { X = Math.RadToDeg(value); }
+            get { return Math.RadToDeg(Pitch); }
+            set { Pitch = Math.RadToDeg(value); }
         }
 
         /// <summary>
         /// Rotation on Y in degrees
         /// </summary>
-        public float YDeg
+        public float YawDeg
         {
-            get { return Math.RadToDeg(Y); }
-            set { Y = Math.RadToDeg(value); }
+            get { return Math.RadToDeg(Yaw); }
+            set { Yaw = Math.RadToDeg(value); }
         }
 
         /// <summarZ>
         /// Rotation on Z in degrees
         /// </summarZ>
-        public float ZDeg
+        public float RollDeg
         {
-            get { return Math.RadToDeg(Z); }
-            set { Z = Math.RadToDeg(value); }
+            get { return Math.RadToDeg(Roll); }
+            set { Roll = Math.RadToDeg(value); }
         }
 
         #endregion
@@ -81,39 +84,6 @@ namespace MiniEngine
             }
         }
 
-        /// <summary>
-        /// Returns a <see cref="Rotator3"/> with components 90°, 0, 0.
-        /// </summary>
-        public static Rotator3 Degree90X
-        {
-            get
-            {
-                return _degree90X;
-            }
-        }
-
-        /// <summary>
-        /// Returns a <see cref="Rotator3"/> with components 0, 90°, 0.
-        /// </summary>
-        public static Rotator3 Degree90Y
-        {
-            get
-            {
-                return _degree90Y;
-            }
-        }
-
-        /// <summary>
-        /// Returns a <see cref="Rotator3"/> with components 0, 0, 90°
-        /// </summary>
-        public static Rotator3 Degree90Z
-        {
-            get
-            {
-                return _degree90Z;
-            }
-        }
-
         #endregion
 
         #region Constructors
@@ -121,14 +91,14 @@ namespace MiniEngine
         /// <summary>
         /// Constructs a 3d rotator with X, Y, Z in radians
         /// </summary>
-        /// <param name="x">The x coordinate in 3d-space.</param>
-        /// <param name="y">The y coordinate in 3d-space.</param>
-        /// <param name="z">The z coordinate in 3d-space.</param>
-        public Rotator3(float x, float y, float z)
+        /// <param name="pitch">The pitch coordinate in 3d-space.</param>
+        /// <param name="yaw">The yaw coordinate in 3d-space.</param>
+        /// <param name="roll">The roll coordinate in 3d-space.</param>
+        public Rotator3(float pitch, float yaw, float roll)
         {
-            this.X = x;
-            this.Y = y;
-            this.Z = z;
+            this.Pitch = pitch;
+            this.Yaw = yaw;
+            this.Roll = roll;
         }
 
 
@@ -143,13 +113,13 @@ namespace MiniEngine
 		public void Normalize()
         {
             float factor = 1.0f / Math.Sqrt(
-                (X * X) +
-                (Y * Y) +
-                (Z * Z)
+                (Pitch * Pitch) +
+                (Yaw * Yaw) +
+                (Roll * Roll)
             );
-            X *= factor;
-            Y *= factor;
-            Z *= factor;
+            Pitch *= factor;
+            Yaw *= factor;
+            Roll *= factor;
         }
 
         /// <summary>
@@ -157,9 +127,9 @@ namespace MiniEngine
         /// </summary>
         public void Invert()
         {
-            this.X = -this.X;
-            this.Y = -this.Y;
-            this.Z = -this.Z;
+            this.Pitch = -this.Pitch;
+            this.Yaw = -this.Yaw;
+            this.Roll = -this.Roll;
         }
 
         /// <summary>
@@ -176,11 +146,11 @@ namespace MiniEngine
                 switch (index)
                 {
                     case 0:
-                        return X;
+                        return Pitch;
                     case 1:
-                        return Y;
+                        return Yaw;
                     case 2:
-                        return Z;
+                        return Roll;
                     default:
                         return 0;
                 }
@@ -190,13 +160,13 @@ namespace MiniEngine
                 switch (index)
                 {
                     case 0:
-                        X = value;
+                        Pitch = value;
                         break;
                     case 1:
-                        Y = value;
+                        Yaw = value;
                         break;
                     case 2:
-                        Z = value;
+                        Roll = value;
                         break;
                 }
             }
@@ -207,7 +177,7 @@ namespace MiniEngine
         /// </summary>
         public override string ToString()
         {
-            return $"{XDeg.ToString("0.###")}°, {YDeg.ToString("0.###")}°, {ZDeg.ToString("0.###")}° ({X}, {Y}, {Z})";
+            return $"{PitchDegree.ToString("0.###")}°, {YawDeg.ToString("0.###")}°, {RollDeg.ToString("0.###")}° ({Pitch}, {Yaw}, {Roll})";
         }
 
 
@@ -228,9 +198,9 @@ namespace MiniEngine
         /// <returns><c>true</c> if the instances are equal; <c>false</c> otherwise.</returns>
         public bool Equals(Rotator3 other)
         {
-            return (X == other.X &&
-                    Y == other.Y &&
-                    Z == other.Z);
+            return (Pitch == other.Pitch &&
+                    Yaw == other.Yaw &&
+                    Roll == other.Roll);
         }
 
         /// <summary>
@@ -239,7 +209,7 @@ namespace MiniEngine
         /// <returns>Hash code of this <see cref="Rotator3"/>.</returns>
         public override int GetHashCode()
         {
-            return X.GetHashCode() + Y.GetHashCode() + Z.GetHashCode();
+            return Pitch.GetHashCode() + Yaw.GetHashCode() + Roll.GetHashCode();
         }
 
 
@@ -268,9 +238,9 @@ namespace MiniEngine
         /// <returns><c>true</c> if the instances are equal; <c>false</c> otherwise.</returns>
         public static bool operator ==(Rotator3 value1, Rotator3 value2)
         {
-            return (value1.X == value2.X &&
-                    value1.Y == value2.Y &&
-                    value1.Z == value2.Z);
+            return (value1.Pitch == value2.Pitch &&
+                    value1.Yaw == value2.Yaw &&
+                    value1.Roll == value2.Roll);
         }
 
         /// <summary>
@@ -292,9 +262,9 @@ namespace MiniEngine
         /// <returns>Sum of the vectors.</returns>
         public static Rotator3 operator +(Rotator3 value1, Rotator3 value2)
         {
-            value1.X += value2.X;
-            value1.Y += value2.Y;
-            value1.Z += value2.Z;
+            value1.Pitch += value2.Pitch;
+            value1.Yaw += value2.Yaw;
+            value1.Roll += value2.Roll;
             return value1;
         }
 
@@ -305,7 +275,7 @@ namespace MiniEngine
         /// <returns>Result of the inversion.</returns>
         public static Rotator3 operator -(Rotator3 value)
         {
-            value = new Rotator3(-value.X, -value.Y, -value.Z);
+            value = new Rotator3(-value.Pitch, -value.Yaw, -value.Roll);
             return value;
         }
 
@@ -317,9 +287,9 @@ namespace MiniEngine
         /// <returns>Result of the vector subtraction.</returns>
         public static Rotator3 operator -(Rotator3 value1, Rotator3 value2)
         {
-            value1.X -= value2.X;
-            value1.Y -= value2.Y;
-            value1.Z -= value2.Z;
+            value1.Pitch -= value2.Pitch;
+            value1.Yaw -= value2.Yaw;
+            value1.Roll -= value2.Roll;
             return value1;
         }
 
@@ -331,9 +301,9 @@ namespace MiniEngine
         /// <returns>Result of the vector multiplication.</returns>
         public static Rotator3 operator *(Rotator3 value1, Rotator3 value2)
         {
-            value1.X *= value2.X;
-            value1.Y *= value2.Y;
-            value1.Z *= value2.Z;
+            value1.Pitch *= value2.Pitch;
+            value1.Yaw *= value2.Yaw;
+            value1.Roll *= value2.Roll;
             return value1;
         }
 
@@ -345,9 +315,9 @@ namespace MiniEngine
         /// <returns>Result of the vector multiplication with a scalar.</returns>
         public static Rotator3 operator *(Rotator3 value, float scaleFactor)
         {
-            value.X *= scaleFactor;
-            value.Y *= scaleFactor;
-            value.Z *= scaleFactor;
+            value.Pitch *= scaleFactor;
+            value.Yaw *= scaleFactor;
+            value.Roll *= scaleFactor;
             return value;
         }
 
@@ -359,9 +329,9 @@ namespace MiniEngine
         /// <returns>Result of the vector multiplication with a scalar.</returns>
         public static Rotator3 operator *(float scaleFactor, Rotator3 value)
         {
-            value.X *= scaleFactor;
-            value.Y *= scaleFactor;
-            value.Z *= scaleFactor;
+            value.Pitch *= scaleFactor;
+            value.Yaw *= scaleFactor;
+            value.Roll *= scaleFactor;
             return value;
         }
 
@@ -373,9 +343,9 @@ namespace MiniEngine
         /// <returns>The result of dividing the vectors.</returns>
         public static Rotator3 operator /(Rotator3 value1, Rotator3 value2)
         {
-            value1.X /= value2.X;
-            value1.Y /= value2.Y;
-            value1.Z /= value2.Z;
+            value1.Pitch /= value2.Pitch;
+            value1.Yaw /= value2.Yaw;
+            value1.Roll /= value2.Roll;
             return value1;
         }
 
@@ -388,9 +358,9 @@ namespace MiniEngine
         public static Rotator3 operator /(Rotator3 value, float divider)
         {
             float factor = 1 / divider;
-            value.X *= factor;
-            value.Y *= factor;
-            value.Z *= factor;
+            value.Pitch *= factor;
+            value.Yaw *= factor;
+            value.Roll *= factor;
             return value;
         }
 

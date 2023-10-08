@@ -34,7 +34,7 @@ namespace MiniEngine
         {
             get
             {
-                var q = Quaternion.CreateFromYawPitchRoll(Rotation.Y, Rotation.X, Rotation.Z);
+                var q = Quaternion.CreateFromYawPitchRoll(Rotation.Yaw, -Rotation.Pitch, Rotation.Roll);
                 return Vector3.Transform(Vector3.Forward, q);
             }
         }
@@ -63,34 +63,34 @@ namespace MiniEngine
         /// <summary>
         /// Rotate on X axis
         /// </summary>
-        public void RotateX(float angleRad)
+        public void RotatePitch(float angleRad)
         {
             if (angleRad == 0)
                 return;
 
-            Rotation.X += angleRad;
+            Rotation.Pitch += angleRad;
         }
 
         /// <summary>
         /// Rotate on Y axis
         /// </summary>
-        public void RotateY(float angleRad)
+        public void RotateYaw(float angleRad)
         {
             if (angleRad == 0)
                 return;
 
-            Rotation.Y += angleRad;
+            Rotation.Yaw += angleRad;
         }
 
         /// <summary>
         /// Rotate on Z axis
         /// </summary>
-        public void RotateZ(float angleRad)
+        public void RotateRoll(float angleRad)
         {
             if (angleRad == 0)
                 return;
 
-            Rotation.Z += angleRad;
+            Rotation.Roll += angleRad;
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace MiniEngine
         /// </summary>
         public Matrix4 GetRotationMatrix()
         {
-            return Matrix4.CreateRotationMatrixX(Rotation.X) * Matrix4.CreateRotationMatrixY(Rotation.Y) * Matrix4.CreateRotationMatrixZ(Rotation.Z);
+            return Matrix4.CreateRotationMatrixPitch(Rotation.Pitch) * Matrix4.CreateRotationMatrixYaw(Rotation.Yaw) * Matrix4.CreateRotationMatrixRoll(Rotation.Roll);
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace MiniEngine
         /// </summary>
         public Matrix4 GetReversedRotationMatrix()
         {
-            return Matrix4.CreateRotationMatrixXYZ(-Rotation.X, -Rotation.Y, -Rotation.Z);
+            return Matrix4.CreateRotationMatrixPitchYawRoll(-Rotation.Pitch, -Rotation.Yaw, -Rotation.Roll);
         }
 
 
