@@ -36,16 +36,27 @@ namespace MiniEngine.Tutorials
 
             _camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
 
-            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\box.obj", new MeshImportationParameters() { InverseFaces = true });
+            //_currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\box.obj", new MeshImportationParameters() 
+            //{ 
+            //    InverseFaces = true,
+            //    SmoothNormals = false
+            //});
+            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
+            {
+                Scale = 6f
+            });
 
 
             foreach (Material m in _currentMesh.Materials)
                 m.AmbientColor = Color3.White;
 
-            _renderingContext.AmbientIntensity = 0.8f;
+            _renderingContext.AmbientIntensity = 0.1f;
             _renderingContext.DiffuseColor = Color3.Red;
+            _renderingContext.DiffuseIntensity = 0.8f;
 
             _worldTransformDirectionalLight.RotateY(Math.DegToRad(90f));
+            _worldTransformDirectionalLight.RotateX(Math.DegToRad(10f));
+            _worldTransformDirectionalLight.RotateZ(Math.DegToRad(10f));
         }
 
 
@@ -100,7 +111,7 @@ namespace MiniEngine.Tutorials
 
             //rotation += deltaRotation;
 
-            //_worldTransformDirectionalLight.RotateY(0.1f);
+            _worldTransformDirectionalLight.RotateY(0.01f);
             
             _renderingContext.DiffuseDirection = _worldTransformDirectionalLight.Forward;
 
@@ -113,7 +124,7 @@ namespace MiniEngine.Tutorials
             WorldTransform worldTransform = new WorldTransform();
             worldTransform.Location = new Vector3(translation, translation, 2.0f);
             worldTransform.Scale = new Vector3(scale);
-            worldTransform.Rotation = new Vector3(0f, rotation, 0f);
+            worldTransform.Rotation = new Rotator3(0f, rotation, 0f);
 
             Matrix4 worldMatrix = worldTransform.GetMatrix();
 

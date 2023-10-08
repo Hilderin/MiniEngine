@@ -31,12 +31,18 @@ namespace MiniEngine.AssertManager
 
             using (AssimpContext context = new AssimpContext())
             {
-                PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.MakeLeftHanded;
+                PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.MakeLeftHanded;
                 if (!parameters.InverseFaces)
                     postProcessSteps = postProcessSteps | PostProcessSteps.FlipWindingOrder;
 
                 if (parameters.Scale != 1f)
                     _transformMatrix = Matrix3.FromScaling(new Vector3(parameters.Scale));
+
+                if (parameters.SmoothNormals)
+                    postProcessSteps |= PostProcessSteps.GenerateSmoothNormals;
+                else
+                    postProcessSteps |= PostProcessSteps.GenerateNormals;
+
                 //context.Scale = parameters.Scale;
 
 
@@ -54,9 +60,18 @@ namespace MiniEngine.AssertManager
                 for (int i = 0; i < scene.MaterialCount; i++)
                 {
                     LoadMaterial(scene.Materials[i], i);
+
                 }
 
 
+            }
+
+
+            //Resetting ambient color on mats if asked...
+            if (parameters.ResetMaterialAmbientColor)
+            {
+                foreach (Material m in _mesh.Materials)
+                    m.AmbientColor = Color3.White;
             }
 
             return _mesh;

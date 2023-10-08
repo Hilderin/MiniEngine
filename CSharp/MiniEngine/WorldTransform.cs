@@ -20,17 +20,24 @@ namespace MiniEngine
         /// <summary>
         /// Scale in the world
         /// </summary>
-        public Vector3 Scale;
+        public Vector3 Scale = Vector3.One;
 
         /// <summary>
         /// Rotation in the world
         /// </summary>
-        public Vector3 Rotation;
+        public Rotator3 Rotation;
 
         /// <summary>
         /// Get th forward vector
         /// </summary>
-        public Vector3 Forward = Vector3.Forward;       //Default -Z (0, 0, -1)
+        public Vector3 Forward
+        {
+            get
+            {
+                var q = Quaternion.CreateFromYawPitchRoll(Rotation.Y, Rotation.X, Rotation.Z);
+                return Vector3.Transform(Vector3.Forward, q);
+            }
+        }
 
         /// <summary>
         /// Get the left vector
@@ -62,22 +69,6 @@ namespace MiniEngine
                 return;
 
             Rotation.X += angleRad;
-            var q = Quaternion.CreateFromYawPitchRoll(Rotation.Y, Rotation.X, Rotation.Z);
-            //var q = Quaternion.CreateFromAxisAngle(Vector3.Up, -Rotation.Y);      //Adding Pi/2 because angle 0 = normal but the up vector is up, we need to compensate.
-            Forward = Vector3.Transform(Vector3.Forward, q);
-            //Forward.Transform2(q);
-            //Forward.Normalize();
-
-            //Vector3 v = Vector3.Right;
-            //v.RotateY(angleRad);
-
-            //var q = Quaternion.CreateFromAxisAngle(Vector3.Up, angleRad);
-            //Vector3 v = Vector3.Right;
-            //var v2 = Vector3.Transform(v, q);
-            //v2.Normalize();
-
-            //v.Transform(q);
-            //Forward.Normalize();
         }
 
         /// <summary>
@@ -89,24 +80,85 @@ namespace MiniEngine
                 return;
 
             Rotation.Y += angleRad;
-            var q = Quaternion.CreateFromYawPitchRoll(Rotation.Y, Rotation.X, Rotation.Z);
-            //var q = Quaternion.CreateFromAxisAngle(Vector3.Up, -Rotation.Y);      //Adding Pi/2 because angle 0 = normal but the up vector is up, we need to compensate.
-            Forward = Vector3.Transform(Vector3.Forward, q);
-            //Forward.Transform2(q);
-            //Forward.Normalize();
-
-            //Vector3 v = Vector3.Right;
-            //v.RotateY(angleRad);
-
-            //var q = Quaternion.CreateFromAxisAngle(Vector3.Up, angleRad);
-            //Vector3 v = Vector3.Right;
-            //var v2 = Vector3.Transform(v, q);
-            //v2.Normalize();
-
-            //v.Transform(q);
-            //Forward.Normalize();
         }
 
+        /// <summary>
+        /// Rotate on Z axis
+        /// </summary>
+        public void RotateZ(float angleRad)
+        {
+            if (angleRad == 0)
+                return;
+
+            Rotation.Z += angleRad;
+        }
+
+        /// <summary>
+        /// Move forward considering the rotation of the world transform
+        /// </summary>
+        public void MoveForward(float distance)
+        {
+            this.Location += this.Forward * -distance;
+        }
+
+        /// <summary>
+        /// Move forward considering the rotation of the world transform
+        /// Z < 0 = Forward
+        /// Z < 0 = Backward
+        /// X > 0 = Right
+        /// X < 0 = Left
+        /// Y > 0 = Up
+        /// Y < 0 = Down
+        /// </summary>
+        public void MoveInDirections(float distance, Vector3 directions)
+        {
+            if (!Math.IsZero(directions.Z))
+                this.Location += this.Forward * directions.Z * distance;
+            if (!Math.IsZero(directions.X))
+                this.Location += this.Left * directions.X * -distance;
+            if (!Math.IsZero(directions.Y))
+                this.Location += this.Up * directions.Y * distance;
+            
+        }
+
+        /// <summary>
+        /// Move backward considering the rotation of the world transform
+        /// </summary>
+        public void MoveBackward(float distance)
+        {
+            this.Location += this.Forward * distance;
+        }
+
+        /// <summary>
+        /// Move left considering the rotation of the world transform
+        /// </summary>
+        public void MoveLeft(float distance)
+        {
+            this.Location += this.Left * -distance;
+        }
+
+        /// <summary>
+        /// Move left considering the rotation of the world transform
+        /// </summary>
+        public void MoveRight(float distance)
+        {
+            this.Location += this.Left * distance;
+        }
+
+        ///// <summary>
+        ///// Move in 4 directions
+        ///// </summary>
+        //public void Move(float distance, bool forward, bool backword, bool left, bool right)
+        //{
+        //    if (forward)
+        //        MoveForward(distance);
+        //    if (backword)
+        //        MoveBackward(distance);
+        //    if (left)
+        //        MoveLeft(distance);
+        //    if (right)
+        //        MoveRight(distance);
+        //}
 
 
         /// <summary>
@@ -162,6 +214,26 @@ namespace MiniEngine
             return Matrix4.CreateRotationMatrixXYZ(-Rotation.X, -Rotation.Y, -Rotation.Z);
         }
 
+
+        /// <summary>
+        /// Calculate the location position from a world transform
+        /// </summary>
+        public Vector3 GetLocalPosition(ref Vector3 location)
+        {
+
+            Matrix4 cameraToLocalTranslation = GetReversedTranslationMatrix();
+
+            Matrix4 cameraToLocalRotation = GetReversedRotationMatrix();
+
+            Matrix4 cameraToLocalTransformation = cameraToLocalRotation * cameraToLocalTranslation;
+
+            Vector4 cameraWorldPos = new Vector4(location, 1.0f);
+
+            Vector4 CameraLocalPos = cameraToLocalTransformation * cameraWorldPos;
+
+            return CameraLocalPos;
+
+        }
 
 
     }

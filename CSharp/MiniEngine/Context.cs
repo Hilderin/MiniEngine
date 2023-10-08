@@ -169,9 +169,15 @@ namespace MiniEngine
 
                 GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
-                //Exécute rendering...
+                //Custom run code...
                 if (runHandler != null)
                     runHandler();
+
+                if (this._window.IsClosing)
+                    break;
+
+                //Rendering...
+                Renderer.Render();
 
                 //Swapping buffer...
                 this._window.SwapBuffers();

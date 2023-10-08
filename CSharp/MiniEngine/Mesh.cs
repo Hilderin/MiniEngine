@@ -7,7 +7,7 @@ namespace MiniEngine
     /// <summary>
     /// Mesh
     /// </summary>
-    public unsafe class Mesh: IDisposable
+    public unsafe class Mesh: WorldTransform, IDisposable
     {
         private const int SHADER_POSITION_LOCATION = 0;
         private const int SHADER_TEX_COORD_LOCATION = 1;
@@ -323,6 +323,8 @@ namespace MiniEngine
 
                 Shader.SetMaterialSpecularColor(ref mat.SpecularColor);
                 Shader.SetCameraLocalPos(ref renderingContext.CameraLocalPosition);
+
+                Shader.SetPointLights(renderingContext.PointLights, renderingContext.PointLightsCalulcatedLocalPositions);
 
 
                 GL.glDrawElementsBaseVertex(GL.GL_TRIANGLES,

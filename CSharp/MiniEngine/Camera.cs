@@ -80,25 +80,25 @@ namespace MiniEngine
         }
 
 
-        /// <summary>
-        /// Calculate the location position from a world transform
-        /// </summary>
-        public Vector3 GetLocalPositionForWorldTransform(WorldTransform worldTransform)
-        {
+        ///// <summary>
+        ///// Calculate the location position from a world transform
+        ///// </summary>
+        //public Vector3 GetLocalPositionForWorldTransform(WorldTransform worldTransform)
+        //{
 
-            Matrix4 cameraToLocalTranslation = worldTransform.GetReversedTranslationMatrix();
+        //    Matrix4 cameraToLocalTranslation = worldTransform.GetReversedTranslationMatrix();
 
-            Matrix4 cameraToLocalRotation = worldTransform.GetReversedRotationMatrix();
+        //    Matrix4 cameraToLocalRotation = worldTransform.GetReversedRotationMatrix();
 
-            Matrix4 cameraToLocalTransformation = cameraToLocalRotation * cameraToLocalTranslation;
+        //    Matrix4 cameraToLocalTransformation = cameraToLocalRotation * cameraToLocalTranslation;
 
-            Vector4 cameraWorldPos = new Vector4(this.Location, 1.0f);
+        //    Vector4 cameraWorldPos = new Vector4(this.Location, 1.0f);
 
-            Vector4 CameraLocalPos = cameraToLocalTransformation * cameraWorldPos;
+        //    Vector4 CameraLocalPos = cameraToLocalTransformation * cameraWorldPos;
 
-            return CameraLocalPos;
+        //    return CameraLocalPos;
 
-        }
+        //}
 
     }
 }

@@ -31,5 +31,15 @@ namespace MiniEngine.AssertManager
         /// </summary>
         public float Scale = 1f;
 
+        /// <summary>
+        /// Smooth normals
+        /// </summary>
+        public bool SmoothNormals = true;
+
+        /// <summary>
+        /// Reset de material ambient color on materials
+        /// </summary>
+        public bool ResetMaterialAmbientColor = false;
+
     }
 }

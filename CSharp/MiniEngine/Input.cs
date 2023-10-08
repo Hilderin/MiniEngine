@@ -97,6 +97,28 @@ namespace MiniEngine
                 return false;
         }
 
+        /// <summary>
+        /// Get movement vector
+        /// </summary>
+        public Vector3 GetMovementVector(Keys forwardKey, Keys backwardKey, Keys leftKey, Keys rightKey, Keys upKey = Keys.None, Keys downKey = Keys.None)
+        {
+            Vector3 movement = Vector3.Zero;
+
+            if (IsKeyPressed(forwardKey))
+                movement += Vector3.Forward;
+            if (IsKeyPressed(backwardKey))
+                movement += Vector3.Backward;
+            if (IsKeyPressed(leftKey))
+                movement += Vector3.Left;
+            if (IsKeyPressed(rightKey))
+                movement += Vector3.Right;
+            if (IsKeyPressed(upKey))
+                movement += Vector3.Up;
+            if (IsKeyPressed(downKey))
+                movement += Vector3.Down;
+
+            return movement;
+        }
 
         /// <summary>
         /// Indicate a new frame

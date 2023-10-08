@@ -46,6 +46,7 @@ namespace MiniEngine.Tutorials
 
             _renderingContext.AmbientIntensity = 0.8f;
             _renderingContext.DiffuseColor = Color3.White;
+            _renderingContext.DiffuseIntensity = 1.0f;
         }
 
 
@@ -106,20 +107,20 @@ namespace MiniEngine.Tutorials
 
 
             WorldTransform worldTransform = new WorldTransform();
-            worldTransform.Location = new Vector3(translation, translation, 2.0f);
+            worldTransform.Location = new Vector3(translation, translation, 6.0f);
             worldTransform.Scale = new Vector3(scale);
-            worldTransform.Rotation = new Vector3(0f, rotation, 0f);
+            worldTransform.Rotation = new Rotator3(0f, rotation, 0f);
 
             Matrix4 worldMatrix = worldTransform.GetMatrix();
 
-            //_renderingContext.AmbiantColor = new Color3(1f, 0, 1f);
+            //_renderingContext.AmbientColor = new Color3(1f, 0, 1f);
             //_renderingContext.AmbientIntensity = 2f;
             _renderingContext.WVPMatrix = _camera.GetMatrix() * worldMatrix;
 
             
-            _renderingContext.DiffuseDirection = new Vector3(1.0f, 1.0f, 0f);
+            _renderingContext.DiffuseDirection = new Vector3(1.0f, 0.0f, 0f);
             _renderingContext.CalculateDiffuseDirection(ref worldMatrix);
-            _renderingContext.CameraLocalPosition = _camera.GetLocalPositionForWorldTransform(worldTransform);
+            _renderingContext.CameraLocalPosition = worldTransform.GetLocalPosition(ref _camera.Location);
 
             _currentMesh.Render(_renderingContext);
         }

@@ -345,11 +345,11 @@ namespace MiniEngine
             double sCubed = s * s * s;
             double sSquared = s * s;
 
-            if (WithinEpsilon(amount, 0f))
+            if (IsDiffZero(amount, 0f))
             {
                 result = value1;
             }
-            else if (WithinEpsilon(amount, 1f))
+            else if (IsDiffZero(amount, 1f))
             {
                 result = value2;
             }
@@ -367,12 +367,17 @@ namespace MiniEngine
         }
 
         /// <summary>
-        /// Check if a
+        /// Check if the value est within epsilon range
         /// </summary>
-        /// <param name="floatA"></param>
-        /// <param name="floatB"></param>
-        /// <returns></returns>
-        public static bool WithinEpsilon(float floatA, float floatB)
+        public static bool IsZero(float value)
+        {
+            return Math.Abs(value) < Epsilon;
+        }
+
+        /// <summary>
+        /// Check if the difference between 2 vectors is in epsilon range
+        /// </summary>
+        public static bool IsDiffZero(float floatA, float floatB)
         {
             return Math.Abs(floatA - floatB) < Epsilon;
         }

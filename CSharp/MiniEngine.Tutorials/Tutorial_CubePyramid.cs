@@ -115,7 +115,7 @@ namespace MiniEngine.Tutorials
             WorldTransform worldTransform = new WorldTransform();
             worldTransform.Location = new Vector3(translation, translation, 2.0f);
             worldTransform.Scale = new Vector3(scale);
-            worldTransform.Rotation = new Vector3(rotation, rotation, rotation);
+            worldTransform.Rotation = new Rotator3(rotation, rotation, rotation);
 
             Matrix4 worldMatrix = worldTransform.GetMatrix();
 

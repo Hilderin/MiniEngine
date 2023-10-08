@@ -27,7 +27,20 @@ namespace MiniEngine
         private int _gMaterialAmbientColorUniform;
         private int _gMaterialDiffuseColorUniform;
         private int _gMaterialSpecularColorUniform;
-        private int _gCameraLocalPos;
+        private int _gCameraLocalPosUniform;
+        private int _gNumPointLightsUniform;
+        private PointLightUniform[] _pointLightUniforms = new PointLightUniform[Renderer.MAX_POINT_LIGHTS];
+
+        private struct PointLightUniform
+        {
+            public int ColorUniform;
+            public int AmbientIntensityUniform;
+            public int PositionUniform;
+            public int DiffuseIntensityUniform;
+            public int AttenConstantUniform;
+            public int AttenLinearUniform;
+            public int AttenExpUniform;
+        }
 
         /// <summary>
         /// Constructor
@@ -55,8 +68,6 @@ void main()
     Normal0 = Normal;
     LocalPos0 = Position;
 }
-
-
 ", ShaderType.Vertex);
 
 
@@ -64,20 +75,41 @@ void main()
             //Fragment shader...
             Add(@"#version 330
 
+const int MAX_POINT_LIGHTS = {MAX_POINT_LIGHTS};
+
 in vec2 TexCoord0;
 in vec3 Normal0;
 in vec3 LocalPos0;
 
 out vec4 FragColor;
 
-struct Light
+struct BaseLight
 {
-    vec3 AmbientColor;
+    vec3 Color;
     float AmbientIntensity;
-    vec3 DiffuseColor;
     float DiffuseIntensity;
-    vec3 DiffuseDirection;
 };
+
+struct DirectionalLight
+{
+    BaseLight Base;
+    vec3 Direction;
+};
+
+struct Attenuation
+{
+    float Constant;
+    float Linear;
+    float Exp;
+};
+
+struct PointLight
+{
+    BaseLight Base;
+    vec3 LocalPos;
+    Attenuation Atten;
+};
+
 
 struct Material
 {
@@ -86,66 +118,125 @@ struct Material
     vec3 SpecularColor;
 };
 
-uniform Light gLight;
+uniform DirectionalLight gDirectionalLight;
+uniform int gNumPointLights;
+uniform PointLight gPointLights[MAX_POINT_LIGHTS];
 uniform Material gMaterial;
 uniform sampler2D gSampler;
-uniform sampler2D gSamplerSpecular;
+uniform sampler2D gSamplerSpecularExponent;
 uniform vec3 gCameraLocalPos;
 
-void main()
+vec4 CalcLightInternal(BaseLight Light, vec3 LightDirection, vec3 Normal)
 {
-    vec4 AmbientColor = vec4(gLight.AmbientColor, 1.0f) *
-                        gLight.AmbientIntensity *
+    vec4 AmbientColor = vec4(Light.Color, 1.0f) *
+                        Light.AmbientIntensity *
                         vec4(gMaterial.AmbientColor, 1.0f);
 
-    vec3 Normal = normalize(Normal0);
-
-    float DiffuseFactor = dot(Normal, -gLight.DiffuseDirection);
+    float DiffuseFactor = dot(Normal, -LightDirection);
 
     vec4 DiffuseColor = vec4(0, 0, 0, 0);
     vec4 SpecularColor = vec4(0, 0, 0, 0);
 
     if (DiffuseFactor > 0) {
-        DiffuseColor = vec4(gLight.DiffuseColor, 1.0f) *
-                       gLight.DiffuseIntensity *
+        DiffuseColor = vec4(Light.Color, 1.0f) *
+                       Light.DiffuseIntensity *
                        vec4(gMaterial.DiffuseColor, 1.0f) *
                        DiffuseFactor;
 
         vec3 PixelToCamera = normalize(gCameraLocalPos - LocalPos0);
-        vec3 LightReflect = normalize(reflect(gLight.DiffuseDirection, Normal));
+        vec3 LightReflect = normalize(reflect(LightDirection, Normal));
         float SpecularFactor = dot(PixelToCamera, LightReflect);
         if (SpecularFactor > 0) {
-            float SpecularExponent = texture2D(gSamplerSpecular, TexCoord0).r * 255.0;
+            float SpecularExponent = texture2D(gSamplerSpecularExponent, TexCoord0).r * 255.0;
             SpecularFactor = pow(SpecularFactor, SpecularExponent);
-            SpecularColor = vec4(gLight.AmbientColor, 1.0f) *
+            SpecularColor = vec4(Light.Color, 1.0f) *
+                            Light.DiffuseIntensity * // using the diffuse intensity for diffuse/specular
                             vec4(gMaterial.SpecularColor, 1.0f) *
                             SpecularFactor;
         }
     }
 
-    //FragColor = texture2D(gSampler, TexCoord0.xy) * (AmbientColor + DiffuseColor);
-    FragColor = texture2D(gSampler, TexCoord0.xy) * (AmbientColor + DiffuseColor + SpecularColor);
+    return (AmbientColor + DiffuseColor + SpecularColor);
 }
 
-", ShaderType.Fragment);
+
+vec4 CalcDirectionalLight(vec3 Normal)
+{
+    return CalcLightInternal(gDirectionalLight.Base, gDirectionalLight.Direction, Normal);
+}
+
+vec4 CalcPointLight(int Index, vec3 Normal)
+{
+    vec3 LightDirection = LocalPos0 - gPointLights[Index].LocalPos;
+    float Distance = length(LightDirection);
+    LightDirection = normalize(LightDirection);
+
+    vec4 Color = CalcLightInternal(gPointLights[Index].Base, LightDirection, Normal);
+    float Attenuation =  gPointLights[Index].Atten.Constant +
+                         gPointLights[Index].Atten.Linear * Distance;
+    if(Attenuation == 0) {
+        return Color;
+    }
+    else 
+    {
+        return Color / Attenuation;
+    }
+}
 
 
+void main()
+{
+    vec3 Normal = normalize(Normal0);
+    vec4 TotalLight = CalcDirectionalLight(Normal);
+
+    for (int i = 0 ; i < gNumPointLights ; i++) {
+        TotalLight += CalcPointLight(i, Normal);
+    }
+
+    FragColor = texture2D(gSampler, TexCoord0.xy) * TotalLight;
+}
+
+".Replace("{MAX_POINT_LIGHTS}", Renderer.MAX_POINT_LIGHTS.ToString())
+, ShaderType.Fragment);
+
+
+            //uniform DirectionalLight gDirectionalLight;
+            //uniform int gNumPointLights;
+            //uniform PointLight gPointLights[MAX_POINT_LIGHTS];
+            //uniform Material gMaterial;
+            //uniform sampler2D gSampler;
+            //uniform sampler2D gSamplerSpecularExponent;
+            //uniform vec3 gCameraLocalPos;
 
             _wvpUniform = GetUniformLocation("gWVP");
             _samplerUniform = GetUniformLocation("gSampler");
-            _samplerSpecularUniform = GetUniformLocation("gSamplerSpecular");
-            _lightAmbientColorUniform = GetUniformLocation("gLight.AmbientColor");
-            _lightAmbientIntensityUniform = GetUniformLocation("gLight.AmbientIntensity");
+            _samplerSpecularUniform = GetUniformLocation("gSamplerSpecularExponent");
 
-            _lightDiffuseColorUniform = GetUniformLocation("gLight.DiffuseColor");
-            _lightDiffuseIntensityUniform = GetUniformLocation("gLight.DiffuseIntensity");
-            _lightDiffuseDirectionUniform = GetUniformLocation("gLight.DiffuseDirection");
+            _lightAmbientColorUniform = GetUniformLocation("gDirectionalLight.Base.Color");
+            _lightAmbientIntensityUniform = GetUniformLocation("gDirectionalLight.Base.AmbientIntensity");
+
+            _lightDiffuseColorUniform = GetUniformLocation("gDirectionalLight.Color");
+            _lightDiffuseIntensityUniform = GetUniformLocation("gDirectionalLight.Base.DiffuseIntensity");
+            _lightDiffuseDirectionUniform = GetUniformLocation("gDirectionalLight.Direction");
 
             _gMaterialAmbientColorUniform = GetUniformLocation("gMaterial.AmbientColor");
             _gMaterialDiffuseColorUniform = GetUniformLocation("gMaterial.DiffuseColor");
             _gMaterialSpecularColorUniform = GetUniformLocation("gMaterial.SpecularColor");
 
-            _gCameraLocalPos = GetUniformLocation("gCameraLocalPos");
+            _gCameraLocalPosUniform = GetUniformLocation("gCameraLocalPos");
+            _gNumPointLightsUniform = GetUniformLocation("gNumPointLights");
+            
+
+            for (int i = 0; i < Renderer.MAX_POINT_LIGHTS; i++)
+            {
+                _pointLightUniforms[i].ColorUniform = GetUniformLocation(String.Format("gPointLights[{0}].Base.Color", i));
+                _pointLightUniforms[i].AmbientIntensityUniform = GetUniformLocation(String.Format("gPointLights[{0}].Base.AmbientIntensity", i));
+                _pointLightUniforms[i].PositionUniform = GetUniformLocation(String.Format("gPointLights[{0}].LocalPos", i));
+                _pointLightUniforms[i].DiffuseIntensityUniform = GetUniformLocation(String.Format("gPointLights[{0}].Base.DiffuseIntensity", i));
+                _pointLightUniforms[i].AttenConstantUniform = GetUniformLocation(String.Format("gPointLights[{0}].Atten.Constant", i));
+                _pointLightUniforms[i].AttenLinearUniform = GetUniformLocation(String.Format("gPointLights[{0}].Atten.Linear", i));
+                _pointLightUniforms[i].AttenExpUniform = GetUniformLocation(String.Format("gPointLights[{0}].Atten.Exp", i));
+            }
 
         }
 
@@ -242,8 +333,42 @@ void main()
         /// </summary>
         public void SetCameraLocalPos(ref Vector3 position)
         {
-            SetUniform(_gCameraLocalPos, position.X, position.Y, position.Z);
+            SetUniform(_gCameraLocalPosUniform, position.X, position.Y, position.Z);
         }
+
+        /// <summary>
+        /// Set the point lights
+        /// </summary>
+        public void SetPointLights(List<PointLight> pointLights, Vector3[] calculatedLocalPosition)
+        {
+
+            if (pointLights != null && pointLights.Count > 0)
+            {
+
+                SetUniform(_gNumPointLightsUniform, pointLights.Count);
+
+
+                for (int i = 0; i < pointLights.Count; i++)
+                {
+                    PointLight light = pointLights[i];
+
+                    SetUniform(_pointLightUniforms[i].ColorUniform, light.Color.R, light.Color.G, light.Color.B);
+                    SetUniform(_pointLightUniforms[i].AmbientIntensityUniform, light.AmbientIntensity);
+                    SetUniform(_pointLightUniforms[i].DiffuseIntensityUniform, light.DiffuseIntensity);
+                    SetUniform(_pointLightUniforms[i].PositionUniform, calculatedLocalPosition[i].X, calculatedLocalPosition[i].Y, calculatedLocalPosition[i].Z);
+                    SetUniform(_pointLightUniforms[i].AttenConstantUniform, light.AttenuationConstant);
+                    SetUniform(_pointLightUniforms[i].AttenLinearUniform, light.AttenuationLinear);
+                    SetUniform(_pointLightUniforms[i].AttenExpUniform, light.AttenuationExponent);
+
+                }
+            }
+            else
+            {
+                //No point lights...
+                SetUniform(_gNumPointLightsUniform, 0);
+            }
+        }
+
 
 
     }
