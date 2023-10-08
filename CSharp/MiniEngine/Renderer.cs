@@ -165,7 +165,7 @@ namespace MiniEngine
                 {
                     _renderingContext.DiffuseColor = DirectionalLight.Color;
                     _renderingContext.DiffuseIntensity = DirectionalLight.Intensity;
-                    _renderingContext.CalculatedDiffuseDirection = Vector3.CalculateLocalDirection(ref worldMatrix, DirectionalLight.Forward);
+                    _renderingContext.CalculatedDiffuseDirection = Vector3.CalculateLocalDirection(ref worldMatrix, DirectionalLight.Backward);
                 }
                 else
                 {

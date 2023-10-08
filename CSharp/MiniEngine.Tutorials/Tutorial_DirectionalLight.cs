@@ -48,7 +48,7 @@ namespace MiniEngine.Tutorials
 
             Renderer.DirectionalLight = new DirectionalLight()
             {
-                Rotation = Rotator3.FromDegrees(45, -90, 0)
+                Rotation = Rotator3.FromDegrees(-90, 00, 0)
             };
 
             //Renderer.Add(new PointLight()

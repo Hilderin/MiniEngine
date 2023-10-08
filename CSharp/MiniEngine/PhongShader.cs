@@ -440,7 +440,7 @@ void main()
                     SetUniform(_spotLightUniforms[i].AttenLinearUniform, light.AttenuationLinear);
                     SetUniform(_spotLightUniforms[i].AttenExpUniform, light.AttenuationExponent);
                     SetUniform(_spotLightUniforms[i].DirectionUniform, calculatedLocalDirection[i].X, calculatedLocalDirection[i].Y, calculatedLocalDirection[i].Z);
-                    SetUniform(_spotLightUniforms[i].CutoffUniform, light.Cutoff);
+                    SetUniform(_spotLightUniforms[i].CutoffUniform, Math.Cos(Math.DegToRad(light.Cutoff)));
 
                 }
             }

@@ -29,13 +29,13 @@ namespace MiniEngine.Tutorials
 
             Renderer.Camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
 
-            //_currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
-            //{
-            //    Scale = 6f,
-            //    ResetMaterialAmbientColor = true
-            //});
-            //_currentMesh.Location = new Vector3(0f, 0f, 0.0f);
-            //Renderer.Add(_currentMesh);
+            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
+            {
+                Scale = 6f,
+                ResetMaterialAmbientColor = true
+            });
+            _currentMesh.Location = new Vector3(0f, 0f, 0.0f);
+            Renderer.Add(_currentMesh);
 
 
             //Mesh mesh2 = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
@@ -58,7 +58,7 @@ namespace MiniEngine.Tutorials
             _spotLight = new SpotLight()
             {
                 Location = new Vector3(-8.0f, 0f, 0f),
-                Rotation = Rotator3.FromDegrees(90, 0, 0),
+                Rotation = Rotator3.FromDegrees(0, 90, 0),
                 AttenuationLinear = 0.2f
             };
             Renderer.Add(_spotLight);
