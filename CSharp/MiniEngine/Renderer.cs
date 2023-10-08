@@ -23,11 +23,6 @@ namespace MiniEngine
         public const int MAX_SPOT_LIGHTS = 2;
 
         /// <summary>
-        /// Context
-        /// </summary>
-        private Context _context;
-
-        /// <summary>
         /// Rendering context
         /// </summary>
         private RenderingContext _renderingContext = new RenderingContext();
@@ -55,10 +50,9 @@ namespace MiniEngine
         /// <summary>
         /// Constructor
         /// </summary>
-        public Renderer(Context context)
+        public Renderer()
         {
-            _context = context;
-
+            
         }
 
         /// <summary>

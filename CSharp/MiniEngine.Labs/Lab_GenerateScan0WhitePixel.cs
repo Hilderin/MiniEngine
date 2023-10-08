@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TeximpNet;
 
-namespace MiniEngine.Lab
+namespace MiniEngine.Labs
 {
     internal class Lab_GenerateScan0WhitePixel
     {

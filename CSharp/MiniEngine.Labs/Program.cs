@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace MiniEngine.Lab
+namespace MiniEngine.Labs
 {
     internal class Program
     {

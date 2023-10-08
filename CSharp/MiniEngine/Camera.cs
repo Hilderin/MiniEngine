@@ -14,7 +14,7 @@ namespace MiniEngine
         /// <summary>
         /// Field of view
         /// </summary>
-        public float FOV = 90.0f;
+        public float FOV = 60.0f;
 
         ///// <summary>
         ///// Width
@@ -67,7 +67,8 @@ namespace MiniEngine
         /// </summary>
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreateProjection(FOV, Context.Current.ClientSize.X, Context.Current.ClientSize.Y, NearZ, FarZ);
+            Vector2 clientSize = Context.Current.ClientSize;
+            return Matrix4.CreateProjection(FOV, clientSize.X, clientSize.Y, NearZ, FarZ);
         }
 
         /// <summary>

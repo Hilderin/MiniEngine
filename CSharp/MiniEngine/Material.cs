@@ -9,19 +9,32 @@ namespace MiniEngine
     public class Material
     {
         /// <summary>
-        /// Empty material
+        /// Not found material (magenta)
         /// </summary>
-        private static Material _emptyMaterial = new Material()
+        private static Material _notFoundMaterial = new Material()
         {
             AmbientColor = Color3.Magenta,
             Diffuse = Texture2D.Empty
         };
 
         /// <summary>
-        /// Empty material
+        /// Default material (white)
         /// </summary>
-        public static Material Empty { get { return _emptyMaterial; } }
+        private static Material _defaultMaterial = new Material()
+        {
+            AmbientColor = Color3.White,
+            Diffuse = Texture2D.Empty
+        };
 
+        /// <summary>
+        /// Not found material (magenta)
+        /// </summary>
+        public static Material NotFound { get { return _notFoundMaterial; } }
+
+        /// <summary>
+        /// Default material (white)
+        /// </summary>
+        public static Material Default { get { return _defaultMaterial; } }
 
 
         /// <summary>

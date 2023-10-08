@@ -32,6 +32,11 @@ namespace MiniEngine
         private bool _isDisposed = false;
 
         /// <summary>
+        /// ClientSize
+        /// </summary>
+        private Vector2 _clientSize = new Vector2(1200, 800);
+
+        /// <summary>
         /// Current context
         /// </summary>
         [ThreadStatic]
@@ -49,7 +54,11 @@ namespace MiniEngine
         /// <summary>
         /// ClientSize
         /// </summary>
-        public Vector2 ClientSize = new Vector2(1200, 800);
+        public Vector2 ClientSize
+        { 
+            get { return _clientSize; }
+            set { Resize(value.X, value.Y); }
+        }
 
 
         /// <summary>
@@ -78,19 +87,45 @@ namespace MiniEngine
 
             InitGlfw();
 
-            Renderer = new Renderer(this);
-            Input = new Input(this);
+            Renderer = new Renderer();
+            Input = new Input();
         }
 
         /// <summary>
         /// Open the window
         /// </summary>
-        public Context OpenWindow(int width, int height, string title)
+        public Context OpenWindow(float width, float height, string title)
         {
-            this._window = new Window(width, height, title, this);
+            if (this._window == null)
+            {
+                this._window = new Window((int)width, (int)height, title, this);
 
-            this.ClientSize.X = width;
-            this.ClientSize.Y = height;
+                _clientSize = new Vector2(width, height);
+
+                this.CenterOnScreen();
+
+            }
+            else
+            {
+                //Ensure that the window is visible...
+                Resize(width, height);
+
+                this.Show();
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Create the context for testing only
+        /// </summary>
+        public Context CreateTest(int width, int height)
+        {
+            this._window = new Window(width, height, "Test", this);
+
+            _clientSize = new Vector2(width, height);
+
+            this.Hide();
 
             return this;
         }
@@ -134,10 +169,57 @@ namespace MiniEngine
         }
 
 
+        /// <summary>
+        /// Show the screen
+        /// </summary>
+        public Context Show()
+        {
+            EnsureWindowExists();
 
+            _window.Visible = true;
 
+            return this;
+        }
 
+        /// <summary>
+        /// Hide the screen
+        /// </summary>
+        public Context Hide()
+        {
+            EnsureWindowExists();
 
+            _window.Visible = false;
+
+            return this;
+        }
+
+        /// <summary>
+        /// Resize the screen
+        /// </summary>
+        public Context Resize(float width, float height)
+        {
+            EnsureWindowExists();
+
+            Vector2 newSize = new Vector2((float)width, (float)height);
+            this._window.ClientSize = _clientSize;
+            _clientSize = newSize;
+
+            return this;
+
+        }
+
+        /// <summary>
+        /// Set the title of the screen
+        /// </summary>
+        public Context SetTitle(string title)
+        {
+            EnsureWindowExists();
+
+            this._window.Title = title;
+
+            return this;
+
+        }
 
         /// <summary>
         /// Init the game/application
@@ -157,8 +239,7 @@ namespace MiniEngine
         /// </summary>
         public void Run(RunHandler runHandler = null)
         {
-            if (this._window == null)
-                OpenWindow(1200, 800, "L renderer");
+            EnsureWindowExists();
 
             //Now we can initialize the renderer...
             InitInternal();
@@ -186,15 +267,35 @@ namespace MiniEngine
                 Input.OnNewFrame();
 
                 //Get new mouse and keyboard pulls
-                try
-                {
-                    Glfw.PollEvents();
-                }
-                catch { }
+                Glfw.PollEvents();
             }
 
-            //We dispose already, not else to to with this context anyway...
-            this.Dispose();
+        }
+
+
+        /// <summary>
+        /// Run only one frame and does not swap buffers
+        /// Important if we want to grab the framebuffer for screenshots
+        /// </summary>
+        public void RenderOneFramebuffer(RunHandler runHandler = null)
+        {
+            EnsureWindowExists();
+
+            //Now we can initialize the renderer...
+            InitInternal();
+
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+
+            //Custom run code...
+            if (runHandler != null)
+                runHandler();
+
+            if (this._window.IsClosing)
+                return;
+
+            //Rendering...
+            Renderer.Render();
+
         }
 
         /// <summary>
@@ -205,6 +306,7 @@ namespace MiniEngine
             if (this._window != null)
                 this._window.Close();
         }
+
 
         /// <summary>
         /// Disposing
@@ -222,6 +324,7 @@ namespace MiniEngine
 
             _isDisposed = true;
         }
+
 
 
         /// <summary>
@@ -264,7 +367,9 @@ namespace MiniEngine
         private void EnsureWindowExists()
         {
             if (_window == null)
-                OpenWindow((int)ClientSize.X, (int)ClientSize.Y, "MiniEngine");
+            {
+                this._window = new Window((int)_clientSize.X, (int)_clientSize.Y, "MiniEngine", this);
+            }
         }
 
 

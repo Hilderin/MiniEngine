@@ -23,7 +23,6 @@ namespace MiniEngine.Tutorials
                     var t = new Tutorial_SpotLights();
 
                     context.OpenWindow(WIDTH, HEIGHT, TITLE)
-                           .CenterOnScreen()
                            .Init(() =>
                            {
                                t.Init();

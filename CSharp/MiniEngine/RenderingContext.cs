@@ -9,8 +9,6 @@ namespace MiniEngine
     /// </summary>
     public class RenderingContext
     {
-        public Material Material = Material.Empty;
-
         public Matrix4 WVPMatrix;
 
         public Color3 AmbientColor = Color3.White;

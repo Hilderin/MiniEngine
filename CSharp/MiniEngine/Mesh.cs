@@ -101,7 +101,7 @@ namespace MiniEngine
         /// <summary>
         /// Constructor
         /// </summary>
-        public Mesh(): this(0, 1)
+        public Mesh(): this(1, 1)
         {
             
         }
@@ -111,8 +111,8 @@ namespace MiniEngine
         /// </summary>
         public Mesh(int nbMesh, int nbMaterial)
         {
-            if (nbMaterial < 1)
-                nbMaterial = 1;
+            if (nbMesh < 1 || nbMaterial < 1)
+                throw new ArgumentException("Number of meshes and material cannot be less then 1.");
 
             _nbMesh = nbMesh;
             _meshDatas = new BasicMeshEntry[nbMesh];
@@ -121,7 +121,7 @@ namespace MiniEngine
             CreateBuffers();
 
             //Default material
-            _materials[0] = Material.Empty;
+            _materials[0] = Material.Default;
         }
 
         /// <summary>
@@ -298,7 +298,7 @@ namespace MiniEngine
                     mat = _materials[_meshDatas[i].MaterialIndex];
                 else
                     //No material...
-                    mat = Material.Empty;
+                    mat = Material.NotFound;
 
                 if (mat.Diffuse != null)
                     mat.Diffuse.Bind(SHADER_COLOR_TEXTURE_UNIT);

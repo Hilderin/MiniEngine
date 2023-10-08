@@ -10,11 +10,6 @@ namespace MiniEngine
     public class Input
     {
         /// <summary>
-        /// Context
-        /// </summary>
-        private Context _context;
-
-        /// <summary>
         /// Keys that are down
         /// </summary>
         private bool[] _keyDown = new bool[349];
@@ -42,9 +37,8 @@ namespace MiniEngine
         /// <summary>
         /// Constructor
         /// </summary>
-        public Input(Context context)
+        public Input()
         {
-            _context = context;
         }
 
 
