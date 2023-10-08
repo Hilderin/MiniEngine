@@ -1,5 +1,4 @@
-﻿using MiniEngine.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,7 +29,7 @@ namespace MiniEngine.Tests
 
 
 
-            using (var actualImage = ScreenshotHelper.TakeScreenshot(0, 0, WIDTH, HEIGHT))
+            using (var actualImage = context.TakeScreenshot(0, 0, WIDTH, HEIGHT))
             {
 
                 if (IsRecording)

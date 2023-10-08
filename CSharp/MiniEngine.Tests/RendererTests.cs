@@ -1,15 +1,12 @@
-using MiniEngine.Helpers;
 using MiniEngine.PrimitiveMeshes;
-using SixLabors.ImageSharp;
+using MiniEngine.Rendering.OpenGL;
 
 namespace MiniEngine.Tests
 {
     [TestClass]
     public class RendererTests
     {
-        private const int WIDTH = 1200;
-        private const int HEIGHT = 800;
-
+        
         /// <summary>
         /// Basic cube with a centered camera at FOV 60
         /// </summary>
@@ -17,13 +14,13 @@ namespace MiniEngine.Tests
         public void BasicScene_CubeCenterFOV60()
         {
 
-            using (Context context = new Context())
+            using (Context context = new Context(new OpenGLRenderer()))
             {
                 context.TestScreenshot("BasicScene_CubeCenterFOV60", () =>
                 {
-                    context.Renderer.Camera.Location.Z = -3f;
+                    context.Camera.Location.Z = -3f;
 
-                    context.Renderer.Add(new CubeMesh());
+                    context.Add(new CubeMesh());
                 });
 
             }

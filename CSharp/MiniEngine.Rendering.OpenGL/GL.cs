@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace MiniEngine.OpenGL
+namespace MiniEngine.Rendering.OpenGL
 {
     /// <summary>
     /// Wrapper OpenGL
@@ -1399,7 +1399,7 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glBitmap(int width, int height, float xorig, float yorig, float xmove, float ymove, byte[] bitmap);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glBlendFunc(uint sfactor, uint dfactor);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glCallList(uint list);
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glCallLists(int n, uint type, IntPtr lists);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glCallLists(int n, uint type, nint lists);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glCallLists(int n, uint type, uint[] lists);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glCallLists(int n, uint type, byte[] lists);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glClear(uint mask);
@@ -1443,7 +1443,7 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glColor4usv(ushort[] v);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glColorMask(byte red, byte green, byte blue, byte alpha);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glColorMaterial(uint face, uint mode);
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glColorPointer(int size, uint type, int stride, IntPtr pointer);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glColorPointer(int size, uint type, int stride, nint pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glColorPointer(int size, uint type, int stride, byte[] pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glColorPointer(int size, uint type, int stride, float[] pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glCopyPixels(int x, int y, int width, int height, uint type);
@@ -1471,13 +1471,13 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDisableClientState(uint array);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawArrays(uint mode, int first, int count);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawBuffer(uint mode);
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawElements(uint mode, int count, uint type, IntPtr indices);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawElements(uint mode, int count, uint type, nint indices);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawElements(uint mode, int count, uint type, uint[] indices);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawPixels(int width, int height, uint format, uint type, float[] pixels);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawPixels(int width, int height, uint format, uint type, uint[] pixels);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawPixels(int width, int height, uint format, uint type, ushort[] pixels);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawPixels(int width, int height, uint format, uint type, byte[] pixels);
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawPixels(int width, int height, uint format, uint type, IntPtr pixels);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glDrawPixels(int width, int height, uint format, uint type, nint pixels);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glEdgeFlag(byte flag);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glEdgeFlagPointer(int stride, int[] pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glEdgeFlagv(byte[] flag);
@@ -1609,7 +1609,7 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glNormal3iv(int[] v);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glNormal3s(short nx, short ny, short nz);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glNormal3sv(short[] v);
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glNormalPointer(uint type, int stride, IntPtr pointer);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glNormalPointer(uint type, int stride, nint pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glNormalPointer(uint type, int stride, float[] pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glOrtho(double left, double right, double bottom, double top, double zNear, double zFar);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glPassThrough(float token);
@@ -1660,7 +1660,7 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glRasterPos4sv(short[] v);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glReadBuffer(uint mode);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glReadPixels(int x, int y, int width, int height, uint format, uint type, byte[] pixels);
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glReadPixels(int x, int y, int width, int height, uint format, uint type, IntPtr pixels);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glReadPixels(int x, int y, int width, int height, uint format, uint type, nint pixels);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glRectd(double x1, double y1, double x2, double y2);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glRectdv(double[] v1, double[] v2);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glRectf(float x1, float y1, float x2, float y2);
@@ -1712,7 +1712,7 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexCoord4iv(int[] v);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexCoord4s(short s, short t, short r, short q);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexCoord4sv(short[] v);
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexCoordPointer(int size, uint type, int stride, IntPtr pointer);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexCoordPointer(int size, uint type, int stride, nint pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexCoordPointer(int size, uint type, int stride, float[] pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexEnvf(uint target, uint pname, float param);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexEnvfv(uint target, uint pname, float[] params_notkeyword);
@@ -1731,7 +1731,7 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage1D(uint target, int level, uint internalformat, int width, int border, uint format, uint type, uint[] pixels); //format=GL_UNSIGNED_INT
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage1D(uint target, int level, uint internalformat, int width, int border, uint format, uint type, int[] pixels); //format=GL_INT
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage1D(uint target, int level, uint internalformat, int width, int border, uint format, uint type, float[] pixels); //format=GL_FLOAT
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage1D(uint target, int level, uint internalformat, int width, int border, uint format, uint type, IntPtr pixels);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage1D(uint target, int level, uint internalformat, int width, int border, uint format, uint type, nint pixels);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, byte[] pixels);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, sbyte[] pixels); //format=GL_BYTE
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, ushort[] pixels); //format=GL_UNSIGNED_SHORT
@@ -1739,7 +1739,7 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, uint[] pixels); //format=GL_UNSIGNED_INT
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, int[] pixels); //format=GL_INT
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, float[] pixels); //format=GL_FLOAT
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, IntPtr pixels);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexImage2D(uint target, int level, uint internalformat, int width, int height, int border, uint format, uint type, nint pixels);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexParameterf(uint target, uint pname, float param);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexParameterfv(uint target, uint pname, float[] params_notkeyword);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glTexParameteri(uint target, uint pname, uint param);
@@ -1772,7 +1772,7 @@ namespace MiniEngine.OpenGL
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glVertex4iv(int[] v);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glVertex4s(short x, short y, short z, short w);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glVertex4sv(short[] v);
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glVertexPointer(int size, uint type, int stride, IntPtr pointer);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glVertexPointer(int size, uint type, int stride, nint pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glVertexPointer(int size, uint type, int stride, short[] pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glVertexPointer(int size, uint type, int stride, int[] pointer);
         [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern void glVertexPointer(int size, uint type, int stride, float[] pointer);
@@ -1785,7 +1785,7 @@ namespace MiniEngine.OpenGL
         /// </summary>
         /// <param name="name">The name of the function.</param>
         /// <returns>The address of the function.</returns>
-        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern IntPtr wglGetProcAddress(string name);
+        [DllImport(LIBRARY_OPENGL, SetLastError = true)] public static extern nint wglGetProcAddress(string name);
 
 
         public delegate void DebugProc(uint source, uint type, int id, uint severity, int length, char* message, nint userParam);
@@ -2195,7 +2195,7 @@ namespace MiniEngine.OpenGL
                         throw new Exception("Open GL Error - Unkown error: 0x" + error.ToString("x"));
                 }
 
-            }  
+            }
         }
 
 
@@ -2227,7 +2227,7 @@ namespace MiniEngine.OpenGL
 
         #region My privates methods
 
-        
+
 
         #endregion
     }

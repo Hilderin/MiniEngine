@@ -48,7 +48,7 @@ namespace MiniEngine.AssertManager
 
                 Scene scene = context.ImportFile(path, postProcessSteps);
 
-                _mesh = new Mesh(scene.MeshCount, scene.MaterialCount);
+                _mesh = new Mesh();
 
                 //Loading meshes.....
                 for (int i = 0; i < scene.MeshCount; i++)
@@ -86,10 +86,10 @@ namespace MiniEngine.AssertManager
             Material material = new Material();
 
             //Diffuse texture...
-            material.Diffuse = GetTexture(TextureType.Diffuse, assmat);
+            material.Diffuse = GetTexture(Assimp.TextureType.Diffuse, assmat, TextureType.RGB);
 
             //Specular texture...
-            material.Specular = GetTexture(TextureType.Shininess, assmat);
+            material.Specular = GetTexture(Assimp.TextureType.Shininess, assmat, TextureType.Red);
 
             //Ambient color...
             if(assmat.HasColorAmbient)
@@ -110,14 +110,14 @@ namespace MiniEngine.AssertManager
         /// <summary>
         /// Get a texture of a type
         /// </summary>
-        private Texture2D GetTexture(TextureType type, Assimp.Material assmat)
+        private Texture2D GetTexture(Assimp.TextureType type, Assimp.Material assmat, TextureType textureType)
         {
             //Diffuse texture...
             if (assmat.GetMaterialTextureCount(type) > 0)
             {
                 if (assmat.GetMaterialTexture(type, 0, out TextureSlot assTexture))
                 {
-                    return new AssetManager().GetTexture2DFromFile(Path.Combine(_workingDirectory, assTexture.FilePath));
+                    return new AssetManager().GetTexture2DFromFile(textureType, Path.Combine(_workingDirectory, assTexture.FilePath));
                 }
             }
             return null;

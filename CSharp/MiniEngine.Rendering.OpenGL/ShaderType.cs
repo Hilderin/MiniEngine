@@ -1,4 +1,4 @@
-﻿using MiniEngine.OpenGL;
+﻿using MiniEngine.Rendering.OpenGL;
 
 namespace MiniEngine
 {

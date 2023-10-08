@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MiniEngine.Rendering.OpenGL\MiniEngine.Rendering.OpenGL.csproj" />
     <ProjectReference Include="..\MiniEngine\MiniEngine.csproj" />
   </ItemGroup>
 

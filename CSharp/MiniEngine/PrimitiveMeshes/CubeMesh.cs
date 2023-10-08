@@ -58,6 +58,8 @@ namespace MiniEngine.PrimitiveMeshes
 
             AddMeshData(positions, texCoords, new Vector3[positions.Length], indices, 0);
 
+            SetMaterial(Material.Default, 0);
+
         }
     }
 }

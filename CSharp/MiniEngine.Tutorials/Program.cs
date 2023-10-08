@@ -1,5 +1,6 @@
 
 
+using MiniEngine.Rendering.OpenGL;
 using System;
 using System.Windows.Forms;
 
@@ -18,9 +19,9 @@ namespace MiniEngine.Tutorials
             try
             {
 
-                using (Context context = new Context())
+                using (Context context = new Context(new OpenGLRenderer()))
                 {
-                    var t = new Tutorial_SpotLights();
+                    var t = new Tutorial_Cube();
 
                     context.OpenWindow(WIDTH, HEIGHT, TITLE)
                            .Init(() =>

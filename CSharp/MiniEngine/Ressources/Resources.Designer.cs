@@ -63,16 +63,6 @@ namespace MiniEngine.Ressources {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] assimp {
-            get {
-                object obj = ResourceManager.GetObject("assimp", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
         internal static byte[] glfw3 {
             get {
                 object obj = ResourceManager.GetObject("glfw3", resourceCulture);

@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using MiniEngine.GLFW;
-using MiniEngine.OpenGL;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace MiniEngine
 {
@@ -19,6 +20,17 @@ namespace MiniEngine
     /// </summary>
     public class Context : IDisposable
     {
+
+        /// <summary>
+        /// The maximum number of point lights
+        /// </summary>
+        public const int MAX_POINT_LIGHTS = 2;
+
+        /// <summary>
+        /// The maximum number of spot lights
+        /// </summary>
+        public const int MAX_SPOT_LIGHTS = 2;
+
         #region Private members
 
         /// <summary>
@@ -47,9 +59,51 @@ namespace MiniEngine
         /// </summary>
         private Window _window;
 
+        /// <summary>
+        /// Meshes to render
+        /// </summary>
+        private List<Mesh> _meshes = new List<Mesh>();
+
+        /// <summary>
+        /// Renderer
+        /// </summary>
+        private IRenderer _renderer;
+
         #endregion
 
         #region Public properties
+
+
+        /// <summary>
+        /// Current camera
+        /// </summary>
+        public Camera Camera = new Camera();
+
+        /// <summary>
+        /// List of meshes
+        /// </summary>
+        public List<Mesh> Meshes { get { return _meshes; } }
+
+        /// <summary>
+        /// Directional light
+        /// </summary>
+        public DirectionalLight DirectionalLight = null;
+
+        /// <summary>
+        /// Default ambient light
+        /// </summary>
+        public AmbientLight AmbientLight = AmbientLight.Default;
+
+        /// <summary>
+        /// Point lights
+        /// </summary>
+        public List<PointLight> PointLights = new List<PointLight>(MAX_POINT_LIGHTS);
+
+        /// <summary>
+        /// Spot lights
+        /// </summary>
+        public List<SpotLight> SpotLights = new List<SpotLight>(MAX_SPOT_LIGHTS);
+
 
         /// <summary>
         /// ClientSize
@@ -64,12 +118,12 @@ namespace MiniEngine
         /// <summary>
         /// Current context
         /// </summary>
-        public static Context Current => _current;
+        public static Context Current { get { return _current; } }
 
         /// <summary>
         /// Renderer
         /// </summary>
-        public readonly Renderer Renderer;
+        public IRenderer Renderer { get { return _renderer; } }
 
         /// <summary>
         /// Input manager
@@ -81,13 +135,14 @@ namespace MiniEngine
         /// <summary>
         /// Constructor
         /// </summary>
-        public Context()
+        public Context(IRenderer renderer)
         {
             _current = this;
 
             InitGlfw();
 
-            Renderer = new Renderer();
+            _renderer = renderer;
+
             Input = new Input();
         }
 
@@ -234,6 +289,57 @@ namespace MiniEngine
             return this;
         }
 
+
+        /// <summary>
+        /// Add a mesh to render
+        /// </summary>
+        public void Add(Mesh mesh)
+        {
+            _meshes.Add(mesh);
+        }
+
+        /// <summary>
+        /// Remove a mesh
+        /// </summary>
+        public void Remove(Mesh mesh)
+        {
+            _meshes.Remove(mesh);
+        }
+
+        /// <summary>
+        /// Add a point light to render
+        /// </summary>
+        public void Add(PointLight pointLight)
+        {
+            this.PointLights.Add(pointLight);
+        }
+
+        /// <summary>
+        /// Remove a point light to render
+        /// </summary>
+        public void Remove(PointLight pointLight)
+        {
+            this.PointLights.Remove(pointLight);
+        }
+
+        /// <summary>
+        /// Add a spot light to render
+        /// </summary>
+        public void Add(SpotLight SpotLight)
+        {
+            this.SpotLights.Add(SpotLight);
+        }
+
+        /// <summary>
+        /// Remove a spot light to render
+        /// </summary>
+        public void Remove(SpotLight SpotLight)
+        {
+            this.SpotLights.Remove(SpotLight);
+        }
+
+
+
         /// <summary>
         /// Run the game/application
         /// </summary>
@@ -248,7 +354,7 @@ namespace MiniEngine
             while (!this._window.IsClosing)
             {
 
-                GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+                _renderer.Clear();
 
                 //Custom run code...
                 if (runHandler != null)
@@ -258,7 +364,7 @@ namespace MiniEngine
                     break;
 
                 //Rendering...
-                Renderer.Render();
+                Renderer.Render(this);
 
                 //Swapping buffer...
                 this._window.SwapBuffers();
@@ -284,7 +390,7 @@ namespace MiniEngine
             //Now we can initialize the renderer...
             InitInternal();
 
-            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+            _renderer.Clear();
 
             //Custom run code...
             if (runHandler != null)
@@ -294,7 +400,7 @@ namespace MiniEngine
                 return;
 
             //Rendering...
-            Renderer.Render();
+            _renderer.Render(this);
 
         }
 
@@ -309,6 +415,17 @@ namespace MiniEngine
 
 
         /// <summary>
+        /// Take a screenshot
+        /// </summary>
+        public SixLabors.ImageSharp.Image<Rgba32> TakeScreenshot(int x, int y, int width, int height)
+        {
+            byte[] buffer = _renderer.GetFramebufferRGBA(x, y, width, height);
+
+            return SixLabors.ImageSharp.Image.LoadPixelData<Rgba32>(buffer, width, height);
+
+        }
+
+        /// <summary>
         /// Disposing
         /// </summary>
         public void Dispose()
@@ -316,11 +433,18 @@ namespace MiniEngine
             if (_isDisposed)
                 return;
 
+            if (_renderer != null)
+            {
+                _renderer.Dispose();
+                _renderer = null;
+            }
+
             if (_window != null)
             {
                 _window.Dispose();
                 _window = null;
             }
+
 
             _isDisposed = true;
         }
@@ -336,7 +460,7 @@ namespace MiniEngine
                 return;
 
             //Now we can initialize the renderer...
-            Renderer.Init();
+            _renderer.Init();
 
             _isInitialized = true;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace MiniEngine.OpenGL
+namespace MiniEngine.Rendering.OpenGL
 {
     internal unsafe static class GLExtensions
     {
@@ -377,8 +377,8 @@ namespace MiniEngine.OpenGL
             //Removing "Handler..."
             name = name.Substring(0, name.Length - "Handler".Length);
 
-            IntPtr proc = GL.wglGetProcAddress(name);
-            if (proc == IntPtr.Zero)
+            nint proc = GL.wglGetProcAddress(name);
+            if (proc == nint.Zero)
                 throw new Exception("Extension function " + name + " not supported or method GL called before initializing OpenGL.");
 
             //  Get the delegate for the function pointer.

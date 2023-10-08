@@ -21,10 +21,15 @@ namespace MiniEngine
         /// </summary>
         public static AmbientLight Default { get { return _default; } }
 
-
+        /// <summary>
+        /// Color of the ambient light
+        /// </summary>
         public Color3 Color = Color3.White;
 
-        public float Intensity = 1f;
+        /// <summary>
+        /// Intensity of the ambient light
+        /// </summary>
+        public float Intensity = 0.8f;
 
     }
 }

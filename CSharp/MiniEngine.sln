@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.AssertManager", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Labs", "MiniEngine.Labs\MiniEngine.Labs.csproj", "{4109F56A-0FF2-4E34-AFCC-F80385FB0BB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniEngine.Tests", "MiniEngine.Tests\MiniEngine.Tests.csproj", "{F8EFEF64-D0E4-4FDD-8F36-8AB423E323C7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Tests", "MiniEngine.Tests\MiniEngine.Tests.csproj", "{F8EFEF64-D0E4-4FDD-8F36-8AB423E323C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniEngine.Rendering.OpenGL", "MiniEngine.Rendering.OpenGL\MiniEngine.Rendering.OpenGL.csproj", "{32F1FE7F-85CF-48FB-AF14-69F58F2EEBF2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{F8EFEF64-D0E4-4FDD-8F36-8AB423E323C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8EFEF64-D0E4-4FDD-8F36-8AB423E323C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8EFEF64-D0E4-4FDD-8F36-8AB423E323C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32F1FE7F-85CF-48FB-AF14-69F58F2EEBF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32F1FE7F-85CF-48FB-AF14-69F58F2EEBF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32F1FE7F-85CF-48FB-AF14-69F58F2EEBF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32F1FE7F-85CF-48FB-AF14-69F58F2EEBF2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

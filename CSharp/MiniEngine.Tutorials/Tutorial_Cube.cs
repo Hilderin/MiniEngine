@@ -1,9 +1,10 @@
 ﻿using System;
 using MiniEngine.AssertManager;
+using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Tutorials
 {
-    internal unsafe class Tutorial_PointLights
+    internal unsafe class Tutorial_Cube
     {
        
         private Mesh _currentMesh;
@@ -16,48 +17,44 @@ namespace MiniEngine.Tutorials
 
             Context.LockCursor();
 
-            Context.Camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
+            Context.Camera.Location = new Vector3(0.0f, 0.0f, -3.0f);
 
-            _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
-            {
-                Scale = 6f,
-                ResetMaterialAmbientColor = true
-            });
+            _currentMesh = new CubeMesh();
             _currentMesh.Location = new Vector3(0f, 0f, 0.0f);
             Context.Add(_currentMesh);
 
 
-            Mesh mesh2 = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
-            {
-                Scale = 3f,
-                ResetMaterialAmbientColor = true
-            });
-            mesh2.Location = new Vector3(2f, 2f, 4f);
-            Context.Add(mesh2);
+            //Mesh mesh2 = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
+            //{
+            //    Scale = 3f,
+            //    ResetMaterialAmbientColor = true
+            //});
+            //mesh2.Location = new Vector3(2f, 2f, 4f);
+            //Context.Add(mesh2);
 
 
-            Context.AmbientLight.Intensity = 0.1f;
+            //Context.AmbientLight.Intensity = 0.1f;
 
             //Context.DirectionalLight = new DirectionalLight()
             //{
             //    Rotation = Rotator3.FromDegrees(45, 90, 0)
             //};
 
-            Context.Add(new PointLight()
-            {
-                Location = new Vector3(-8.0f, 0f, 0f),
-                AttenuationLinear = 0.2f
-            });
+            //Context.Add(new PointLight()
+            //{
+            //    Location = new Vector3(-8.0f, 0f, 0f),
+            //    AttenuationLinear = 0.2f
+            //});
 
 
-            var terrainMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\box_terrain.obj", new MeshImportationParameters()
-            {
-                Scale = 1f,
-                InverseFaces = false,
-                SmoothNormals = false
-            });
-            terrainMesh.Location = new Vector3(0f, -1f, 0.0f);
-            Context.Add(terrainMesh);
+            //var terrainMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\box_terrain.obj", new MeshImportationParameters()
+            //{
+            //    Scale = 1f,
+            //    InverseFaces = false,
+            //    SmoothNormals = false
+            //});
+            //terrainMesh.Location = new Vector3(0f, -1f, 0.0f);
+            //Context.Add(terrainMesh);
         }
 
 

@@ -5,20 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MiniEngine.AssertManager;
-using MiniEngine.OpenGL;
 using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Tutorials
 {
-    internal unsafe class Tutorial_SpotLights : IDisposable
+    internal unsafe class Tutorial_SpotLights
     {
        
         private Mesh _currentMesh;
         private SpotLight _spotLight;
 
         private Context Context = Context.Current;
-        private Renderer Renderer = Context.Current.Renderer;
-        private Camera Camera = Context.Current.Renderer.Camera;
+        private Camera Camera = Context.Current.Camera;
 
 
 
@@ -27,7 +25,7 @@ namespace MiniEngine.Tutorials
 
             Context.LockCursor();
 
-            Renderer.Camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
+            Context.Camera.Location = new Vector3(1.0f, 0.0f, -3.0f);
 
             _currentMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
             {
@@ -35,7 +33,7 @@ namespace MiniEngine.Tutorials
                 ResetMaterialAmbientColor = true
             });
             _currentMesh.Location = new Vector3(0f, 0f, 0.0f);
-            Renderer.Add(_currentMesh);
+            Context.Add(_currentMesh);
 
 
             //Mesh mesh2 = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj", new MeshImportationParameters()
@@ -44,12 +42,12 @@ namespace MiniEngine.Tutorials
             //    ResetMaterialAmbientColor = true
             //});
             //mesh2.Location = new Vector3(2f, 2f, 4f);
-            //Renderer.Add(mesh2);
+            //Context.Add(mesh2);
 
 
-            Renderer.AmbientLight.Intensity = 0.1f;
+            Context.AmbientLight.Intensity = 0.1f;
 
-            //Renderer.DirectionalLight = new DirectionalLight()
+            //Context.DirectionalLight = new DirectionalLight()
             //{
             //    Rotation = Rotator3.FromDegrees(45, 90, 0)
             //};
@@ -61,7 +59,7 @@ namespace MiniEngine.Tutorials
                 Rotation = Rotator3.FromDegrees(0, 90, 0),
                 AttenuationLinear = 0.2f
             };
-            Renderer.Add(_spotLight);
+            Context.Add(_spotLight);
 
 
             var terrainMesh = new AssetManager().GetMeshFromFile(@"C:\Projects\ogldev\Content\box_terrain.obj", new MeshImportationParameters()
@@ -71,7 +69,7 @@ namespace MiniEngine.Tutorials
                 SmoothNormals = false
             });
             terrainMesh.Location = new Vector3(0f, -4f, 0.0f);
-            Renderer.Add(terrainMesh);
+            Context.Add(terrainMesh);
         }
 
 
@@ -80,23 +78,23 @@ namespace MiniEngine.Tutorials
             Camera.MoveInDirections(0.1f, Context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
 
             if (Context.Input.IsKeyPressed(Keys.NumpadAdd))
-                Renderer.AmbientLight.Intensity += 0.01f;
+                Context.AmbientLight.Intensity += 0.01f;
             if (Context.Input.IsKeyPressed(Keys.NumpadSubtract))
-                Renderer.AmbientLight.Intensity -= 0.01f;
+                Context.AmbientLight.Intensity -= 0.01f;
 
             if (Context.Input.IsKeyPressed(Keys.PageUp))
             {
-                if (Renderer.DirectionalLight != null)
-                    Renderer.DirectionalLight.Intensity += 0.01f;
+                if (Context.DirectionalLight != null)
+                    Context.DirectionalLight.Intensity += 0.01f;
             }
             if (Context.Input.IsKeyPressed(Keys.PageDown))
             {
-                if (Renderer.DirectionalLight != null)
-                    Renderer.DirectionalLight.Intensity -= 0.01f;
+                if (Context.DirectionalLight != null)
+                    Context.DirectionalLight.Intensity -= 0.01f;
             }
-            Renderer.AmbientLight.Intensity = Math.Clamp(Renderer.AmbientLight.Intensity, 0f, 1f);
-            if (Renderer.DirectionalLight != null)
-                Renderer.DirectionalLight.Intensity = Math.Clamp(Renderer.DirectionalLight.Intensity, 0f, 1f);
+            Context.AmbientLight.Intensity = Math.Clamp(Context.AmbientLight.Intensity, 0f, 1f);
+            if (Context.DirectionalLight != null)
+                Context.DirectionalLight.Intensity = Math.Clamp(Context.DirectionalLight.Intensity, 0f, 1f);
 
             if (Context.Input.IsJustMouseMoved)
             {
@@ -110,11 +108,5 @@ namespace MiniEngine.Tutorials
 
         }
 
-
-        public void Dispose()
-        {
-            if (_currentMesh != null)
-                _currentMesh.Dispose();
-        }
     }
 }
