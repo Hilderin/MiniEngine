@@ -20,9 +20,9 @@ namespace MiniEngine
         private List<SubMeshData> _subMeshes = new List<SubMeshData>();
 
         /// <summary>
-        /// Renderer for this mesh
+        /// State for the renderer
         /// </summary>
-        public IMeshRenderer MeshRenderer = null;
+        public object RendererStateObj = null;
 
 
         /// <summary>

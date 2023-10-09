@@ -10,7 +10,7 @@ namespace MiniEngine.Rendering.OpenGL
     /// <summary>
     /// Renderer for the meshes
     /// </summary>
-    internal class OpenGLMeshRenderer: IMeshRenderer
+    internal class OpenGLMeshRenderer
     {
         private const int SHADER_POSITION_LOCATION = 0;
         private const int SHADER_TEX_COORD_LOCATION = 1;
@@ -212,9 +212,9 @@ namespace MiniEngine.Rendering.OpenGL
                 Material mat = _materials[_meshEntries[i].MaterialIndex];
 
                 if (mat.Diffuse != null)
-                    ((OpenGLTextureBinder)mat.Diffuse.Binder).Bind(SHADER_COLOR_TEXTURE_UNIT);
+                    ((OpenGLTextureBinder)mat.Diffuse.RendererStateObj).Bind(SHADER_COLOR_TEXTURE_UNIT);
                 if (mat.Specular != null)
-                    ((OpenGLTextureBinder)mat.Specular.Binder).Bind(SHADER_SPECULAR_EXPONENT_UNIT);
+                    ((OpenGLTextureBinder)mat.Specular.RendererStateObj).Bind(SHADER_SPECULAR_EXPONENT_UNIT);
 
 
                 _shader.Enable();

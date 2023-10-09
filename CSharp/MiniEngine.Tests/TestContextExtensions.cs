@@ -19,10 +19,10 @@ namespace MiniEngine.Tests
         /// <summary>
         /// Test the 
         /// </summary>
-        public static void TestScreenshot(this Context context, string testName, InitHandler initHandler)
+        public static void TestScreenshot(this Context context, string testName)
         {
             context.CreateTest(WIDTH, HEIGHT)
-                       .Init(initHandler)
+                       .Init()
                        .RenderOneFramebuffer();
 
             string pathFileResult = TestHelper.GetPathTestResultFile(testName + ".png");

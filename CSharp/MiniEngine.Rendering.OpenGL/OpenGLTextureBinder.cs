@@ -9,7 +9,7 @@ namespace MiniEngine.Rendering.OpenGL
     /// <summary>
     /// Texture binder for OpenGL
     /// </summary>
-    public class OpenGLTextureBinder: ITextureBinder
+    public class OpenGLTextureBinder
     {
        
         /// <summary>

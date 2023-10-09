@@ -45,9 +45,9 @@ namespace MiniEngine
         public byte[] Data { get; set; }
 
         /// <summary>
-        /// Binder for the renderer
+        /// State object for the renderer
         /// </summary>
-        public ITextureBinder Binder;
+        public object RendererStateObj;
 
         /// <summary>
         /// Constructor

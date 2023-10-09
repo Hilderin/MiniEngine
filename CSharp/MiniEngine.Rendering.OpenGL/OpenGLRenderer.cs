@@ -145,11 +145,11 @@ namespace MiniEngine.Rendering.OpenGL
                 Mesh mesh = meshes[iMesh];
 
                 OpenGLMeshRenderer meshRenderer;
-                if (mesh.MeshRenderer == null)
+                if (mesh.RendererStateObj == null)
                 {
                     //Initialization of the mesh renderer...
                     meshRenderer = new OpenGLMeshRenderer(mesh);
-                    mesh.MeshRenderer = meshRenderer;
+                    mesh.RendererStateObj = meshRenderer;
                     _meshRenderers.Add(meshRenderer);
 
                     //Initialisation of the materials...
@@ -157,7 +157,7 @@ namespace MiniEngine.Rendering.OpenGL
                 }
                 else
                 {
-                    meshRenderer = (OpenGLMeshRenderer)mesh.MeshRenderer;
+                    meshRenderer = (OpenGLMeshRenderer)mesh.RendererStateObj;
                 }
 
                 Matrix4 worldMatrix = mesh.GetMatrix();
@@ -238,11 +238,11 @@ namespace MiniEngine.Rendering.OpenGL
         public void PrepareTexture(Texture2D texture)
         {
             OpenGLTextureBinder binder;
-            if (texture.Binder == null)
+            if (texture.RendererStateObj == null)
             {
                 //We need to create a new binder...
                 binder = new OpenGLTextureBinder(texture);
-                texture.Binder = binder;
+                texture.RendererStateObj = binder;
                 _textureBinders.Add(binder);
             }
         }
