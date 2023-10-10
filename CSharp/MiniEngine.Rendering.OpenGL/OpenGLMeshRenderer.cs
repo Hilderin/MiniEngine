@@ -29,6 +29,11 @@ namespace MiniEngine.Rendering.OpenGL
         private const int NB_BUFFERS = 6;
 
         /// <summary>
+        /// Mesh that uses this renderer
+        /// </summary>
+        private Mesh _mesh = null;
+
+        /// <summary>
         /// Vertex Array Object
         /// </summary>
         private uint _vao = uint.MaxValue;
@@ -94,6 +99,7 @@ namespace MiniEngine.Rendering.OpenGL
         /// </summary>
         public OpenGLMeshRenderer(Mesh mesh)
         {
+            _mesh = mesh;
 
             MeshData meshData = mesh.GetMeshData();
 
@@ -253,14 +259,6 @@ namespace MiniEngine.Rendering.OpenGL
         /// </summary>
         public void Dispose()
         {
-            Clear();
-        }
-
-        /// <summary>
-        /// Clear the mesh data and buffers
-        /// </summary>
-        public void Clear()
-        {
             if (_vao != uint.MaxValue)
             {
                 GL.glDeleteVertexArrays(_vao);
@@ -272,6 +270,8 @@ namespace MiniEngine.Rendering.OpenGL
                 GL.glDeleteBuffers(_buffers);
                 GL.CheckError();
 
+                _mesh.RendererStateObj = null;
+                _mesh = null;
             }
         }
 

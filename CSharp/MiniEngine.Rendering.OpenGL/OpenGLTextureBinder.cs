@@ -18,10 +18,17 @@ namespace MiniEngine.Rendering.OpenGL
         private uint _textureid = uint.MaxValue;
 
         /// <summary>
+        /// Texture that uses this binder
+        /// </summary>
+        private Texture2D _texture = null;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public OpenGLTextureBinder(Texture2D texture)
         {
+            _texture = texture;
+
             uint internalFormat;
             uint format;
 
@@ -77,6 +84,9 @@ namespace MiniEngine.Rendering.OpenGL
                 GL.CheckError();
 
                 _textureid = uint.MaxValue;
+
+                _texture.RendererStateObj = null;
+                _texture = null;
             }
         }
 
