@@ -12,6 +12,11 @@ namespace MiniEngine
     public interface IRenderer: IDisposable
     {
         /// <summary>
+        /// Update the window options specific to the engine
+        /// </summary>
+        void PreInitGlfw();
+
+        /// <summary>
         /// Initialize the rendering engine
         /// </summary>
         void Init();
@@ -30,5 +35,10 @@ namespace MiniEngine
         /// Get the frame buffer 
         /// </summary>
         byte[] GetFramebufferRGBA(int x, int y, int width, int height);
+
+        /// <summary>
+        /// Indicate we the buffer sould be swapped each frame
+        /// </summary>
+        bool ShouldSwapBuffer { get; }
     }
 }

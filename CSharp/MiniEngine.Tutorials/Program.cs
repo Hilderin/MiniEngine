@@ -1,6 +1,7 @@
 
 
 using MiniEngine.Rendering.OpenGL;
+using MiniEngine.Rendering.Vulkan;
 using System;
 using System.Windows.Forms;
 
@@ -19,9 +20,10 @@ namespace MiniEngine.Tutorials
             try
             {
 
-                using (Context context = new Context(new OpenGLRenderer()))
+                //using (Context context = new Context(new OpenGLRenderer()))
+                using (Context context = new Context(new VulkanRenderer("MiniEngine Tutorial", true)))
                 {
-                    var t = new Tutorial_Cube();
+                    var t = new Tutorial_Basic();
 
                     context.OpenWindow(WIDTH, HEIGHT, TITLE)
                            .Init(() =>

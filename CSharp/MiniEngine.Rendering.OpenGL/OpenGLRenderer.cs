@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniEngine.GLFW;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -65,6 +66,11 @@ namespace MiniEngine.Rendering.OpenGL
         private List<OpenGLTextureBinder> _textureBinders = new List<OpenGLTextureBinder>();
 
         /// <summary>
+        /// Indicate we the buffer sould be swapped each frame
+        /// </summary>
+        public bool ShouldSwapBuffer { get { return true; } }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public OpenGLRenderer()
@@ -94,6 +100,21 @@ namespace MiniEngine.Rendering.OpenGL
             return buffer;
         }
 
+        /// <summary>
+        /// Update the window options specific to the engine
+        /// </summary>
+        public void PreInitGlfw()
+        {
+            // Set some common hints for the OpenGL profile creation
+            Glfw.WindowHint(Hint.ClientApi, ClientApi.OpenGL);
+            Glfw.WindowHint(Hint.ContextVersionMajor, 3);
+            Glfw.WindowHint(Hint.ContextVersionMinor, 3);
+            Glfw.WindowHint(Hint.OpenglProfile, Profile.Core);
+            Glfw.WindowHint(Hint.Doublebuffer, true);
+            Glfw.WindowHint(Hint.Decorated, true);
+            Glfw.WindowHint(Hint.OpenglForwardCompatible, true);
+            Glfw.WindowHint(Hint.DepthBits, true);                  //Depth test
+        }
 
         /// <summary>
         /// Initialize the renderer

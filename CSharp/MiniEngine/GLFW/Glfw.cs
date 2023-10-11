@@ -14,7 +14,7 @@ namespace MiniEngine.GLFW
     ///     functions.
     /// </summary>
     [SuppressUnmanagedCodeSecurity]
-    public static class Glfw
+    public unsafe static class Glfw
     {
         #region Fields and Constants
 
@@ -24,11 +24,11 @@ namespace MiniEngine.GLFW
         /// </summary>
 //#if Windows
         public const string LIBRARY = "glfw3";
-//#elif OSX
-//        public const string LIBRARY = "libglfw.3"; // mac
-//#else
-//        public const string LIBRARY = "glfw";
-//#endif
+        //#elif OSX
+        //        public const string LIBRARY = "libglfw.3"; // mac
+        //#else
+        //        public const string LIBRARY = "glfw";
+        //#endif
 
         private static readonly ErrorCallback errorCallback = GlfwError;
 
@@ -72,6 +72,17 @@ namespace MiniEngine.GLFW
             description = code == ErrorCode.None ? null : NativeUtils.PtrToStringUtf8(ptr);
             return code;
         }
+
+        /// <summary>
+        /// Returns the necessary extensions
+        /// </summary>
+        public static string[] GetRequiredInstanceExtensions(out int glfwExtensionCount)
+        {
+            IntPtr ptr = GetRequiredInstanceExtensionsPrivate(out glfwExtensionCount);
+
+            return ConvertIntPtrToStringArray(ptr, glfwExtensionCount);
+        }
+
 
         /// <summary>
         ///     Retrieves the content scale for the specified monitor. The content scale is the ratio between the
@@ -327,7 +338,7 @@ namespace MiniEngine.GLFW
         public static extern bool JoystickIsGamepad(int joystickId);
 
         [DllImport(LIBRARY, EntryPoint = "glfwUpdateGamepadMappings", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool UpdateGamepadMappings( byte[] mappings);
+        private static extern bool UpdateGamepadMappings(byte[] mappings);
 
         /// <summary>
         ///     Parses the specified string and updates the internal list with any gamepad mappings it finds.
@@ -1482,6 +1493,9 @@ namespace MiniEngine.GLFW
         [DllImport(LIBRARY, EntryPoint = "glfwGetError", CallingConvention = CallingConvention.Cdecl)]
         private static extern ErrorCode GetErrorPrivate(out IntPtr description);
 
+        [DllImport(LIBRARY, EntryPoint = "glfwGetRequiredInstanceExtensions", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GetRequiredInstanceExtensionsPrivate(out int glfwExtensionCount);
+
         #endregion
 
         #region Methods
@@ -1499,7 +1513,7 @@ namespace MiniEngine.GLFW
         ///     resources..
         /// </param>
         /// <returns>The created window, or <see cref="Window.None" /> if an error occurred.</returns>
-        public static Window CreateWindow(int width, int height,  string title, Monitor monitor, Window share)
+        public static Window CreateWindow(int width, int height, string title, Monitor monitor, Window share)
         {
             return CreateWindow(width, height, Encoding.UTF8.GetBytes(title), monitor, share);
         }
@@ -1520,7 +1534,7 @@ namespace MiniEngine.GLFW
         /// </summary>
         /// <param name="window">A window instance.</param>
         /// <returns>The contents of the clipboard as a UTF-8 encoded string, or <c>null</c> if an error occurred.</returns>
-        
+
         public static string GetClipboardString(Window window)
         {
             return NativeUtils.PtrToStringUtf8(GetClipboardStringInternal(window));
@@ -1874,6 +1888,40 @@ namespace MiniEngine.GLFW
         private static void GlfwError(ErrorCode code, IntPtr message)
         {
             throw new Exception(NativeUtils.PtrToStringUtf8(message));
+        }
+
+        private static string[] ConvertIntPtrToStringArray(IntPtr p, int nstring)
+        {
+            //marshal.ptr
+            string[] s = new string[nstring];
+            char[] word;
+            int i, j, size;
+
+            unsafe
+            {
+                byte** str = (byte**)p.ToPointer();
+
+                i = 0;
+                while (i < nstring)
+                {
+                    j = 0;
+                    while (str[i][j] != 0)
+                        j++;
+                    size = j;
+                    word = new char[size];
+                    j = 0;
+                    while (str[i][j] != 0)
+                    {
+                        word[j] = (char)str[i][j];
+                        j++;
+                    }
+                    s[i] = new string(word);
+
+                    i++;
+                }
+            }
+
+            return s;
         }
 
         #endregion

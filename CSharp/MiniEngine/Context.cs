@@ -139,7 +139,7 @@ namespace MiniEngine
         {
             _current = this;
 
-            InitGlfw();
+            renderer.PreInitGlfw();
 
             _renderer = renderer;
 
@@ -367,7 +367,8 @@ namespace MiniEngine
                 Renderer.Render(this);
 
                 //Swapping buffer...
-                this._window.SwapBuffers();
+                if(Renderer.ShouldSwapBuffer)
+                    this._window.SwapBuffers();
 
                 //Indicate a new frame...
                 Input.OnNewFrame();
@@ -473,15 +474,7 @@ namespace MiniEngine
         /// </summary>
         private void InitGlfw()
         {
-            // Set some common hints for the OpenGL profile creation
-            Glfw.WindowHint(Hint.ClientApi, ClientApi.OpenGL);
-            Glfw.WindowHint(Hint.ContextVersionMajor, 3);
-            Glfw.WindowHint(Hint.ContextVersionMinor, 3);
-            Glfw.WindowHint(Hint.OpenglProfile, Profile.Core);
-            Glfw.WindowHint(Hint.Doublebuffer, true);
-            Glfw.WindowHint(Hint.Decorated, true);
-            Glfw.WindowHint(Hint.OpenglForwardCompatible, true);
-            Glfw.WindowHint(Hint.DepthBits, true);                  //Depth test
+            
 
         }
 
