@@ -630,6 +630,13 @@ namespace MiniEngine.GLFW
         [DllImport(LIBRARY, EntryPoint = "glfwSetWindowSize", CallingConvention = CallingConvention.Cdecl)]
         public static extern void SetWindowSize(Window window, int width, int height);
 
+
+        /// <summary>
+        ///     Create a surface
+        /// </summary>
+        [DllImport(LIBRARY, EntryPoint = "glfwCreateWindowSurface", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int CreateWindowSurface(IntPtr instance, Window window, IntPtr allocator, IntPtr surface);
+
         /// <summary>
         ///     This function retrieves the size, in pixels, of the framebuffer of the specified window.
         ///     <para>If you wish to retrieve the size of the window in screen coordinates, use <see cref="GetWindowSize" />.</para>

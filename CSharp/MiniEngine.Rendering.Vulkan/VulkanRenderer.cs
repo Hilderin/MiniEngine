@@ -20,6 +20,11 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private VkInstance _vk = null;
 
+        /// <summary>
+        /// A reference to the window
+        /// </summary>
+        private Window _window = null;
+
         public Camera Camera;
 
         public Matrix4 WVPMatrix;
@@ -136,9 +141,21 @@ namespace MiniEngine.Rendering.Vulkan
 
             _vk.SetupDebugMessenger();
 
+            _vk.CreateSurface(_window);
+
+            _vk.PickPhysicalDevice();
+
+            _vk.CreateLogicalDevice();
+
         }
 
-
+        /// <summary>
+        /// Pass the window to the render when it's created
+        /// </summary>
+        public void SetWindow(Window window)
+        {
+            _window = window;
+        }
 
 
         /// <summary>

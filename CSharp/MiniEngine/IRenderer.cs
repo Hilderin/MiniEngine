@@ -22,6 +22,11 @@ namespace MiniEngine
         void Init();
 
         /// <summary>
+        /// Pass the window to the render when it's created
+        /// </summary>
+        void SetWindow(Window window);
+
+        /// <summary>
         /// Clear the screen (called before a new frame)
         /// </summary>
         void Clear();

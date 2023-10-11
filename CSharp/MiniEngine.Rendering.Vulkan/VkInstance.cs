@@ -3,35 +3,59 @@ using Silk.NET.Core;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.EXT;
-using System;
-using System.Collections.Generic;
+using Silk.NET.Vulkan.Extensions.KHR;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
-    /// Wrapper for vulkan fonctions
+    /// Wrapper for vulkan instance and functions
     /// </summary>
     public unsafe class VkInstance: IDisposable
     {
-        private Vk vk;
+        #region Private members
+
+        private Vk vk = null;
         private Instance instance;
-        private ExtDebugUtils? debugUtils;
+        private ExtDebugUtils debugUtils = null;
         private DebugUtilsMessengerEXT debugMessenger;
+        private PhysicalDevice physicalDevice;
+        private Device device;
+        private Queue graphicsQueue;
 
+        private KhrSurface khrSurface = null;
+        private SurfaceKHR surface;
+        private Queue presentQueue;
 
+        
         private readonly string[] validationLayers = new[]
         {
             "VK_LAYER_KHRONOS_validation"
         };
 
+        #endregion
+
+        #region Public properties
+
+        /// <summary>
+        /// Indicate if we want to enable the validation layers
+        /// </summary>
         public bool EnableValidationLayers = true;
+
+        /// <summary>
+        /// Application name passed to Vulkan instance
+        /// </summary>
         public string ApplicationName = "MiniEngine";
 
+        #endregion
+
+        #region Public methods
+
+
+        /// <summary>
+        /// Create the vulkan instance
+        /// </summary>
         public void CreateInstance()
         {
             vk = Vk.GetApi();
@@ -66,6 +90,7 @@ namespace MiniEngine.Rendering.Vulkan
                 createInfo.EnabledLayerCount = (uint)validationLayers.Length;
                 createInfo.PpEnabledLayerNames = (byte**)SilkMarshal.StringArrayToPtr(validationLayers);
 
+                //Separate debug function calls juste for CreateInstance....
                 DebugUtilsMessengerCreateInfoEXT debugCreateInfo = new();
                 PopulateDebugMessengerCreateInfo(ref debugCreateInfo);
                 createInfo.PNext = &debugCreateInfo;
@@ -91,6 +116,9 @@ namespace MiniEngine.Rendering.Vulkan
             }
         }
 
+        /// <summary>
+        /// Activate the debug messages
+        /// </summary>
         public void SetupDebugMessenger()
         {
             if (!EnableValidationLayers) return;
@@ -107,6 +135,151 @@ namespace MiniEngine.Rendering.Vulkan
             }
         }
 
+        /// <summary>
+        /// Create the surface
+        /// </summary>
+        public void CreateSurface(Window window)
+        {
+            if (!vk.TryGetInstanceExtension<KhrSurface>(instance, out khrSurface))
+            {
+                throw new NotSupportedException("KHR_surface extension not found.");
+            }
+            
+            fixed (SurfaceKHR* ptrsurface = &surface)
+            {
+                window.CreateSurface(instance.Handle, (IntPtr)ptrsurface);
+            }
+
+
+        }
+
+
+        /// <summary>
+        /// Search the physical device to use
+        /// </summary>
+        public void PickPhysicalDevice()
+        {
+            uint devicedCount = 0;
+            vk!.EnumeratePhysicalDevices(instance, ref devicedCount, null);
+
+            if (devicedCount == 0)
+            {
+                throw new Exception("failed to find GPUs with Vulkan support!");
+            }
+
+            var devices = new PhysicalDevice[devicedCount];
+            fixed (PhysicalDevice* devicesPtr = devices)
+            {
+                vk!.EnumeratePhysicalDevices(instance, ref devicedCount, devicesPtr);
+            }
+
+            foreach (var device in devices)
+            {
+                if (IsDeviceSuitable(device))
+                {
+                    physicalDevice = device;
+                    break;
+                }
+            }
+
+            if (physicalDevice.Handle == 0)
+            {
+                throw new Exception("failed to find a suitable GPU!");
+            }
+        }
+
+        /// <summary>
+        /// Create Logical Device
+        /// </summary>
+        public void CreateLogicalDevice()
+        {
+            var indices = FindQueueFamilies(physicalDevice);
+
+            DeviceQueueCreateInfo queueCreateInfo = new()
+            {
+                SType = StructureType.DeviceQueueCreateInfo,
+                QueueFamilyIndex = indices.GraphicsFamily!.Value,
+                QueueCount = 1
+            };
+
+            float queuePriority = 1.0f;
+            queueCreateInfo.PQueuePriorities = &queuePriority;
+
+            PhysicalDeviceFeatures deviceFeatures = new();
+
+            DeviceCreateInfo createInfo = new()
+            {
+                SType = StructureType.DeviceCreateInfo,
+                QueueCreateInfoCount = 1,
+                PQueueCreateInfos = &queueCreateInfo,
+
+                PEnabledFeatures = &deviceFeatures,
+
+                EnabledExtensionCount = 0
+            };
+
+            if (EnableValidationLayers)
+            {
+                createInfo.EnabledLayerCount = (uint)validationLayers.Length;
+                createInfo.PpEnabledLayerNames = (byte**)SilkMarshal.StringArrayToPtr(validationLayers);
+            }
+            else
+            {
+                createInfo.EnabledLayerCount = 0;
+            }
+
+            if (vk!.CreateDevice(physicalDevice, in createInfo, null, out device) != Result.Success)
+            {
+                throw new Exception("failed to create logical device!");
+            }
+
+            vk!.GetDeviceQueue(device, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
+
+            if (EnableValidationLayers)
+            {
+                SilkMarshal.Free((nint)createInfo.PpEnabledLayerNames);
+            }
+        }
+
+        /// <summary>
+        /// Disposing
+        /// </summary>
+        public void Dispose()
+        {
+            if (vk != null)
+            {
+                vk.DestroyDevice(device, null);
+
+                
+
+                if (EnableValidationLayers)
+                {
+                    //DestroyDebugUtilsMessenger equivilant to method DestroyDebugUtilsMessengerEXT from original tutorial.
+                    debugUtils?.DestroyDebugUtilsMessenger(instance, debugMessenger, null);
+                }
+
+                if(khrSurface != null)
+                    khrSurface.DestroySurface(instance, surface, null);
+
+                vk.DestroyInstance(instance, null);
+                vk.Dispose();
+
+                vk = null;
+            }
+
+        }
+
+
+
+
+
+        #endregion
+
+        #region Private methods
+
+        /// <summary>
+        /// Returns the required extensions for glfw and validation layers
+        /// </summary>
         private string[] GetRequiredExtensions()
         {
             string[] glfwExtensions = Glfw.GetRequiredInstanceExtensions();
@@ -119,6 +292,9 @@ namespace MiniEngine.Rendering.Vulkan
             return glfwExtensions;
         }
 
+        /// <summary>
+        /// Validate if the validation layers are supported (Vulkan SDK installed)
+        /// </summary>
         private bool CheckValidationLayerSupport()
         {
             uint layerCount = 0;
@@ -134,6 +310,9 @@ namespace MiniEngine.Rendering.Vulkan
             return validationLayers.All(availableLayerNames.Contains);
         }
 
+        /// <summary>
+        /// Setup the struct DebugUtilsMessengerCreateInfoEXT
+        /// </summary>
         private void PopulateDebugMessengerCreateInfo(ref DebugUtilsMessengerCreateInfoEXT createInfo)
         {
             createInfo.SType = StructureType.DebugUtilsMessengerCreateInfoExt;
@@ -146,28 +325,73 @@ namespace MiniEngine.Rendering.Vulkan
             createInfo.PfnUserCallback = (DebugUtilsMessengerCallbackFunctionEXT)DebugCallback;
         }
 
+        /// <summary>
+        /// Callback when we receive vulkan callback
+        /// </summary>
         private uint DebugCallback(DebugUtilsMessageSeverityFlagsEXT messageSeverity, DebugUtilsMessageTypeFlagsEXT messageTypes, DebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
         {
-            Console.WriteLine($"validation layer:" + Marshal.PtrToStringAnsi((nint)pCallbackData->PMessage));
+            string data = Marshal.PtrToStringAnsi((nint)pCallbackData->PMessage);
+
+            //Console.WriteLine($"validation layer:" + data);
+            Debug.WriteLine($"validation layer: {data}");
 
             return Vk.False;
         }
 
         /// <summary>
-        /// Disposing
+        /// Check if a device is suitable
         /// </summary>
-        public void Dispose()
+        private bool IsDeviceSuitable(PhysicalDevice device)
         {
-            if (EnableValidationLayers)
+            var indices = FindQueueFamilies(device);
+
+            return indices.IsComplete();
+        }
+
+        /// <summary>
+        /// Search a family queue
+        /// </summary>
+        private QueueFamilyIndices FindQueueFamilies(PhysicalDevice device)
+        {
+            var indices = new QueueFamilyIndices();
+
+            uint queueFamilityCount = 0;
+            vk!.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, null);
+
+            var queueFamilies = new QueueFamilyProperties[queueFamilityCount];
+            fixed (QueueFamilyProperties* queueFamiliesPtr = queueFamilies)
             {
-                //DestroyDebugUtilsMessenger equivilant to method DestroyDebugUtilsMessengerEXT from original tutorial.
-                debugUtils?.DestroyDebugUtilsMessenger(instance, debugMessenger, null);
+                vk!.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, queueFamiliesPtr);
             }
 
-            vk?.DestroyInstance(instance, null);
-            vk?.Dispose();
 
+            uint i = 0;
+            foreach (var queueFamily in queueFamilies)
+            {
+                if (queueFamily.QueueFlags.HasFlag(QueueFlags.GraphicsBit))
+                {
+                    indices.GraphicsFamily = i;
+                }
+
+                khrSurface!.GetPhysicalDeviceSurfaceSupport(device, i, surface, out var presentSupport);
+
+                if (presentSupport)
+                {
+                    indices.PresentFamily = i;
+                }
+
+                if (indices.IsComplete())
+                {
+                    break;
+                }
+
+                i++;
+            }
+
+            return indices;
         }
+
+        #endregion
 
     }
 }

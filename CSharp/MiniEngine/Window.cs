@@ -534,6 +534,18 @@ namespace MiniEngine
             Glfw.SetWindowSizeLimits(_glfwWindow, minWidth, minHeight, maxWidth, maxHeight);
         }
 
+
+        /// <summary>
+        /// Create a surface
+        /// </summary>
+        public void CreateSurface(IntPtr instance, IntPtr surface)
+        {
+            int result = Glfw.CreateWindowSurface(instance, _glfwWindow, IntPtr.Zero, surface);
+            if (result != 0)
+                throw new Exception($"Impossible to create surface: {result}");
+        }
+
+
         /// <summary>
         /// Dispose the Window
         /// </summary>

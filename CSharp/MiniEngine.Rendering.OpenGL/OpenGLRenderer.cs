@@ -131,6 +131,13 @@ namespace MiniEngine.Rendering.OpenGL
             GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         }
 
+        /// <summary>
+        /// Pass the window to the render when it's created
+        /// </summary>
+        public void SetWindow(Window window)
+        {
+            
+        }
 
 
 

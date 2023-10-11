@@ -157,6 +157,8 @@ namespace MiniEngine
 
                 _clientSize = new Vector2(width, height);
 
+                Renderer.SetWindow(this._window);
+
                 this.CenterOnScreen();
 
             }
