@@ -76,8 +76,9 @@ namespace MiniEngine.GLFW
         /// <summary>
         /// Returns the necessary extensions
         /// </summary>
-        public static string[] GetRequiredInstanceExtensions(out int glfwExtensionCount)
+        public static string[] GetRequiredInstanceExtensions()
         {
+            int glfwExtensionCount;
             IntPtr ptr = GetRequiredInstanceExtensionsPrivate(out glfwExtensionCount);
 
             return ConvertIntPtrToStringArray(ptr, glfwExtensionCount);

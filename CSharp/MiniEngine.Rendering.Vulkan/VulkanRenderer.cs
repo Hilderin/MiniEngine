@@ -18,7 +18,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Vulkan instance
         /// </summary>
-        private Vk _vk = null;
+        private VkInstance _vk = null;
 
         public Camera Camera;
 
@@ -130,9 +130,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Init()
         {
-            _vk = new Vk();
+            _vk = new VkInstance();
 
-            _vk.CreateInstance(this.ApplicationName, this.AddValidationLayers);
+            _vk.CreateInstance();
 
             _vk.SetupDebugMessenger();
 
