@@ -19,6 +19,13 @@ namespace MiniEngine.Tutorials
         {
             try
             {
+                //VkInstance vk = new VkInstance();
+
+                //vk.InitWindow();
+                //vk.InitVulkan();
+                //vk.MainLoop();
+                //vk.Dispose();
+
 
                 //using (Context context = new Context(new OpenGLRenderer()))
                 using (Context context = new Context(new VulkanRenderer("MiniEngine Tutorial", true)))

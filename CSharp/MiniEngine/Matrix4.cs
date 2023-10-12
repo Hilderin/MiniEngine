@@ -302,7 +302,7 @@ namespace MiniEngine
         /// </summary>
         public static Matrix4 CreateProjection(float fov, float width, float height, float nearZ, float farZ)
         {
-            Matrix4 newMatrix = new Matrix4();
+            Matrix4 newMatrix;
 
             float tanHalfFOV = Math.Tan(Math.DegToRad(fov / 2.0f));
             float f = 1 / tanHalfFOV;
@@ -314,12 +314,137 @@ namespace MiniEngine
             float B = 2.0f * farZ * nearZ / zRange;
 
             newMatrix.M11 = f / aspectRatio;
+            newMatrix.M12 = newMatrix.M13 = newMatrix.M14 = 0.0f;
+            
             newMatrix.M22 = f;
+            newMatrix.M21 = newMatrix.M23 = newMatrix.M24 = 0.0f;
+            
+            newMatrix.M31 = newMatrix.M32 = 0.0f;
             newMatrix.M33 = A;
             newMatrix.M34 = B;
+            
+            newMatrix.M41 = newMatrix.M42 = newMatrix.M44 = 0.0f;
             newMatrix.M43 = 1.0f;
 
             return newMatrix;
+        }
+
+        ///<summary>
+        /// Summary:
+        ///     Creates a perspective projection matrix based on a field of view, aspect ratio,
+        ///     and near and far view plane distances.
+        ///
+        /// Parameters:
+        ///   fieldOfView:
+        ///     Field of view in the y direction, in radians.
+        ///
+        ///   aspectRatio:
+        ///     Aspect ratio, defined as view space width divided by height.
+        ///
+        ///   nearPlaneDistance:
+        ///     Distance to the near view plane.
+        ///
+        ///   farPlaneDistance:
+        ///     Distance to the far view plane.
+        ///
+        /// Returns:
+        ///     The perspective projection matrix.
+        ///</summary>
+        public static Matrix4 CreatePerspectiveFieldOfView(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance)
+        {
+            float val = 1f / (Math.Tan((fieldOfView / 2f)));
+            float m = (val / aspectRatio);
+            Matrix4 result;
+            result.M11 = m;
+            result.M12 = result.M13 = result.M14 = 0.0f;
+            result.M22 = val;
+            result.M21 = result.M23 = result.M24 = 0.0f;
+
+            result.M31 = result.M32 = 0.0f;
+            float right = (result.M33 = (float.IsPositiveInfinity(farPlaneDistance) ? -1f : (farPlaneDistance / (nearPlaneDistance - farPlaneDistance))));
+            result.M34 = -1f;
+            result.M41 = result.M42 = result.M44 = 0.0f;
+            result.M43 = (nearPlaneDistance * right);
+            return result;
+        }
+
+        ///<summary>
+        /// Summary:
+        ///     Creates a view matrix.
+        ///
+        /// Parameters:
+        ///   cameraPosition:
+        ///     The position of the camera.
+        ///
+        ///   cameraTarget:
+        ///     The target towards which the camera is pointing.
+        ///
+        ///   cameraUpVector:
+        ///     The direction that is "up" from the camera's point of view.
+        ///
+        /// Returns:
+        ///     The view matrix.
+        ///</summary>
+        public static Matrix4 CreateLookAt(Vector3 cameraPosition, Vector3 cameraTarget, Vector3 cameraUpVector)
+        {
+            Vector3 vector3D = Vector3.Normalize(cameraPosition - cameraTarget);
+            Vector3 vector3D2 = Vector3.Normalize(Vector3.Cross(cameraUpVector, vector3D));
+            Vector3 vector = Vector3.Cross(vector3D, vector3D2);
+            Matrix4 identity = Matrix4.Identity;
+            identity.M11 = vector3D2.X;
+            identity.M12 = vector.X;
+            identity.M13 = vector3D.X;
+            identity.M21 = vector3D2.Y;
+            identity.M22 = vector.Y;
+            identity.M23 = vector3D.Y;
+            identity.M31 = vector3D2.Z;
+            identity.M32 = vector.Z;
+            identity.M33 = vector3D.Z;
+            identity.M41 = -Vector3.Dot(vector3D2, cameraPosition);
+            identity.M42 = -Vector3.Dot(vector, cameraPosition);
+            identity.M43 = -Vector3.Dot(vector3D, cameraPosition);
+
+            return identity;
+        }
+
+        ///<summary>
+        /// Summary:
+        ///     Creates a matrix that rotates around an arbitrary vector.
+        ///
+        /// Parameters:
+        ///   axis:
+        ///     The axis to rotate around.
+        ///
+        ///   angle:
+        ///     The angle to rotate around the given axis, in radians.
+        ///
+        /// Returns:
+        ///     The rotation matrix.
+        ///</summary>
+        public static Matrix4 CreateFromAxisAngle(Vector3 axis, float angle)
+        {
+            float x = axis.X;
+            float y = axis.Y;
+            float z = axis.Z;
+            float left = Math.Sin(angle);
+            float left2 = Math.Cos(angle);
+            float val =  x * x;
+            float val2 = y * y;
+            float val3 = z * z;
+            float val4 = x * y;
+            float val5 = x * z;
+            float val6 = y * z;
+            Matrix4 identity = Matrix4.Identity;
+            identity.M11 = val + (left2 * (1f - val));
+            identity.M12 = (val4 - (left2 * val4)) + (left * z);
+            identity.M13 = (val5 - (left2 * val5)) - (left * y);
+            identity.M21 = (val4 - (left2 * val4)) - (left * z);
+            identity.M22 = val2 + (left2 * (1f - val2));
+            identity.M23 = (val6 - (left2 * val6)) + (left * x);
+            identity.M31 = (val5 - (left2 * val5)) + (left * y);
+            identity.M32 = (val6 - (left2 * val6)) - (left * x);
+            identity.M33 = (val3 + (left2 *(1f - val3)));
+            return identity;
         }
 
 

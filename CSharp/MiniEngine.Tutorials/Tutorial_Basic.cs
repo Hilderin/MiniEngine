@@ -15,7 +15,7 @@ namespace MiniEngine.Tutorials
         public void Init()
         {
 
-            Context.LockCursor();
+            //Context.LockCursor();
 
            
         }

@@ -118,14 +118,37 @@ namespace MiniEngine.Rendering.Vulkan
             throw new NotImplementedException();
         }
 
+        public const int GL_DONT_CARE = 0x1100;
+
         /// <summary>
         /// Update the window options specific to the engine
         /// </summary>
         public void PreInitGlfw()
         {
-            // No API
+            //// No API
+            //true, new Vector2D<int>(50, 50), new Vector2D<int>(1280, 720), 0.0, 0.0, GraphicsAPI.DefaultVulkan,
+            //    name, WindowState.Normal,
+            //    WindowBorder.Resizable, false, false, VideoMode.Default
             Glfw.WindowHint(Hint.ClientApi, ClientApi.None);
-            Glfw.WindowHint(Hint.Resizable, false);
+            //Glfw.WindowHint(Hint.Resizable, false);
+
+            //Glfw.WindowHint(Hint.RefreshRate, GL_DONT_CARE);
+            //Glfw.WindowHint(Hint.DepthBits, GL_DONT_CARE);
+            //Glfw.WindowHint(Hint.StencilBits, GL_DONT_CARE);
+
+            //Glfw.WindowHint(Hint.RedBits, GL_DONT_CARE);
+            //Glfw.WindowHint(Hint.GreenBits, GL_DONT_CARE);
+            //Glfw.WindowHint(Hint.BlueBits, GL_DONT_CARE);
+            
+
+            //// Set transparent framebuffer
+            //Glfw.WindowHint(Hint.TransparentFramebuffer, false);
+
+            //// Set topmost window
+            //Glfw.WindowHint(Hint.Floating, false);
+
+            //// Set multisample samples
+            //Glfw.WindowHint(Hint.Samples, GL_DONT_CARE);
 
 
         }
@@ -139,17 +162,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             _vk.SetWindow(_window);
 
-            _vk.CreateInstance();
-
-            _vk.SetupDebugMessenger();
-
-            _vk.CreateSurface();
-
-            _vk.PickPhysicalDevice();
-
-            _vk.CreateLogicalDevice();
-
-            _vk.CreateSwapChain();
+            //_vk.InitWindow();
+            _vk.InitVulkan();
+            //_vk.MainLoop();
 
         }
 
@@ -167,7 +182,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Render(Context context)
         {
-            
+            _vk.DrawFrame(0);
 
         }
 

@@ -32,6 +32,13 @@ namespace MiniEngine
         /// </summary>
         private KeyCallback _onKeyCallback;
         private MouseCallback _onMouseCallback;
+        private SizeCallback _onSizeCallback;
+
+
+        /// <summary>
+        /// Event when the window is resized
+        /// </summary>
+        public event Action<Vector2> OnWindowResized;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="NativeWindow" /> class.
@@ -586,15 +593,17 @@ namespace MiniEngine
         {
             _onKeyCallback = OnKey;
             _onMouseCallback = OnCursorPosition;
+            _onSizeCallback = OnSizeCallback;
 
             Glfw.SetKeyCallback(_glfwWindow, _onKeyCallback);
             Glfw.SetCursorPositionCallback(_glfwWindow, _onMouseCallback);
+            Glfw.SetWindowSizeCallback(_glfwWindow, _onSizeCallback);
         }
 
         /// <summary>
         /// OnKeypress
         /// </summary>
-        public void OnKey(GLFW.Window window, Keys key, int scanCode, InputState state, ModifierKeys mods)
+        private void OnKey(GLFW.Window window, Keys key, int scanCode, InputState state, ModifierKeys mods)
         {
             _context.Input.SetKeyState(key, (state != InputState.Release));
         }
@@ -602,9 +611,18 @@ namespace MiniEngine
         /// <summary>
         /// OnCursorPosition (mouse mouved)
         /// </summary>
-        public void OnCursorPosition(GLFW.Window window, double x, double y)
+        private void OnCursorPosition(GLFW.Window window, double x, double y)
         {
             _context.Input.SetMousePosition(new Vector2((float)x, (float)y));
+        }
+
+        /// <summary>
+        /// When window is resized
+        /// </summary>
+        private void OnSizeCallback(GLFW.Window window, int width, int height)
+        {
+            if (OnWindowResized != null)
+                OnWindowResized(new Vector2(width, height));
         }
 
         #endregion

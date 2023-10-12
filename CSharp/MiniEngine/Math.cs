@@ -196,6 +196,13 @@ namespace MiniEngine
             return MathF.Floor(value);
         }
 
+        /// <summary>
+        /// Returns the base 2 logarithm of a number
+        /// </summary>
+        public static float Log2(float value)
+        {
+            return MathF.Log2(value);
+        }
 
         /// <summary>
         /// Return a byte from a float base 1

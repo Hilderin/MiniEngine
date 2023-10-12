@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MiniEngine.Tutorials": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Projects\\MiniEngine\\CSharp\\MiniEngine.Tutorials"
+    }
+  }
+}
