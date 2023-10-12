@@ -114,6 +114,20 @@ namespace MiniEngine
             set => Glfw.SetWindowSize(_glfwWindow, (int)value.X, (int)value.Y);
         }
 
+        /// <summary>
+        ///     This function retrieves the size, in pixels, of the framebuffer of the specified window.
+        ///     <para>If you wish to retrieve the size of the window in screen coordinates, use <see cref="GetWindowSize" />.</para>
+        /// </summary>
+        public Vector2 FramebufferSize
+        {
+            get
+            {
+                Glfw.GetFramebufferSize(_glfwWindow, out int width, out int height);
+
+                return new Vector2(width, height);
+            }
+        }
+
 
         /// <summary>
         ///     Gets the monitor this window is fullscreen on.

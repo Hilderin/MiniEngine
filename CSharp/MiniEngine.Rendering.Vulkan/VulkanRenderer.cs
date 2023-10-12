@@ -137,15 +137,19 @@ namespace MiniEngine.Rendering.Vulkan
         {
             _vk = new VkInstance();
 
+            _vk.SetWindow(_window);
+
             _vk.CreateInstance();
 
             _vk.SetupDebugMessenger();
 
-            _vk.CreateSurface(_window);
+            _vk.CreateSurface();
 
             _vk.PickPhysicalDevice();
 
             _vk.CreateLogicalDevice();
+
+            _vk.CreateSwapChain();
 
         }
 
