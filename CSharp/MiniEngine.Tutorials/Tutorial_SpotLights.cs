@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MiniEngine.AssertManager;
+using MiniEngine.Assets;
 using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Tutorials

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MiniEngine.AssertManager
+namespace MiniEngine.Assets
 {
     /// <summary>
     /// Mesh importation parameters
@@ -30,6 +30,11 @@ namespace MiniEngine.AssertManager
         /// Scale
         /// </summary>
         public float Scale = 1f;
+
+        /// <summary>
+        /// Flip Y
+        /// </summary>
+        public bool FlipY = false;
 
         /// <summary>
         /// Smooth normals

@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TeximpNet;
 
-namespace MiniEngine.AssertManager
+namespace MiniEngine.Assets
 {
     /// <summary>
     /// Texture importer

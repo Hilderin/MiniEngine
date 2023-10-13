@@ -1,6 +1,6 @@
 ﻿using Assimp;
 
-namespace MiniEngine.AssertManager
+namespace MiniEngine.Assets
 {
     /// <summary>
     /// Manager for the assets

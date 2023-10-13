@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MiniEngine.AssertManager\MiniEngine.AssertManager.csproj" />
+    <ProjectReference Include="..\MiniEngine.Assets\MiniEngine.Assets.csproj" />
     <ProjectReference Include="..\MiniEngine\MiniEngine.csproj" />
   </ItemGroup>
 

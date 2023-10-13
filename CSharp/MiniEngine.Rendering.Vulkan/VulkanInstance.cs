@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using MiniEngine.Assets;
 using Silk.NET.Assimp;
 using Silk.NET.Core;
 using Silk.NET.Core.Native;
@@ -69,17 +70,10 @@ namespace MiniEngine.Rendering.Vulkan
 
         public CommandPool commandPool;
 
-
         
+        //public Vertex[] vertices = null;
 
-        public Buffer vertexBuffer;
-        public DeviceMemory vertexBufferMemory;
-        public Buffer indexBuffer;
-        public DeviceMemory indexBufferMemory;
-
-        public Vertex[] vertices = null;
-
-        public uint[] indices = null;
+        //public uint[] indices = null;
 
 
         public DescriptorSetLayout descriptorSetLayout;
@@ -88,7 +82,13 @@ namespace MiniEngine.Rendering.Vulkan
 
         #region Private members
 
+        private VulkanInitializer _initializer = null;
 
+        private VulkanSwapChain _swapChain = null;
+
+
+        public VulkanTextureBinder _texture = null;
+        public VulkanMeshRenderer _meshRenderer = null;
 
         private Dictionary<uint, VulkanSampler> _samplers = new Dictionary<uint, VulkanSampler>();
         
@@ -103,11 +103,7 @@ namespace MiniEngine.Rendering.Vulkan
         private bool frameBufferResized = false;
 
 
-        private VulkanInitializer _initializer = null;
-
-        private VulkanSwapChain _swapChain = null;
-
-        public VulkanTextureBinder _texture = null;
+        
 
         #endregion
 
@@ -148,19 +144,19 @@ namespace MiniEngine.Rendering.Vulkan
 
             _initializer.Init();
 
-            var texture = new MiniEngine.AssertManager.TextureImporter().GetTexture2DFromFile(TEXTURE_PATH);
+            AssetManager assetManager = new AssetManager();
+            var texture = assetManager.GetTexture2DFromFile(TEXTURE_PATH);
             _texture = new VulkanTextureBinder(texture, this);
             _texture.Init();
 
-            //CreateTextureImage();
-            //CreateTextureImageView();
-            //CreateTextureSampler();
-            LoadModel();
-            CreateVertexBuffer();
-            CreateIndexBuffer();
+            var mesh = assetManager.GetMeshFromFile(MODEL_PATH, new MeshImportationParameters() { InverseFaces = true });
+            _meshRenderer = new VulkanMeshRenderer(mesh, this);
+            _meshRenderer.Init();
+
+            
             CreateDescriptorSetLayout();
 
-            _swapChain = new VulkanSwapChain(this);
+            _swapChain = new VulkanSwapChain(_meshRenderer, this);
 
             _swapChain.Init();
 
@@ -240,6 +236,7 @@ namespace MiniEngine.Rendering.Vulkan
             _swapChain?.Dispose();
 
             _texture?.Dispose();
+            _meshRenderer?.Dispose();
 
             foreach (VulkanSampler sampler in _samplers.Values)
                 sampler.Dispose();
@@ -247,12 +244,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             Api.DestroyDescriptorSetLayout(device, descriptorSetLayout, null);
 
-            Api.DestroyBuffer(device, indexBuffer, null);
-            Api.FreeMemory(device, indexBufferMemory, null);
-
-            Api.DestroyBuffer(device, vertexBuffer, null);
-            Api.FreeMemory(device, vertexBufferMemory, null);
-
+            
             for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
                 Api.DestroySemaphore(device, renderFinishedSemaphores[i], null);
@@ -287,7 +279,7 @@ namespace MiniEngine.Rendering.Vulkan
             _swapChain.Dispose();
 
 
-            _swapChain = new VulkanSwapChain(this);
+            _swapChain = new VulkanSwapChain(_meshRenderer, this);
             _swapChain.Init();
 
             //CreateImageViews();
@@ -378,119 +370,11 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
 
-        
-
-
-        private void LoadModel()
-        {
-            using var assimp = Assimp.GetApi();
-            var scene = assimp.ImportFile(MODEL_PATH, (uint)PostProcessPreset.TargetRealTimeMaximumQuality);
-
-            var vertexMap = new Dictionary<Vertex, uint>();
-            var vertices = new List<Vertex>();
-            var indices = new List<uint>();
-
-            VisitSceneNode(scene->MRootNode);
-
-            assimp.ReleaseImport(scene);
-
-            this.vertices = vertices.ToArray();
-            this.indices = indices.ToArray();
-
-            void VisitSceneNode(Node* node)
-            {
-                for (int m = 0; m < node->MNumMeshes; m++)
-                {
-                    var mesh = scene->MMeshes[node->MMeshes[m]];
-
-                    for (int f = 0; f < mesh->MNumFaces; f++)
-                    {
-                        var face = mesh->MFaces[f];
-
-                        for (int i = 0; i < face.MNumIndices; i++)
-                        {
-                            uint index = face.MIndices[i];
-
-                            var position = mesh->MVertices[index];
-                            var texture = mesh->MTextureCoords[0][(int)index];
-
-                            Vertex vertex = new()
-                            {
-                                pos = new Vector3(position.X, position.Y, position.Z),
-                                color = new Vector3(1, 1, 1),
-                                //Flip Y for OBJ in Vulkan
-                                textCoord = new Vector2(texture.X, 1.0f - texture.Y)
-                            };
-
-                            if (vertexMap.TryGetValue(vertex, out var meshIndex))
-                            {
-                                indices.Add(meshIndex);
-                            }
-                            else
-                            {
-                                indices.Add((uint)vertices.Count);
-                                vertexMap[vertex] = (uint)vertices.Count;
-                                vertices.Add(vertex);
-                            }
-                        }
-                    }
-                }
-
-                for (int c = 0; c < node->MNumChildren; c++)
-                {
-                    VisitSceneNode(node->MChildren[c]);
-                }
-            }
-        }
-
-
-        private void CreateVertexBuffer()
-        {
-            ulong bufferSize = (ulong)(Unsafe.SizeOf<Vertex>() * vertices.Length);
-
-            Buffer stagingBuffer = default;
-            DeviceMemory stagingBufferMemory = default;
-            this.CreateBuffer(bufferSize, BufferUsageFlags.TransferSrcBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref stagingBuffer, ref stagingBufferMemory);
-
-            void* data;
-            Api.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-            vertices.AsSpan().CopyTo(new Span<Vertex>(data, vertices.Length));
-            Api.UnmapMemory(device, stagingBufferMemory);
-
-            this.CreateBuffer(bufferSize, BufferUsageFlags.TransferDstBit | BufferUsageFlags.VertexBufferBit, MemoryPropertyFlags.DeviceLocalBit, ref vertexBuffer, ref vertexBufferMemory);
-
-            this.CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-            Api.DestroyBuffer(device, stagingBuffer, null);
-            Api.FreeMemory(device, stagingBufferMemory, null);
-        }
-
-        private void CreateIndexBuffer()
-        {
-            ulong bufferSize = (ulong)(Unsafe.SizeOf<uint>() * indices.Length);
-
-            Buffer stagingBuffer = default;
-            DeviceMemory stagingBufferMemory = default;
-            this.CreateBuffer(bufferSize, BufferUsageFlags.TransferSrcBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref stagingBuffer, ref stagingBufferMemory);
-
-            void* data;
-            Api.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-            indices.AsSpan().CopyTo(new Span<uint>(data, indices.Length));
-            Api.UnmapMemory(device, stagingBufferMemory);
-
-            this.CreateBuffer(bufferSize, BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit, MemoryPropertyFlags.DeviceLocalBit, ref indexBuffer, ref indexBufferMemory);
-
-            this.CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-            Api.DestroyBuffer(device, stagingBuffer, null);
-            Api.FreeMemory(device, stagingBufferMemory, null);
-        }
 
 
 
-        
 
-        
+
 
 
 

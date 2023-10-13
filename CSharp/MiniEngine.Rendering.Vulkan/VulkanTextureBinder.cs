@@ -1,19 +1,13 @@
 ﻿using Silk.NET.Vulkan;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Image = Silk.NET.Vulkan.Image;
 using Buffer = Silk.NET.Vulkan.Buffer;
-using System.Runtime.InteropServices;
 
 namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Texture binder for Vulkan
     /// </summary>
-    public unsafe class VulkanTextureBinder
+    public unsafe class VulkanTextureBinder: IDisposable
     {
         public uint mipLevels;
         private Image textureImage;

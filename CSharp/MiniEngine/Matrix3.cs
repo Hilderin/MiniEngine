@@ -513,6 +513,16 @@ namespace MiniEngine
         }
 
         /// <summary>
+        /// Creates a matrix that flips Y
+        /// </summary>
+        public static Matrix3 FromFlipY()
+        {
+            Matrix3 m = Identity;
+            m.M22 = -1f;
+            return m;
+        }
+
+        /// <summary>
         /// Creates a rotation matrix that rotates a vector called "from" into another
         /// vector called "to". Based on an algorithm by Tomas Moller and John Hudges:
         /// <para>

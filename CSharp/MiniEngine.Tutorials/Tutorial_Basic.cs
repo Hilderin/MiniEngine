@@ -1,5 +1,5 @@
 ﻿using System;
-using MiniEngine.AssertManager;
+using MiniEngine.Assets;
 using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Tutorials

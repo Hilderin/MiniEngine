@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace MiniEngine.AssertManager
+namespace MiniEngine.Assets
 {
     internal class MeshImporter
     {
@@ -31,12 +31,15 @@ namespace MiniEngine.AssertManager
 
             using (AssimpContext context = new AssimpContext())
             {
-                PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.MakeLeftHanded;
+                //PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.MakeLeftHanded;
+                PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
                 if (!parameters.InverseFaces)
                     postProcessSteps = postProcessSteps | PostProcessSteps.FlipWindingOrder;
 
                 if (parameters.Scale != 1f)
-                    _transformMatrix = Matrix3.FromScaling(new Vector3(parameters.Scale));
+                    _transformMatrix = _transformMatrix * Matrix3.FromScaling(new Vector3(parameters.Scale));
+                if (parameters.FlipY)
+                    _transformMatrix = _transformMatrix * Matrix3.FromFlipY();
 
                 if (parameters.SmoothNormals)
                     postProcessSteps |= PostProcessSteps.GenerateSmoothNormals;

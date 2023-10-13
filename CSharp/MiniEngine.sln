@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Tutorials", "Min
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine", "MiniEngine\MiniEngine.csproj", "{75149D39-4A72-4472-BD1E-B5444BBAE1D6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.AssertManager", "MiniEngine.AssertManager\MiniEngine.AssertManager.csproj", "{863BB252-DC76-4877-9E89-8CC185EF8B85}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Assets", "MiniEngine.Assets\MiniEngine.Assets.csproj", "{863BB252-DC76-4877-9E89-8CC185EF8B85}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Labs", "MiniEngine.Labs\MiniEngine.Labs.csproj", "{4109F56A-0FF2-4E34-AFCC-F80385FB0BB5}"
 EndProject
@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Tests", "MiniEng
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Rendering.OpenGL", "MiniEngine.Rendering.OpenGL\MiniEngine.Rendering.OpenGL.csproj", "{32F1FE7F-85CF-48FB-AF14-69F58F2EEBF2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniEngine.Rendering.Vulkan", "MiniEngine.Rendering.Vulkan\MiniEngine.Rendering.Vulkan.csproj", "{4CB8F174-7279-4724-9944-FA19FA4D35D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Rendering.Vulkan", "MiniEngine.Rendering.Vulkan\MiniEngine.Rendering.Vulkan.csproj", "{4CB8F174-7279-4724-9944-FA19FA4D35D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

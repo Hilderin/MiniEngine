@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MiniEngine.Assets\MiniEngine.Assets.csproj" />
+    <ProjectReference Include="..\MiniEngine.AssetManager\MiniEngine.AssetManager.csproj" />
     <ProjectReference Include="..\MiniEngine.Rendering.OpenGL\MiniEngine.Rendering.OpenGL.csproj" />
     <ProjectReference Include="..\MiniEngine.Rendering.Vulkan\MiniEngine.Rendering.Vulkan.csproj" />
     <ProjectReference Include="..\MiniEngine\MiniEngine.csproj" />

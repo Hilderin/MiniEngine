@@ -17,6 +17,8 @@ namespace MiniEngine.Rendering.Vulkan
         #region Private members
 
         private VulkanInstance _vi;
+        private VulkanMeshRenderer _meshRender;
+
         private Format swapChainImageFormat;
         private Extent2D swapChainExtent;
         public SwapchainKHR swapChain;
@@ -61,9 +63,11 @@ namespace MiniEngine.Rendering.Vulkan
                 /// <summary>
                 /// Constructor
                 /// </summary>
-        public VulkanSwapChain(VulkanInstance vi)
+        public VulkanSwapChain(VulkanMeshRenderer meshRender, VulkanInstance vi)
         {
             _vi = vi;
+            _meshRender = meshRender;
+
             Api = vi.Api;
         }
 
@@ -772,20 +776,26 @@ namespace MiniEngine.Rendering.Vulkan
 
                 Api.CmdBindPipeline(commandBuffers[i], PipelineBindPoint.Graphics, graphicsPipeline);
 
-                var vertexBuffers = new Buffer[] { _vi.vertexBuffer };
-                var offsets = new ulong[] { 0 };
-
-                fixed (ulong* offsetsPtr = offsets)
-                fixed (Buffer* vertexBuffersPtr = vertexBuffers)
+                for (int iMesh = 0; iMesh < _meshRender._vulkanMeshDatas.Length; iMesh++)
                 {
-                    Api.CmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffersPtr, offsetsPtr);
+                    var vertexBuffers = new Buffer[] { _meshRender._vulkanMeshDatas[iMesh].vertexBuffer };
+                    var offsets = new ulong[] { 0 };
+
+                    fixed (ulong* offsetsPtr = offsets)
+                    fixed (Buffer* vertexBuffersPtr = vertexBuffers)
+                    {
+                        Api.CmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffersPtr, offsetsPtr);
+                    }
+
+                    Api.CmdBindIndexBuffer(commandBuffers[i], _meshRender._vulkanMeshDatas[iMesh].indexBuffer, 0, IndexType.Uint32);
+
+                    Api.CmdBindDescriptorSets(commandBuffers[i], PipelineBindPoint.Graphics, pipelineLayout, 0, 1, descriptorSets[i], 0, null);
+
+                    Api.CmdDrawIndexed(commandBuffers[i], (uint)_meshRender._vulkanMeshDatas[iMesh].indexBufferLength, 1, 0, 0, 0);
                 }
+                
 
-                Api.CmdBindIndexBuffer(commandBuffers[i], _vi.indexBuffer, 0, IndexType.Uint32);
-
-                Api.CmdBindDescriptorSets(commandBuffers[i], PipelineBindPoint.Graphics, pipelineLayout, 0, 1, descriptorSets[i], 0, null);
-
-                Api.CmdDrawIndexed(commandBuffers[i], (uint)_vi.indices.Length, 1, 0, 0, 0);
+                
 
                 Api.CmdEndRenderPass(commandBuffers[i]);
 

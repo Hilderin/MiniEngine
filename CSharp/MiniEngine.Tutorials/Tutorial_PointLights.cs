@@ -1,5 +1,5 @@
 ﻿using System;
-using MiniEngine.AssertManager;
+using MiniEngine.Assets;
 
 namespace MiniEngine.Tutorials
 {
