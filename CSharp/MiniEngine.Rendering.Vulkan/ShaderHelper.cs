@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MiniEngine.Rendering.Vulkan
 {
-    public unsafe static class VulkanShaderHelper
+    public unsafe static class ShaderHelper
     {
         /// <summary>
         /// Create a shader module

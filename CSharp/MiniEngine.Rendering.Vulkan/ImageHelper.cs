@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MiniEngine.Rendering.Vulkan
 {
-    public unsafe static class VulkanImageHelper
+    public unsafe static class ImageHelper
     {
         /// <summary>
         /// Create a image view
@@ -86,7 +86,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 SType = StructureType.MemoryAllocateInfo,
                 AllocationSize = memRequirements.Size,
-                MemoryTypeIndex = VulkanMemoryHelper.FindMemoryType(vi, memRequirements.MemoryTypeBits, properties),
+                MemoryTypeIndex = MemoryHelper.FindMemoryType(vi, memRequirements.MemoryTypeBits, properties),
             };
 
             fixed (DeviceMemory* imageMemoryPtr = &imageMemory)

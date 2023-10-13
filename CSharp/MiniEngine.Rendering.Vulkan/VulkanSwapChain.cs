@@ -239,7 +239,7 @@ namespace MiniEngine.Rendering.Vulkan
             for (int i = 0; i < swapChainImages.Length; i++)
             {
 
-                swapChainImageViews[i] = VulkanImageHelper.CreateImageView(_vi, swapChainImages[i], swapChainImageFormat, ImageAspectFlags.ColorBit, 1);
+                swapChainImageViews[i] = ImageHelper.CreateImageView(_vi, swapChainImages[i], swapChainImageFormat, ImageAspectFlags.ColorBit, 1);
             }
         }
 
@@ -346,8 +346,8 @@ namespace MiniEngine.Rendering.Vulkan
             var vertShaderCode = System.IO.File.ReadAllBytes("shaders/vert.spv");
             var fragShaderCode = System.IO.File.ReadAllBytes("shaders/frag.spv");
 
-            var vertShaderModule = VulkanShaderHelper.CreateShaderModule(_vi, vertShaderCode);
-            var fragShaderModule = VulkanShaderHelper.CreateShaderModule(_vi, fragShaderCode);
+            var vertShaderModule = ShaderHelper.CreateShaderModule(_vi, vertShaderCode);
+            var fragShaderModule = ShaderHelper.CreateShaderModule(_vi, fragShaderCode);
 
             PipelineShaderStageCreateInfo vertShaderStageInfo = new()
             {
@@ -520,8 +520,8 @@ namespace MiniEngine.Rendering.Vulkan
         {
             Format colorFormat = swapChainImageFormat;
 
-            VulkanImageHelper.CreateImage(_vi, swapChainExtent.Width, swapChainExtent.Height, 1, _vi.msaaSamples, colorFormat, ImageTiling.Optimal, ImageUsageFlags.TransientAttachmentBit | ImageUsageFlags.ColorAttachmentBit, MemoryPropertyFlags.DeviceLocalBit, ref colorImage, ref colorImageMemory);
-            colorImageView = VulkanImageHelper.CreateImageView(_vi, colorImage, colorFormat, ImageAspectFlags.ColorBit, 1);
+            ImageHelper.CreateImage(_vi, swapChainExtent.Width, swapChainExtent.Height, 1, _vi.msaaSamples, colorFormat, ImageTiling.Optimal, ImageUsageFlags.TransientAttachmentBit | ImageUsageFlags.ColorAttachmentBit, MemoryPropertyFlags.DeviceLocalBit, ref colorImage, ref colorImageMemory);
+            colorImageView = ImageHelper.CreateImageView(_vi, colorImage, colorFormat, ImageAspectFlags.ColorBit, 1);
 
         }
 
@@ -532,8 +532,8 @@ namespace MiniEngine.Rendering.Vulkan
         {
             Format depthFormat = FindDepthFormat();
 
-            VulkanImageHelper.CreateImage(_vi, swapChainExtent.Width, swapChainExtent.Height, 1, _vi.msaaSamples, depthFormat, ImageTiling.Optimal, ImageUsageFlags.DepthStencilAttachmentBit, MemoryPropertyFlags.DeviceLocalBit, ref depthImage, ref depthImageMemory);
-            depthImageView = VulkanImageHelper.CreateImageView(_vi, depthImage, depthFormat, ImageAspectFlags.DepthBit, 1);
+            ImageHelper.CreateImage(_vi, swapChainExtent.Width, swapChainExtent.Height, 1, _vi.msaaSamples, depthFormat, ImageTiling.Optimal, ImageUsageFlags.DepthStencilAttachmentBit, MemoryPropertyFlags.DeviceLocalBit, ref depthImage, ref depthImageMemory);
+            depthImageView = ImageHelper.CreateImageView(_vi, depthImage, depthFormat, ImageAspectFlags.DepthBit, 1);
         }
 
         /// <summary>
@@ -581,7 +581,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             for (int i = 0; i < swapChainImages.Length; i++)
             {
-                VulkanMemoryHelper.CreateBuffer(_vi, bufferSize, BufferUsageFlags.UniformBufferBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref uniformBuffers[i], ref uniformBuffersMemory[i]);
+                MemoryHelper.CreateBuffer(_vi, bufferSize, BufferUsageFlags.UniformBufferBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref uniformBuffers[i], ref uniformBuffersMemory[i]);
             }
 
         }

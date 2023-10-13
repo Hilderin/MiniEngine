@@ -8,7 +8,7 @@ using Buffer = Silk.NET.Vulkan.Buffer;
 
 namespace MiniEngine.Rendering.Vulkan
 {
-    public unsafe static class VulkanMemoryHelper
+    public unsafe static class MemoryHelper
     {
         /// <summary>
         /// Find a memory type
@@ -28,6 +28,7 @@ namespace MiniEngine.Rendering.Vulkan
             throw new Exception("failed to find suitable memory type!");
         }
 
+        
 
         /// <summary>
         /// Create a buffer
@@ -57,7 +58,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 SType = StructureType.MemoryAllocateInfo,
                 AllocationSize = memRequirements.Size,
-                MemoryTypeIndex = VulkanMemoryHelper.FindMemoryType(vi, memRequirements.MemoryTypeBits, properties),
+                MemoryTypeIndex = MemoryHelper.FindMemoryType(vi, memRequirements.MemoryTypeBits, properties),
             };
 
             fixed (DeviceMemory* bufferMemoryPtr = &bufferMemory)
@@ -71,7 +72,22 @@ namespace MiniEngine.Rendering.Vulkan
             vi.VkApi.BindBufferMemory(vi.device, buffer, bufferMemory, 0);
         }
 
+        /// <summary>
+        /// Copy a buffer
+        /// </summary>
+        public static void CopyBuffer(VulkanInstance vi, Buffer srcBuffer, Buffer dstBuffer, ulong size)
+        {
+            CommandBuffer commandBuffer = CommandBufferHelper.BeginSingleTimeCommands(vi);
 
+            BufferCopy copyRegion = new()
+            {
+                Size = size,
+            };
+
+            vi.VkApi.CmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, copyRegion);
+
+            CommandBufferHelper.EndSingleTimeCommands(vi, commandBuffer);
+        }
 
     }
 }
