@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace MiniEngine.Rendering.Vulkan
 {
-    public unsafe static class ImageHelper
+    public unsafe static class ImageExtensions
     {
         /// <summary>
         /// Create a image view
         /// </summary>
-        public static ImageView CreateImageView(VulkanInstance vi, Image image, Format format, ImageAspectFlags aspectFlags, uint mipLevels)
+        public static ImageView CreateImageView(this VulkanInstance vi, Image image, Format format, ImageAspectFlags aspectFlags, uint mipLevels)
         {
             ImageViewCreateInfo createInfo = new()
             {
@@ -39,7 +39,7 @@ namespace MiniEngine.Rendering.Vulkan
             };
 
 
-            if (vi.VkApi.CreateImageView(vi.device, createInfo, null, out ImageView imageView) != Result.Success)
+            if (vi.Api.CreateImageView(vi.device, createInfo, null, out ImageView imageView) != Result.Success)
             {
                 throw new Exception("failed to create image views!");
             }
@@ -50,7 +50,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create and bind an image
         /// </summary>
-        public static void CreateImage(VulkanInstance vi, uint width, uint height, uint mipLevels, SampleCountFlags numSamples, Format format, ImageTiling tiling, ImageUsageFlags usage, MemoryPropertyFlags properties, ref Image image, ref DeviceMemory imageMemory)
+        public static void CreateImage(this VulkanInstance vi, uint width, uint height, uint mipLevels, SampleCountFlags numSamples, Format format, ImageTiling tiling, ImageUsageFlags usage, MemoryPropertyFlags properties, ref Image image, ref DeviceMemory imageMemory)
         {
             ImageCreateInfo imageInfo = new()
             {
@@ -74,30 +74,30 @@ namespace MiniEngine.Rendering.Vulkan
 
             fixed (Image* imagePtr = &image)
             {
-                if (vi.VkApi.CreateImage(vi.device, imageInfo, null, imagePtr) != Result.Success)
+                if (vi.Api.CreateImage(vi.device, imageInfo, null, imagePtr) != Result.Success)
                 {
                     throw new Exception("failed to create image!");
                 }
             }
 
-            vi.VkApi.GetImageMemoryRequirements(vi.device, image, out MemoryRequirements memRequirements);
+            vi.Api.GetImageMemoryRequirements(vi.device, image, out MemoryRequirements memRequirements);
 
             MemoryAllocateInfo allocInfo = new()
             {
                 SType = StructureType.MemoryAllocateInfo,
                 AllocationSize = memRequirements.Size,
-                MemoryTypeIndex = MemoryHelper.FindMemoryType(vi, memRequirements.MemoryTypeBits, properties),
+                MemoryTypeIndex = vi.FindMemoryType(memRequirements.MemoryTypeBits, properties),
             };
 
             fixed (DeviceMemory* imageMemoryPtr = &imageMemory)
             {
-                if (vi.VkApi.AllocateMemory(vi.device, allocInfo, null, imageMemoryPtr) != Result.Success)
+                if (vi.Api.AllocateMemory(vi.device, allocInfo, null, imageMemoryPtr) != Result.Success)
                 {
                     throw new Exception("failed to allocate image memory!");
                 }
             }
 
-            vi.VkApi.BindImageMemory(vi.device, image, imageMemory, 0);
+            vi.Api.BindImageMemory(vi.device, image, imageMemory, 0);
         }
 
     }

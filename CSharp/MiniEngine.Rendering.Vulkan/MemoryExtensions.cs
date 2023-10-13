@@ -8,14 +8,14 @@ using Buffer = Silk.NET.Vulkan.Buffer;
 
 namespace MiniEngine.Rendering.Vulkan
 {
-    public unsafe static class MemoryHelper
+    public unsafe static class MemoryExtensions
     {
         /// <summary>
         /// Find a memory type
         /// </summary>
-        public static uint FindMemoryType(VulkanInstance vi, uint typeFilter, MemoryPropertyFlags properties)
+        public static uint FindMemoryType(this VulkanInstance vi, uint typeFilter, MemoryPropertyFlags properties)
         {
-            vi.VkApi.GetPhysicalDeviceMemoryProperties(vi.physicalDevice, out PhysicalDeviceMemoryProperties memProperties);
+            vi.Api.GetPhysicalDeviceMemoryProperties(vi.physicalDevice, out PhysicalDeviceMemoryProperties memProperties);
 
             for (int i = 0; i < memProperties.MemoryTypeCount; i++)
             {
@@ -33,7 +33,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a buffer
         /// </summary>
-        public static void CreateBuffer(VulkanInstance vi, ulong size, BufferUsageFlags usage, MemoryPropertyFlags properties, ref Buffer buffer, ref DeviceMemory bufferMemory)
+        public static void CreateBuffer(this VulkanInstance vi, ulong size, BufferUsageFlags usage, MemoryPropertyFlags properties, ref Buffer buffer, ref DeviceMemory bufferMemory)
         {
             BufferCreateInfo bufferInfo = new()
             {
@@ -45,48 +45,48 @@ namespace MiniEngine.Rendering.Vulkan
 
             fixed (Buffer* bufferPtr = &buffer)
             {
-                if (vi.VkApi.CreateBuffer(vi.device, bufferInfo, null, bufferPtr) != Result.Success)
+                if (vi.Api.CreateBuffer(vi.device, bufferInfo, null, bufferPtr) != Result.Success)
                 {
                     throw new Exception("failed to create vertex buffer!");
                 }
             }
 
             MemoryRequirements memRequirements = new();
-            vi.VkApi.GetBufferMemoryRequirements(vi.device, buffer, out memRequirements);
+            vi.Api.GetBufferMemoryRequirements(vi.device, buffer, out memRequirements);
 
             MemoryAllocateInfo allocateInfo = new()
             {
                 SType = StructureType.MemoryAllocateInfo,
                 AllocationSize = memRequirements.Size,
-                MemoryTypeIndex = MemoryHelper.FindMemoryType(vi, memRequirements.MemoryTypeBits, properties),
+                MemoryTypeIndex = MemoryExtensions.FindMemoryType(vi, memRequirements.MemoryTypeBits, properties),
             };
 
             fixed (DeviceMemory* bufferMemoryPtr = &bufferMemory)
             {
-                if (vi.VkApi.AllocateMemory(vi.device, allocateInfo, null, bufferMemoryPtr) != Result.Success)
+                if (vi.Api.AllocateMemory(vi.device, allocateInfo, null, bufferMemoryPtr) != Result.Success)
                 {
                     throw new Exception("failed to allocate vertex buffer memory!");
                 }
             }
 
-            vi.VkApi.BindBufferMemory(vi.device, buffer, bufferMemory, 0);
+            vi.Api.BindBufferMemory(vi.device, buffer, bufferMemory, 0);
         }
 
         /// <summary>
         /// Copy a buffer
         /// </summary>
-        public static void CopyBuffer(VulkanInstance vi, Buffer srcBuffer, Buffer dstBuffer, ulong size)
+        public static void CopyBuffer(this VulkanInstance vi, Buffer srcBuffer, Buffer dstBuffer, ulong size)
         {
-            CommandBuffer commandBuffer = CommandBufferHelper.BeginSingleTimeCommands(vi);
+            CommandBuffer commandBuffer = vi.BeginSingleTimeCommands();
 
             BufferCopy copyRegion = new()
             {
                 Size = size,
             };
 
-            vi.VkApi.CmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, copyRegion);
+            vi.Api.CmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, copyRegion);
 
-            CommandBufferHelper.EndSingleTimeCommands(vi, commandBuffer);
+            vi.EndSingleTimeCommands(commandBuffer);
         }
 
     }

@@ -21,7 +21,7 @@ namespace MiniEngine.Rendering.Vulkan
         private Extent2D swapChainExtent;
         public SwapchainKHR swapChain;
         private Image[] swapChainImages = null;
-        private Vk VkApi;
+        private Vk Api;
 
 
         private ImageView[] swapChainImageViews = null;
@@ -64,7 +64,7 @@ namespace MiniEngine.Rendering.Vulkan
         public VulkanSwapChain(VulkanInstance vi)
         {
             _vi = vi;
-            VkApi = vi.VkApi;
+            Api = vi.Api;
         }
 
         #endregion
@@ -102,50 +102,50 @@ namespace MiniEngine.Rendering.Vulkan
 
 
             void* data;
-            VkApi.MapMemory(_vi.device, uniformBuffersMemory[currentImage], 0, (ulong)Unsafe.SizeOf<UniformBufferObject>(), 0, &data);
+            Api.MapMemory(_vi.device, uniformBuffersMemory[currentImage], 0, (ulong)Unsafe.SizeOf<UniformBufferObject>(), 0, &data);
             new Span<UniformBufferObject>(data, 1)[0] = ubo;
-            VkApi.UnmapMemory(_vi.device, uniformBuffersMemory[currentImage]);
+            Api.UnmapMemory(_vi.device, uniformBuffersMemory[currentImage]);
 
         }
 
         public void Dispose()
         {
-            VkApi.DestroyImageView(_vi.device, depthImageView, null);
-            VkApi.DestroyImage(_vi.device, depthImage, null);
-            VkApi.FreeMemory(_vi.device, depthImageMemory, null);
+            Api.DestroyImageView(_vi.device, depthImageView, null);
+            Api.DestroyImage(_vi.device, depthImage, null);
+            Api.FreeMemory(_vi.device, depthImageMemory, null);
 
-            VkApi.DestroyImageView(_vi.device, colorImageView, null);
-            VkApi.DestroyImage(_vi.device, colorImage, null);
-            VkApi.FreeMemory(_vi.device, colorImageMemory, null);
+            Api.DestroyImageView(_vi.device, colorImageView, null);
+            Api.DestroyImage(_vi.device, colorImage, null);
+            Api.FreeMemory(_vi.device, colorImageMemory, null);
 
             foreach (var framebuffer in swapChainFramebuffers)
             {
-                VkApi.DestroyFramebuffer(_vi.device, framebuffer, null);
+                Api.DestroyFramebuffer(_vi.device, framebuffer, null);
             }
 
             fixed (CommandBuffer* commandBuffersPtr = commandBuffers)
             {
-                VkApi.FreeCommandBuffers(_vi.device, _vi.commandPool, (uint)commandBuffers.Length, commandBuffersPtr);
+                Api.FreeCommandBuffers(_vi.device, _vi.commandPool, (uint)commandBuffers.Length, commandBuffersPtr);
             }
 
-            VkApi.DestroyPipeline(_vi.device, graphicsPipeline, null);
-            VkApi.DestroyPipelineLayout(_vi.device, pipelineLayout, null);
-            VkApi.DestroyRenderPass(_vi.device, renderPass, null);
+            Api.DestroyPipeline(_vi.device, graphicsPipeline, null);
+            Api.DestroyPipelineLayout(_vi.device, pipelineLayout, null);
+            Api.DestroyRenderPass(_vi.device, renderPass, null);
 
             foreach (var imageView in swapChainImageViews!)
             {
-                VkApi.DestroyImageView(_vi.device, imageView, null);
+                Api.DestroyImageView(_vi.device, imageView, null);
             }
 
             _vi.khrSwapChain.DestroySwapchain(_vi.device, swapChain, null);
 
             for (int i = 0; i < swapChainImages.Length; i++)
             {
-                VkApi.DestroyBuffer(_vi.device, uniformBuffers[i], null);
-                VkApi.FreeMemory(_vi.device, uniformBuffersMemory[i], null);
+                Api.DestroyBuffer(_vi.device, uniformBuffers[i], null);
+                Api.FreeMemory(_vi.device, uniformBuffersMemory[i], null);
             }
 
-            VkApi.DestroyDescriptorPool(_vi.device, descriptorPool, null);
+            Api.DestroyDescriptorPool(_vi.device, descriptorPool, null);
         }
 
 
@@ -182,11 +182,12 @@ namespace MiniEngine.Rendering.Vulkan
                 ImageUsage = ImageUsageFlags.ColorAttachmentBit,
             };
 
-            var indices = QueueFamiliesHelper.FindQueueFamilies(_vi, _vi.physicalDevice);
-            var queueFamilyIndices = stackalloc[] { indices.GraphicsFamily.Value, indices.PresentFamily.Value };
+            var indices = _vi.FindQueueFamilies();
+            
 
             if (indices.GraphicsFamily != indices.PresentFamily)
             {
+                var queueFamilyIndices = stackalloc[] { indices.GraphicsFamily.Value, indices.PresentFamily.Value };
                 creatInfo = creatInfo with
                 {
                     ImageSharingMode = SharingMode.Concurrent,
@@ -209,7 +210,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             //if (khrSwapChain is null)
             //{
-            //    if (!VkApi.TryGetDeviceExtension(Instance, device, out khrSwapChain))
+            //    if (!Api.TryGetDeviceExtension(Instance, device, out khrSwapChain))
             //    {
             //        throw new NotSupportedException("VK_KHR_swapchain extension not found.");
             //    }
@@ -239,7 +240,7 @@ namespace MiniEngine.Rendering.Vulkan
             for (int i = 0; i < swapChainImages.Length; i++)
             {
 
-                swapChainImageViews[i] = ImageHelper.CreateImageView(_vi, swapChainImages[i], swapChainImageFormat, ImageAspectFlags.ColorBit, 1);
+                swapChainImageViews[i] = _vi.CreateImageView(swapChainImages[i], swapChainImageFormat, ImageAspectFlags.ColorBit, 1);
             }
         }
 
@@ -334,7 +335,7 @@ namespace MiniEngine.Rendering.Vulkan
                     PDependencies = &dependency,
                 };
 
-                if (VkApi.CreateRenderPass(_vi.device, renderPassInfo, null, out renderPass) != Result.Success)
+                if (Api.CreateRenderPass(_vi.device, renderPassInfo, null, out renderPass) != Result.Success)
                 {
                     throw new Exception("failed to create render pass!");
                 }
@@ -476,7 +477,7 @@ namespace MiniEngine.Rendering.Vulkan
                     PSetLayouts = descriptorSetLayoutPtr
                 };
 
-                if (VkApi.CreatePipelineLayout(_vi.device, pipelineLayoutInfo, null, out pipelineLayout) != Result.Success)
+                if (Api.CreatePipelineLayout(_vi.device, pipelineLayoutInfo, null, out pipelineLayout) != Result.Success)
                 {
                     throw new Exception("failed to create pipeline layout!");
                 }
@@ -499,14 +500,14 @@ namespace MiniEngine.Rendering.Vulkan
                     BasePipelineHandle = default
                 };
 
-                if (VkApi.CreateGraphicsPipelines(_vi.device, default, 1, pipelineInfo, null, out graphicsPipeline) != Result.Success)
+                if (Api.CreateGraphicsPipelines(_vi.device, default, 1, pipelineInfo, null, out graphicsPipeline) != Result.Success)
                 {
                     throw new Exception("failed to create graphics pipeline!");
                 }
             }
 
-            VkApi.DestroyShaderModule(_vi.device, fragShaderModule, null);
-            VkApi.DestroyShaderModule(_vi.device, vertShaderModule, null);
+            Api.DestroyShaderModule(_vi.device, fragShaderModule, null);
+            Api.DestroyShaderModule(_vi.device, vertShaderModule, null);
 
             SilkMarshal.Free((nint)vertShaderStageInfo.PName);
             SilkMarshal.Free((nint)fragShaderStageInfo.PName);
@@ -520,8 +521,8 @@ namespace MiniEngine.Rendering.Vulkan
         {
             Format colorFormat = swapChainImageFormat;
 
-            ImageHelper.CreateImage(_vi, swapChainExtent.Width, swapChainExtent.Height, 1, _vi.msaaSamples, colorFormat, ImageTiling.Optimal, ImageUsageFlags.TransientAttachmentBit | ImageUsageFlags.ColorAttachmentBit, MemoryPropertyFlags.DeviceLocalBit, ref colorImage, ref colorImageMemory);
-            colorImageView = ImageHelper.CreateImageView(_vi, colorImage, colorFormat, ImageAspectFlags.ColorBit, 1);
+            _vi.CreateImage(swapChainExtent.Width, swapChainExtent.Height, 1, _vi.msaaSamples, colorFormat, ImageTiling.Optimal, ImageUsageFlags.TransientAttachmentBit | ImageUsageFlags.ColorAttachmentBit, MemoryPropertyFlags.DeviceLocalBit, ref colorImage, ref colorImageMemory);
+            colorImageView = _vi.CreateImageView(colorImage, colorFormat, ImageAspectFlags.ColorBit, 1);
 
         }
 
@@ -532,8 +533,8 @@ namespace MiniEngine.Rendering.Vulkan
         {
             Format depthFormat = FindDepthFormat();
 
-            ImageHelper.CreateImage(_vi, swapChainExtent.Width, swapChainExtent.Height, 1, _vi.msaaSamples, depthFormat, ImageTiling.Optimal, ImageUsageFlags.DepthStencilAttachmentBit, MemoryPropertyFlags.DeviceLocalBit, ref depthImage, ref depthImageMemory);
-            depthImageView = ImageHelper.CreateImageView(_vi, depthImage, depthFormat, ImageAspectFlags.DepthBit, 1);
+            _vi.CreateImage(swapChainExtent.Width, swapChainExtent.Height, 1, _vi.msaaSamples, depthFormat, ImageTiling.Optimal, ImageUsageFlags.DepthStencilAttachmentBit, MemoryPropertyFlags.DeviceLocalBit, ref depthImage, ref depthImageMemory);
+            depthImageView = _vi.CreateImageView(depthImage, depthFormat, ImageAspectFlags.DepthBit, 1);
         }
 
         /// <summary>
@@ -560,7 +561,7 @@ namespace MiniEngine.Rendering.Vulkan
                         Layers = 1,
                     };
 
-                    if (VkApi.CreateFramebuffer(_vi.device, framebufferInfo, null, out swapChainFramebuffers[i]) != Result.Success)
+                    if (Api.CreateFramebuffer(_vi.device, framebufferInfo, null, out swapChainFramebuffers[i]) != Result.Success)
                     {
                         throw new Exception("failed to create framebuffer!");
                     }
@@ -581,7 +582,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             for (int i = 0; i < swapChainImages.Length; i++)
             {
-                MemoryHelper.CreateBuffer(_vi, bufferSize, BufferUsageFlags.UniformBufferBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref uniformBuffers[i], ref uniformBuffersMemory[i]);
+                _vi.CreateBuffer(bufferSize, BufferUsageFlags.UniformBufferBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref uniformBuffers[i], ref uniformBuffersMemory[i]);
             }
 
         }
@@ -618,7 +619,7 @@ namespace MiniEngine.Rendering.Vulkan
                     MaxSets = (uint)swapChainImages.Length,
                 };
 
-                if (VkApi.CreateDescriptorPool(_vi.device, poolInfo, null, descriptorPoolPtr) != Result.Success)
+                if (Api.CreateDescriptorPool(_vi.device, poolInfo, null, descriptorPoolPtr) != Result.Success)
                 {
                     throw new Exception("failed to create descriptor pool!");
                 }
@@ -645,7 +646,7 @@ namespace MiniEngine.Rendering.Vulkan
                 descriptorSets = new DescriptorSet[swapChainImages.Length];
                 fixed (DescriptorSet* descriptorSetsPtr = descriptorSets)
                 {
-                    if (VkApi.AllocateDescriptorSets(_vi.device, allocateInfo, descriptorSetsPtr) != Result.Success)
+                    if (Api.AllocateDescriptorSets(_vi.device, allocateInfo, descriptorSetsPtr) != Result.Success)
                     {
                         throw new Exception("failed to allocate descriptor sets!");
                     }
@@ -666,8 +667,8 @@ namespace MiniEngine.Rendering.Vulkan
                 DescriptorImageInfo imageInfo = new()
                 {
                     ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
-                    ImageView = _vi.textureImageView,
-                    Sampler = _vi.textureSampler,
+                    ImageView = _vi._texture.textureImageView,
+                    Sampler = _vi._texture.Sampler.textureSampler,
                 };
 
                 var descriptorWrites = new WriteDescriptorSet[]
@@ -696,7 +697,7 @@ namespace MiniEngine.Rendering.Vulkan
 
                 fixed (WriteDescriptorSet* descriptorWritesPtr = descriptorWrites)
                 {
-                    VkApi.UpdateDescriptorSets(_vi.device, (uint)descriptorWrites.Length, descriptorWritesPtr, 0, null);
+                    Api.UpdateDescriptorSets(_vi.device, (uint)descriptorWrites.Length, descriptorWritesPtr, 0, null);
                 }
             }
 
@@ -717,7 +718,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             fixed (CommandBuffer* commandBuffersPtr = commandBuffers)
             {
-                if (VkApi.AllocateCommandBuffers(_vi.device, allocInfo, commandBuffersPtr) != Result.Success)
+                if (Api.AllocateCommandBuffers(_vi.device, allocInfo, commandBuffersPtr) != Result.Success)
                 {
                     throw new Exception("failed to allocate command buffers!");
                 }
@@ -731,7 +732,7 @@ namespace MiniEngine.Rendering.Vulkan
                     SType = StructureType.CommandBufferBeginInfo,
                 };
 
-                if (VkApi.BeginCommandBuffer(commandBuffers[i], beginInfo) != Result.Success)
+                if (Api.BeginCommandBuffer(commandBuffers[i], beginInfo) != Result.Success)
                 {
                     throw new Exception("failed to begin recording command buffer!");
                 }
@@ -766,10 +767,10 @@ namespace MiniEngine.Rendering.Vulkan
                     renderPassInfo.ClearValueCount = (uint)clearValues.Length;
                     renderPassInfo.PClearValues = clearValuesPtr;
 
-                    VkApi.CmdBeginRenderPass(commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
+                    Api.CmdBeginRenderPass(commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
                 }
 
-                VkApi.CmdBindPipeline(commandBuffers[i], PipelineBindPoint.Graphics, graphicsPipeline);
+                Api.CmdBindPipeline(commandBuffers[i], PipelineBindPoint.Graphics, graphicsPipeline);
 
                 var vertexBuffers = new Buffer[] { _vi.vertexBuffer };
                 var offsets = new ulong[] { 0 };
@@ -777,18 +778,18 @@ namespace MiniEngine.Rendering.Vulkan
                 fixed (ulong* offsetsPtr = offsets)
                 fixed (Buffer* vertexBuffersPtr = vertexBuffers)
                 {
-                    VkApi.CmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffersPtr, offsetsPtr);
+                    Api.CmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffersPtr, offsetsPtr);
                 }
 
-                VkApi.CmdBindIndexBuffer(commandBuffers[i], _vi.indexBuffer, 0, IndexType.Uint32);
+                Api.CmdBindIndexBuffer(commandBuffers[i], _vi.indexBuffer, 0, IndexType.Uint32);
 
-                VkApi.CmdBindDescriptorSets(commandBuffers[i], PipelineBindPoint.Graphics, pipelineLayout, 0, 1, descriptorSets[i], 0, null);
+                Api.CmdBindDescriptorSets(commandBuffers[i], PipelineBindPoint.Graphics, pipelineLayout, 0, 1, descriptorSets[i], 0, null);
 
-                VkApi.CmdDrawIndexed(commandBuffers[i], (uint)_vi.indices.Length, 1, 0, 0, 0);
+                Api.CmdDrawIndexed(commandBuffers[i], (uint)_vi.indices.Length, 1, 0, 0, 0);
 
-                VkApi.CmdEndRenderPass(commandBuffers[i]);
+                Api.CmdEndRenderPass(commandBuffers[i]);
 
-                if (VkApi.EndCommandBuffer(commandBuffers[i]) != Result.Success)
+                if (Api.EndCommandBuffer(commandBuffers[i]) != Result.Success)
                 {
                     throw new Exception("failed to record command buffer!");
                 }
@@ -858,7 +859,7 @@ namespace MiniEngine.Rendering.Vulkan
         {
             foreach (var format in candidates)
             {
-                VkApi.GetPhysicalDeviceFormatProperties(_vi.physicalDevice, format, out var props);
+                Api.GetPhysicalDeviceFormatProperties(_vi.physicalDevice, format, out var props);
 
                 if (tiling == ImageTiling.Linear && (props.LinearTilingFeatures & features) == features)
                 {

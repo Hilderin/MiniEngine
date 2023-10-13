@@ -19,7 +19,7 @@ namespace MiniEngine.Rendering.Vulkan
         public void Init()
         {
             //TryGetInstanceExtension equivilant to method CreateDebugUtilsMessengerEXT from original tutorial.
-            if (!_vi.VkApi.TryGetInstanceExtension(_vi.Instance, out _debugUtils))
+            if (!_vi.Api.TryGetInstanceExtension(_vi.Instance, out _debugUtils))
                 return;
 
             DebugUtilsMessengerCreateInfoEXT createInfo = CreateDebugMessengerCreateInfo();

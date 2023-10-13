@@ -17,6 +17,11 @@ namespace MiniEngine
         RGB,
 
         /// <summary>
+        /// RGB texture (4 colors)
+        /// </summary>
+        RGBA,
+
+        /// <summary>
         /// Only red channel
         /// </summary>
         Red

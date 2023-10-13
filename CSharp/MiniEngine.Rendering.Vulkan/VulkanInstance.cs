@@ -43,7 +43,7 @@ namespace MiniEngine.Rendering.Vulkan
             KhrSwapchain.ExtensionName
         };
 
-        public Vk VkApi;
+        public Vk Api;
 
         public Instance Instance;
 
@@ -70,8 +70,7 @@ namespace MiniEngine.Rendering.Vulkan
         public CommandPool commandPool;
 
 
-        public ImageView textureImageView;
-        public Sampler textureSampler;
+        
 
         public Buffer vertexBuffer;
         public DeviceMemory vertexBufferMemory;
@@ -91,10 +90,8 @@ namespace MiniEngine.Rendering.Vulkan
 
 
 
-
-        private uint mipLevels;
-        private Image textureImage;
-        private DeviceMemory textureImageMemory;
+        private Dictionary<uint, VulkanSampler> _samplers = new Dictionary<uint, VulkanSampler>();
+        
 
 
         private Semaphore[] imageAvailableSemaphores = null;
@@ -110,6 +107,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         private VulkanSwapChain _swapChain = null;
 
+        public VulkanTextureBinder _texture = null;
 
         #endregion
 
@@ -150,9 +148,13 @@ namespace MiniEngine.Rendering.Vulkan
 
             _initializer.Init();
 
-            CreateTextureImage();
-            CreateTextureImageView();
-            CreateTextureSampler();
+            var texture = new MiniEngine.AssertManager.TextureImporter().GetTexture2DFromFile(TEXTURE_PATH);
+            _texture = new VulkanTextureBinder(texture, this);
+            _texture.Init();
+
+            //CreateTextureImage();
+            //CreateTextureImageView();
+            //CreateTextureSampler();
             LoadModel();
             CreateVertexBuffer();
             CreateIndexBuffer();
@@ -174,34 +176,88 @@ namespace MiniEngine.Rendering.Vulkan
             frameBufferResized = true;
         }
 
+        /// <summary>
+        /// Get the sampler for a mipLevels
+        /// </summary>
+        public VulkanSampler GetSampler(uint mipLevels)
+        {
+            if (!_samplers.TryGetValue(mipLevels, out VulkanSampler sampler))
+            {
+                sampler = new VulkanSampler(this, mipLevels);
+                sampler.Init();
+                _samplers.Add(mipLevels, sampler);
+            }
+
+            return sampler;
+        }
+
+        /// <summary>
+        /// Get an extension
+        /// </summary>
+        /// <exception cref="NotSupportedException"></exception>
+        public T GetInstanceExtension<T>() where T : NativeExtension<Vk>
+        {
+            T extension;
+            if (!Api.TryGetInstanceExtension<T>(Instance, out extension))
+            {
+                throw new NotSupportedException(typeof(T).Name + " extension not found.");
+            }
+
+            return extension;
+        }
+
+
+        /// <summary>
+        /// Returns the list of physical devices
+        /// </summary>
+        public PhysicalDevice[] GetPhysicalDevices()
+        {
+            uint devicedCount = 0;
+            Api.EnumeratePhysicalDevices(Instance, ref devicedCount, null);
+
+            if (devicedCount == 0)
+            {
+                throw new Exception("failed to find GPUs with Vulkan support!");
+            }
+
+            var devices = new PhysicalDevice[devicedCount];
+            fixed (PhysicalDevice* devicesPtr = devices)
+            {
+                Api.EnumeratePhysicalDevices(Instance, ref devicedCount, devicesPtr);
+            }
+
+            return devices;
+
+        }
+
 
 
         public void Dispose()
         {
             //Wait everything that is in progress to be done...
-            VkApi.DeviceWaitIdle(device);
+            Api.DeviceWaitIdle(device);
 
             _swapChain?.Dispose();
 
-            VkApi.DestroySampler(device, textureSampler, null);
-            VkApi.DestroyImageView(device, textureImageView, null);
+            _texture?.Dispose();
 
-            VkApi.DestroyImage(device, textureImage, null);
-            VkApi.FreeMemory(device, textureImageMemory, null);
+            foreach (VulkanSampler sampler in _samplers.Values)
+                sampler.Dispose();
+            _samplers.Clear();
 
-            VkApi.DestroyDescriptorSetLayout(device, descriptorSetLayout, null);
+            Api.DestroyDescriptorSetLayout(device, descriptorSetLayout, null);
 
-            VkApi.DestroyBuffer(device, indexBuffer, null);
-            VkApi.FreeMemory(device, indexBufferMemory, null);
+            Api.DestroyBuffer(device, indexBuffer, null);
+            Api.FreeMemory(device, indexBufferMemory, null);
 
-            VkApi.DestroyBuffer(device, vertexBuffer, null);
-            VkApi.FreeMemory(device, vertexBufferMemory, null);
+            Api.DestroyBuffer(device, vertexBuffer, null);
+            Api.FreeMemory(device, vertexBufferMemory, null);
 
             for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
-                VkApi.DestroySemaphore(device, renderFinishedSemaphores[i], null);
-                VkApi.DestroySemaphore(device, imageAvailableSemaphores[i], null);
-                VkApi.DestroyFence(device, inFlightFences[i], null);
+                Api.DestroySemaphore(device, renderFinishedSemaphores[i], null);
+                Api.DestroySemaphore(device, imageAvailableSemaphores[i], null);
+                Api.DestroyFence(device, inFlightFences[i], null);
             }
 
             
@@ -226,7 +282,7 @@ namespace MiniEngine.Rendering.Vulkan
             //    window.DoEvents();
             //}
 
-            VkApi.DeviceWaitIdle(device);
+            Api.DeviceWaitIdle(device);
 
             _swapChain.Dispose();
 
@@ -271,9 +327,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             for (var i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
-                if (VkApi.CreateSemaphore(device, semaphoreInfo, null, out imageAvailableSemaphores[i]) != Result.Success ||
-                    VkApi.CreateSemaphore(device, semaphoreInfo, null, out renderFinishedSemaphores[i]) != Result.Success ||
-                    VkApi.CreateFence(device, fenceInfo, null, out inFlightFences[i]) != Result.Success)
+                if (Api.CreateSemaphore(device, semaphoreInfo, null, out imageAvailableSemaphores[i]) != Result.Success ||
+                    Api.CreateSemaphore(device, semaphoreInfo, null, out renderFinishedSemaphores[i]) != Result.Success ||
+                    Api.CreateFence(device, fenceInfo, null, out inFlightFences[i]) != Result.Success)
                 {
                     throw new Exception("failed to create synchronization objects for a frame!");
                 }
@@ -314,7 +370,7 @@ namespace MiniEngine.Rendering.Vulkan
                     PBindings = bindingsPtr,
                 };
 
-                if (VkApi.CreateDescriptorSetLayout(device, layoutInfo, null, descriptorSetLayoutPtr) != Result.Success)
+                if (Api.CreateDescriptorSetLayout(device, layoutInfo, null, descriptorSetLayoutPtr) != Result.Success)
                 {
                     throw new Exception("failed to create descriptor set layout!");
                 }
@@ -322,293 +378,8 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
 
-
-
-        private void CreateTextureImage()
-        {
-            using var img = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgba32>(TEXTURE_PATH);
-
-            ulong imageSize = (ulong)(img.Width * img.Height * img.PixelType.BitsPerPixel / 8);
-            mipLevels = (uint)(Math.Floor(Math.Log2(Math.Max(img.Width, img.Height))) + 1);
-
-            Buffer stagingBuffer = default;
-            DeviceMemory stagingBufferMemory = default;
-            MemoryHelper.CreateBuffer(this, imageSize, BufferUsageFlags.TransferSrcBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref stagingBuffer, ref stagingBufferMemory);
-
-            void* data;
-            VkApi.MapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
-            img.CopyPixelDataTo(new Span<byte>(data, (int)imageSize));
-            VkApi.UnmapMemory(device, stagingBufferMemory);
-
-            ImageHelper.CreateImage(this, (uint)img.Width, (uint)img.Height, mipLevels, SampleCountFlags.Count1Bit, Format.R8G8B8A8Srgb, ImageTiling.Optimal, ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit | ImageUsageFlags.SampledBit, MemoryPropertyFlags.DeviceLocalBit, ref textureImage, ref textureImageMemory);
-
-            TransitionImageLayout(textureImage, Format.R8G8B8A8Srgb, ImageLayout.Undefined, ImageLayout.TransferDstOptimal, mipLevels);
-            CopyBufferToImage(stagingBuffer, textureImage, (uint)img.Width, (uint)img.Height);
-            //Transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-
-            VkApi.DestroyBuffer(device, stagingBuffer, null);
-            VkApi.FreeMemory(device, stagingBufferMemory, null);
-
-            GenerateMipMaps(textureImage, Format.R8G8B8A8Srgb, (uint)img.Width, (uint)img.Height, mipLevels);
-        }
-
-        private void GenerateMipMaps(Image image, Format imageFormat, uint width, uint height, uint mipLevels)
-        {
-            VkApi.GetPhysicalDeviceFormatProperties(physicalDevice, imageFormat, out var formatProperties);
-
-            if ((formatProperties.OptimalTilingFeatures & FormatFeatureFlags.SampledImageFilterLinearBit) == 0)
-            {
-                throw new Exception("texture image format does not support linear blitting!");
-            }
-
-            var commandBuffer = CommandBufferHelper.BeginSingleTimeCommands(this);
-
-            ImageMemoryBarrier barrier = new()
-            {
-                SType = StructureType.ImageMemoryBarrier,
-                Image = image,
-                SrcQueueFamilyIndex = Vk.QueueFamilyIgnored,
-                DstQueueFamilyIndex = Vk.QueueFamilyIgnored,
-                SubresourceRange =
-            {
-                AspectMask = ImageAspectFlags.ColorBit,
-                BaseArrayLayer = 0,
-                LayerCount = 1,
-                LevelCount = 1,
-            }
-            };
-
-            var mipWidth = width;
-            var mipHeight = height;
-
-            for (uint i = 1; i < mipLevels; i++)
-            {
-                barrier.SubresourceRange.BaseMipLevel = i - 1;
-                barrier.OldLayout = ImageLayout.TransferDstOptimal;
-                barrier.NewLayout = ImageLayout.TransferSrcOptimal;
-                barrier.SrcAccessMask = AccessFlags.TransferWriteBit;
-                barrier.DstAccessMask = AccessFlags.TransferReadBit;
-
-                VkApi.CmdPipelineBarrier(commandBuffer, PipelineStageFlags.TransferBit, PipelineStageFlags.TransferBit, 0,
-                    0, null,
-                    0, null,
-                    1, barrier);
-
-                ImageBlit blit = new()
-                {
-                    SrcOffsets =
-                {
-                    Element0 = new Offset3D(0,0,0),
-                    Element1 = new Offset3D((int)mipWidth, (int)mipHeight, 1),
-                },
-                    SrcSubresource =
-                {
-                    AspectMask = ImageAspectFlags.ColorBit,
-                    MipLevel = i - 1,
-                    BaseArrayLayer = 0,
-                    LayerCount = 1,
-                },
-                    DstOffsets =
-                {
-                    Element0 = new Offset3D(0,0,0),
-                    Element1 = new Offset3D((int)(mipWidth > 1 ? mipWidth / 2 : 1), (int)(mipHeight > 1 ? mipHeight / 2 : 1),1),
-                },
-                    DstSubresource =
-                {
-                    AspectMask = ImageAspectFlags.ColorBit,
-                    MipLevel = i,
-                    BaseArrayLayer = 0,
-                    LayerCount = 1,
-                },
-
-                };
-
-                VkApi.CmdBlitImage(commandBuffer,
-                    image, ImageLayout.TransferSrcOptimal,
-                    image, ImageLayout.TransferDstOptimal,
-                    1, blit,
-                    Filter.Linear);
-
-                barrier.OldLayout = ImageLayout.TransferSrcOptimal;
-                barrier.NewLayout = ImageLayout.ShaderReadOnlyOptimal;
-                barrier.SrcAccessMask = AccessFlags.TransferReadBit;
-                barrier.DstAccessMask = AccessFlags.ShaderReadBit;
-
-                VkApi.CmdPipelineBarrier(commandBuffer, PipelineStageFlags.TransferBit, PipelineStageFlags.FragmentShaderBit, 0,
-                    0, null,
-                    0, null,
-                    1, barrier);
-
-                if (mipWidth > 1) mipWidth /= 2;
-                if (mipHeight > 1) mipHeight /= 2;
-            }
-
-            barrier.SubresourceRange.BaseMipLevel = mipLevels - 1;
-            barrier.OldLayout = ImageLayout.TransferDstOptimal;
-            barrier.NewLayout = ImageLayout.ShaderReadOnlyOptimal;
-            barrier.SrcAccessMask = AccessFlags.TransferWriteBit;
-            barrier.DstAccessMask = AccessFlags.ShaderReadBit;
-
-            VkApi.CmdPipelineBarrier(commandBuffer, PipelineStageFlags.TransferBit, PipelineStageFlags.FragmentShaderBit, 0,
-                0, null,
-                0, null,
-                1, barrier);
-
-            CommandBufferHelper.EndSingleTimeCommands(this, commandBuffer);
-        }
-
         
 
-        private void CreateTextureImageView()
-        {
-            textureImageView = CreateImageView(textureImage, Format.R8G8B8A8Srgb, ImageAspectFlags.ColorBit, mipLevels);
-        }
-
-        private void CreateTextureSampler()
-        {
-            VkApi.GetPhysicalDeviceProperties(physicalDevice, out PhysicalDeviceProperties properties);
-
-            SamplerCreateInfo samplerInfo = new()
-            {
-                SType = StructureType.SamplerCreateInfo,
-                MagFilter = Filter.Linear,
-                MinFilter = Filter.Linear,
-                AddressModeU = SamplerAddressMode.Repeat,
-                AddressModeV = SamplerAddressMode.Repeat,
-                AddressModeW = SamplerAddressMode.Repeat,
-                AnisotropyEnable = true,
-                MaxAnisotropy = properties.Limits.MaxSamplerAnisotropy,
-                BorderColor = BorderColor.IntOpaqueBlack,
-                UnnormalizedCoordinates = false,
-                CompareEnable = false,
-                CompareOp = CompareOp.Always,
-                MipmapMode = SamplerMipmapMode.Linear,
-                MinLod = 0,
-                MaxLod = mipLevels,
-                MipLodBias = 0,
-            };
-
-            fixed (Sampler* textureSamplerPtr = &textureSampler)
-            {
-                if (VkApi.CreateSampler(device, samplerInfo, null, textureSamplerPtr) != Result.Success)
-                {
-                    throw new Exception("failed to create texture sampler!");
-                }
-            }
-        }
-
-        private ImageView CreateImageView(Image image, Format format, ImageAspectFlags aspectFlags, uint mipLevels)
-        {
-            ImageViewCreateInfo createInfo = new()
-            {
-                SType = StructureType.ImageViewCreateInfo,
-                Image = image,
-                ViewType = ImageViewType.Type2D,
-                Format = format,
-                //Components =
-                //    {
-                //        R = ComponentSwizzle.Identity,
-                //        G = ComponentSwizzle.Identity,
-                //        B = ComponentSwizzle.Identity,
-                //        A = ComponentSwizzle.Identity,
-                //    },
-                SubresourceRange =
-                {
-                    AspectMask = aspectFlags,
-                    BaseMipLevel = 0,
-                    LevelCount = mipLevels,
-                    BaseArrayLayer = 0,
-                    LayerCount = 1,
-                }
-
-            };
-
-
-            if (VkApi.CreateImageView(device, createInfo, null, out ImageView imageView) != Result.Success)
-            {
-                throw new Exception("failed to create image views!");
-            }
-
-            return imageView;
-        }
-
-        private void TransitionImageLayout(Image image, Format format, ImageLayout oldLayout, ImageLayout newLayout, uint mipLevels)
-        {
-            CommandBuffer commandBuffer = CommandBufferHelper.BeginSingleTimeCommands(this);
-
-            ImageMemoryBarrier barrier = new()
-            {
-                SType = StructureType.ImageMemoryBarrier,
-                OldLayout = oldLayout,
-                NewLayout = newLayout,
-                SrcQueueFamilyIndex = Vk.QueueFamilyIgnored,
-                DstQueueFamilyIndex = Vk.QueueFamilyIgnored,
-                Image = image,
-                SubresourceRange =
-            {
-                AspectMask = ImageAspectFlags.ColorBit,
-                BaseMipLevel = 0,
-                LevelCount = mipLevels,
-                BaseArrayLayer = 0,
-                LayerCount = 1,
-            }
-            };
-
-            PipelineStageFlags sourceStage;
-            PipelineStageFlags destinationStage;
-
-            if (oldLayout == ImageLayout.Undefined && newLayout == ImageLayout.TransferDstOptimal)
-            {
-                barrier.SrcAccessMask = 0;
-                barrier.DstAccessMask = AccessFlags.TransferWriteBit;
-
-                sourceStage = PipelineStageFlags.TopOfPipeBit;
-                destinationStage = PipelineStageFlags.TransferBit;
-            }
-            else if (oldLayout == ImageLayout.TransferDstOptimal && newLayout == ImageLayout.ShaderReadOnlyOptimal)
-            {
-                barrier.SrcAccessMask = AccessFlags.TransferWriteBit;
-                barrier.DstAccessMask = AccessFlags.ShaderReadBit;
-
-                sourceStage = PipelineStageFlags.TransferBit;
-                destinationStage = PipelineStageFlags.FragmentShaderBit;
-            }
-            else
-            {
-                throw new Exception("unsupported layout transition!");
-            }
-
-            VkApi.CmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, null, 0, null, 1, barrier);
-
-            CommandBufferHelper.EndSingleTimeCommands(this, commandBuffer);
-
-        }
-
-        private void CopyBufferToImage(Buffer buffer, Image image, uint width, uint height)
-        {
-            CommandBuffer commandBuffer = CommandBufferHelper.BeginSingleTimeCommands(this);
-
-            BufferImageCopy region = new()
-            {
-                BufferOffset = 0,
-                BufferRowLength = 0,
-                BufferImageHeight = 0,
-                ImageSubresource =
-            {
-                AspectMask = ImageAspectFlags.ColorBit,
-                MipLevel = 0,
-                BaseArrayLayer = 0,
-                LayerCount = 1,
-            },
-                ImageOffset = new Offset3D(0, 0, 0),
-                ImageExtent = new Extent3D(width, height, 1),
-
-            };
-
-            VkApi.CmdCopyBufferToImage(commandBuffer, buffer, image, ImageLayout.TransferDstOptimal, 1, region);
-
-            CommandBufferHelper.EndSingleTimeCommands(this, commandBuffer);
-        }
 
         private void LoadModel()
         {
@@ -679,19 +450,19 @@ namespace MiniEngine.Rendering.Vulkan
 
             Buffer stagingBuffer = default;
             DeviceMemory stagingBufferMemory = default;
-            MemoryHelper.CreateBuffer(this, bufferSize, BufferUsageFlags.TransferSrcBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref stagingBuffer, ref stagingBufferMemory);
+            this.CreateBuffer(bufferSize, BufferUsageFlags.TransferSrcBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref stagingBuffer, ref stagingBufferMemory);
 
             void* data;
-            VkApi.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+            Api.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
             vertices.AsSpan().CopyTo(new Span<Vertex>(data, vertices.Length));
-            VkApi.UnmapMemory(device, stagingBufferMemory);
+            Api.UnmapMemory(device, stagingBufferMemory);
 
-            MemoryHelper.CreateBuffer(this, bufferSize, BufferUsageFlags.TransferDstBit | BufferUsageFlags.VertexBufferBit, MemoryPropertyFlags.DeviceLocalBit, ref vertexBuffer, ref vertexBufferMemory);
+            this.CreateBuffer(bufferSize, BufferUsageFlags.TransferDstBit | BufferUsageFlags.VertexBufferBit, MemoryPropertyFlags.DeviceLocalBit, ref vertexBuffer, ref vertexBufferMemory);
 
-            MemoryHelper.CopyBuffer(this, stagingBuffer, vertexBuffer, bufferSize);
+            this.CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
-            VkApi.DestroyBuffer(device, stagingBuffer, null);
-            VkApi.FreeMemory(device, stagingBufferMemory, null);
+            Api.DestroyBuffer(device, stagingBuffer, null);
+            Api.FreeMemory(device, stagingBufferMemory, null);
         }
 
         private void CreateIndexBuffer()
@@ -700,19 +471,19 @@ namespace MiniEngine.Rendering.Vulkan
 
             Buffer stagingBuffer = default;
             DeviceMemory stagingBufferMemory = default;
-            MemoryHelper.CreateBuffer(this, bufferSize, BufferUsageFlags.TransferSrcBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref stagingBuffer, ref stagingBufferMemory);
+            this.CreateBuffer(bufferSize, BufferUsageFlags.TransferSrcBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref stagingBuffer, ref stagingBufferMemory);
 
             void* data;
-            VkApi.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+            Api.MapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
             indices.AsSpan().CopyTo(new Span<uint>(data, indices.Length));
-            VkApi.UnmapMemory(device, stagingBufferMemory);
+            Api.UnmapMemory(device, stagingBufferMemory);
 
-            MemoryHelper.CreateBuffer(this, bufferSize, BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit, MemoryPropertyFlags.DeviceLocalBit, ref indexBuffer, ref indexBufferMemory);
+            this.CreateBuffer(bufferSize, BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit, MemoryPropertyFlags.DeviceLocalBit, ref indexBuffer, ref indexBufferMemory);
 
-            MemoryHelper.CopyBuffer(this, stagingBuffer, indexBuffer, bufferSize);
+            this.CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
-            VkApi.DestroyBuffer(device, stagingBuffer, null);
-            VkApi.FreeMemory(device, stagingBufferMemory, null);
+            Api.DestroyBuffer(device, stagingBuffer, null);
+            Api.FreeMemory(device, stagingBufferMemory, null);
         }
 
 
@@ -725,7 +496,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         public void DrawFrame(double time)
         {
-            VkApi.WaitForFences(device, 1, inFlightFences[currentFrame], true, ulong.MaxValue);
+            Api.WaitForFences(device, 1, inFlightFences[currentFrame], true, ulong.MaxValue);
 
             uint imageIndex = 0;
             var result = khrSwapChain.AcquireNextImage(device, _swapChain.swapChain, ulong.MaxValue, imageAvailableSemaphores[currentFrame], default, ref imageIndex);
@@ -744,7 +515,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             if (imagesInFlight[imageIndex].Handle != default)
             {
-                VkApi.WaitForFences(device, 1, imagesInFlight[imageIndex], true, ulong.MaxValue);
+                Api.WaitForFences(device, 1, imagesInFlight[imageIndex], true, ulong.MaxValue);
             }
             imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
@@ -775,9 +546,9 @@ namespace MiniEngine.Rendering.Vulkan
                 PSignalSemaphores = signalSemaphores,
             };
 
-            VkApi.ResetFences(device, 1, inFlightFences[currentFrame]);
+            Api.ResetFences(device, 1, inFlightFences[currentFrame]);
 
-            if (VkApi.QueueSubmit(graphicsQueue, 1, submitInfo, inFlightFences[currentFrame]) != Result.Success)
+            if (Api.QueueSubmit(graphicsQueue, 1, submitInfo, inFlightFences[currentFrame]) != Result.Success)
             {
                 throw new Exception("failed to submit draw command buffer!");
             }

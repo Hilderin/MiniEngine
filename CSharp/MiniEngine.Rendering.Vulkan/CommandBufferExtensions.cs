@@ -10,12 +10,12 @@ namespace MiniEngine.Rendering.Vulkan
     /// <summary>
     /// Helper for using the command buffer
     /// </summary>
-    public unsafe static class CommandBufferHelper
+    public unsafe static class CommandBufferExtensions
     {
         /// <summary>
         /// Create a single time command buffer
         /// </summary>
-        public static CommandBuffer BeginSingleTimeCommands(VulkanInstance vi)
+        public static CommandBuffer BeginSingleTimeCommands(this VulkanInstance vi)
         {
             CommandBufferAllocateInfo allocateInfo = new()
             {
@@ -25,7 +25,7 @@ namespace MiniEngine.Rendering.Vulkan
                 CommandBufferCount = 1,
             };
 
-            vi.VkApi.AllocateCommandBuffers(vi.device, allocateInfo, out CommandBuffer commandBuffer);
+            vi.Api.AllocateCommandBuffers(vi.device, allocateInfo, out CommandBuffer commandBuffer);
 
             CommandBufferBeginInfo beginInfo = new()
             {
@@ -33,7 +33,7 @@ namespace MiniEngine.Rendering.Vulkan
                 Flags = CommandBufferUsageFlags.OneTimeSubmitBit,
             };
 
-            vi.VkApi.BeginCommandBuffer(commandBuffer, beginInfo);
+            vi.Api.BeginCommandBuffer(commandBuffer, beginInfo);
 
             return commandBuffer;
         }
@@ -41,9 +41,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Execute and wait for the result of the command buffer
         /// </summary>
-        public static void EndSingleTimeCommands(VulkanInstance vi, CommandBuffer commandBuffer)
+        public static void EndSingleTimeCommands(this VulkanInstance vi, CommandBuffer commandBuffer)
         {
-            vi.VkApi.EndCommandBuffer(commandBuffer);
+            vi.Api.EndCommandBuffer(commandBuffer);
 
             
             SubmitInfo submitInfo = new()
@@ -53,10 +53,10 @@ namespace MiniEngine.Rendering.Vulkan
                 PCommandBuffers = &commandBuffer,
             };
 
-            vi.VkApi.QueueSubmit(vi.graphicsQueue, 1, submitInfo, default);
-            vi.VkApi.QueueWaitIdle(vi.graphicsQueue);
+            vi.Api.QueueSubmit(vi.graphicsQueue, 1, submitInfo, default);
+            vi.Api.QueueWaitIdle(vi.graphicsQueue);
 
-            vi.VkApi.FreeCommandBuffers(vi.device, vi.commandPool, 1, commandBuffer);
+            vi.Api.FreeCommandBuffers(vi.device, vi.commandPool, 1, commandBuffer);
         }
 
     }

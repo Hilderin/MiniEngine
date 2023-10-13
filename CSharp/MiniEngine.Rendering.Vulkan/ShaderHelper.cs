@@ -26,7 +26,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 createInfo.PCode = (uint*)codePtr;
 
-                if (vi.VkApi.CreateShaderModule(vi.device, createInfo, null, out shaderModule) != Result.Success)
+                if (vi.Api.CreateShaderModule(vi.device, createInfo, null, out shaderModule) != Result.Success)
                 {
                     throw new Exception();
                 }

@@ -7,22 +7,31 @@ using System.Threading.Tasks;
 
 namespace MiniEngine.Rendering.Vulkan
 {
-    public unsafe static class QueueFamiliesHelper
+    public unsafe static class QueueFamiliesExtensions
     {
         /// <summary>
         /// Find queue families for a device
         /// </summary>
-        public static QueueFamilyIndices FindQueueFamilies(VulkanInstance vi, PhysicalDevice device)
+        public static QueueFamilyIndices FindQueueFamilies(this VulkanInstance vi)
+        {
+            return FindQueueFamilies(vi, vi.physicalDevice);
+
+        }
+
+        /// <summary>
+        /// Find queue families for a device
+        /// </summary>
+        public static QueueFamilyIndices FindQueueFamilies(this VulkanInstance vi, PhysicalDevice device)
         {
             var indices = new QueueFamilyIndices();
 
             uint queueFamilityCount = 0;
-            vi.VkApi.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, null);
+            vi.Api.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, null);
 
             var queueFamilies = new QueueFamilyProperties[queueFamilityCount];
             fixed (QueueFamilyProperties* queueFamiliesPtr = queueFamilies)
             {
-                vi.VkApi.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, queueFamiliesPtr);
+                vi.Api.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, queueFamiliesPtr);
             }
 
 

@@ -19,9 +19,9 @@ namespace MiniEngine.AssertManager
         /// <summary>
         /// Import a texture 2d from file
         /// </summary>
-        public Texture2D GetTexture2DFromFile(TextureType textureType, string path)
+        public Texture2D GetTexture2DFromFile(string path)
         {
-            return new TextureImporter().GetTexture2DFromFile(textureType, path);
+            return new TextureImporter().GetTexture2DFromFile(path);
 
         }
 

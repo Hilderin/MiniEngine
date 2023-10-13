@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -18,8 +19,9 @@ namespace MiniEngine.AssertManager
         /// <summary>
         /// Load a texture from disk
         /// </summary>
-        public Texture2D GetTexture2DFromFile(TextureType textureType, string path)
+        public Texture2D GetTexture2DFromFile(string path)
         {
+            byte[] sourceData = File.ReadAllBytes(path);
 
             using (Surface image = Surface.LoadFromFile(path))
             {
@@ -40,6 +42,12 @@ namespace MiniEngine.AssertManager
                         bufferSize = image.Width * image.Height * 3;
                         break;
 
+                    case 32:
+                        //32 bits per pixels so... 4 bytes... so RGB
+                        type = TextureType.RGBA;
+                        bufferSize = image.Width * image.Height * 4;
+                        break;
+
                     default:
                         throw new Exception($"Unsupported color type of texture '{path}', ColorType: {image.ColorType}, BitsPerPixel: {image.BitsPerPixel}");
                 }
@@ -48,7 +56,7 @@ namespace MiniEngine.AssertManager
                 byte[] data = new byte[bufferSize];
                 Marshal.Copy(image.GetScanLine(0), data, 0, bufferSize);
 
-                return new Texture2D(image.Width, image.Height, data, type);
+                return new Texture2D(image.Width, image.Height, data, type, sourceData);
             }
 
         }

@@ -58,7 +58,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CreateInstance()
         {
-            _vi.VkApi = Vk.GetApi();
+            _vi.Api = Vk.GetApi();
 
             if (_vi.EnableValidationLayers && !CheckValidationLayerSupport())
             {
@@ -101,9 +101,10 @@ namespace MiniEngine.Rendering.Vulkan
                 createInfo.PNext = null;
             }
 
-            if (_vi.VkApi.CreateInstance(createInfo, null, out _vi.Instance) != Result.Success)
+            if (_vi.Api.CreateInstance(createInfo, null, out _vi.Instance) != Result.Success)
             {
                 throw new Exception("failed to create instance!");
+
             }
 
             Marshal.FreeHGlobal((IntPtr)appInfo.PApplicationName);
@@ -121,10 +122,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CreateSurface()
         {
-            if (!_vi.VkApi.TryGetInstanceExtension<KhrSurface>(_vi.Instance, out _vi.khrSurface))
-            {
-                throw new NotSupportedException("KHR_surface extension not found.");
-            }
+            _vi.khrSurface = _vi.GetInstanceExtension<KhrSurface>();
 
             SurfaceKHR surface;
             _vi.Window.CreateSurface(_vi.Instance.Handle, (IntPtr)(&surface));
@@ -136,19 +134,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void PickPhysicalDevice()
         {
-            uint devicedCount = 0;
-            _vi.VkApi.EnumeratePhysicalDevices(_vi.Instance, ref devicedCount, null);
-
-            if (devicedCount == 0)
-            {
-                throw new Exception("failed to find GPUs with Vulkan support!");
-            }
-
-            var devices = new PhysicalDevice[devicedCount];
-            fixed (PhysicalDevice* devicesPtr = devices)
-            {
-                _vi.VkApi.EnumeratePhysicalDevices(_vi.Instance, ref devicedCount, devicesPtr);
-            }
+            var devices = _vi.GetPhysicalDevices();
 
             foreach (var device in devices)
             {
@@ -171,7 +157,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CreateLogicalDevice()
         {
-            var indices = QueueFamiliesHelper.FindQueueFamilies(_vi, _vi.physicalDevice);
+            var indices = _vi.FindQueueFamilies();
 
             var uniqueQueueFamilies = new[] { indices.GraphicsFamily.Value, indices.PresentFamily.Value };
             uniqueQueueFamilies = uniqueQueueFamilies.Distinct().ToArray();
@@ -219,14 +205,14 @@ namespace MiniEngine.Rendering.Vulkan
                 createInfo.EnabledLayerCount = 0;
             }
 
-            if (_vi.VkApi.CreateDevice(_vi.physicalDevice, in createInfo, null, out _vi.device) != Result.Success)
+            if (_vi.Api.CreateDevice(_vi.physicalDevice, in createInfo, null, out _vi.device) != Result.Success)
             {
                 throw new Exception("failed to create logical device!");
             }
 
 
-            _vi.VkApi.GetDeviceQueue(_vi.device, indices.GraphicsFamily.Value, 0, out _vi.graphicsQueue);
-            _vi.VkApi.GetDeviceQueue(_vi.device, indices.PresentFamily.Value, 0, out _vi.presentQueue);
+            _vi.Api.GetDeviceQueue(_vi.device, indices.GraphicsFamily.Value, 0, out _vi.graphicsQueue);
+            _vi.Api.GetDeviceQueue(_vi.device, indices.PresentFamily.Value, 0, out _vi.presentQueue);
 
 
             if (_vi.EnableValidationLayers)
@@ -245,7 +231,7 @@ namespace MiniEngine.Rendering.Vulkan
         {
             if (_vi.khrSwapChain is null)
             {
-                if (!_vi.VkApi.TryGetDeviceExtension(_vi.Instance, _vi.device, out _vi.khrSwapChain))
+                if (!_vi.Api.TryGetDeviceExtension(_vi.Instance, _vi.device, out _vi.khrSwapChain))
                 {
                     throw new NotSupportedException("VK_KHR_swapchain extension not found.");
                 }
@@ -273,7 +259,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CreateCommandPool()
         {
-            var queueFamiliyIndicies = QueueFamiliesHelper.FindQueueFamilies(_vi, _vi.physicalDevice);
+            var queueFamiliyIndicies = _vi.FindQueueFamilies();
 
             CommandPoolCreateInfo poolInfo = new()
             {
@@ -281,7 +267,7 @@ namespace MiniEngine.Rendering.Vulkan
                 QueueFamilyIndex = queueFamiliyIndicies.GraphicsFamily.Value,
             };
 
-            if (_vi.VkApi.CreateCommandPool(_vi.device, poolInfo, null, out _vi.commandPool) != Result.Success)
+            if (_vi.Api.CreateCommandPool(_vi.device, poolInfo, null, out _vi.commandPool) != Result.Success)
             {
                 throw new Exception("failed to create command pool!");
             }
@@ -292,16 +278,16 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Dispose()
         {
-            _vi.VkApi.DestroyCommandPool(_vi.device, _vi.commandPool, null);
+            _vi.Api.DestroyCommandPool(_vi.device, _vi.commandPool, null);
 
-            _vi.VkApi.DestroyDevice(_vi.device, null);
+            _vi.Api.DestroyDevice(_vi.device, null);
 
             _vi.khrSurface.DestroySurface(_vi.Instance, _vi.surface, null);
 
             _debugMessenger?.Dispose();
 
-            _vi.VkApi.DestroyInstance(_vi.Instance, null);
-            _vi.VkApi.Dispose();
+            _vi.Api.DestroyInstance(_vi.Instance, null);
+            _vi.Api.Dispose();
         }
 
         #endregion
@@ -312,7 +298,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         private bool IsDeviceSuitable(PhysicalDevice device)
         {
-            var indices = QueueFamiliesHelper.FindQueueFamilies(_vi, device);
+            var indices = _vi.FindQueueFamilies(device);
 
             bool extensionsSupported = CheckDeviceExtensionsSupport(device);
 
@@ -323,7 +309,7 @@ namespace MiniEngine.Rendering.Vulkan
                 swapChainAdequate = swapChainSupport.Formats.Any() && swapChainSupport.PresentModes.Any();
             }
 
-            _vi.VkApi.GetPhysicalDeviceFeatures(device, out PhysicalDeviceFeatures supportedFeatures);
+            _vi.Api.GetPhysicalDeviceFeatures(device, out PhysicalDeviceFeatures supportedFeatures);
 
             return indices.IsComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.SamplerAnisotropy;
         }
@@ -332,12 +318,12 @@ namespace MiniEngine.Rendering.Vulkan
         private bool CheckDeviceExtensionsSupport(PhysicalDevice device)
         {
             uint extentionsCount = 0;
-            _vi.VkApi.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, null);
+            _vi.Api.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, null);
 
             var availableExtensions = new ExtensionProperties[extentionsCount];
             fixed (ExtensionProperties* availableExtensionsPtr = availableExtensions)
             {
-                _vi.VkApi.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, availableExtensionsPtr);
+                _vi.Api.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, availableExtensionsPtr);
             }
 
             var availableExtensionNames = availableExtensions.Select(extension => Marshal.PtrToStringAnsi((IntPtr)extension.ExtensionName)).ToHashSet();
@@ -351,11 +337,11 @@ namespace MiniEngine.Rendering.Vulkan
         private bool CheckValidationLayerSupport()
         {
             uint layerCount = 0;
-            _vi.VkApi.EnumerateInstanceLayerProperties(ref layerCount, null);
+            _vi.Api.EnumerateInstanceLayerProperties(ref layerCount, null);
             var availableLayers = new LayerProperties[layerCount];
             fixed (LayerProperties* availableLayersPtr = availableLayers)
             {
-                _vi.VkApi.EnumerateInstanceLayerProperties(ref layerCount, availableLayersPtr);
+                _vi.Api.EnumerateInstanceLayerProperties(ref layerCount, availableLayersPtr);
             }
 
             var availableLayerNames = availableLayers.Select(layer => Marshal.PtrToStringAnsi((IntPtr)layer.LayerName)).ToHashSet();
@@ -374,7 +360,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         private SampleCountFlags GetMaxUsableSampleCount()
         {
-            _vi.VkApi.GetPhysicalDeviceProperties(_vi.physicalDevice, out var physicalDeviceProperties);
+            _vi.Api.GetPhysicalDeviceProperties(_vi.physicalDevice, out var physicalDeviceProperties);
 
             var counts = physicalDeviceProperties.Limits.FramebufferColorSampleCounts & physicalDeviceProperties.Limits.FramebufferDepthSampleCounts;
 

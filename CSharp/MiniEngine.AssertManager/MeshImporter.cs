@@ -86,10 +86,10 @@ namespace MiniEngine.AssertManager
             Material material = new Material();
 
             //Diffuse texture...
-            material.Diffuse = GetTexture(Assimp.TextureType.Diffuse, assmat, TextureType.RGB);
+            material.Diffuse = GetTexture(Assimp.TextureType.Diffuse, assmat);
 
             //Specular texture...
-            material.Specular = GetTexture(Assimp.TextureType.Shininess, assmat, TextureType.Red);
+            material.Specular = GetTexture(Assimp.TextureType.Shininess, assmat);
 
             //Ambient color...
             if(assmat.HasColorAmbient)
@@ -110,14 +110,14 @@ namespace MiniEngine.AssertManager
         /// <summary>
         /// Get a texture of a type
         /// </summary>
-        private Texture2D GetTexture(Assimp.TextureType type, Assimp.Material assmat, TextureType textureType)
+        private Texture2D GetTexture(Assimp.TextureType type, Assimp.Material assmat)
         {
             //Diffuse texture...
             if (assmat.GetMaterialTextureCount(type) > 0)
             {
                 if (assmat.GetMaterialTexture(type, 0, out TextureSlot assTexture))
                 {
-                    return new AssetManager().GetTexture2DFromFile(textureType, Path.Combine(_workingDirectory, assTexture.FilePath));
+                    return new AssetManager().GetTexture2DFromFile(Path.Combine(_workingDirectory, assTexture.FilePath));
                 }
             }
             return null;
