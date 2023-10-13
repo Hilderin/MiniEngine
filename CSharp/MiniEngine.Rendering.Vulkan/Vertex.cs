@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MiniEngine.Rendering.Vulkan
 {
-    struct Vertex
+    public struct Vertex
     {
         public Vector3 pos;
         public Vector3 color;

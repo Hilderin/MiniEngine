@@ -18,7 +18,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Vulkan instance
         /// </summary>
-        private VkInstance _vk = null;
+        private VulkanInstance _vk = null;
 
         /// <summary>
         /// A reference to the window
@@ -75,7 +75,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Indicate if we when to add addionnals validations (for development purpose)
         /// </summary>
-        public bool AddValidationLayers;
+        public bool EnableValidationLayers;
 
         /// <summary>
         /// Indicate we the buffer sould be swapped each frame
@@ -95,10 +95,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VulkanRenderer(string applicationName, bool addValidationLayers)
+        public VulkanRenderer(string applicationName, bool enableValidationLayers)
         {
             this.ApplicationName = applicationName;
-            this.AddValidationLayers = addValidationLayers;
+            this.EnableValidationLayers = enableValidationLayers;
         }
 
         /// <summary>
@@ -158,12 +158,12 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Init()
         {
-            _vk = new VkInstance();
+            _vk = new VulkanInstance(ApplicationName, EnableValidationLayers);
 
             _vk.SetWindow(_window);
 
             //_vk.InitWindow();
-            _vk.InitVulkan();
+            _vk.Init();
             //_vk.MainLoop();
 
         }

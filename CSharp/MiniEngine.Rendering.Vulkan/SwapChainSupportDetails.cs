@@ -2,7 +2,7 @@
 
 namespace MiniEngine.Rendering.Vulkan
 {
-    struct SwapChainSupportDetails
+    public struct SwapChainSupportDetails
     {
         public SurfaceCapabilitiesKHR Capabilities;
         public SurfaceFormatKHR[] Formats;
