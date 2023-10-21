@@ -10,7 +10,7 @@ namespace MiniEngine.Tutorials
         private Mesh _currentMesh;
 
         private Context Context = Context.Current;
-        private Camera Camera = Context.Current.Camera;
+        private Camera Camera = Context.Current.Scene.Camera;
 
         public void Init()
         {

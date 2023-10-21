@@ -44,27 +44,27 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Point lights
         /// </summary>
-        public List<PointLight> PointLights = new List<PointLight>(Context.MAX_POINT_LIGHTS);
+        public List<PointLight> PointLights = new List<PointLight>();
 
         /// <summary>
         /// Spot lights
         /// </summary>
-        public List<SpotLight> SpotLights = new List<SpotLight>(Context.MAX_POINT_LIGHTS);
+        public List<SpotLight> SpotLights = new List<SpotLight>();
 
         /// <summary>
         /// Position of the point light in reference to the current mesh
         /// </summary>
-        public Vector3[] PointLightsCalulcatedLocalPositions = new Vector3[Context.MAX_POINT_LIGHTS];
+        public Vector3[] PointLightsCalulcatedLocalPositions = new Vector3[0];
 
         /// <summary>
         /// Position of the spot light in reference to the current mesh
         /// </summary>
-        public Vector3[] SpotLightsCalulcatedLocalPositions = new Vector3[Context.MAX_POINT_LIGHTS];
+        public Vector3[] SpotLightsCalulcatedLocalPositions = new Vector3[0];
 
         /// <summary>
         /// Direction of the spot light in reference to the current mesh
         /// </summary>
-        public Vector3[] SpotLightsCalulcatedLocalDirections = new Vector3[Context.MAX_POINT_LIGHTS];
+        public Vector3[] SpotLightsCalulcatedLocalDirections = new Vector3[0];
 
         /// <summary>
         /// Application name
@@ -145,7 +145,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Render the scene
         /// </summary>
-        public void Render(Context context)
+        public void Render(Scene scene)
         {
             _vk.DrawFrame(0);
 

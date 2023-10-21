@@ -21,16 +21,6 @@ namespace MiniEngine
     public class Context : IDisposable
     {
 
-        /// <summary>
-        /// The maximum number of point lights
-        /// </summary>
-        public const int MAX_POINT_LIGHTS = 2;
-
-        /// <summary>
-        /// The maximum number of spot lights
-        /// </summary>
-        public const int MAX_SPOT_LIGHTS = 2;
-
         #region Private members
 
         /// <summary>
@@ -59,10 +49,6 @@ namespace MiniEngine
         /// </summary>
         private Window _window;
 
-        /// <summary>
-        /// Meshes to render
-        /// </summary>
-        private List<Mesh> _meshes = new List<Mesh>();
 
         /// <summary>
         /// Renderer
@@ -75,34 +61,9 @@ namespace MiniEngine
 
 
         /// <summary>
-        /// Current camera
+        /// Scene to render
         /// </summary>
-        public Camera Camera = new Camera();
-
-        /// <summary>
-        /// List of meshes
-        /// </summary>
-        public List<Mesh> Meshes { get { return _meshes; } }
-
-        /// <summary>
-        /// Directional light
-        /// </summary>
-        public DirectionalLight DirectionalLight = null;
-
-        /// <summary>
-        /// Default ambient light
-        /// </summary>
-        public AmbientLight AmbientLight = AmbientLight.Default;
-
-        /// <summary>
-        /// Point lights
-        /// </summary>
-        public List<PointLight> PointLights = new List<PointLight>(MAX_POINT_LIGHTS);
-
-        /// <summary>
-        /// Spot lights
-        /// </summary>
-        public List<SpotLight> SpotLights = new List<SpotLight>(MAX_SPOT_LIGHTS);
+        public Scene Scene = new Scene();
 
 
         /// <summary>
@@ -293,56 +254,6 @@ namespace MiniEngine
 
 
         /// <summary>
-        /// Add a mesh to render
-        /// </summary>
-        public void Add(Mesh mesh)
-        {
-            _meshes.Add(mesh);
-        }
-
-        /// <summary>
-        /// Remove a mesh
-        /// </summary>
-        public void Remove(Mesh mesh)
-        {
-            _meshes.Remove(mesh);
-        }
-
-        /// <summary>
-        /// Add a point light to render
-        /// </summary>
-        public void Add(PointLight pointLight)
-        {
-            this.PointLights.Add(pointLight);
-        }
-
-        /// <summary>
-        /// Remove a point light to render
-        /// </summary>
-        public void Remove(PointLight pointLight)
-        {
-            this.PointLights.Remove(pointLight);
-        }
-
-        /// <summary>
-        /// Add a spot light to render
-        /// </summary>
-        public void Add(SpotLight SpotLight)
-        {
-            this.SpotLights.Add(SpotLight);
-        }
-
-        /// <summary>
-        /// Remove a spot light to render
-        /// </summary>
-        public void Remove(SpotLight SpotLight)
-        {
-            this.SpotLights.Remove(SpotLight);
-        }
-
-
-
-        /// <summary>
         /// Run the game/application
         /// </summary>
         public void Run(RunHandler runHandler = null)
@@ -356,7 +267,7 @@ namespace MiniEngine
             while (!this._window.IsClosing)
             {
 
-                _renderer.Clear();
+                
 
                 //Custom run code...
                 if (runHandler != null)
@@ -365,12 +276,10 @@ namespace MiniEngine
                 if (this._window.IsClosing)
                     break;
 
+                
                 //Rendering...
-                Renderer.Render(this);
+                Renderer.Render(Scene);
 
-                //Swapping buffer...
-                if(Renderer.ShouldSwapBuffer)
-                    this._window.SwapBuffers();
 
                 //Indicate a new frame...
                 Input.OnNewFrame();
@@ -393,8 +302,6 @@ namespace MiniEngine
             //Now we can initialize the renderer...
             InitInternal();
 
-            _renderer.Clear();
-
             //Custom run code...
             if (runHandler != null)
                 runHandler();
@@ -403,7 +310,7 @@ namespace MiniEngine
                 return;
 
             //Rendering...
-            _renderer.Render(this);
+            _renderer.Render(Scene);
 
         }
 

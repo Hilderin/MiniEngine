@@ -297,6 +297,17 @@ namespace MiniEngine
         }
 
         /// <summary>
+		/// Returns the greater of two values.
+		/// </summary>
+		/// <param name="value1">Source value.</param>
+		/// <param name="value2">Source value.</param>
+		/// <returns>The greater value.</returns>
+		public static int Max(int value1, int value2)
+        {
+            return value1 > value2 ? value1 : value2;
+        }
+
+        /// <summary>
         /// Returns the lesser of two values.
         /// </summary>
         /// <param name="value1">Source value.</param>
@@ -306,6 +317,18 @@ namespace MiniEngine
         {
             return value1 < value2 ? value1 : value2;
         }
+
+        /// <summary>
+        /// Returns the lesser of two values.
+        /// </summary>
+        /// <param name="value1">Source value.</param>
+        /// <param name="value2">Source value.</param>
+        /// <returns>The lesser value.</returns>
+        public static int Min(int value1, int value2)
+        {
+            return value1 < value2 ? value1 : value2;
+        }
+
 
         /// <summary>
 		/// Interpolates between two values using a cubic equation.

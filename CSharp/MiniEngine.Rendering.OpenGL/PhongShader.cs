@@ -8,6 +8,19 @@ namespace MiniEngine.Rendering.OpenGL
     /// </summary>
     public class PhongShader: OpenGLShader
     {
+
+
+        /// <summary>
+        /// The maximum number of point lights
+        /// </summary>
+        public const int MAX_POINT_LIGHTS = 2;
+
+        /// <summary>
+        /// The maximum number of spot lights
+        /// </summary>
+        public const int MAX_SPOT_LIGHTS = 2;
+
+
         /// <summary>
         /// Uniforms locations
         /// </summary>
@@ -26,8 +39,8 @@ namespace MiniEngine.Rendering.OpenGL
         private int _gNumPointLightsUniform;
         private int _gNumSpotLightsUniform;
 
-        private PointLightUniform[] _pointLightUniforms = new PointLightUniform[Context.MAX_POINT_LIGHTS];
-        private SpotLightUniform[] _spotLightUniforms = new SpotLightUniform[Context.MAX_SPOT_LIGHTS];
+        private PointLightUniform[] _pointLightUniforms = new PointLightUniform[MAX_POINT_LIGHTS];
+        private SpotLightUniform[] _spotLightUniforms = new SpotLightUniform[MAX_SPOT_LIGHTS];
 
         private struct PointLightUniform
         {
@@ -231,8 +244,8 @@ void main()
     //FragColor = vec4(1 / TexCoord0.x, 1, 1, 1);
 }
 
-".Replace("{MAX_POINT_LIGHTS}", Context.MAX_POINT_LIGHTS.ToString())
- .Replace("{MAX_SPOT_LIGHTS}", Context.MAX_SPOT_LIGHTS.ToString())
+".Replace("{MAX_POINT_LIGHTS}", MAX_POINT_LIGHTS.ToString())
+ .Replace("{MAX_SPOT_LIGHTS}", MAX_SPOT_LIGHTS.ToString())
 , ShaderType.Fragment);
 
 
@@ -257,7 +270,7 @@ void main()
             _gNumSpotLightsUniform = GetUniformLocation("gNumSpotLights");
 
 
-            for (int i = 0; i < Context.MAX_POINT_LIGHTS; i++)
+            for (int i = 0; i < MAX_POINT_LIGHTS; i++)
             {
                 _pointLightUniforms[i].ColorUniform = GetUniformLocation(String.Format("gPointLights[{0}].Base.Color", i));
                 _pointLightUniforms[i].AmbientIntensityUniform = GetUniformLocation(String.Format("gPointLights[{0}].Base.AmbientIntensity", i));
@@ -268,7 +281,7 @@ void main()
                 _pointLightUniforms[i].AttenExpUniform = GetUniformLocation(String.Format("gPointLights[{0}].Atten.Exp", i));
             }
 
-            for (int i = 0; i < Context.MAX_POINT_LIGHTS; i++)
+            for (int i = 0; i < MAX_POINT_LIGHTS; i++)
             {
                 _spotLightUniforms[i].ColorUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Base.Base.Color", i));
                 _spotLightUniforms[i].AmbientIntensityUniform = GetUniformLocation(String.Format("gSpotLights[{0}].Base.Base.AmbientIntensity", i));

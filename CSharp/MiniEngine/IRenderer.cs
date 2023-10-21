@@ -34,7 +34,7 @@ namespace MiniEngine
         /// <summary>
         /// Render the scene
         /// </summary>
-        void Render(Context context);
+        void Render(Scene scene);
 
         /// <summary>
         /// Get the frame buffer 

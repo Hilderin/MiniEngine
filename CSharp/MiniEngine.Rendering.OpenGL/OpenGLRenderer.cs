@@ -12,6 +12,8 @@ namespace MiniEngine.Rendering.OpenGL
     /// </summary>
     public class OpenGLRenderer : IRenderer
     {
+        private Window _window;
+
         public Camera Camera;
 
         public Matrix4 WVPMatrix;
@@ -32,27 +34,27 @@ namespace MiniEngine.Rendering.OpenGL
         /// <summary>
         /// Point lights
         /// </summary>
-        public List<PointLight> PointLights = new List<PointLight>(Context.MAX_POINT_LIGHTS);
+        public List<PointLight> PointLights = new List<PointLight>();
 
         /// <summary>
         /// Spot lights
         /// </summary>
-        public List<SpotLight> SpotLights = new List<SpotLight>(Context.MAX_POINT_LIGHTS);
+        public List<SpotLight> SpotLights = new List<SpotLight>();
 
         /// <summary>
         /// Position of the point light in reference to the current mesh
         /// </summary>
-        public Vector3[] PointLightsCalulcatedLocalPositions = new Vector3[Context.MAX_POINT_LIGHTS];
+        public Vector3[] PointLightsCalulcatedLocalPositions = new Vector3[0];
 
         /// <summary>
         /// Position of the spot light in reference to the current mesh
         /// </summary>
-        public Vector3[] SpotLightsCalulcatedLocalPositions = new Vector3[Context.MAX_POINT_LIGHTS];
+        public Vector3[] SpotLightsCalulcatedLocalPositions = new Vector3[0];
 
         /// <summary>
         /// Direction of the spot light in reference to the current mesh
         /// </summary>
-        public Vector3[] SpotLightsCalulcatedLocalDirections = new Vector3[Context.MAX_POINT_LIGHTS];
+        public Vector3[] SpotLightsCalulcatedLocalDirections = new Vector3[0];
 
 
         /// <summary>
@@ -68,7 +70,7 @@ namespace MiniEngine.Rendering.OpenGL
         /// <summary>
         /// Indicate we the buffer sould be swapped each frame
         /// </summary>
-        public bool ShouldSwapBuffer { get { return true; } }
+        public bool ShouldSwapBuffer { get; set; } = true;
 
         /// <summary>
         /// Constructor
@@ -136,7 +138,7 @@ namespace MiniEngine.Rendering.OpenGL
         /// </summary>
         public void SetWindow(Window window)
         {
-            
+            _window = window;
         }
 
 
@@ -144,19 +146,23 @@ namespace MiniEngine.Rendering.OpenGL
         /// <summary>
         /// Render the scene
         /// </summary>
-        public void Render(Context context)
+        public void Render(Scene scene)
         {
+
+            Clear();
+
+
             //No camera = nothing to render...
-            if (context.Camera == null)
+            if (scene.Camera == null)
                 return;
 
-            this.Camera = context.Camera;
+            this.Camera = scene.Camera;
 
             //Setup the ambient light...
-            if (context.AmbientLight != null)
+            if (scene.AmbientLight != null)
             {
-                this.AmbientColor = context.AmbientLight.Color;
-                this.AmbientIntensity = context.AmbientLight.Intensity;
+                this.AmbientColor = scene.AmbientLight.Color;
+                this.AmbientIntensity = scene.AmbientLight.Intensity;
             }
             else
             {
@@ -165,9 +171,9 @@ namespace MiniEngine.Rendering.OpenGL
 
 
             //Get the camera matrix for the render call...
-            Matrix4 cameraMatrix = context.Camera.GetMatrix();
+            Matrix4 cameraMatrix = scene.Camera.GetMatrix();
 
-            List<Mesh> meshes = context.Meshes;
+            List<Mesh> meshes = scene.Meshes;
             for (int iMesh = 0; iMesh < meshes.Count; iMesh++)
             {
                 Mesh mesh = meshes[iMesh];
@@ -195,11 +201,11 @@ namespace MiniEngine.Rendering.OpenGL
                 this.CameraLocalPosition = mesh.GetLocalPosition(ref this.Camera.Location);
 
 
-                if (context.DirectionalLight != null)
+                if (scene.DirectionalLight != null)
                 {
-                    this.DiffuseColor = context.DirectionalLight.Color;
-                    this.DiffuseIntensity = context.DirectionalLight.Intensity;
-                    this.CalculatedDiffuseDirection = Vector3.CalculateLocalDirection(ref worldMatrix, context.DirectionalLight.Backward);
+                    this.DiffuseColor = scene.DirectionalLight.Color;
+                    this.DiffuseIntensity = scene.DirectionalLight.Intensity;
+                    this.CalculatedDiffuseDirection = Vector3.CalculateLocalDirection(ref worldMatrix, scene.DirectionalLight.Backward);
                 }
                 else
                 {
@@ -209,10 +215,18 @@ namespace MiniEngine.Rendering.OpenGL
 
 
                 //Calculate the point lights in reference to the mesh
+                this.PointLights = scene.PointLights;
+                if (this.PointLightsCalulcatedLocalPositions.Length < scene.PointLights.Count)
+                    this.PointLightsCalulcatedLocalPositions = new Vector3[scene.PointLights.Count];
                 for (int i = 0; i < this.PointLights.Count; i++)
                     this.PointLightsCalulcatedLocalPositions[i] = mesh.GetLocalPosition(ref this.PointLights[i].Location);
 
                 //Calculate the spot lights in reference to the mesh
+                this.SpotLights = scene.SpotLights;
+                if (this.SpotLightsCalulcatedLocalPositions.Length < scene.SpotLights.Count)
+                    this.SpotLightsCalulcatedLocalPositions = new Vector3[scene.SpotLights.Count];
+                if (this.SpotLightsCalulcatedLocalDirections.Length < scene.SpotLights.Count)
+                    this.SpotLightsCalulcatedLocalDirections = new Vector3[scene.SpotLights.Count];
                 for (int i = 0; i < this.SpotLights.Count; i++)
                 {
                     this.SpotLightsCalulcatedLocalPositions[i] = mesh.GetLocalPosition(ref this.SpotLights[i].Location);
@@ -227,6 +241,10 @@ namespace MiniEngine.Rendering.OpenGL
 
             }
 
+
+            //Swapping buffer...
+            if (ShouldSwapBuffer && _window != null)
+                _window.SwapBuffers();
         }
 
 

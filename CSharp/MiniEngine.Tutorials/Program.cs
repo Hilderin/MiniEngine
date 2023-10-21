@@ -27,10 +27,10 @@ namespace MiniEngine.Tutorials
                 //vk.Dispose();
 
 
-                //using (Context context = new Context(new OpenGLRenderer()))
-                using (Context context = new Context(new VulkanRenderer("MiniEngine Tutorial", true)))
+                using (Context context = new Context(new OpenGLRenderer()))
+                //using (Context context = new Context(new VulkanRenderer("MiniEngine Tutorial", true)))
                 {
-                    var t = new Tutorial_Basic();
+                    var t = new Tutorial_PointLights();
 
                     context.OpenWindow(WIDTH, HEIGHT, TITLE)
                            .Init(() =>
