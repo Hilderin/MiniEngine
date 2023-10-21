@@ -1,6 +1,5 @@
-﻿using MiniEngine.Rendering.OpenGL;
-
-namespace MiniEngine
+﻿
+namespace MiniEngine.Rendering.OpenGL
 {
     /// <summary>
     /// Shader type

@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Rendering.OpenGL
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Rendering.Vulkan", "MiniEngine.Rendering.Vulkan\MiniEngine.Rendering.Vulkan.csproj", "{4CB8F174-7279-4724-9944-FA19FA4D35D6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniEngine.Drivers.Vulkan", "MiniEngine.Drivers.Vulkan\MiniEngine.Drivers.Vulkan.csproj", "{0E6FA915-9F16-4F6D-AC60-A8AD9B65C703}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniEngine.Tutorials.Drivers.Vulkan", "MiniEngine.Tutorials.Drivers.Vulkan\MiniEngine.Tutorials.Drivers.Vulkan.csproj", "{C00C5942-C5E3-44F0-86FB-52D4FF6E693E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +55,14 @@ Global
 		{4CB8F174-7279-4724-9944-FA19FA4D35D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4CB8F174-7279-4724-9944-FA19FA4D35D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4CB8F174-7279-4724-9944-FA19FA4D35D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E6FA915-9F16-4F6D-AC60-A8AD9B65C703}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E6FA915-9F16-4F6D-AC60-A8AD9B65C703}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E6FA915-9F16-4F6D-AC60-A8AD9B65C703}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E6FA915-9F16-4F6D-AC60-A8AD9B65C703}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C00C5942-C5E3-44F0-86FB-52D4FF6E693E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C00C5942-C5E3-44F0-86FB-52D4FF6E693E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C00C5942-C5E3-44F0-86FB-52D4FF6E693E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C00C5942-C5E3-44F0-86FB-52D4FF6E693E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

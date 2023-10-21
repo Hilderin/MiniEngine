@@ -34,7 +34,6 @@ namespace MiniEngine.Rendering.Vulkan
 
         public Color3 DiffuseColor = Color3.White;
         public float DiffuseIntensity = 0f;
-        //public Vector3 DiffuseDirection = Vector3.Down;
         public Vector3 CalculatedDiffuseDirection = Vector3.Down;
 
         /// <summary>
@@ -82,16 +81,6 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public bool ShouldSwapBuffer { get { return false; } }
 
-        ///// <summary>
-        ///// List of mesh renderers
-        ///// </summary>
-        //private List<OpenGLMeshRenderer> _meshRenderers = new List<OpenGLMeshRenderer>();
-
-        ///// <summary>
-        ///// List of texture binders
-        ///// </summary>
-        //private List<OpenGLTextureBinder> _textureBinders = new List<OpenGLTextureBinder>();
-
         /// <summary>
         /// Constructor
         /// </summary>
@@ -118,38 +107,14 @@ namespace MiniEngine.Rendering.Vulkan
             throw new NotImplementedException();
         }
 
-        public const int GL_DONT_CARE = 0x1100;
 
         /// <summary>
         /// Update the window options specific to the engine
         /// </summary>
         public void PreInitGlfw()
         {
-            //// No API
-            //true, new Vector2D<int>(50, 50), new Vector2D<int>(1280, 720), 0.0, 0.0, GraphicsAPI.DefaultVulkan,
-            //    name, WindowState.Normal,
-            //    WindowBorder.Resizable, false, false, VideoMode.Default
+            // No API
             Glfw.WindowHint(Hint.ClientApi, ClientApi.None);
-            //Glfw.WindowHint(Hint.Resizable, false);
-
-            //Glfw.WindowHint(Hint.RefreshRate, GL_DONT_CARE);
-            //Glfw.WindowHint(Hint.DepthBits, GL_DONT_CARE);
-            //Glfw.WindowHint(Hint.StencilBits, GL_DONT_CARE);
-
-            //Glfw.WindowHint(Hint.RedBits, GL_DONT_CARE);
-            //Glfw.WindowHint(Hint.GreenBits, GL_DONT_CARE);
-            //Glfw.WindowHint(Hint.BlueBits, GL_DONT_CARE);
-            
-
-            //// Set transparent framebuffer
-            //Glfw.WindowHint(Hint.TransparentFramebuffer, false);
-
-            //// Set topmost window
-            //Glfw.WindowHint(Hint.Floating, false);
-
-            //// Set multisample samples
-            //Glfw.WindowHint(Hint.Samples, GL_DONT_CARE);
-
 
         }
 

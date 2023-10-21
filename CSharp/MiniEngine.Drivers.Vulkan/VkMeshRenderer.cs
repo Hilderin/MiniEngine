@@ -1,0 +1,171 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using static MiniEngine.Mesh;
+
+namespace MiniEngine.Drivers.Vulkan
+{
+    /// <summary>
+    /// Renderer for the meshes
+    /// </summary>
+    public unsafe class VkMeshRenderer : IDisposable
+    {
+        /// <summary>
+        /// Mesh that uses this renderer
+        /// </summary>
+        private Mesh _mesh = null;
+
+        private VkRenderer _vi;
+
+        /// <summary>
+        /// Materials
+        /// </summary>
+        private Material[] _materials;
+
+        private MeshData _meshData;
+
+        /// <summary>
+        /// Datas for the sub meshes
+        /// </summary>
+        private List<SubMeshData> _subMeshes = new List<SubMeshData>();
+
+        public VulkanMeshData[] _vulkanMeshDatas;
+
+        /// <summary>
+        /// List of materials
+        /// </summary>
+        public Material[] Materials { get { return _materials; } }
+
+
+
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public VkMeshRenderer(Mesh mesh, VkRenderer vi)
+        {
+            _mesh = mesh;
+            _vi = vi;
+
+            _meshData = _mesh.GetMeshData();
+            _subMeshes = _meshData.SubMeshes;
+
+            Init();
+        }
+
+
+        /// <summary>
+        /// Render the mesh
+        /// </summary>
+        public void PopulateCommandBuffers(CommandBuffer commandBuffer)
+        {
+            for (int i = 0; i < _vulkanMeshDatas.Length; i++)
+            {
+                //buffers[i].CmdBindDescriptorSets(PipelineBindPoint.Graphics, pipelineLayout, 0, descriptorSets, null);
+                commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _vulkanMeshDatas[i].Pipeline);
+                //buffers[i].CmdBindVertexBuffer(0, vertexBuffer, 0);
+                //buffers[i].CmdBindIndexBuffer(indexBuffer, 0, IndexType.Uint16);
+                //buffers[i].CmdDrawIndexed(indexLength, 1, 0, 0, 0);
+                commandBuffer.CmdDraw(3, 1, 0, 0);
+               
+            }
+        }
+
+        /// <summary>
+        /// Disposing of the mesh
+        /// </summary>
+        public void Dispose()
+        {
+            for (int i = 0; i < _vulkanMeshDatas.Length; i++)
+            {
+                if (_vulkanMeshDatas[i].Pipeline != null)
+                {
+                    _vulkanMeshDatas[i].Pipeline.Dispose();
+                    _vulkanMeshDatas[i].Pipeline = null;
+                }
+
+                _vulkanMeshDatas[i].vertexBuffer.Dispose();
+                _vulkanMeshDatas[i].indexBuffer.Dispose();
+            }
+
+            _vulkanMeshDatas = null;
+            _mesh = null;
+            _materials = null;
+        }
+
+
+        /// <summary>
+        /// Init the mesh
+        /// </summary>
+        private void Init()
+        {
+
+            List<Material> materials = new List<Material>(_meshData.Materials);
+
+            _vulkanMeshDatas = new VulkanMeshData[_subMeshes.Count];
+
+            for (int i = 0; i < _subMeshes.Count; i++)
+            {
+                CreateVertexBuffer(_subMeshes[i], ref _vulkanMeshDatas[i]);
+                CreateIndexBuffer(_subMeshes[i], ref _vulkanMeshDatas[i]);
+
+                //Check to be sure we have a material...
+                while (materials.Count <= _subMeshes[i].MaterialIndex)
+                    materials.Add(Material.NotFound);
+            }
+
+            //Creation of the array of material... (faster to acces!)
+            _materials = _meshData.Materials.ToArray();
+
+
+            //Pipeline creation...
+            for (int i = 0; i < _subMeshes.Count; i++)
+            {
+                _vulkanMeshDatas[i].Pipeline = new VkPipeline(_vi, _materials[_subMeshes[i].MaterialIndex].Shader);
+                //_vulkanMeshDatas[i].CommandBuffers = CreateCommandBuffers(_vulkanMeshDatas[i].Pipeline, _vulkanMeshDatas[i].vertexBuffer, _vulkanMeshDatas[i].indexBuffer, _vulkanMeshDatas[i].indexBufferLength);
+
+            }
+
+        }
+
+
+        /// <summary>
+        /// Create the vertex buffer
+        /// </summary>
+        private void CreateVertexBuffer(SubMeshData subMeshData, ref VulkanMeshData vulkanMeshData)
+        {
+            Vertex[] vertices = new Vertex[subMeshData.Positions.Length];
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i] = new Vertex()
+                {
+                    Pos = new Vector3(subMeshData.Positions[i].X, subMeshData.Positions[i].Y, subMeshData.Positions[i].Z),
+                    Color = Vector3.One,
+                    TexCoord = subMeshData.TexCoords[i]
+                };
+            }
+
+            vulkanMeshData.vertexBuffer = _vi.Device.CreateBuffer(vertices, BufferUsageFlags.VertexBuffer);
+
+        }
+
+        private void CreateIndexBuffer(SubMeshData subMeshData, ref VulkanMeshData vulkanMeshData)
+        {
+            vulkanMeshData.indexBufferLength = subMeshData.Indices.Length;
+            vulkanMeshData.indexBuffer = _vi.Device.CreateBuffer(subMeshData.Indices, BufferUsageFlags.VertexBuffer);
+
+        }
+
+
+    }
+
+    public struct VulkanMeshData
+    {
+        public VkBuffer vertexBuffer;
+        public VkBuffer indexBuffer;
+        public int indexBufferLength;
+        public VkPipeline Pipeline;
+        //public CommandBuffer[] CommandBuffers;
+    }
+}

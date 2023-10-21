@@ -36,6 +36,10 @@ namespace MiniEngine
         /// </summary>
         public static Material Default { get { return _defaultMaterial; } }
 
+        /// <summary>
+        /// The shader behind this Material
+        /// </summary>
+        public Shader Shader;
 
         /// <summary>
         /// Ambient color: the color used when ambient light hits the material

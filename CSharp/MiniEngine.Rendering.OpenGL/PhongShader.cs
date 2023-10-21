@@ -6,7 +6,7 @@ namespace MiniEngine.Rendering.OpenGL
     /// <summary>
     /// Phong shader
     /// </summary>
-    public class PhongShader: Shader
+    public class PhongShader: OpenGLShader
     {
         /// <summary>
         /// Uniforms locations

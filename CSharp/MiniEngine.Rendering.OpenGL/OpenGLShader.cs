@@ -10,7 +10,7 @@ namespace MiniEngine.Rendering.OpenGL
     /// <summary>
     /// Material
     /// </summary>
-    public class Shader     //: IDisposable
+    public class OpenGLShader     //: IDisposable
     {
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace MiniEngine.Rendering.OpenGL
         /// <summary>
         /// Constructor
         /// </summary>
-        public Shader()
+        public OpenGLShader()
         {
             
         }
@@ -45,7 +45,7 @@ namespace MiniEngine.Rendering.OpenGL
         /// <summary>
         /// Constructor
         /// </summary>
-        public Shader(string vertexShaderCode, string fragmentShaderCode)
+        public OpenGLShader(string vertexShaderCode, string fragmentShaderCode)
         {
             Add(vertexShaderCode, ShaderType.Vertex);
             Add(fragmentShaderCode, ShaderType.Fragment);
