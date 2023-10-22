@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MiniEngine.Drivers.Vulkan
 {
-    public static class VkDeviceExtensions
+    public static class DeviceExtensions
     {
         /// <summary>
         /// Create the SwapChain

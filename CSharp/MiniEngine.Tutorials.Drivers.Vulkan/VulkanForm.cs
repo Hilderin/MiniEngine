@@ -86,12 +86,12 @@ void main() {
         }
 
 
-        private Bool32 DebugCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, ulong objectHandle, IntPtr location, int messageCode, IntPtr layerPrefix, IntPtr message, IntPtr userData)
+        private bool DebugCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, int messageCode, string message)
         {
             if (flags == DebugReportFlagsExt.Error)
-                throw new Exception($"Vulkan error: {Marshal.PtrToStringAnsi(message)}");
+                throw new Exception($"Vulkan error: {message}");
 
-            Debug.WriteLine($"{flags}: {Marshal.PtrToStringAnsi(message)}");
+            Debug.WriteLine($"{flags}: {message}");
             return true;
         }
 

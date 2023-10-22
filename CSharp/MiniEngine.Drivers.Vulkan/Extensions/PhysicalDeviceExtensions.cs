@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MiniEngine.Drivers.Vulkan
 {
-    public static class VkPhysicalDeviceExtensions
+    public static class PhysicalDeviceExtensions
     {
 
         /// <summary>

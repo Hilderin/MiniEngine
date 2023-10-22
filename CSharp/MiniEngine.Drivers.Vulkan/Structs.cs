@@ -9,11 +9,14 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace MiniEngine.Drivers.Vulkan
 {
-	unsafe public partial struct Offset2D
+    public delegate bool DebugReportCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, int messageCode, string message);
+
+    unsafe public partial struct Offset2D
 	{
 		public Int32 X;
 		public Int32 Y;
@@ -14320,4 +14323,254 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 
 	}
+
+    public struct Bool32
+    {
+        UInt32 value;
+
+        public Bool32(bool bValue)
+        {
+            value = bValue ? 1u : 0;
+        }
+
+        public static implicit operator Bool32(bool bValue)
+        {
+            return new Bool32(bValue);
+        }
+
+        public static implicit operator bool(Bool32 bValue)
+        {
+            return bValue.value == 0 ? false : true;
+        }
+    }
+
+    public struct DeviceSize
+    {
+        UInt64 value;
+
+        public static implicit operator DeviceSize(UInt64 iValue)
+        {
+            return new DeviceSize { value = iValue };
+        }
+
+        public static implicit operator DeviceSize(uint iValue)
+        {
+            return new DeviceSize { value = iValue };
+        }
+
+        public static implicit operator DeviceSize(int iValue)
+        {
+            return new DeviceSize { value = (ulong)iValue };
+        }
+
+        public static implicit operator UInt64(DeviceSize size)
+        {
+            return size.value;
+        }
+    }
+
+    unsafe public partial class ClearColorValue : MarshalledObject
+    {
+        public float[] Float32
+        {
+            get
+            {
+                var arr = new float[4];
+                for (int i = 0; i < 4; i++)
+                    arr[i] = m->Float32[i];
+                return arr;
+            }
+
+            set
+            {
+                if (value.Length > 4)
+                    throw new Exception("array too long");
+                for (int i = 0; i < value.Length; i++)
+                    m->Float32[i] = value[i];
+                for (int i = value.Length; i < 4; i++)
+                    m->Float32[i] = 0;
+            }
+        }
+
+        public Int32[] Int32
+        {
+            get
+            {
+                var arr = new Int32[4];
+                for (int i = 0; i < 4; i++)
+                    arr[i] = m->Int32[i];
+                return arr;
+            }
+
+            set
+            {
+                if (value.Length > 4)
+                    throw new Exception("array too long");
+                for (int i = 0; i < value.Length; i++)
+                    m->Int32[i] = value[i];
+                for (int i = value.Length; i < 4; i++)
+                    m->Int32[i] = 0;
+            }
+        }
+
+        public UInt32[] Uint32
+        {
+            get
+            {
+                var arr = new UInt32[4];
+                for (int i = 0; i < 4; i++)
+                    arr[i] = m->Uint32[i];
+                return arr;
+            }
+
+            set
+            {
+                if (value.Length > 4)
+                    throw new Exception("array too long");
+                for (int i = 0; i < value.Length; i++)
+                    m->Uint32[i] = value[i];
+                for (int i = value.Length; i < 4; i++)
+                    m->Uint32[i] = 0;
+            }
+        }
+        internal Interop.ClearColorValue* m
+        {
+
+            get
+            {
+                return (Interop.ClearColorValue*)native.Handle;
+            }
+        }
+
+        public ClearColorValue()
+        {
+            native = Interop.Structure.Allocate(typeof(Interop.ClearColorValue));
+        }
+
+        internal ClearColorValue(NativePointer pointer)
+        {
+            native = pointer;
+        }
+
+    }
+
+    unsafe public partial class ClearValue : MarshalledObject
+    {
+        ClearColorValue lColor;
+        public ClearColorValue Color
+        {
+            get { return lColor; }
+            set { lColor = value; m->Color = value != null ? *value.m : default(Interop.ClearColorValue); }
+        }
+
+        public ClearDepthStencilValue DepthStencil
+        {
+            get { return m->DepthStencil; }
+            set { m->DepthStencil = value; }
+        }
+        internal Interop.ClearValue* m
+        {
+
+            get
+            {
+                return (Interop.ClearValue*)native.Handle;
+            }
+        }
+
+        public ClearValue()
+        {
+            native = Interop.Structure.Allocate(typeof(Interop.ClearValue));
+            Initialize();
+        }
+
+        internal ClearValue(NativePointer pointer)
+        {
+            native = pointer;
+            Initialize();
+        }
+
+
+        internal void Initialize()
+        {
+            lColor = new ClearColorValue(new NativePointer(native.Reference, (IntPtr)(&m->Color)));
+        }
+
+    }
+
+
+
+
+    public class ResultException : Exception
+    {
+        internal Result result;
+
+        public Result Result
+        {
+            get { return result; }
+        }
+
+        internal ResultException(Result res)
+        {
+            result = res;
+        }
+    }
+
+    public class Version
+    {
+        public static uint Make(uint major, uint minor, uint patch)
+        {
+            return (major << 22) | (minor << 12) | patch;
+        }
+
+        public static string ToString(uint version)
+        {
+            return string.Format("{0}.{1}.{2}", version >> 22, (version >> 12) & 0x3ff, version & 0xfff);
+        }
+    }
+
+    public static class NativeMemoryDebug
+    {
+        static bool enabled;
+        public static bool Enabled
+        {
+            get
+            {
+                return enabled;
+            }
+            set
+            {
+                if (value && value != enabled)
+                {
+                    lock (Allocations)
+                    {
+                        Allocations = new Dictionary<IntPtr, int>();
+                        AllocatedSize = 0;
+                    }
+                }
+                enabled = value;
+            }
+        }
+
+        public static int AllocatedSize { get; internal set; }
+
+        public delegate void ReportCallbackDelegate(string format, params object[] args);
+        public delegate string StackTraceDelegate();
+
+        public static ReportCallbackDelegate ReportCallback = null;
+        public static StackTraceDelegate StackTraceCallback = null;
+
+        internal static Dictionary<IntPtr, int> Allocations = new Dictionary<IntPtr, int>();
+
+        static public void Report(string format, params object[] args)
+        {
+            if (ReportCallback != null)
+                ReportCallback(format, args);
+        }
+
+        static public string StackTrace()
+        {
+            return (StackTraceCallback == null) ? "" : StackTraceCallback();
+        }
+    }
+
 }

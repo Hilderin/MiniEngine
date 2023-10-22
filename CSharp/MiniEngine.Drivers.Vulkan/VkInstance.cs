@@ -53,7 +53,7 @@ namespace MiniEngine.Drivers.Vulkan
 			if (debugCallback != null && vkDestroyDebugReportCallbackEXT != null) {
 				DestroyDebugReportCallbackEXT (debugCallback);
 				debugCallback = null;
-				debugCallbackFunc = null;
+				debugCallbackFuncInternal = null;
 				debugCallbackDelegate = null;
             }
 			if (m != IntPtr.Zero) {
@@ -64,19 +64,25 @@ namespace MiniEngine.Drivers.Vulkan
 
 
         DebugReportCallbackExt debugCallback;
-		DebugReportCallback debugCallbackFunc;
+		/// <summary>
+		/// Important the create a variable so the garbage collector will not destroy it
+		/// </summary>
+        DebugReportCallbackInternal debugCallbackFuncInternal;
         DebugReportCallback debugCallbackDelegate;
-        public void EnableDebug (DebugReportCallback d, DebugReportFlagsExt flags = DebugReportFlagsExt.Debug | DebugReportFlagsExt.Error | DebugReportFlagsExt.Information | DebugReportFlagsExt.PerformanceWarning | DebugReportFlagsExt.Warning)
+
+        private delegate Bool32 DebugReportCallbackInternal(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, ulong objectHandle, IntPtr location, int messageCode, IntPtr layerPrefix, IntPtr message, IntPtr userData);
+
+		public void EnableDebug(DebugReportCallback callback, DebugReportFlagsExt flags = DebugReportFlagsExt.Debug | DebugReportFlagsExt.Error | DebugReportFlagsExt.Information | DebugReportFlagsExt.PerformanceWarning | DebugReportFlagsExt.Warning)
 		{
 			if (vkCreateDebugReportCallbackEXT == null)
 				throw new InvalidOperationException ("vkCreateDebugReportCallbackEXT is not available, possibly you might be missing VK_EXT_debug_report extension. Try to enable it when creating the Instance.");
 
-			debugCallbackFunc = DebugCallback;
-			debugCallbackDelegate = d;
+			debugCallbackFuncInternal = DebugCallbackInternal;
+			debugCallbackDelegate = callback;
 
             var debugCreateInfo = new DebugReportCallbackCreateInfoExt () {
 				Flags = flags,
-				PfnCallback = Marshal.GetFunctionPointerForDelegate (debugCallbackFunc)
+				PfnCallback = Marshal.GetFunctionPointerForDelegate (debugCallbackFuncInternal)
 			};
 
 			if (debugCallback != null)
@@ -85,10 +91,10 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 
 
-        private Bool32 DebugCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, ulong objectHandle, IntPtr location, int messageCode, IntPtr layerPrefix, IntPtr message, IntPtr userData)
+        private Bool32 DebugCallbackInternal(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, ulong objectHandle, IntPtr location, int messageCode, IntPtr layerPrefix, IntPtr message, IntPtr userData)
         {
-            debugCallbackDelegate(flags, objectType, objectHandle, location, messageCode, layerPrefix, message, userData);
-            return true;
+			string messageStr = Marshal.PtrToStringAnsi(message);
+            return debugCallbackDelegate(flags, objectType, messageCode, messageStr);
         }
     }
 
