@@ -1,6 +1,7 @@
 ﻿using MiniEngine.Shaders;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static MiniEngine.Mesh;
 
@@ -60,15 +61,45 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public void PopulateCommandBuffers(CommandBuffer commandBuffer)
         {
+
+            Matrix4 mvp = _vi.MVPMatrix * _mesh.GetMatrix();
+            
+            Debug.Print("--------------");
+            foreach (var subMesh in _subMeshes)
+            {
+                foreach (var vector in subMesh.Positions)
+                {
+                    Vector4 vector4 = new Vector4(vector, 1);
+                    Vector4 vector4Res = _vi.MVPMatrix * vector4;
+                    Debug.Print(vector.ToString() + " => " + vector4Res.ToString());
+                }
+            }
+
+
+
             for (int i = 0; i < _vulkanMeshDatas.Length; i++)
             {
+                //Push constant...
+                
+
+                unsafe
+                {
+                    //fixed (Matrix4* ptr = &_vi.MVPMatrix)
+                    //{
+                        commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, (uint)sizeof(Matrix4), (nint)(&mvp));
+                    //}
+                }
+                //commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, ref _vi.MVPMatrix);
+
+
                 //buffers[i].CmdBindDescriptorSets(PipelineBindPoint.Graphics, pipelineLayout, 0, descriptorSets, null);
-                commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _vulkanMeshDatas[i].Pipeline);
+                    commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _vulkanMeshDatas[i].Pipeline);
                 commandBuffer.CmdBindVertexBuffer(0, _vulkanMeshDatas[i].vertexBuffer, 0);
                 commandBuffer.CmdBindIndexBuffer(_vulkanMeshDatas[i].indexBuffer, 0, IndexType.Uint32);
                 commandBuffer.CmdDrawIndexed((uint)_vulkanMeshDatas[i].indexBufferLength, 1, 0, 0, 0);
                 //commandBuffer.CmdDraw(3, 1, 0, 0);
-               
+
+
             }
         }
 
@@ -141,7 +172,7 @@ namespace MiniEngine.Drivers.Vulkan
                 vertices[i] = new Vertex()
                 {
                     Pos = new Vector3(subMeshData.Positions[i].X, subMeshData.Positions[i].Y, subMeshData.Positions[i].Z),
-                    Color = Vector3.One,
+                    Color = subMeshData.Colors[i],
                     TexCoord = subMeshData.TexCoords[i]
                 };
             }
@@ -154,7 +185,7 @@ namespace MiniEngine.Drivers.Vulkan
         private void CreateIndexBuffer(SubMeshData subMeshData, ref VulkanMeshData vulkanMeshData)
         {
             vulkanMeshData.indexBufferLength = subMeshData.Indices.Length;
-            vulkanMeshData.indexBuffer = _vi.Device.CreateBuffer(subMeshData.Indices, BufferUsageFlags.IndexBuffer);
+            vulkanMeshData.indexBuffer = _vi.CreateBufferOnGPU(subMeshData.Indices, BufferUsageFlags.IndexBuffer);
 
         }
 

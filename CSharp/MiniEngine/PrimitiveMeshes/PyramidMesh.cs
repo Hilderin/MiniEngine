@@ -23,6 +23,12 @@ namespace MiniEngine.PrimitiveMeshes
             positions[2] = new Vector3(1.0f, -1.0f, 0.5773f);
             positions[3] = new Vector3(0.0f, 1.0f, 0.0f);
 
+            Vector3[] colors = new Vector3[4];
+            colors[0] = new Vector3(1f, 0f, 0f);
+            colors[1] = new Vector3(0f, 1f, 0f);
+            colors[2] = new Vector3(0f, 0f, 1f);
+            colors[3] = new Vector3(1f, 1f, 0f);
+
             Vector2[] texCoords = new Vector2[4];
             texCoords[0] = new Vector2(0.0f, 0.0f);
             texCoords[1] = new Vector2(0.5f, 0.0f);
@@ -42,7 +48,8 @@ namespace MiniEngine.PrimitiveMeshes
             //    vertices[i].Color = new Vector3(Math.RandomFloat(0.0f, 1.0f), Math.RandomFloat(0.0f, 1.0f), Math.RandomFloat(0.0f, 1.0f));
             //}
 
-            AddMeshData(positions, texCoords, new Vector3[positions.Length], indices, 0);
+            Vector3[] emptyArray = new Vector3[positions.Length];
+            AddMeshData(positions, texCoords, emptyArray, colors, indices, 0);
 
             SetMaterial(Material.Default, 0);
         }

@@ -11,6 +11,8 @@ namespace MiniEngine
     /// </summary>
     public class Camera: WorldTransform
     {
+        public Vector2 ClientSize;
+
         /// <summary>
         /// Field of view
         /// </summary>
@@ -67,8 +69,8 @@ namespace MiniEngine
         /// </summary>
         public Matrix4 GetProjectionMatrix()
         {
-            Vector2 clientSize = Context.Current.ClientSize;
-            return Matrix4.CreateProjection(FOV, clientSize.X, clientSize.Y, NearZ, FarZ);
+            //Vector2 clientSize = Context.Current.ClientSize;
+            return Matrix4.CreateProjection(FOV, ClientSize.X, ClientSize.Y, NearZ, FarZ);
         }
 
         /// <summary>

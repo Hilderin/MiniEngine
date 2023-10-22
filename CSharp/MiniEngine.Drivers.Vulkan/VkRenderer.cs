@@ -25,6 +25,8 @@ namespace MiniEngine.Drivers.Vulkan
         public CommandPool CommandPool;
         public CommandBuffer[] CommandBuffers;
 
+        public Matrix4 MVPMatrix;
+
 
         public List<VkMeshRenderer> MeshRenderers = new List<VkMeshRenderer>();
 
@@ -141,45 +143,9 @@ namespace MiniEngine.Drivers.Vulkan
 
         public void DrawFrame()
         {
-            uint nextImageIndex = Device.AcquireNextImageKHR(Swapchain, ulong.MaxValue, Semaphore);
-            Device.ResetFence(Fence);
-
-
-
-            CommandBuffer commandBuffer = CommandBuffers[nextImageIndex];
-
-            commandBuffer.Begin();
-            var renderPassBeginInfo = new RenderPassBeginInfo
-            {
-                Framebuffer = Framebuffers[nextImageIndex],
-                RenderPass = RenderPass,
-                //ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { DateTime.Now.Millisecond % 100f / 100f, 0.87f, 0.75f, 1.0f }) } },
-                ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { 0f, 0.87f, 0.75f, 1.0f }) } },
-                RenderArea = new Rect2D { Extent = CurrentExtent }
-            };
-            commandBuffer.CmdBeginRenderPass(renderPassBeginInfo, SubpassContents.Inline);
-
-
-            foreach (var meshRenderer in MeshRenderers)
-                meshRenderer.PopulateCommandBuffers(commandBuffer);
-
-            commandBuffer.CmdEndRenderPass();
-            commandBuffer.End();
-
-            var submitInfo = new SubmitInfo
-            {
-                WaitSemaphores = new Semaphore[] { Semaphore },
-                WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
-                CommandBuffers = new CommandBuffer[] { commandBuffer }
-            };
-            Queue.Submit(submitInfo, Fence);
-            Device.WaitForFence(Fence, true, 100000000);
-            var presentInfo = new PresentInfoKhr
-            {
-                Swapchains = new SwapchainKhr[] { Swapchain },
-                ImageIndices = new uint[] { nextImageIndex }
-            };
-            Queue.PresentKHR(presentInfo);
+            //Recalculate things internally
+            RecalculateNextFrame();
+            RenderFrame();
         }
 
         /// <summary>
@@ -227,6 +193,79 @@ namespace MiniEngine.Drivers.Vulkan
 
             Device.FreeCommandBuffer(CommandPool, commandBuffer);
         }
+
+
+
+        /// <summary>
+        /// Render the next frame
+        /// </summary>
+        private void RenderFrame()
+        {
+            uint nextImageIndex = Device.AcquireNextImageKHR(Swapchain, ulong.MaxValue, Semaphore);
+            Device.ResetFence(Fence);
+
+
+
+            CommandBuffer commandBuffer = CommandBuffers[nextImageIndex];
+
+            commandBuffer.Begin();
+            var renderPassBeginInfo = new RenderPassBeginInfo
+            {
+                Framebuffer = Framebuffers[nextImageIndex],
+                RenderPass = RenderPass,
+                //ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { DateTime.Now.Millisecond % 100f / 100f, 0.87f, 0.75f, 1.0f }) } },
+                ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { 0f, 0.87f, 0.75f, 1.0f }) } },
+                RenderArea = new Rect2D { Extent = CurrentExtent }
+            };
+            commandBuffer.CmdBeginRenderPass(renderPassBeginInfo, SubpassContents.Inline);
+
+            foreach (var meshRenderer in MeshRenderers)
+                meshRenderer.PopulateCommandBuffers(commandBuffer);
+
+            commandBuffer.CmdEndRenderPass();
+            commandBuffer.End();
+
+            var submitInfo = new SubmitInfo
+            {
+                WaitSemaphores = new Semaphore[] { Semaphore },
+                WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
+                CommandBuffers = new CommandBuffer[] { commandBuffer }
+            };
+            Queue.Submit(submitInfo, Fence);
+            Device.WaitForFence(Fence, true, 100000000);
+            var presentInfo = new PresentInfoKhr
+            {
+                Swapchains = new SwapchainKhr[] { Swapchain },
+                ImageIndices = new uint[] { nextImageIndex }
+            };
+            Queue.PresentKHR(presentInfo);
+        }
+
+        /// <summary>
+        /// Recalculte things for the next frame
+        /// </summary>
+        private void RecalculateNextFrame()
+        {
+            
+            //Matrix4 model = Matrix4.Identity * Matrix4.CreateFromAxisAngle(new Vector3(0, 0, 1), Math.DegToRad(90.0f));
+            //Matrix4 view = Matrix4.CreateLookAt(new Vector3(2, 2, 2), new Vector3(0, 0, 0), new Vector3(0, 0, 1));
+            //Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView(Math.DegToRad(45.0f), (float)CurrentExtent.Width / CurrentExtent.Height, 0.1f, 10.0f);
+
+            this.MVPMatrix = new Camera()
+            {
+                Location = new Vector3(0, 0, -3f),
+                //Rotation = Rotator3.FromDegrees(0, 90, 0),
+                ClientSize = new Vector2(CurrentExtent.Width, CurrentExtent.Height)
+            }.GetCameraMatrix();
+            //scene.Camera.GetMatrix();
+            //this.MVPMatrix = Matrix4.Identity;
+            this.MVPMatrix.M22 *= -1;
+
+            Vector3 coord = Vector3.Transform(Vector3.Zero, this.MVPMatrix);
+            //this.MVPMatrix = Matrix4.Identity;
+
+        }
+
 
 
     }

@@ -61,6 +61,7 @@ namespace MiniEngine
         public void AddMeshData(Vector3[] positions,
                                 Vector2[] texCoords,
                                 Vector3[] normals,
+                                Vector3[] colors,
                                 int[] indices,
                                 int materialIndex)
         {
@@ -69,6 +70,7 @@ namespace MiniEngine
                 Positions = positions,
                 TexCoords = texCoords,
                 Normals = normals,
+                Colors = colors,
                 Indices = indices,
                 MaterialIndex = materialIndex
             });
@@ -104,6 +106,7 @@ namespace MiniEngine
             public Vector3[] Positions;
             public Vector2[] TexCoords;
             public Vector3[] Normals;
+            public Vector3[] Colors;
             public int[] Indices;
             public int MaterialIndex;
         }

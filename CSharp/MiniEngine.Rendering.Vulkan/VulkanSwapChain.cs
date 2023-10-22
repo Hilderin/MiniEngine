@@ -431,7 +431,7 @@ namespace MiniEngine.Rendering.Vulkan
                     RasterizerDiscardEnable = false,
                     PolygonMode = PolygonMode.Fill,
                     LineWidth = 1,
-                    CullMode = CullModeFlags.BackBit,
+                    CullMode = CullModeFlags.None,
                     FrontFace = FrontFace.CounterClockwise,
                     DepthBiasEnable = false,
                 };

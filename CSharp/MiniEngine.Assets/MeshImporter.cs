@@ -163,7 +163,8 @@ namespace MiniEngine.Assets
                 indices[indexIndice++] = mesh.Faces[i].Indices[2];
             }
 
-            _mesh.AddMeshData(positions, texCoords, normals, indices, mesh.MaterialIndex);
+            Vector3[] emptyArray = new Vector3[positions.Length];
+            _mesh.AddMeshData(positions, texCoords, normals, emptyArray, indices, mesh.MaterialIndex);
 
         }
 

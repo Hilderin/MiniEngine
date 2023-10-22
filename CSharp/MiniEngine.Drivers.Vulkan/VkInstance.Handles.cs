@@ -1605,6 +1605,17 @@ namespace MiniEngine.Drivers.Vulkan
 			return CreatePipelineLayout(pipelineLayoutCreateInfo);
         }
 
+        public PipelineLayout CreatePipelineLayout(DescriptorSetLayout descriptorSetLayout, PushConstantRange[] constantRanges)
+        {
+            var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
+            {
+                SetLayouts = new DescriptorSetLayout[] { descriptorSetLayout },
+				PushConstantRanges = constantRanges
+            };
+            return CreatePipelineLayout(pipelineLayoutCreateInfo);
+        }
+        
+
         public PipelineLayout CreatePipelineLayout (PipelineLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
 		{
 			Result result;
@@ -3516,7 +3527,19 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		public void CmdPushConstants (PipelineLayout layout, ShaderStageFlags stageFlags, UInt32 offset, UInt32 size, IntPtr pValues)
+        public void CmdPushConstants<T>(PipelineLayout layout, ShaderStageFlags stageFlags, UInt32 offset, ref T pValues)
+        {
+            unsafe
+            {
+				fixed (T* ptr = &pValues)
+				{
+					CmdPushConstants(layout, stageFlags, offset, (uint)sizeof(T), (nint)ptr);
+				}
+            }
+        }
+
+
+        public void CmdPushConstants (PipelineLayout layout, ShaderStageFlags stageFlags, UInt32 offset, UInt32 size, IntPtr pValues)
 		{
 			unsafe {
 				Interop.NativeMethods.vkCmdPushConstants (this.m, layout != null ? layout.m : default(UInt64), stageFlags, offset, size, pValues);

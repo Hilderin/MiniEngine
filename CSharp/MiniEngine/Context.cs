@@ -276,6 +276,8 @@ namespace MiniEngine
                 if (this._window.IsClosing)
                     break;
 
+                //Updating Camera Client Size...
+                Scene.Camera.ClientSize = _clientSize;
                 
                 //Rendering...
                 Renderer.Render(Scene);

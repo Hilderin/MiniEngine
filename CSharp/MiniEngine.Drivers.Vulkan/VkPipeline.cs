@@ -20,7 +20,7 @@ namespace MiniEngine.Drivers.Vulkan
         private CommandBuffer[] commandBuffers;
         private DescriptorSet[] descriptorSets;
         private DescriptorSetLayout descriptorSetLayout;
-        private PipelineLayout pipelineLayout;
+        public PipelineLayout pipelineLayout;
         private Buffer uniformBuffer;
         public Pipeline pipeline;
 
@@ -71,8 +71,15 @@ namespace MiniEngine.Drivers.Vulkan
             //Descriptor set layout creation from shader...
             descriptorSetLayout = VkShaderHelper.CreateDescriptorSetLayout(_vi.Device, _shaderBinder);
 
+            PushConstantRange[] constantRanges = {
+                new() {
+                    Size = (uint)Marshal.SizeOf<Matrix4>(),
+                    StageFlags = ShaderStageFlags.Vertex
+                }
+            };
+
             //Pipeline layout creation...
-            pipelineLayout = _vi.Device.CreatePipelineLayout(descriptorSetLayout);
+            pipelineLayout = _vi.Device.CreatePipelineLayout(descriptorSetLayout, constantRanges);
 
 
             var vertShaderCode = VkShaderHelper.Compile(_shaderBinder.Shader.VertexCode, ShaderStageFlags.Vertex);
@@ -124,7 +131,8 @@ namespace MiniEngine.Drivers.Vulkan
             var rasterizationStateCreateInfo = new PipelineRasterizationStateCreateInfo
             {
                 PolygonMode = PolygonMode.Fill,
-                CullMode = (uint)CullModeFlags.None,
+                //CullMode = CullModeFlags.Front,
+                CullMode = CullModeFlags.Back,
                 FrontFace = FrontFace.Clockwise,
                 LineWidth = 1.0f
             };

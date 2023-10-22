@@ -26,6 +26,18 @@ namespace MiniEngine.Tutorials.Drivers.Vulkan
 
             Shader shader = new Shader(@"#version 450
 
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+} ubo;
+
+//push constants block
+layout( push_constant ) uniform constants
+{
+	mat4 render_matrix;
+} PushConstants;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec3 inTexCoord;
@@ -33,7 +45,8 @@ layout(location = 2) in vec3 inTexCoord;
 layout(location = 0) out vec3 fragColor;
 
 void main() {
-    gl_Position = vec4(inPosition, 1.0);
+    gl_Position = PushConstants.render_matrix * vec4(inPosition, 1.0);
+    fragColor = vec3(PushConstants.render_matrix * vec4(inPosition, 1.0));
     fragColor = inColor;
 }
 ", @"#version 450
@@ -43,7 +56,7 @@ layout(location = 0) in vec3 fragColor;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    outColor = vec4(1.0, 1.0, 1.0, 1.0);
+    outColor = vec4(fragColor, 1.0);
 }
 ");
 
@@ -56,7 +69,9 @@ void main() {
             ////_texture.Init();
 
             //var mesh = assetManager.GetMeshFromFile(MODEL_PATH, new MeshImportationParameters() { InverseFaces = true });
-            var mesh = new CubeMesh();
+            //var mesh = new CubeMesh();
+            //var mesh = new PlaneMesh();
+            var mesh = new TriangleMesh();
             foreach (var mat in mesh.Materials)
                 mat.Shader = shader;
 
