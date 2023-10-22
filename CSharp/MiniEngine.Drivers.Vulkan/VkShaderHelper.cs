@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniEngine.Shaders;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,8 +12,30 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Helper for the shader
     /// </summary>
-    public static class ShaderHelper
+    public static class VkShaderHelper
     {
+
+        /// <summary>
+        /// Create a descriptor set layout for a shader
+        /// </summary>
+        public static DescriptorSetLayout CreateDescriptorSetLayout(Device device, ShaderBinder shaderBinder)
+        {
+            var layoutBinding = new DescriptorSetLayoutBinding
+            {
+                DescriptorType = DescriptorType.UniformBuffer,
+                DescriptorCount = 1,
+                StageFlags = ShaderStageFlags.Vertex
+            };
+            var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
+            {
+                Bindings = new DescriptorSetLayoutBinding[] { layoutBinding }
+            };
+
+            return device.CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo);
+        }
+
+
+
         /// <summary>
         /// Compile a shader
         /// </summary>

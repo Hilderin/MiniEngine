@@ -7,7 +7,7 @@ using static MiniEngine.Drivers.Vulkan.VkInstance;
 
 namespace MiniEngine.Drivers.Vulkan
 {
-    public class VkRenderer: IDisposable
+    public class VkRenderer : IDisposable
     {
         public VkInstance vk;
         public SurfaceKhr Surface;
@@ -51,7 +51,7 @@ namespace MiniEngine.Drivers.Vulkan
             SwapChainImages = Device.GetSwapchainImagesKHR(Swapchain);
             SwapChainImagesView = Device.CreateImageViews(SwapChainImages, surfaceFormat);
 
-            RenderPass = Device.CreateRenderPass(surfaceFormat);            
+            RenderPass = Device.CreateRenderPass(surfaceFormat);
             Framebuffers = Device.CreateFramebuffers(RenderPass, SwapChainImagesView, CurrentExtent);
 
             Fence = Device.CreateFence();
@@ -68,7 +68,7 @@ namespace MiniEngine.Drivers.Vulkan
             };
 
             CommandBuffers = Device.AllocateCommandBuffers(commandBufferAllocateInfo);
-            
+
         }
 
         /// <summary>
@@ -145,10 +145,10 @@ namespace MiniEngine.Drivers.Vulkan
             Device.ResetFence(Fence);
 
 
-            
+
             CommandBuffer commandBuffer = CommandBuffers[nextImageIndex];
 
-            commandBuffer.Begin(new CommandBufferBeginInfo());
+            commandBuffer.Begin();
             var renderPassBeginInfo = new RenderPassBeginInfo
             {
                 Framebuffer = Framebuffers[nextImageIndex],
@@ -182,6 +182,51 @@ namespace MiniEngine.Drivers.Vulkan
             Queue.PresentKHR(presentInfo);
         }
 
+        /// <summary>
+        /// Create a buffer on the GPU
+        /// </summary>
+        public VkBuffer CreateBufferOnGPU<T>(T[] values, BufferUsageFlags usageFlags)
+        {
+            //Create a stating buffer available from the CPU... so we can copy values into it...
+            using (VkBuffer stagingBuffer = Device.CreateBuffer(values, BufferUsageFlags.TransferSrc, MemoryPropertyFlags.HostVisible | MemoryPropertyFlags.HostCoherent))
+            {
+                //Create a buffer on the GPU..
+                VkBuffer gpuBuffer = Device.CreateBuffer(stagingBuffer.Size, BufferUsageFlags.TransferDst | usageFlags, MemoryPropertyFlags.DeviceLocal);
+
+                //Copy the data to the GPU...
+                CopyBuffer(stagingBuffer, gpuBuffer);
+
+                return gpuBuffer;
+            }
+
+
+        }
+
+        /// <summary>
+        /// Copy a buffer
+        /// </summary>
+        public void CopyBuffer(VkBuffer bufferSource, VkBuffer bufferDest)
+        {
+            
+            var commandBuffer = Device.AllocateCommandBuffer(CommandPool);
+
+            commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
+
+            BufferCopy copyRegion = new()
+            {
+                Size = bufferSource.Size,
+            };
+
+            commandBuffer.CmdCopyBuffer(bufferSource.Buffer, bufferDest.Buffer, copyRegion);
+
+            commandBuffer.End();
+
+            Queue.Submit(commandBuffer);
+            Queue.WaitIdle();
+
+
+            Device.FreeCommandBuffer(CommandPool, commandBuffer);
+        }
 
 
     }

@@ -11,15 +11,17 @@ namespace MiniEngine.Drivers.Vulkan
     /// </summary>
     public class VkBuffer: IDisposable
     {
+        public int Size;
         public Device Device;
         public Buffer Buffer;
         public DeviceMemory DeviceMemory;
 
-        public VkBuffer(Device device, Buffer buffer, DeviceMemory deviceMemory)
+        public VkBuffer(Device device, Buffer buffer, DeviceMemory deviceMemory, int length)
         {
             Device = device;
             Buffer = buffer;
             DeviceMemory = deviceMemory;
+            Size = length;
         }
 
         public void Dispose()

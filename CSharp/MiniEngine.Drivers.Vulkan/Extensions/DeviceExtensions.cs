@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MiniEngine.Drivers.Vulkan
@@ -140,14 +141,41 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
         /// <summary>
-        /// Create a buffer
+        /// Copy data to a buffer
         /// </summary>
-        public unsafe static VkBuffer CreateBuffer<T>(this Device device, T[] values, BufferUsageFlags usageFlags)
+        public unsafe static void CopyToBuffer<T>(this Device device, VkBuffer buffer, T[] values)
         {
             Type type = typeof(T);
-            var array = values as System.Array;
-            var length = (array != null) ? array.Length : 1;
-            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * length;
+            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
+
+            var memPtr = device.MapMemory(buffer.DeviceMemory, 0, size, 0);
+
+            //Copy to the memPtr location...
+            values.AsSpan().CopyTo(new Span<T>((void*)memPtr, values.Length));
+
+            device.UnmapMemory(buffer.DeviceMemory);
+        }
+
+        /// <summary>
+        /// Create a buffer
+        /// </summary>
+        public unsafe static VkBuffer CreateBuffer<T>(this Device device, T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        {
+            Type type = typeof(T);            
+            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
+                
+            VkBuffer buffer = CreateBuffer(device, size, usageFlags, memoryPropertyFlags);
+
+            CopyToBuffer(device, buffer, values);
+
+            return buffer;
+        }
+
+        /// <summary>
+        /// Create a buffer
+        /// </summary>
+        public unsafe static VkBuffer CreateBuffer(this Device device, int size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        {
             var createBufferInfo = new BufferCreateInfo
             {
                 Size = size,
@@ -156,6 +184,20 @@ namespace MiniEngine.Drivers.Vulkan
                 QueueFamilyIndices = new uint[] { 0 }
             };
             var buffer = device.CreateBuffer(createBufferInfo);
+
+            var deviceMemory = device.CreateDeviceMemory(buffer, memoryPropertyFlags);
+
+            device.BindBufferMemory(buffer, deviceMemory, 0);
+
+            return new VkBuffer(device, buffer, deviceMemory, size);
+        }
+
+
+        /// <summary>
+        /// Allocate a DeviceMemory
+        /// </summary>
+        public static DeviceMemory CreateDeviceMemory(this Device device, Buffer buffer, MemoryPropertyFlags memoryPropertyFlags)
+        {
             var memoryReq = device.GetBufferMemoryRequirements(buffer);
 
             var allocInfo = new MemoryAllocateInfo { AllocationSize = memoryReq.Size };
@@ -174,32 +216,31 @@ namespace MiniEngine.Drivers.Vulkan
             }
 
             if (!heapIndexSet)
-                allocInfo.MemoryTypeIndex = memoryProperties.MemoryTypes[0].HeapIndex;
+                allocInfo.MemoryTypeIndex = GetMemoryTypeIndex(device, memoryReq.MemoryTypeBits, memoryPropertyFlags);
 
-            var deviceMemory = device.AllocateMemory(allocInfo);
-            var memPtr = device.MapMemory(deviceMemory, 0, size, 0);
+            return device.AllocateMemory(allocInfo);
+        }
 
-#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-            fixed (T* ptr = &values[0])
+        /// <summary>
+        /// Find MemoryTypeIndex on a device for memorytype and memoryproperties
+        /// </summary>
+        public static uint GetMemoryTypeIndex(this Device device, UInt32 memoryTypeBits, MemoryPropertyFlags memoryPropertyFlags)
+        {
+
+            var memoryProperties = device.PhysicalDevice.GetMemoryProperties();
+            var memoryTypes = memoryProperties.MemoryTypes;
+
+            for (uint i = 0; i < memoryProperties.MemoryTypeCount; i++)
             {
-                //byte* ptrByte = (byte*)ptr;
-                System.Buffer.MemoryCopy(ptr, (void*)memPtr, length, length);
-                //System.Runtime.InteropServices.Marshal.Copy((nint)ptrByte, 0, memPtr, length);
+                if (((memoryTypeBits >> (int)i) & 1) == 1 &&
+                    (memoryTypes[i].PropertyFlags & memoryPropertyFlags) == memoryPropertyFlags)
+                {
+                    return i;
+                }
             }
-#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-            //if (type == typeof(float))
-            //    System.Runtime.InteropServices.Marshal.Copy(values as float[], 0, memPtr, length);
-            //else if (type == typeof(short))
-            //    System.Runtime.InteropServices.Marshal.Copy(values as short[], 0, memPtr, length);
-            //else
-            //    throw new NotSupportedException($"Not supported type to create a buffer: {type.Name}");
-            //else if (type == typeof(AreaUniformBuffer))
-            //    System.Runtime.InteropServices.Marshal.StructureToPtr(values, memPtr, false);
 
-            device.UnmapMemory(deviceMemory);
-            device.BindBufferMemory(buffer, deviceMemory, 0);
-
-            return new VkBuffer(device, buffer, deviceMemory);
+            //On the heap...
+            return memoryProperties.MemoryTypes[0].HeapIndex;
         }
     }
 }

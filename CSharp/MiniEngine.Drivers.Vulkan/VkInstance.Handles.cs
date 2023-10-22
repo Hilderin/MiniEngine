@@ -1596,7 +1596,16 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		public PipelineLayout CreatePipelineLayout (PipelineLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public PipelineLayout CreatePipelineLayout(DescriptorSetLayout descriptorSetLayout)
+        {
+            var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
+            {
+                SetLayouts = new DescriptorSetLayout[] { descriptorSetLayout }
+            };
+			return CreatePipelineLayout(pipelineLayoutCreateInfo);
+        }
+
+        public PipelineLayout CreatePipelineLayout (PipelineLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
 		{
 			Result result;
 			PipelineLayout pPipelineLayout;
@@ -1875,7 +1884,26 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		public CommandBuffer[] AllocateCommandBuffers (CommandBufferAllocateInfo pAllocateInfo)
+		/// <summary>
+		/// Create one CommandBuffer
+		/// </summary>
+		/// <param name="commandPool"></param>
+		/// <returns></returns>
+		public CommandBuffer AllocateCommandBuffer(CommandPool commandPool)
+		{
+            var commandBufferAllocateInfo = new CommandBufferAllocateInfo
+            {
+                Level = CommandBufferLevel.Primary,
+                CommandPool = commandPool,
+                CommandBufferCount = 1
+            };
+
+            var commandBuffers = this.AllocateCommandBuffers(commandBufferAllocateInfo);
+			return commandBuffers[0];
+        }
+
+
+        public CommandBuffer[] AllocateCommandBuffers (CommandBufferAllocateInfo pAllocateInfo)
 		{
 			Result result;
 			unsafe {
@@ -2772,7 +2800,18 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		public void Submit (SubmitInfo[] pSubmits, Fence fence = null)
+        public void Submit(CommandBuffer commandBuffer, Fence fence = null)
+        {
+            SubmitInfo submitInfo = new()
+            {
+                CommandBufferCount = 1,
+                CommandBuffers = new CommandBuffer[] { commandBuffer }
+            };
+			Submit(submitInfo, fence);
+        }
+
+
+        public void Submit (SubmitInfo[] pSubmits, Fence fence = null)
 		{
 			Result result;
 			unsafe {
@@ -2873,7 +2912,22 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		public void Begin (CommandBufferBeginInfo pBeginInfo)
+		private readonly static CommandBufferBeginInfo _emptyCommandBufferBeginInfo = new CommandBufferBeginInfo();
+        public void Begin()
+		{
+			Begin(_emptyCommandBufferBeginInfo);
+		}
+        
+        public void Begin(CommandBufferUsageFlags commandBufferUsageFlags)
+        {
+            CommandBufferBeginInfo beginInfo = new()
+            {
+                Flags = commandBufferUsageFlags,
+            };
+			Begin(beginInfo);
+        }
+
+        public void Begin (CommandBufferBeginInfo pBeginInfo)
 		{
 			Result result;
 			unsafe {
@@ -3070,18 +3124,18 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-        public void CmdBindVertexBuffer(UInt32 firstBinding, Buffer pBuffer)
-        {
-            unsafe
-            {
-                fixed (UInt64* ptrpBuffer = &pBuffer.m)
-                {
-                    //TODO: à revoirle warning ici...
-                    //Interop.NativeMethods.vkCmdBindVertexBuffers (this.m, firstBinding, (UInt32)(pOffset != null ? 1 : 0), ptrpBuffer, &pOffset);
-                    Interop.NativeMethods.vkCmdBindVertexBuffers(this.m, firstBinding, 0, ptrpBuffer, null);
-                }
-            }
-        }
+        //public void CmdBindVertexBuffer(UInt32 firstBinding, Buffer pBuffer)
+        //{
+        //    unsafe
+        //    {
+        //        fixed (UInt64* ptrpBuffer = &pBuffer.m)
+        //        {
+        //            //TODO: à revoirle warning ici...
+        //            //Interop.NativeMethods.vkCmdBindVertexBuffers (this.m, firstBinding, (UInt32)(pOffset != null ? 1 : 0), ptrpBuffer, &pOffset);
+        //            Interop.NativeMethods.vkCmdBindVertexBuffers(this.m, firstBinding, 1, ptrpBuffer, null);
+        //        }
+        //    }
+        //}
 
         public void CmdDraw (UInt32 vertexCount, UInt32 instanceCount, UInt32 firstVertex, UInt32 firstInstance)
 		{

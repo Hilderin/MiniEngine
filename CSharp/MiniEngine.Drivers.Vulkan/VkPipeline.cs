@@ -1,6 +1,9 @@
-﻿using System;
+﻿using MiniEngine.Shaders;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,10 +12,10 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Contains a pipeline
     /// </summary>
-    public class VkPipeline: IDisposable
+    public class VkPipeline : IDisposable
     {
         private VkRenderer _vi;
-        private Shader _shader;
+        private ShaderBinder _shaderBinder;
 
         private CommandBuffer[] commandBuffers;
         private DescriptorSet[] descriptorSets;
@@ -21,10 +24,10 @@ namespace MiniEngine.Drivers.Vulkan
         private Buffer uniformBuffer;
         public Pipeline pipeline;
 
-        public VkPipeline(VkRenderer vi, Shader shader)
+        public VkPipeline(VkRenderer vi, ShaderBinder shaderBinder)
         {
             _vi = vi;
-            _shader = shader;
+            _shaderBinder = shaderBinder;
 
             Build();
         }
@@ -34,6 +37,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public void Dispose()
         {
+            if (descriptorSetLayout != null)
+            {
+                _vi.Device.DestroyDescriptorSetLayout(descriptorSetLayout);
+                descriptorSetLayout = null;
+            }
+
             if (pipeline != null)
             {
                 _vi.Device.DestroyPipeline(pipeline);
@@ -45,24 +54,29 @@ namespace MiniEngine.Drivers.Vulkan
                 _vi.Device.DestroyPipelineLayout(pipelineLayout);
                 pipelineLayout = null;
             }
+
+            if (descriptorSetLayout != null)
+            {
+                _vi.Device.DestroyDescriptorSetLayout(descriptorSetLayout);
+                descriptorSetLayout = null;
+            }
+
         }
 
+        /// <summary>
+        /// Build the pipeline...
+        /// </summary>
         public void Build()
         {
-            //var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
-            //{
-            //    SetLayouts = new DescriptorSetLayout[] { descriptorSetLayout }
-            //};
-            //pipelineLayout = device.CreatePipelineLayout(pipelineLayoutCreateInfo);
-            var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
-            {
-                SetLayouts = new DescriptorSetLayout[0]
-            };
-            pipelineLayout = _vi.Device.CreatePipelineLayout(pipelineLayoutCreateInfo);
+            //Descriptor set layout creation from shader...
+            descriptorSetLayout = VkShaderHelper.CreateDescriptorSetLayout(_vi.Device, _shaderBinder);
+
+            //Pipeline layout creation...
+            pipelineLayout = _vi.Device.CreatePipelineLayout(descriptorSetLayout);
 
 
-            var vertShaderCode = ShaderHelper.Compile(_shader.VertexCode, ShaderStageFlags.Vertex);
-            var fragShaderCode = ShaderHelper.Compile(_shader.FragmentCode, ShaderStageFlags.Fragment);
+            var vertShaderCode = VkShaderHelper.Compile(_shaderBinder.Shader.VertexCode, ShaderStageFlags.Vertex);
+            var fragShaderCode = VkShaderHelper.Compile(_shaderBinder.Shader.FragmentCode, ShaderStageFlags.Fragment);
 
 
             var vertexShaderModule = _vi.Device.CreateShaderModule(vertShaderCode);
@@ -118,24 +132,11 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 Topology = PrimitiveTopology.TriangleList
             };
-            var vertexInputBindingDescription = new VertexInputBindingDescription
-            {
-                Stride = 3 * sizeof(float),
-                InputRate = VertexInputRate.Vertex
-            };
-            var vertexInputAttributeDescription = new VertexInputAttributeDescription
-            {
-                Format = Format.R32G32B32Sfloat
-            };
-            //var vertexInputStateCreateInfo = new PipelineVertexInputStateCreateInfo
-            //{
-            //    VertexBindingDescriptions = new VertexInputBindingDescription[] { vertexInputBindingDescription },
-            //    VertexAttributeDescriptions = new VertexInputAttributeDescription[] { vertexInputAttributeDescription }
-            //};
+
             var vertexInputStateCreateInfo = new PipelineVertexInputStateCreateInfo
             {
-                VertexBindingDescriptions = new VertexInputBindingDescription[0],
-                VertexAttributeDescriptions = new VertexInputAttributeDescription[0]
+                VertexBindingDescriptions = new VertexInputBindingDescription[] { GetVertexBindingDescription() },
+                VertexAttributeDescriptions = GetVertexAttributeDescriptions()
             };
 
             var pipelineCreateInfo = new GraphicsPipelineCreateInfo
@@ -161,6 +162,54 @@ namespace MiniEngine.Drivers.Vulkan
             _vi.Device.DestroyShaderModule(fragmentShaderModule);
         }
 
+
+        /// <summary>
+        /// Get the Vertex struct Binding Description
+        /// </summary>
+        public VertexInputBindingDescription GetVertexBindingDescription()
+        {
+            VertexInputBindingDescription bindingDescription = new()
+            {
+                Binding = 0,
+                Stride = (uint)Unsafe.SizeOf<Vertex>(),
+                InputRate = VertexInputRate.Vertex,
+            };
+
+            return bindingDescription;
+        }
+
+        /// <summary>
+        /// Get the Vertex struct Binding Attributes Description
+        /// </summary>
+        public static VertexInputAttributeDescription[] GetVertexAttributeDescriptions()
+        {
+            var attributeDescriptions = new[]
+            {
+                new VertexInputAttributeDescription()
+                {
+                    Binding = 0,
+                    Location = 0,
+                    Format = Format.R32G32B32Sfloat,
+                    Offset = (uint)Marshal.OffsetOf<Vertex>(nameof(Vertex.Pos)),
+                },
+                new VertexInputAttributeDescription()
+                {
+                    Binding = 0,
+                    Location = 1,
+                    Format = Format.R32G32B32Sfloat,
+                    Offset = (uint)Marshal.OffsetOf<Vertex>(nameof(Vertex.Color)),
+                },
+                new VertexInputAttributeDescription()
+                {
+                    Binding = 0,
+                    Location = 2,
+                    Format = Format.R32G32Sfloat,
+                    Offset = (uint)Marshal.OffsetOf<Vertex>(nameof(Vertex.TexCoord)),
+                }
+            };
+
+            return attributeDescriptions;
+        }
 
         /// <summary>
         /// Implicit conversion to a Pipeline
