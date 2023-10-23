@@ -1,6 +1,7 @@
 ﻿using MiniEngine.GLFW;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -171,7 +172,8 @@ namespace MiniEngine.Rendering.OpenGL
 
 
             //Get the camera matrix for the render call...
-            Matrix4 cameraMatrix = scene.Camera.GetMatrix();
+            //Matrix4 cameraMatrix = scene.Camera.GetProjectionMatrixOpenGL() * scene.Camera.GetMatrix();
+            Matrix4 cameraMatrix = scene.Camera.GetProjectionMatrixOpenGL() * scene.Camera.GetMatrix();
 
             List<Mesh> meshes = scene.Meshes;
             for (int iMesh = 0; iMesh < meshes.Count; iMesh++)
@@ -198,6 +200,7 @@ namespace MiniEngine.Rendering.OpenGL
 
                 //Setup camera in reference to the mesh...
                 this.WVPMatrix = cameraMatrix * worldMatrix;
+                Debug.Print(this.WVPMatrix.ToString());
                 this.CameraLocalPosition = mesh.GetLocalPosition(ref this.Camera.Location);
 
 

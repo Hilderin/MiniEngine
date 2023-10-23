@@ -3,6 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace MiniEngine
 {
+    /// <summary>
+    /// Matrix 4x4
+    /// Note: stores matrices in column-major order (see: https://en.wikipedia.org/wiki/Row-_and_column-major_order)
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct Matrix4
     {
@@ -26,39 +30,9 @@ namespace MiniEngine
         public float M11;
 
         /// <summary>
-        /// A first row and second column value.
-        /// </summary>
-        public float M12;
-
-        /// <summary>
-        /// A first row and third column value.
-        /// </summary>
-        public float M13;
-
-        /// <summary>
-        /// A first row and fourth column value.
-        /// </summary>
-        public float M14;
-
-        /// <summary>
         /// A second row and first column value.
         /// </summary>
         public float M21;
-
-        /// <summary>
-        /// A second row and second column value.
-        /// </summary>
-        public float M22;
-
-        /// <summary>
-        /// A second row and third column value.
-        /// </summary>
-        public float M23;
-
-        /// <summary>
-        /// A second row and fourth column value.
-        /// </summary>
-        public float M24;
 
         /// <summary>
         /// A third row and first column value.
@@ -66,24 +40,24 @@ namespace MiniEngine
         public float M31;
 
         /// <summary>
-        /// A third row and second column value.
-        /// </summary>
-        public float M32;
-
-        /// <summary>
-        /// A third row and third column value.
-        /// </summary>
-        public float M33;
-
-        /// <summary>
-        /// A third row and fourth column value.
-        /// </summary>
-        public float M34;
-
-        /// <summary>
         /// A fourth row and first column value.
         /// </summary>
         public float M41;
+
+        /// <summary>
+        /// A first row and second column value.
+        /// </summary>
+        public float M12;
+
+        /// <summary>
+        /// A second row and second column value.
+        /// </summary>
+        public float M22;
+
+        /// <summary>
+        /// A third row and second column value.
+        /// </summary>
+        public float M32;
 
         /// <summary>
         /// A fourth row and second column value.
@@ -91,9 +65,39 @@ namespace MiniEngine
         public float M42;
 
         /// <summary>
+        /// A first row and third column value.
+        /// </summary>
+        public float M13;
+
+        /// <summary>
+        /// A second row and third column value.
+        /// </summary>
+        public float M23;
+
+        /// <summary>
+        /// A third row and third column value.
+        /// </summary>
+        public float M33;
+
+        /// <summary>
         /// A fourth row and third column value.
         /// </summary>
         public float M43;
+
+        /// <summary>
+        /// A first row and fourth column value.
+        /// </summary>
+        public float M14;
+
+        /// <summary>
+        /// A second row and fourth column value.
+        /// </summary>
+        public float M24;
+
+        /// <summary>
+        /// A third row and fourth column value.
+        /// </summary>
+        public float M34;
 
         /// <summary>
         /// A fourth row and fourth column value.
@@ -300,7 +304,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a projection matrix
         /// </summary>
-        public static Matrix4 CreateProjection(float fov, float width, float height, float nearZ, float farZ)
+        public static Matrix4 CreateProjectionOpenGL(float fov, float width, float height, float nearZ, float farZ)
         {
             Matrix4 newMatrix;
 
@@ -315,14 +319,14 @@ namespace MiniEngine
 
             newMatrix.M11 = f / aspectRatio;
             newMatrix.M12 = newMatrix.M13 = newMatrix.M14 = 0.0f;
-            
+
             newMatrix.M22 = f;
             newMatrix.M21 = newMatrix.M23 = newMatrix.M24 = 0.0f;
-            
+
             newMatrix.M31 = newMatrix.M32 = 0.0f;
             newMatrix.M33 = A;
             newMatrix.M34 = B;
-            
+
             newMatrix.M41 = newMatrix.M42 = newMatrix.M44 = 0.0f;
             newMatrix.M43 = 1.0f;
 
@@ -350,22 +354,68 @@ namespace MiniEngine
         /// Returns:
         ///     The perspective projection matrix.
         ///</summary>
-        public static Matrix4 CreatePerspectiveFieldOfView(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance)
+        public static Matrix4 CreatePerspectiveVulkan(float fieldOfView, float width, float height, float near, float far)
         {
-            float val = 1f / (Math.Tan((fieldOfView / 2f)));
-            float m = (val / aspectRatio);
-            Matrix4 result;
-            result.M11 = m;
-            result.M12 = result.M13 = result.M14 = 0.0f;
-            result.M22 = val;
-            result.M21 = result.M23 = result.M24 = 0.0f;
+            float aspectRatio = width / height;
+            float focalLength = 1f / (Math.Tan((Math.DegToRad(fieldOfView) / 2f)));
+            float x = (focalLength / aspectRatio);
+            float y = focalLength;
+            float A = far / (far - near);
+            float B = -near * A;
 
-            result.M31 = result.M32 = 0.0f;
-            float right = (result.M33 = (float.IsPositiveInfinity(farPlaneDistance) ? -1f : (farPlaneDistance / (nearPlaneDistance - farPlaneDistance))));
-            result.M34 = -1f;
-            result.M41 = result.M42 = result.M44 = 0.0f;
-            result.M43 = (nearPlaneDistance * right);
-            return result;
+            return new Matrix4(
+                x, 0f, 0f, 0f,
+                0f, y, 0f, 0f,
+                0f, 0f, A, B,
+                0f, 0f, 1f, 0f);
+
+            //return new Matrix4(
+            //    x, 0f, 0f, 0f,
+            //    0f, y, 0f, 0f,
+            //    0f, 0f, A, B,
+            //    0f, 0f, -1f, 0f);
+
+            //result.M11 = x;
+            //result.M12 = result.M13 = result.M14 = 0.0f;
+            //result.M22 = focalLength;
+            //result.M21 = result.M23 = result.M24 = 0.0f;
+
+            //result.M31 = result.M32 = 0.0f;
+            //float right = (result.M33 = (float.IsPositiveInfinity(far) ? -1f : (far / (near - far))));
+            //result.M34 = (-near * right);
+            //result.M41 = result.M42 = result.M44 = 0.0f;
+            //result.M43 = 1f;
+            //return result;
+
+            //Matrix4 result;
+            //result.M11 = x;
+            //result.M12 = result.M13 = result.M14 = 0.0f;
+            //result.M22 = focalLength;
+            //result.M21 = result.M23 = result.M24 = 0.0f;
+
+            //result.M31 = result.M32 = 0.0f;
+            //float right = (result.M33 = (float.IsPositiveInfinity(far) ? -1f : (far / (near - far))));
+            //result.M34 = (-near * right);
+            //result.M41 = result.M42 = result.M44 = 0.0f;
+            //result.M43 = 1f;
+            //return result;
+
+            //float aspectRatio = width / height;
+            //float val = 1f / (Math.Tan((fieldOfView / 2f)));
+            //float m = (val / aspectRatio);
+
+            //Matrix4 result;
+            //result.M11 = m;
+            //result.M12 = result.M13 = result.M14 = 0.0f;
+            //result.M22 = val;
+            //result.M21 = result.M23 = result.M24 = 0.0f;
+
+            //result.M31 = result.M32 = 0.0f;
+            //float right = (result.M33 = (float.IsPositiveInfinity(farPlaneDistance) ? -1f : (farPlaneDistance / (nearPlaneDistance - farPlaneDistance))));
+            //result.M34 = -1f;
+            //result.M41 = result.M42 = result.M44 = 0.0f;
+            //result.M43 = (nearPlaneDistance * right);
+            //return result;
         }
 
         ///<summary>
@@ -428,7 +478,7 @@ namespace MiniEngine
             float z = axis.Z;
             float left = Math.Sin(angle);
             float left2 = Math.Cos(angle);
-            float val =  x * x;
+            float val = x * x;
             float val2 = y * y;
             float val3 = z * z;
             float val4 = x * y;
@@ -443,7 +493,7 @@ namespace MiniEngine
             identity.M23 = (val6 - (left2 * val6)) + (left * x);
             identity.M31 = (val5 - (left2 * val5)) + (left * y);
             identity.M32 = (val6 - (left2 * val6)) - (left * x);
-            identity.M33 = (val3 + (left2 *(1f - val3)));
+            identity.M33 = (val3 + (left2 * (1f - val3)));
             return identity;
         }
 

@@ -101,12 +101,20 @@ namespace MiniEngine.Drivers.Vulkan
                     Name = "main"
                 }
             };
+            //var viewport = new Viewport
+            //{
+            //    MinDepth = 0,
+            //    MaxDepth = 1.0f,
+            //    Width = _vi.CurrentExtent.Width,
+            //    Height = _vi.CurrentExtent.Height
+            //};
             var viewport = new Viewport
             {
                 MinDepth = 0,
                 MaxDepth = 1.0f,
                 Width = _vi.CurrentExtent.Width,
-                Height = _vi.CurrentExtent.Height
+                Height = -_vi.CurrentExtent.Height,      //Inverting Y axis so the coord will be 
+                Y = _vi.CurrentExtent.Height
             };
             var scissor = new Rect2D { Extent = _vi.CurrentExtent };
             var viewportCreateInfo = new PipelineViewportStateCreateInfo
@@ -133,6 +141,7 @@ namespace MiniEngine.Drivers.Vulkan
                 PolygonMode = PolygonMode.Fill,
                 //CullMode = CullModeFlags.Front,
                 CullMode = CullModeFlags.Back,
+                //CullMode = CullModeFlags.None,
                 FrontFace = FrontFace.Clockwise,
                 LineWidth = 1.0f
             };

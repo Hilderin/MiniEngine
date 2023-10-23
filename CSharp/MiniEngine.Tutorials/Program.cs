@@ -30,7 +30,7 @@ namespace MiniEngine.Tutorials
                 using (Context context = new Context(new OpenGLRenderer()))
                 //using (Context context = new Context(new VulkanRenderer("MiniEngine Tutorial", true)))
                 {
-                    var t = new Tutorial_PointLights();
+                    var t = new Tutorial_Cube();
 
                     context.OpenWindow(WIDTH, HEIGHT, TITLE)
                            .Init(() =>

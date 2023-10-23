@@ -14,7 +14,7 @@ namespace MiniEngine.Tutorials.Drivers.Vulkan
 
 
         private VkRenderer Renderer;
-        private VkMeshRenderer MeshRenderer;
+        private Scene Scene = new Scene();
 
         public VulkanForm()
         {
@@ -75,9 +75,9 @@ void main() {
             foreach (var mat in mesh.Materials)
                 mat.Shader = shader;
 
-            MeshRenderer = new VkMeshRenderer(mesh, Renderer);
+            Scene.Add(mesh);
 
-            Renderer.MeshRenderers.Add(MeshRenderer);
+            Scene.Camera.Location.Z = -3f;
 
 
         }
@@ -104,13 +104,12 @@ void main() {
 
         private void VulkanForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            MeshRenderer?.Dispose();
             Renderer?.Dispose();
         }
 
         private void tmrRefresh_Tick(object sender, EventArgs e)
         {
-            Renderer.DrawFrame();
+            Renderer.Render(Scene);
         }
     }
 }

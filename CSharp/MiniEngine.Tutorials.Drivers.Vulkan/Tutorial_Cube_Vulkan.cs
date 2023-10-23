@@ -2,9 +2,9 @@
 using MiniEngine.Assets;
 using MiniEngine.PrimitiveMeshes;
 
-namespace MiniEngine.Tutorials
+namespace MiniEngine.Tutorials.Drivers.Vulkan
 {
-    internal unsafe class Tutorial_Cube
+    internal class Tutorial_Cube_Vulkan
     {
        
         private Mesh _currentMesh;
@@ -18,10 +18,64 @@ namespace MiniEngine.Tutorials
 
             Context.LockCursor();
 
-            Scene.Camera.Location = new Vector3(0.0f, 0.0f, -3.0f);
+
+
+            Shader shader = new Shader(@"#version 450
+
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+} ubo;
+
+//push constants block
+layout( push_constant ) uniform constants
+{
+	mat4 render_matrix;
+} PushConstants;
+
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec3 inColor;
+layout(location = 2) in vec3 inTexCoord;
+
+layout(location = 0) out vec3 fragColor;
+
+//[1, 0, 0, -1][0, 1, 0, 0][0, 0, 1, 0][0, 0, 0, 1]
+mat4 aMat4 = mat4(1.0, 0.0, 0.0, -1.0,  // 1. column
+                  0.0, 1.0, 0.0, 0.0,  // 2. column
+                  0.0, 0.0, 1.0, 0.0,  // 3. column
+                  0.0, 0.0, 0.0, 1.0); // 4. column
+
+void main() {
+    gl_Position = PushConstants.render_matrix * vec4(inPosition, 1.0);
+    //gl_Position.y = -gl_Position.y;
+    fragColor = vec3(PushConstants.render_matrix * vec4(inPosition, 1.0));
+    fragColor = inColor;
+}
+", @"#version 450
+
+layout(location = 0) in vec3 fragColor;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(fragColor, 1.0);
+}
+");
+
+
+
+
+
+
+
+            Scene.Camera.Location = new Vector3(0.0f, 0.0f, -1f);
 
             _currentMesh = new TriangleMesh();
-            _currentMesh.Location = new Vector3(0f, 0f, 0.0f);
+            _currentMesh.Location = new Vector3(0f, 0f, 0f);
+            foreach (var mat in _currentMesh.Materials)
+                mat.Shader = shader;
+
             Scene.Add(_currentMesh);
 
 
@@ -91,7 +145,7 @@ namespace MiniEngine.Tutorials
 
 
             //_currentMesh.RotateY(0.01f);
-                        
+
         }
 
     }

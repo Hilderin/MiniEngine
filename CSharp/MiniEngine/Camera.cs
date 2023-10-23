@@ -41,8 +41,30 @@ namespace MiniEngine
         /// <summary>
         /// Get the Camera matrix
         /// </summary>
-        public Matrix4 GetCameraMatrix()
+        public Matrix4 GetViewMatrix()
         {
+            //public static Matrix4 CreateLookAt(Vector3 cameraPosition, Vector3 cameraTarget, Vector3 cameraUpVector)
+            //{
+            //    Vector3 vector3D = Vector3.Normalize(cameraPosition - cameraTarget);
+            //    Vector3 vector3D2 = Vector3.Normalize(Vector3.Cross(cameraUpVector, vector3D));
+            //    Vector3 vector = Vector3.Cross(vector3D, vector3D2);
+            //    Matrix4 identity = Matrix4.Identity;
+            //    identity.M11 = vector3D2.X;
+            //    identity.M12 = vector.X;
+            //    identity.M13 = vector3D.X;
+            //    identity.M21 = vector3D2.Y;
+            //    identity.M22 = vector.Y;
+            //    identity.M23 = vector3D.Y;
+            //    identity.M31 = vector3D2.Z;
+            //    identity.M32 = vector.Z;
+            //    identity.M33 = vector3D.Z;
+            //    identity.M41 = -Vector3.Dot(vector3D2, cameraPosition);
+            //    identity.M42 = -Vector3.Dot(vector, cameraPosition);
+            //    identity.M43 = -Vector3.Dot(vector3D, cameraPosition);
+
+            //    return identity;
+            //}
+
             //UVN...
             //U = Points to the right of the camera
             //V = UP
@@ -67,10 +89,19 @@ namespace MiniEngine
         /// <summary>
         /// Get the projection matrix
         /// </summary>
-        public Matrix4 GetProjectionMatrix()
+        public Matrix4 GetProjectionMatrixOpenGL()
         {
             //Vector2 clientSize = Context.Current.ClientSize;
-            return Matrix4.CreateProjection(FOV, ClientSize.X, ClientSize.Y, NearZ, FarZ);
+            return Matrix4.CreateProjectionOpenGL(FOV, ClientSize.X, ClientSize.Y, NearZ, FarZ);
+        }
+
+        /// <summary>
+        /// Get the projection matrix
+        /// </summary>
+        public Matrix4 GetProjectionMatrixVulkan()
+        {
+            //Vector2 clientSize = Context.Current.ClientSize;
+            return Matrix4.CreatePerspectiveVulkan(FOV, ClientSize.X, ClientSize.Y, NearZ, FarZ);
         }
 
         /// <summary>
@@ -79,7 +110,7 @@ namespace MiniEngine
         /// <returns></returns>
         public override Matrix4 GetMatrix()
         {
-            return GetProjectionMatrix() * GetCameraMatrix();
+            return GetViewMatrix();
         }
 
 

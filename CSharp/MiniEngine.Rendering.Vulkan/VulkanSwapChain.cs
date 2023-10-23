@@ -100,7 +100,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 model = Matrix4.Identity * Matrix4.CreateFromAxisAngle(new Vector3(0, 0, 1), Math.DegToRad(90.0f)),
                 view = Matrix4.CreateLookAt(new Vector3(2, 2, 2), new Vector3(0, 0, 0), new Vector3(0, 0, 1)),
-                proj = Matrix4.CreatePerspectiveFieldOfView(Math.DegToRad(45.0f), (float)swapChainExtent.Width / swapChainExtent.Height, 0.1f, 10.0f),
+                proj = Matrix4.CreatePerspectiveVulkan(Math.DegToRad(45.0f), (float)swapChainExtent.Width, (float)swapChainExtent.Height, 0.1f, 10.0f),
             };
             ubo.proj.M22 *= -1;
 

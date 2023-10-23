@@ -63,14 +63,16 @@ namespace MiniEngine.Drivers.Vulkan
         {
 
             Matrix4 mvp = _vi.MVPMatrix * _mesh.GetMatrix();
-            
+            Matrix4 mvpTransposed = Matrix4.Transpose(ref mvp);
+
             Debug.Print("--------------");
+            Debug.Print("mvp:" + mvp.ToString());
             foreach (var subMesh in _subMeshes)
             {
                 foreach (var vector in subMesh.Positions)
                 {
                     Vector4 vector4 = new Vector4(vector, 1);
-                    Vector4 vector4Res = _vi.MVPMatrix * vector4;
+                    Vector4 vector4Res = mvp * vector4;
                     Debug.Print(vector.ToString() + " => " + vector4Res.ToString());
                 }
             }
@@ -86,7 +88,7 @@ namespace MiniEngine.Drivers.Vulkan
                 {
                     //fixed (Matrix4* ptr = &_vi.MVPMatrix)
                     //{
-                        commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, (uint)sizeof(Matrix4), (nint)(&mvp));
+                        commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, (uint)sizeof(Matrix4), (nint)(&mvpTransposed));
                     //}
                 }
                 //commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, ref _vi.MVPMatrix);
@@ -121,6 +123,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
 
             _vulkanMeshDatas = null;
+            _mesh.RendererStateObj = null;
             _mesh = null;
             _materials = null;
         }
