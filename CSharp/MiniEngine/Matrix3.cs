@@ -1,53 +1,31 @@
-﻿/*
-* Copyright (c) 2012-2020 AssimpNet - Nicholas Woodfield
-* 
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-* 
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-* 
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
-
-using System;
-using System.Globalization;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace MiniEngine
 {
     /// <summary>
-    /// Represents a 3x3 matrix. Assimp docs say their matrices are always row-major,
-    /// and it looks like they're only describing the memory layout. Matrices are treated
-    /// as column vectors however (X base in the first column, Y base the second, and Z base the third)
+    /// Represents a 3x3 matrix.
+    /// Note: stores matrices in column-major order (see: https://en.wikipedia.org/wiki/Row-_and_column-major_order)
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct Matrix3 : IEquatable<Matrix3>
     {
+
+        #region Static members
+
+        /// <summary>
+        /// Identity matrix
+        /// </summary>
+        private static Matrix3 _identity = new Matrix3(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+
+        #endregion
+
+        #region Public Fields
+
         /// <summary>
         /// Value at row 1, column 1 of the matrix
         /// </summary>
         public float M11;
-
-        /// <summary>
-        /// Value at row 1, column 2 of the matrix
-        /// </summary>
-        public float M12;
-
-        /// <summary>
-        /// Value at row 1, column 3 of the matrix
-        /// </summary>
-        public float M13;
 
         /// <summary>
         /// Value at row 2, column 1 of the matrix
@@ -55,19 +33,19 @@ namespace MiniEngine
         public float M21;
 
         /// <summary>
-        /// Value at row 2, column 2 of the matrix
-        /// </summary>
-        public float M22;
-
-        /// <summary>
-        /// Value at row 2, column 3 of the matrix
-        /// </summary>
-        public float M23;
-
-        /// <summary>
         /// Value at row 3, column 1 of the matrix
         /// </summary>
         public float M31;
+
+        /// <summary>
+        /// Value at row 1, column 2 of the matrix
+        /// </summary>
+        public float M12;
+
+        /// <summary>
+        /// Value at row 2, column 2 of the matrix
+        /// </summary>
+        public float M22;
 
         /// <summary>
         /// Value at row 3, column 2 of the matrix
@@ -75,11 +53,23 @@ namespace MiniEngine
         public float M32;
 
         /// <summary>
+        /// Value at row 1, column 3 of the matrix
+        /// </summary>
+        public float M13;
+
+        /// <summary>
+        /// Value at row 2, column 3 of the matrix
+        /// </summary>
+        public float M23;
+
+        /// <summary>
         /// Value at row 3, column 3 of the matrix
         /// </summary>
         public float M33;
 
-        private static Matrix3 _identity = new Matrix3(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+        #endregion
+
+        #region Public static properties
 
         /// <summary>
         /// Gets the identity matrix.
@@ -91,6 +81,10 @@ namespace MiniEngine
                 return _identity;
             }
         }
+
+        #endregion
+
+        #region Public properties
 
         /// <summary>
         /// Gets if this matrix is an identity matrix.
@@ -218,6 +212,10 @@ namespace MiniEngine
             }
         }
 
+        #endregion
+
+        #region Constructors
+
         /// <summary>
         /// Constructs a new Matrix3.
         /// </summary>
@@ -280,6 +278,11 @@ namespace MiniEngine
             this.M32 = rotMatrix.M32;
             this.M33 = rotMatrix.M33;
         }
+
+        #endregion
+
+
+        #region Public methods
 
         /// <summary>
         /// Transposes this matrix (rows become columns, vice versa).
@@ -634,6 +637,62 @@ namespace MiniEngine
             return m;
         }
 
+
+
+        /// <summary>
+        /// Tests equality between this matrix and another.
+        /// </summary>
+        /// <param name="other">Other matrix to test</param>
+        /// <returns>True if the matrices are equal, false otherwise</returns>
+        public bool Equals(Matrix3 other)
+        {
+            return (((M11 == other.M11) && (M12 == other.M12) && (M13 == other.M13))
+                && ((M21 == other.M21) && (M22 == other.M22) && (M23 == other.M23))
+                && ((M31 == other.M31) && (M32 == other.M32) && (M33 == other.M33)));
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="System.Object"/> is equal to this instance.
+        /// </summary>
+        /// <param name="obj">The <see cref="System.Object"/> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="System.Object"/> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
+        public override bool Equals(Object obj)
+        {
+            if (obj is Matrix3)
+            {
+                return Equals((Matrix3)obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return M11.GetHashCode() + M12.GetHashCode() + M13.GetHashCode() + M21.GetHashCode() + M22.GetHashCode() + M23.GetHashCode() +
+                M31.GetHashCode() + M32.GetHashCode() + M33.GetHashCode();
+        }
+
+        /// <summary>
+        /// Returns a <see cref="System.String"/> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String"/> that represents this instance.
+        public override string ToString()
+        {
+            return $@"[{M11}, {M12}, {M13}][{M21}, {M22}, {M23}][{M31}, {M32}, {M33}]";
+        }
+
+        #endregion
+
+        #region Operators
+
         /// <summary>
         /// Tests equality between two matrices.
         /// </summary>
@@ -715,54 +774,8 @@ namespace MiniEngine
             return m;
         }
 
-        /// <summary>
-        /// Tests equality between this matrix and another.
-        /// </summary>
-        /// <param name="other">Other matrix to test</param>
-        /// <returns>True if the matrices are equal, false otherwise</returns>
-        public bool Equals(Matrix3 other)
-        {
-            return (((M11 == other.M11) && (M12 == other.M12) && (M13 == other.M13))
-                && ((M21 == other.M21) && (M22 == other.M22) && (M23 == other.M23))
-                && ((M31 == other.M31) && (M32 == other.M32) && (M33 == other.M33)));
-        }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="System.Object"/> is equal to this instance.
-        /// </summary>
-        /// <param name="obj">The <see cref="System.Object"/> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object"/> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
-        public override bool Equals(Object obj)
-        {
-            if (obj is Matrix3)
-            {
-                return Equals((Matrix3)obj);
-            }
-            return false;
-        }
+        #endregion
 
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
-        public override int GetHashCode()
-        {
-            return M11.GetHashCode() + M12.GetHashCode() + M13.GetHashCode() + M21.GetHashCode() + M22.GetHashCode() + M23.GetHashCode() +
-                M31.GetHashCode() + M32.GetHashCode() + M33.GetHashCode();
-        }
-
-        /// <summary>
-        /// Returns a <see cref="System.String"/> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String"/> that represents this instance.
-        public override string ToString()
-        {
-            return $@"[{M11}, {M12}, {M13}][{M21}, {M22}, {M23}][{M31}, {M32}, {M33}]";
-        }
     }
 }
