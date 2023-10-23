@@ -12,22 +12,24 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Contains a pipeline
     /// </summary>
-    public class VkPipeline : IDisposable
+    public class VkPipelineWrapper : IDisposable
     {
-        private VkRenderer _vi;
+        private VkDevice _device;
         private ShaderBinder _shaderBinder;
+        private VkRenderPass _renderPass;
 
-        private CommandBuffer[] commandBuffers;
-        private DescriptorSet[] descriptorSets;
-        private DescriptorSetLayout descriptorSetLayout;
-        public PipelineLayout pipelineLayout;
-        private Buffer uniformBuffer;
-        public Pipeline pipeline;
+        private VkCommandBuffer[] commandBuffers;
+        private VkDescriptorSet[] descriptorSets;
+        private VkDescriptorSetLayout descriptorSetLayout;
+        public VkPipelineLayout pipelineLayout;
+        private VkBuffer uniformBuffer;
+        public VkPipeline pipeline;
 
-        public VkPipeline(VkRenderer vi, ShaderBinder shaderBinder)
+        public VkPipelineWrapper(VkDevice device, VkRenderPass renderPass, ShaderBinder shaderBinder)
         {
-            _vi = vi;
+            _device = device;
             _shaderBinder = shaderBinder;
+            _renderPass = renderPass;
 
             Build();
         }
@@ -39,25 +41,25 @@ namespace MiniEngine.Drivers.Vulkan
         {
             if (descriptorSetLayout != null)
             {
-                _vi.Device.DestroyDescriptorSetLayout(descriptorSetLayout);
+                _device.DestroyDescriptorSetLayout(descriptorSetLayout);
                 descriptorSetLayout = null;
             }
 
             if (pipeline != null)
             {
-                _vi.Device.DestroyPipeline(pipeline);
+                _device.DestroyPipeline(pipeline);
                 pipeline = null;
             }
 
             if (pipelineLayout != null)
             {
-                _vi.Device.DestroyPipelineLayout(pipelineLayout);
+                _device.DestroyPipelineLayout(pipelineLayout);
                 pipelineLayout = null;
             }
 
             if (descriptorSetLayout != null)
             {
-                _vi.Device.DestroyDescriptorSetLayout(descriptorSetLayout);
+                _device.DestroyDescriptorSetLayout(descriptorSetLayout);
                 descriptorSetLayout = null;
             }
 
@@ -69,7 +71,7 @@ namespace MiniEngine.Drivers.Vulkan
         public void Build()
         {
             //Descriptor set layout creation from shader...
-            descriptorSetLayout = VkShaderHelper.CreateDescriptorSetLayout(_vi.Device, _shaderBinder);
+            descriptorSetLayout = VkShaderHelper.CreateDescriptorSetLayout(_device, _shaderBinder);
 
             PushConstantRange[] constantRanges = {
                 new() {
@@ -79,15 +81,15 @@ namespace MiniEngine.Drivers.Vulkan
             };
 
             //Pipeline layout creation...
-            pipelineLayout = _vi.Device.CreatePipelineLayout(descriptorSetLayout, constantRanges);
+            pipelineLayout = _device.CreatePipelineLayout(descriptorSetLayout, constantRanges);
 
 
             var vertShaderCode = VkShaderHelper.Compile(_shaderBinder.Shader.VertexCode, ShaderStageFlags.Vertex);
             var fragShaderCode = VkShaderHelper.Compile(_shaderBinder.Shader.FragmentCode, ShaderStageFlags.Fragment);
 
 
-            var vertexShaderModule = _vi.Device.CreateShaderModule(vertShaderCode);
-            var fragmentShaderModule = _vi.Device.CreateShaderModule(fragShaderCode);
+            var vertexShaderModule = _device.CreateShaderModule(vertShaderCode);
+            var fragmentShaderModule = _device.CreateShaderModule(fragShaderCode);
 
             PipelineShaderStageCreateInfo[] pipelineShaderStages = {
                 new PipelineShaderStageCreateInfo {
@@ -112,11 +114,11 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 MinDepth = 0,
                 MaxDepth = 1.0f,
-                Width = _vi.CurrentExtent.Width,
-                Height = -_vi.CurrentExtent.Height,      //Inverting Y axis so the coord will be 
-                Y = _vi.CurrentExtent.Height
+                Width = _device.CurrentExtent.Width,
+                Height = -_device.CurrentExtent.Height,      //Inverting Y axis so the coord will be 
+                Y = _device.CurrentExtent.Height
             };
-            var scissor = new Rect2D { Extent = _vi.CurrentExtent };
+            var scissor = new Rect2D { Extent = _device.CurrentExtent };
             var viewportCreateInfo = new PipelineViewportStateCreateInfo
             {
                 Viewports = new Viewport[] { viewport },
@@ -166,17 +168,17 @@ namespace MiniEngine.Drivers.Vulkan
                 RasterizationState = rasterizationStateCreateInfo,
                 InputAssemblyState = inputAssemblyStateCreateInfo,
                 VertexInputState = vertexInputStateCreateInfo,
-                RenderPass = _vi.RenderPass
+                RenderPass = _renderPass
             };
 
-            //var pipelines = _vi.Device.CreateGraphicsPipelines(_vi.Device.CreatePipelineCache(new PipelineCacheCreateInfo()), new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
-            var pipelines = _vi.Device.CreateGraphicsPipelines(null, new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
+            //var pipelines = _device.CreateGraphicsPipelines(_device.CreatePipelineCache(new PipelineCacheCreateInfo()), new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
+            var pipelines = _device.CreateGraphicsPipelines(null, new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
 
             pipeline = pipelines[0];
 
             //We don't need it anymore...
-            _vi.Device.DestroyShaderModule(vertexShaderModule);
-            _vi.Device.DestroyShaderModule(fragmentShaderModule);
+            _device.DestroyShaderModule(vertexShaderModule);
+            _device.DestroyShaderModule(fragmentShaderModule);
         }
 
 
@@ -231,7 +233,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Implicit conversion to a Pipeline
         /// </summary>
-        public static implicit operator Pipeline(VkPipeline pipeline) { return pipeline.pipeline; }
+        public static implicit operator VkPipeline(VkPipelineWrapper pipeline) { return pipeline.pipeline; }
 
     }
 }

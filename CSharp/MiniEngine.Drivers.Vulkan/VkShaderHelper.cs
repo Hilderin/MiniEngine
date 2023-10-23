@@ -18,7 +18,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a descriptor set layout for a shader
         /// </summary>
-        public static DescriptorSetLayout CreateDescriptorSetLayout(Device device, ShaderBinder shaderBinder)
+        public static VkDescriptorSetLayout CreateDescriptorSetLayout(VkDevice device, ShaderBinder shaderBinder)
         {
             var layoutBinding = new DescriptorSetLayoutBinding
             {

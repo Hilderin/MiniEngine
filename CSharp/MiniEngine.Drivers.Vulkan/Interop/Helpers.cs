@@ -5,9 +5,9 @@ namespace MiniEngine.Drivers.Vulkan.Interop
 {
 	internal class Structure
 	{
-		internal static Vulkan.NativePointer Allocate (Type type)
+		internal static Vulkan.VkNativePointer Allocate (Type type)
 		{
-			return new NativePointer (new NativeReference (Marshal.SizeOf (type), true));
+			return new VkNativePointer (new VkNativeReference (Marshal.SizeOf (type), true));
 		}
 
 		unsafe internal static void MarshalFixedSizeString (byte* dst, string src, int size)

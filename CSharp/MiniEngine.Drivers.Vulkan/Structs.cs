@@ -146,7 +146,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceProperties (NativePointer pointer)
+		internal PhysicalDeviceProperties (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -155,7 +155,7 @@ namespace MiniEngine.Drivers.Vulkan
 
 		internal void Initialize ()
 		{
-			lLimits = new PhysicalDeviceLimits (new NativePointer (native.Reference, (IntPtr)(&m->Limits)));
+			lLimits = new PhysicalDeviceLimits (new VkNativePointer (native.Reference, (IntPtr)(&m->Limits)));
 		}
 
 	}
@@ -183,7 +183,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.ExtensionProperties));
 		}
 
-		internal ExtensionProperties (NativePointer pointer)
+		internal ExtensionProperties (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -223,7 +223,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.LayerProperties));
 		}
 
-		internal LayerProperties (NativePointer pointer)
+		internal LayerProperties (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -269,7 +269,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ApplicationInfo (NativePointer pointer)
+		internal ApplicationInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -326,7 +326,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.AllocationCallbacks));
 		}
 
-		internal AllocationCallbacks (NativePointer pointer)
+		internal AllocationCallbacks (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -350,7 +350,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->QueueCount = value; }
 		}
 
-		NativeReference refQueuePriorities;
+		VkNativeReference refQueuePriorities;
 		public float[] QueuePriorities {
 			get {
 				if (m->QueueCount == 0)
@@ -372,7 +372,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->QueueCount = (uint)value.Length;
-				refQueuePriorities = new NativeReference ((int)(sizeof(float)*value.Length));
+				refQueuePriorities = new VkNativeReference ((int)(sizeof(float)*value.Length));
 				m->QueuePriorities = refQueuePriorities.Handle;
 				unsafe
 				{
@@ -395,7 +395,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceQueueCreateInfo (NativePointer pointer)
+		internal DeviceQueueCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -429,7 +429,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->QueueCreateInfoCount = value; }
 		}
 
-		NativeReference refQueueCreateInfos;
+		VkNativeReference refQueueCreateInfos;
 		public DeviceQueueCreateInfo[] QueueCreateInfos {
 			get {
 				if (m->QueueCreateInfoCount == 0)
@@ -453,7 +453,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->QueueCreateInfoCount = (uint)value.Length;
-				refQueueCreateInfos = new NativeReference ((int)(sizeof(Interop.DeviceQueueCreateInfo)*value.Length));
+				refQueueCreateInfos = new VkNativeReference ((int)(sizeof(Interop.DeviceQueueCreateInfo)*value.Length));
 				m->QueueCreateInfos = refQueueCreateInfos.Handle;
 				unsafe
 				{
@@ -469,7 +469,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->EnabledLayerCount = value; }
 		}
 
-		NativeReference refEnabledLayerNames;
+		VkNativeReference refEnabledLayerNames;
 		public string[] EnabledLayerNames {
 			get {
 				if (m->EnabledLayerCount == 0)
@@ -491,7 +491,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->EnabledLayerCount = (uint)value.Length;
-				refEnabledLayerNames = new NativeReference ((int)(sizeof(IntPtr)*m->EnabledLayerCount));
+				refEnabledLayerNames = new VkNativeReference ((int)(sizeof(IntPtr)*m->EnabledLayerCount));
 				m->EnabledLayerNames = refEnabledLayerNames.Handle;
 				unsafe
 				{
@@ -507,7 +507,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->EnabledExtensionCount = value; }
 		}
 
-		NativeReference refEnabledExtensionNames;
+		VkNativeReference refEnabledExtensionNames;
 		public string[] EnabledExtensionNames {
 			get {
 				if (m->EnabledExtensionCount == 0)
@@ -529,7 +529,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->EnabledExtensionCount = (uint)value.Length;
-				refEnabledExtensionNames = new NativeReference ((int)(sizeof(IntPtr)*m->EnabledExtensionCount));
+				refEnabledExtensionNames = new VkNativeReference ((int)(sizeof(IntPtr)*m->EnabledExtensionCount));
 				m->EnabledExtensionNames = refEnabledExtensionNames.Handle;
 				unsafe
 				{
@@ -557,7 +557,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceCreateInfo (NativePointer pointer)
+		internal DeviceCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -601,7 +601,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->EnabledLayerCount = value; }
 		}
 
-		NativeReference refEnabledLayerNames;
+		VkNativeReference refEnabledLayerNames;
 		public string[] EnabledLayerNames {
 			get {
 				if (m->EnabledLayerCount == 0)
@@ -623,7 +623,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->EnabledLayerCount = (uint)value.Length;
-				refEnabledLayerNames = new NativeReference ((int)(sizeof(IntPtr)*m->EnabledLayerCount));
+				refEnabledLayerNames = new VkNativeReference ((int)(sizeof(IntPtr)*m->EnabledLayerCount));
 				m->EnabledLayerNames = refEnabledLayerNames.Handle;
 				unsafe
 				{
@@ -639,7 +639,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->EnabledExtensionCount = value; }
 		}
 
-		NativeReference refEnabledExtensionNames;
+		VkNativeReference refEnabledExtensionNames;
 		public string[] EnabledExtensionNames {
 			get {
 				if (m->EnabledExtensionCount == 0)
@@ -661,7 +661,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->EnabledExtensionCount = (uint)value.Length;
-				refEnabledExtensionNames = new NativeReference ((int)(sizeof(IntPtr)*m->EnabledExtensionCount));
+				refEnabledExtensionNames = new VkNativeReference ((int)(sizeof(IntPtr)*m->EnabledExtensionCount));
 				m->EnabledExtensionNames = refEnabledExtensionNames.Handle;
 				unsafe
 				{
@@ -684,7 +684,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal InstanceCreateInfo (NativePointer pointer)
+		internal InstanceCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -785,7 +785,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.PhysicalDeviceMemoryProperties));
 		}
 
-		internal PhysicalDeviceMemoryProperties (NativePointer pointer)
+		internal PhysicalDeviceMemoryProperties (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -816,7 +816,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryAllocateInfo (NativePointer pointer)
+		internal MemoryAllocateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -867,8 +867,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class MappedMemoryRange : MarshalledObject
 	{
-		DeviceMemory lMemory;
-		public DeviceMemory Memory {
+		VkDeviceMemory lMemory;
+		public VkDeviceMemory Memory {
 			get { return lMemory; }
 			set { lMemory = value; m->Memory = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -895,7 +895,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MappedMemoryRange (NativePointer pointer)
+		internal MappedMemoryRange (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -927,8 +927,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class DescriptorBufferInfo : MarshalledObject
 	{
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -955,7 +955,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DescriptorBufferInfo (NativePointer pointer)
+		internal DescriptorBufferInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -970,14 +970,14 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class DescriptorImageInfo : MarshalledObject
 	{
-		Sampler lSampler;
-		public Sampler Sampler {
+		VkSampler lSampler;
+		public VkSampler Sampler {
 			get { return lSampler; }
 			set { lSampler = value; m->Sampler = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		ImageView lImageView;
-		public ImageView ImageView {
+		VkImageView lImageView;
+		public VkImageView ImageView {
 			get { return lImageView; }
 			set { lImageView = value; m->ImageView = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -999,7 +999,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DescriptorImageInfo (NativePointer pointer)
+		internal DescriptorImageInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1014,8 +1014,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class WriteDescriptorSet : MarshalledObject
 	{
-		DescriptorSet lDstSet;
-		public DescriptorSet DstSet {
+		VkDescriptorSet lDstSet;
+		public VkDescriptorSet DstSet {
 			get { return lDstSet; }
 			set { lDstSet = value; m->DstSet = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1040,7 +1040,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DescriptorType = value; }
 		}
 
-		NativeReference refImageInfo;
+		VkNativeReference refImageInfo;
 		public DescriptorImageInfo[] ImageInfo {
 			get {
 				if (m->DescriptorCount == 0)
@@ -1064,7 +1064,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DescriptorCount = (uint)value.Length;
-				refImageInfo = new NativeReference ((int)(sizeof(Interop.DescriptorImageInfo)*value.Length));
+				refImageInfo = new VkNativeReference ((int)(sizeof(Interop.DescriptorImageInfo)*value.Length));
 				m->ImageInfo = refImageInfo.Handle;
 				unsafe
 				{
@@ -1075,7 +1075,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refBufferInfo;
+		VkNativeReference refBufferInfo;
 		public DescriptorBufferInfo[] BufferInfo {
 			get {
 				if (m->DescriptorCount == 0)
@@ -1099,7 +1099,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DescriptorCount = (uint)value.Length;
-				refBufferInfo = new NativeReference ((int)(sizeof(Interop.DescriptorBufferInfo)*value.Length));
+				refBufferInfo = new VkNativeReference ((int)(sizeof(Interop.DescriptorBufferInfo)*value.Length));
 				m->BufferInfo = refBufferInfo.Handle;
 				unsafe
 				{
@@ -1110,17 +1110,17 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refTexelBufferView;
-		public BufferView[] TexelBufferView {
+		VkNativeReference refTexelBufferView;
+		public VkBufferView[] TexelBufferView {
 			get {
 				if (m->DescriptorCount == 0)
 					return null;
-				var values = new BufferView [m->DescriptorCount];
+				var values = new VkBufferView [m->DescriptorCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->TexelBufferView;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new BufferView ();
+						values [i] = new VkBufferView ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -1134,7 +1134,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DescriptorCount = (uint)value.Length;
-				refTexelBufferView = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refTexelBufferView = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->TexelBufferView = refTexelBufferView.Handle;
 				unsafe
 				{
@@ -1157,7 +1157,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal WriteDescriptorSet (NativePointer pointer)
+		internal WriteDescriptorSet (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1185,8 +1185,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class CopyDescriptorSet : MarshalledObject
 	{
-		DescriptorSet lSrcSet;
-		public DescriptorSet SrcSet {
+		VkDescriptorSet lSrcSet;
+		public VkDescriptorSet SrcSet {
 			get { return lSrcSet; }
 			set { lSrcSet = value; m->SrcSet = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1201,8 +1201,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SrcArrayElement = value; }
 		}
 
-		DescriptorSet lDstSet;
-		public DescriptorSet DstSet {
+		VkDescriptorSet lDstSet;
+		public VkDescriptorSet DstSet {
 			get { return lDstSet; }
 			set { lDstSet = value; m->DstSet = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1234,7 +1234,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal CopyDescriptorSet (NativePointer pointer)
+		internal CopyDescriptorSet (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1275,7 +1275,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->QueueFamilyIndexCount = value; }
 		}
 
-		NativeReference refQueueFamilyIndices;
+		VkNativeReference refQueueFamilyIndices;
 		public UInt32[] QueueFamilyIndices {
 			get {
 				if (m->QueueFamilyIndexCount == 0)
@@ -1297,7 +1297,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->QueueFamilyIndexCount = (uint)value.Length;
-				refQueueFamilyIndices = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refQueueFamilyIndices = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->QueueFamilyIndices = refQueueFamilyIndices.Handle;
 				unsafe
 				{
@@ -1320,7 +1320,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BufferCreateInfo (NativePointer pointer)
+		internal BufferCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1349,8 +1349,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1382,7 +1382,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BufferViewCreateInfo (NativePointer pointer)
+		internal BufferViewCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1444,7 +1444,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryBarrier (NativePointer pointer)
+		internal MemoryBarrier (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1480,8 +1480,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DstQueueFamilyIndex = value; }
 		}
 
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1508,7 +1508,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BufferMemoryBarrier (NativePointer pointer)
+		internal BufferMemoryBarrier (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1554,8 +1554,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DstQueueFamilyIndex = value; }
 		}
 
-		Image lImage;
-		public Image Image {
+		VkImage lImage;
+		public VkImage Image {
 			get { return lImage; }
 			set { lImage = value; m->Image = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1577,7 +1577,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImageMemoryBarrier (NativePointer pointer)
+		internal ImageMemoryBarrier (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1648,7 +1648,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->QueueFamilyIndexCount = value; }
 		}
 
-		NativeReference refQueueFamilyIndices;
+		VkNativeReference refQueueFamilyIndices;
 		public UInt32[] QueueFamilyIndices {
 			get {
 				if (m->QueueFamilyIndexCount == 0)
@@ -1670,7 +1670,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->QueueFamilyIndexCount = (uint)value.Length;
-				refQueueFamilyIndices = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refQueueFamilyIndices = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->QueueFamilyIndices = refQueueFamilyIndices.Handle;
 				unsafe
 				{
@@ -1698,7 +1698,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImageCreateInfo (NativePointer pointer)
+		internal ImageCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1736,8 +1736,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		Image lImage;
-		public Image Image {
+		VkImage lImage;
+		public VkImage Image {
 			get { return lImage; }
 			set { lImage = value; m->Image = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1774,7 +1774,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImageViewCreateInfo (NativePointer pointer)
+		internal ImageViewCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1807,8 +1807,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Size = value; }
 		}
 
-		DeviceMemory lMemory;
-		public DeviceMemory Memory {
+		VkDeviceMemory lMemory;
+		public VkDeviceMemory Memory {
 			get { return lMemory; }
 			set { lMemory = value; m->Memory = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1835,7 +1835,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SparseMemoryBind (NativePointer pointer)
+		internal SparseMemoryBind (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1865,8 +1865,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Extent = value; }
 		}
 
-		DeviceMemory lMemory;
-		public DeviceMemory Memory {
+		VkDeviceMemory lMemory;
+		public VkDeviceMemory Memory {
 			get { return lMemory; }
 			set { lMemory = value; m->Memory = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1893,7 +1893,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SparseImageMemoryBind (NativePointer pointer)
+		internal SparseImageMemoryBind (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1908,8 +1908,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class SparseBufferMemoryBindInfo : MarshalledObject
 	{
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -1919,7 +1919,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->BindCount = value; }
 		}
 
-		NativeReference refBinds;
+		VkNativeReference refBinds;
 		public SparseMemoryBind[] Binds {
 			get {
 				if (m->BindCount == 0)
@@ -1943,7 +1943,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->BindCount = (uint)value.Length;
-				refBinds = new NativeReference ((int)(sizeof(Interop.SparseMemoryBind)*value.Length));
+				refBinds = new VkNativeReference ((int)(sizeof(Interop.SparseMemoryBind)*value.Length));
 				m->Binds = refBinds.Handle;
 				unsafe
 				{
@@ -1966,7 +1966,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SparseBufferMemoryBindInfo (NativePointer pointer)
+		internal SparseBufferMemoryBindInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -1989,8 +1989,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class SparseImageOpaqueMemoryBindInfo : MarshalledObject
 	{
-		Image lImage;
-		public Image Image {
+		VkImage lImage;
+		public VkImage Image {
 			get { return lImage; }
 			set { lImage = value; m->Image = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -2000,7 +2000,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->BindCount = value; }
 		}
 
-		NativeReference refBinds;
+		VkNativeReference refBinds;
 		public SparseMemoryBind[] Binds {
 			get {
 				if (m->BindCount == 0)
@@ -2024,7 +2024,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->BindCount = (uint)value.Length;
-				refBinds = new NativeReference ((int)(sizeof(Interop.SparseMemoryBind)*value.Length));
+				refBinds = new VkNativeReference ((int)(sizeof(Interop.SparseMemoryBind)*value.Length));
 				m->Binds = refBinds.Handle;
 				unsafe
 				{
@@ -2047,7 +2047,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SparseImageOpaqueMemoryBindInfo (NativePointer pointer)
+		internal SparseImageOpaqueMemoryBindInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -2070,8 +2070,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class SparseImageMemoryBindInfo : MarshalledObject
 	{
-		Image lImage;
-		public Image Image {
+		VkImage lImage;
+		public VkImage Image {
 			get { return lImage; }
 			set { lImage = value; m->Image = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -2081,7 +2081,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->BindCount = value; }
 		}
 
-		NativeReference refBinds;
+		VkNativeReference refBinds;
 		public SparseImageMemoryBind[] Binds {
 			get {
 				if (m->BindCount == 0)
@@ -2105,7 +2105,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->BindCount = (uint)value.Length;
-				refBinds = new NativeReference ((int)(sizeof(Interop.SparseImageMemoryBind)*value.Length));
+				refBinds = new VkNativeReference ((int)(sizeof(Interop.SparseImageMemoryBind)*value.Length));
 				m->Binds = refBinds.Handle;
 				unsafe
 				{
@@ -2128,7 +2128,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SparseImageMemoryBindInfo (NativePointer pointer)
+		internal SparseImageMemoryBindInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -2156,17 +2156,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->WaitSemaphoreCount = value; }
 		}
 
-		NativeReference refWaitSemaphores;
-		public Semaphore[] WaitSemaphores {
+		VkNativeReference refWaitSemaphores;
+		public VkSemaphore[] WaitSemaphores {
 			get {
 				if (m->WaitSemaphoreCount == 0)
 					return null;
-				var values = new Semaphore [m->WaitSemaphoreCount];
+				var values = new VkSemaphore [m->WaitSemaphoreCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->WaitSemaphores;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new Semaphore ();
+						values [i] = new VkSemaphore ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -2180,7 +2180,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->WaitSemaphoreCount = (uint)value.Length;
-				refWaitSemaphores = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refWaitSemaphores = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->WaitSemaphores = refWaitSemaphores.Handle;
 				unsafe
 				{
@@ -2196,7 +2196,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->BufferBindCount = value; }
 		}
 
-		NativeReference refBufferBinds;
+		VkNativeReference refBufferBinds;
 		public SparseBufferMemoryBindInfo[] BufferBinds {
 			get {
 				if (m->BufferBindCount == 0)
@@ -2220,7 +2220,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->BufferBindCount = (uint)value.Length;
-				refBufferBinds = new NativeReference ((int)(sizeof(Interop.SparseBufferMemoryBindInfo)*value.Length));
+				refBufferBinds = new VkNativeReference ((int)(sizeof(Interop.SparseBufferMemoryBindInfo)*value.Length));
 				m->BufferBinds = refBufferBinds.Handle;
 				unsafe
 				{
@@ -2236,7 +2236,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ImageOpaqueBindCount = value; }
 		}
 
-		NativeReference refImageOpaqueBinds;
+		VkNativeReference refImageOpaqueBinds;
 		public SparseImageOpaqueMemoryBindInfo[] ImageOpaqueBinds {
 			get {
 				if (m->ImageOpaqueBindCount == 0)
@@ -2260,7 +2260,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ImageOpaqueBindCount = (uint)value.Length;
-				refImageOpaqueBinds = new NativeReference ((int)(sizeof(Interop.SparseImageOpaqueMemoryBindInfo)*value.Length));
+				refImageOpaqueBinds = new VkNativeReference ((int)(sizeof(Interop.SparseImageOpaqueMemoryBindInfo)*value.Length));
 				m->ImageOpaqueBinds = refImageOpaqueBinds.Handle;
 				unsafe
 				{
@@ -2276,7 +2276,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ImageBindCount = value; }
 		}
 
-		NativeReference refImageBinds;
+		VkNativeReference refImageBinds;
 		public SparseImageMemoryBindInfo[] ImageBinds {
 			get {
 				if (m->ImageBindCount == 0)
@@ -2300,7 +2300,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ImageBindCount = (uint)value.Length;
-				refImageBinds = new NativeReference ((int)(sizeof(Interop.SparseImageMemoryBindInfo)*value.Length));
+				refImageBinds = new VkNativeReference ((int)(sizeof(Interop.SparseImageMemoryBindInfo)*value.Length));
 				m->ImageBinds = refImageBinds.Handle;
 				unsafe
 				{
@@ -2316,17 +2316,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SignalSemaphoreCount = value; }
 		}
 
-		NativeReference refSignalSemaphores;
-		public Semaphore[] SignalSemaphores {
+		VkNativeReference refSignalSemaphores;
+		public VkSemaphore[] SignalSemaphores {
 			get {
 				if (m->SignalSemaphoreCount == 0)
 					return null;
-				var values = new Semaphore [m->SignalSemaphoreCount];
+				var values = new VkSemaphore [m->SignalSemaphoreCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->SignalSemaphores;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new Semaphore ();
+						values [i] = new VkSemaphore ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -2340,7 +2340,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SignalSemaphoreCount = (uint)value.Length;
-				refSignalSemaphores = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refSignalSemaphores = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->SignalSemaphores = refSignalSemaphores.Handle;
 				unsafe
 				{
@@ -2363,7 +2363,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BindSparseInfo (NativePointer pointer)
+		internal BindSparseInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -2469,7 +2469,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.ImageBlit));
 		}
 
-		internal ImageBlit (NativePointer pointer)
+		internal ImageBlit (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -2507,7 +2507,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->CodeSize = value; }
 		}
 
-		NativeReference refCode;
+		VkNativeReference refCode;
 		public UInt32[] Code {
 			get {
 				if (m->CodeSize == UIntPtr.Zero)
@@ -2529,7 +2529,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->CodeSize = (UIntPtr)(value.Length << 2);
-				refCode = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refCode = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->Code = refCode.Handle;
 				unsafe
 				{
@@ -2539,7 +2539,26 @@ namespace MiniEngine.Drivers.Vulkan
 				}
 			}
 		}
-		internal Interop.ShaderModuleCreateInfo* m {
+
+
+        public byte[] CodeBytes
+        {
+            set
+            {
+                /* todo free allocated memory when already set */
+                if (value == null)
+                {
+                    m->CodeSize = UIntPtr.Zero;
+                    m->Code = IntPtr.Zero;
+                    return;
+                }
+                m->CodeSize = (UIntPtr)value.Length;
+                m->Code = Marshal.AllocHGlobal(value.Length);
+                Marshal.Copy(value, 0, m->Code, value.Length);
+            }
+        }
+
+        internal Interop.ShaderModuleCreateInfo* m {
 
 			get {
 				return (Interop.ShaderModuleCreateInfo*)native.Handle;
@@ -2552,7 +2571,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ShaderModuleCreateInfo (NativePointer pointer)
+		internal ShaderModuleCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -2572,7 +2591,8 @@ namespace MiniEngine.Drivers.Vulkan
 			m->SType = StructureType.ShaderModuleCreateInfo;
 		}
 
-	}
+
+    }
 
 	unsafe public partial class DescriptorSetLayoutBinding : MarshalledObject
 	{
@@ -2596,17 +2616,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->StageFlags = value; }
 		}
 
-		NativeReference refImmutableSamplers;
-		public Sampler[] ImmutableSamplers {
+		VkNativeReference refImmutableSamplers;
+		public VkSampler[] ImmutableSamplers {
 			get {
 				if (m->DescriptorCount == 0)
 					return null;
-				var values = new Sampler [m->DescriptorCount];
+				var values = new VkSampler [m->DescriptorCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->ImmutableSamplers;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new Sampler ();
+						values [i] = new VkSampler ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -2620,7 +2640,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DescriptorCount = (uint)value.Length;
-				refImmutableSamplers = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refImmutableSamplers = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->ImmutableSamplers = refImmutableSamplers.Handle;
 				unsafe
 				{
@@ -2642,7 +2662,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.DescriptorSetLayoutBinding));
 		}
 
-		internal DescriptorSetLayoutBinding (NativePointer pointer)
+		internal DescriptorSetLayoutBinding (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -2669,7 +2689,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->BindingCount = value; }
 		}
 
-		NativeReference refBindings;
+		VkNativeReference refBindings;
 		public DescriptorSetLayoutBinding[] Bindings {
 			get {
 				if (m->BindingCount == 0)
@@ -2693,7 +2713,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->BindingCount = (uint)value.Length;
-				refBindings = new NativeReference ((int)(sizeof(Interop.DescriptorSetLayoutBinding)*value.Length));
+				refBindings = new VkNativeReference ((int)(sizeof(Interop.DescriptorSetLayoutBinding)*value.Length));
 				m->Bindings = refBindings.Handle;
 				unsafe
 				{
@@ -2716,7 +2736,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DescriptorSetLayoutCreateInfo (NativePointer pointer)
+		internal DescriptorSetLayoutCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -2761,7 +2781,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->PoolSizeCount = value; }
 		}
 
-		NativeReference refPoolSizes;
+		VkNativeReference refPoolSizes;
 		public DescriptorPoolSize[] PoolSizes {
 			get {
 				if (m->PoolSizeCount == 0)
@@ -2783,7 +2803,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->PoolSizeCount = (uint)value.Length;
-				refPoolSizes = new NativeReference ((int)(sizeof(DescriptorPoolSize)*value.Length));
+				refPoolSizes = new VkNativeReference ((int)(sizeof(DescriptorPoolSize)*value.Length));
 				m->PoolSizes = refPoolSizes.Handle;
 				unsafe
 				{
@@ -2806,7 +2826,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DescriptorPoolCreateInfo (NativePointer pointer)
+		internal DescriptorPoolCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -2830,8 +2850,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class DescriptorSetAllocateInfo : MarshalledObject
 	{
-		DescriptorPool lDescriptorPool;
-		public DescriptorPool DescriptorPool {
+		VkDescriptorPool lDescriptorPool;
+		public VkDescriptorPool DescriptorPool {
 			get { return lDescriptorPool; }
 			set { lDescriptorPool = value; m->DescriptorPool = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -2841,17 +2861,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DescriptorSetCount = value; }
 		}
 
-		NativeReference refSetLayouts;
-		public DescriptorSetLayout[] SetLayouts {
+		VkNativeReference refSetLayouts;
+		public VkDescriptorSetLayout[] SetLayouts {
 			get {
 				if (m->DescriptorSetCount == 0)
 					return null;
-				var values = new DescriptorSetLayout [m->DescriptorSetCount];
+				var values = new VkDescriptorSetLayout [m->DescriptorSetCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->SetLayouts;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new DescriptorSetLayout ();
+						values [i] = new VkDescriptorSetLayout ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -2865,7 +2885,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DescriptorSetCount = (uint)value.Length;
-				refSetLayouts = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refSetLayouts = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->SetLayouts = refSetLayouts.Handle;
 				unsafe
 				{
@@ -2888,7 +2908,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DescriptorSetAllocateInfo (NativePointer pointer)
+		internal DescriptorSetAllocateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -2924,7 +2944,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->MapEntryCount = value; }
 		}
 
-		NativeReference refMapEntries;
+		VkNativeReference refMapEntries;
 		public SpecializationMapEntry[] MapEntries {
 			get {
 				if (m->MapEntryCount == 0)
@@ -2946,7 +2966,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->MapEntryCount = (uint)value.Length;
-				refMapEntries = new NativeReference ((int)(sizeof(SpecializationMapEntry)*value.Length));
+				refMapEntries = new VkNativeReference ((int)(sizeof(SpecializationMapEntry)*value.Length));
 				m->MapEntries = refMapEntries.Handle;
 				unsafe
 				{
@@ -2978,7 +2998,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.SpecializationInfo));
 		}
 
-		internal SpecializationInfo (NativePointer pointer)
+		internal SpecializationInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -3005,8 +3025,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Stage = value; }
 		}
 
-		ShaderModule lModule;
-		public ShaderModule Module {
+		VkShaderModule lModule;
+		public VkShaderModule Module {
 			get { return lModule; }
 			set { lModule = value; m->Module = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -3034,7 +3054,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineShaderStageCreateInfo (NativePointer pointer)
+		internal PipelineShaderStageCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3061,14 +3081,14 @@ namespace MiniEngine.Drivers.Vulkan
 			set { lStage = value; m->Stage = value != null ? *value.m : default(Interop.PipelineShaderStageCreateInfo); }
 		}
 
-		PipelineLayout lLayout;
-		public PipelineLayout Layout {
+		VkPipelineLayout lLayout;
+		public VkPipelineLayout Layout {
 			get { return lLayout; }
 			set { lLayout = value; m->Layout = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		Pipeline lBasePipelineHandle;
-		public Pipeline BasePipelineHandle {
+		VkPipeline lBasePipelineHandle;
+		public VkPipeline BasePipelineHandle {
 			get { return lBasePipelineHandle; }
 			set { lBasePipelineHandle = value; m->BasePipelineHandle = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -3090,7 +3110,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ComputePipelineCreateInfo (NativePointer pointer)
+		internal ComputePipelineCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3100,7 +3120,7 @@ namespace MiniEngine.Drivers.Vulkan
 		internal void Initialize ()
 		{
 			m->SType = StructureType.ComputePipelineCreateInfo;
-			lStage = new PipelineShaderStageCreateInfo (new NativePointer (native.Reference, (IntPtr)(&m->Stage)));
+			lStage = new PipelineShaderStageCreateInfo (new VkNativePointer (native.Reference, (IntPtr)(&m->Stage)));
 		}
 
 	}
@@ -3132,7 +3152,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->VertexBindingDescriptionCount = value; }
 		}
 
-		NativeReference refVertexBindingDescriptions;
+		VkNativeReference refVertexBindingDescriptions;
 		public VertexInputBindingDescription[] VertexBindingDescriptions {
 			get {
 				if (m->VertexBindingDescriptionCount == 0)
@@ -3154,7 +3174,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->VertexBindingDescriptionCount = (uint)value.Length;
-				refVertexBindingDescriptions = new NativeReference ((int)(sizeof(VertexInputBindingDescription)*value.Length));
+				refVertexBindingDescriptions = new VkNativeReference ((int)(sizeof(VertexInputBindingDescription)*value.Length));
 				m->VertexBindingDescriptions = refVertexBindingDescriptions.Handle;
 				unsafe
 				{
@@ -3170,7 +3190,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->VertexAttributeDescriptionCount = value; }
 		}
 
-		NativeReference refVertexAttributeDescriptions;
+		VkNativeReference refVertexAttributeDescriptions;
 		public VertexInputAttributeDescription[] VertexAttributeDescriptions {
 			get {
 				if (m->VertexAttributeDescriptionCount == 0)
@@ -3192,7 +3212,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->VertexAttributeDescriptionCount = (uint)value.Length;
-				refVertexAttributeDescriptions = new NativeReference ((int)(sizeof(VertexInputAttributeDescription)*value.Length));
+				refVertexAttributeDescriptions = new VkNativeReference ((int)(sizeof(VertexInputAttributeDescription)*value.Length));
 				m->VertexAttributeDescriptions = refVertexAttributeDescriptions.Handle;
 				unsafe
 				{
@@ -3215,7 +3235,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineVertexInputStateCreateInfo (NativePointer pointer)
+		internal PipelineVertexInputStateCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3268,7 +3288,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineInputAssemblyStateCreateInfo (NativePointer pointer)
+		internal PipelineInputAssemblyStateCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3306,7 +3326,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineTessellationStateCreateInfo (NativePointer pointer)
+		internal PipelineTessellationStateCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3332,7 +3352,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ViewportCount = value; }
 		}
 
-		NativeReference refViewports;
+		VkNativeReference refViewports;
 		public Viewport[] Viewports {
 			get {
 				if (m->ViewportCount == 0)
@@ -3354,7 +3374,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ViewportCount = (uint)value.Length;
-				refViewports = new NativeReference ((int)(sizeof(Viewport)*value.Length));
+				refViewports = new VkNativeReference ((int)(sizeof(Viewport)*value.Length));
 				m->Viewports = refViewports.Handle;
 				unsafe
 				{
@@ -3370,7 +3390,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ScissorCount = value; }
 		}
 
-		NativeReference refScissors;
+		VkNativeReference refScissors;
 		public Rect2D[] Scissors {
 			get {
 				if (m->ScissorCount == 0)
@@ -3392,7 +3412,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ScissorCount = (uint)value.Length;
-				refScissors = new NativeReference ((int)(sizeof(Rect2D)*value.Length));
+				refScissors = new VkNativeReference ((int)(sizeof(Rect2D)*value.Length));
 				m->Scissors = refScissors.Handle;
 				unsafe
 				{
@@ -3415,7 +3435,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineViewportStateCreateInfo (NativePointer pointer)
+		internal PipelineViewportStateCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3508,7 +3528,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineRasterizationStateCreateInfo (NativePointer pointer)
+		internal PipelineRasterizationStateCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3544,7 +3564,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->MinSampleShading = value; }
 		}
 
-		NativeReference refSampleMask;
+		VkNativeReference refSampleMask;
 		public UInt32[] SampleMask {
 			get {
 				if (m->RasterizationSamples == 0)
@@ -3566,7 +3586,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->RasterizationSamples = (SampleCountFlags)(value.Length << 5);
-				refSampleMask = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refSampleMask = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->SampleMask = refSampleMask.Handle;
 				unsafe
 				{
@@ -3599,7 +3619,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineMultisampleStateCreateInfo (NativePointer pointer)
+		internal PipelineMultisampleStateCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3655,7 +3675,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->AttachmentCount = value; }
 		}
 
-		NativeReference refAttachments;
+		VkNativeReference refAttachments;
 		public PipelineColorBlendAttachmentState[] Attachments {
 			get {
 				if (m->AttachmentCount == 0)
@@ -3677,7 +3697,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->AttachmentCount = (uint)value.Length;
-				refAttachments = new NativeReference ((int)(sizeof(PipelineColorBlendAttachmentState)*value.Length));
+				refAttachments = new VkNativeReference ((int)(sizeof(PipelineColorBlendAttachmentState)*value.Length));
 				m->Attachments = refAttachments.Handle;
 				unsafe
 				{
@@ -3718,7 +3738,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineColorBlendStateCreateInfo (NativePointer pointer)
+		internal PipelineColorBlendStateCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3752,7 +3772,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DynamicStateCount = value; }
 		}
 
-		NativeReference refDynamicStates;
+		VkNativeReference refDynamicStates;
 		public DynamicState[] DynamicStates {
 			get {
 				if (m->DynamicStateCount == 0)
@@ -3774,7 +3794,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DynamicStateCount = (uint)value.Length;
-				refDynamicStates = new NativeReference ((int)(sizeof(DynamicState)*value.Length));
+				refDynamicStates = new VkNativeReference ((int)(sizeof(DynamicState)*value.Length));
 				m->DynamicStates = refDynamicStates.Handle;
 				unsafe
 				{
@@ -3797,7 +3817,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineDynamicStateCreateInfo (NativePointer pointer)
+		internal PipelineDynamicStateCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3894,7 +3914,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineDepthStencilStateCreateInfo (NativePointer pointer)
+		internal PipelineDepthStencilStateCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -3920,7 +3940,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->StageCount = value; }
 		}
 
-		NativeReference refStages;
+		VkNativeReference refStages;
 		public PipelineShaderStageCreateInfo[] Stages {
 			get {
 				if (m->StageCount == 0)
@@ -3944,7 +3964,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->StageCount = (uint)value.Length;
-				refStages = new NativeReference ((int)(sizeof(Interop.PipelineShaderStageCreateInfo)*value.Length));
+				refStages = new VkNativeReference ((int)(sizeof(Interop.PipelineShaderStageCreateInfo)*value.Length));
 				m->Stages = refStages.Handle;
 				unsafe
 				{
@@ -4009,14 +4029,14 @@ namespace MiniEngine.Drivers.Vulkan
 			set { lDynamicState = value; m->DynamicState = value != null ? (IntPtr)value.m : default(IntPtr); }
 		}
 
-		PipelineLayout lLayout;
-		public PipelineLayout Layout {
+		VkPipelineLayout lLayout;
+		public VkPipelineLayout Layout {
 			get { return lLayout; }
 			set { lLayout = value; m->Layout = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		RenderPass lRenderPass;
-		public RenderPass RenderPass {
+		VkRenderPass lRenderPass;
+		public VkRenderPass RenderPass {
 			get { return lRenderPass; }
 			set { lRenderPass = value; m->RenderPass = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -4026,8 +4046,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Subpass = value; }
 		}
 
-		Pipeline lBasePipelineHandle;
-		public Pipeline BasePipelineHandle {
+		VkPipeline lBasePipelineHandle;
+		public VkPipeline BasePipelineHandle {
 			get { return lBasePipelineHandle; }
 			set { lBasePipelineHandle = value; m->BasePipelineHandle = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -4049,7 +4069,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal GraphicsPipelineCreateInfo (NativePointer pointer)
+		internal GraphicsPipelineCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4100,7 +4120,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineCacheCreateInfo (NativePointer pointer)
+		internal PipelineCacheCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4133,17 +4153,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SetLayoutCount = value; }
 		}
 
-		NativeReference refSetLayouts;
-		public DescriptorSetLayout[] SetLayouts {
+		VkNativeReference refSetLayouts;
+		public VkDescriptorSetLayout[] SetLayouts {
 			get {
 				if (m->SetLayoutCount == 0)
 					return null;
-				var values = new DescriptorSetLayout [m->SetLayoutCount];
+				var values = new VkDescriptorSetLayout [m->SetLayoutCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->SetLayouts;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new DescriptorSetLayout ();
+						values [i] = new VkDescriptorSetLayout ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -4157,7 +4177,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SetLayoutCount = (uint)value.Length;
-				refSetLayouts = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refSetLayouts = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->SetLayouts = refSetLayouts.Handle;
 				unsafe
 				{
@@ -4173,7 +4193,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->PushConstantRangeCount = value; }
 		}
 
-		NativeReference refPushConstantRanges;
+		VkNativeReference refPushConstantRanges;
 		public PushConstantRange[] PushConstantRanges {
 			get {
 				if (m->PushConstantRangeCount == 0)
@@ -4195,7 +4215,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->PushConstantRangeCount = (uint)value.Length;
-				refPushConstantRanges = new NativeReference ((int)(sizeof(PushConstantRange)*value.Length));
+				refPushConstantRanges = new VkNativeReference ((int)(sizeof(PushConstantRange)*value.Length));
 				m->PushConstantRanges = refPushConstantRanges.Handle;
 				unsafe
 				{
@@ -4218,7 +4238,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineLayoutCreateInfo (NativePointer pointer)
+		internal PipelineLayoutCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4336,7 +4356,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SamplerCreateInfo (NativePointer pointer)
+		internal SamplerCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4374,7 +4394,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal CommandPoolCreateInfo (NativePointer pointer)
+		internal CommandPoolCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4390,8 +4410,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class CommandBufferAllocateInfo : MarshalledObject
 	{
-		CommandPool lCommandPool;
-		public CommandPool CommandPool {
+		VkCommandPool lCommandPool;
+		public VkCommandPool CommandPool {
 			get { return lCommandPool; }
 			set { lCommandPool = value; m->CommandPool = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -4418,7 +4438,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal CommandBufferAllocateInfo (NativePointer pointer)
+		internal CommandBufferAllocateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4434,8 +4454,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class CommandBufferInheritanceInfo : MarshalledObject
 	{
-		RenderPass lRenderPass;
-		public RenderPass RenderPass {
+		VkRenderPass lRenderPass;
+		public VkRenderPass RenderPass {
 			get { return lRenderPass; }
 			set { lRenderPass = value; m->RenderPass = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -4445,8 +4465,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Subpass = value; }
 		}
 
-		Framebuffer lFramebuffer;
-		public Framebuffer Framebuffer {
+		VkFramebuffer lFramebuffer;
+		public VkFramebuffer Framebuffer {
 			get { return lFramebuffer; }
 			set { lFramebuffer = value; m->Framebuffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -4478,7 +4498,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal CommandBufferInheritanceInfo (NativePointer pointer)
+		internal CommandBufferInheritanceInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4517,7 +4537,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal CommandBufferBeginInfo (NativePointer pointer)
+		internal CommandBufferBeginInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4533,14 +4553,14 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class RenderPassBeginInfo : MarshalledObject
 	{
-		RenderPass lRenderPass;
-		public RenderPass RenderPass {
+		VkRenderPass lRenderPass;
+		public VkRenderPass RenderPass {
 			get { return lRenderPass; }
 			set { lRenderPass = value; m->RenderPass = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		Framebuffer lFramebuffer;
-		public Framebuffer Framebuffer {
+		VkFramebuffer lFramebuffer;
+		public VkFramebuffer Framebuffer {
 			get { return lFramebuffer; }
 			set { lFramebuffer = value; m->Framebuffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -4555,7 +4575,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ClearValueCount = value; }
 		}
 
-		NativeReference refClearValues;
+		VkNativeReference refClearValues;
 		public ClearValue[] ClearValues {
 			get {
 				if (m->ClearValueCount == 0)
@@ -4579,7 +4599,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ClearValueCount = (uint)value.Length;
-				refClearValues = new NativeReference ((int)(sizeof(Interop.ClearValue)*value.Length));
+				refClearValues = new VkNativeReference ((int)(sizeof(Interop.ClearValue)*value.Length));
 				m->ClearValues = refClearValues.Handle;
 				unsafe
 				{
@@ -4602,7 +4622,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal RenderPassBeginInfo (NativePointer pointer)
+		internal RenderPassBeginInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4660,7 +4680,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ClearAttachment (NativePointer pointer)
+		internal ClearAttachment (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -4669,7 +4689,7 @@ namespace MiniEngine.Drivers.Vulkan
 
 		internal void Initialize ()
 		{
-			lClearValue = new ClearValue (new NativePointer (native.Reference, (IntPtr)(&m->ClearValue)));
+			lClearValue = new ClearValue (new VkNativePointer (native.Reference, (IntPtr)(&m->ClearValue)));
 		}
 
 	}
@@ -4710,7 +4730,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->InputAttachmentCount = value; }
 		}
 
-		NativeReference refInputAttachments;
+		VkNativeReference refInputAttachments;
 		public AttachmentReference[] InputAttachments {
 			get {
 				if (m->InputAttachmentCount == 0)
@@ -4732,7 +4752,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->InputAttachmentCount = (uint)value.Length;
-				refInputAttachments = new NativeReference ((int)(sizeof(AttachmentReference)*value.Length));
+				refInputAttachments = new VkNativeReference ((int)(sizeof(AttachmentReference)*value.Length));
 				m->InputAttachments = refInputAttachments.Handle;
 				unsafe
 				{
@@ -4748,7 +4768,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ColorAttachmentCount = value; }
 		}
 
-		NativeReference refColorAttachments;
+		VkNativeReference refColorAttachments;
 		public AttachmentReference[] ColorAttachments {
 			get {
 				if (m->ColorAttachmentCount == 0)
@@ -4770,7 +4790,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ColorAttachmentCount = (uint)value.Length;
-				refColorAttachments = new NativeReference ((int)(sizeof(AttachmentReference)*value.Length));
+				refColorAttachments = new VkNativeReference ((int)(sizeof(AttachmentReference)*value.Length));
 				m->ColorAttachments = refColorAttachments.Handle;
 				unsafe
 				{
@@ -4781,7 +4801,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refResolveAttachments;
+		VkNativeReference refResolveAttachments;
 		public AttachmentReference[] ResolveAttachments {
 			get {
 				if (m->ColorAttachmentCount == 0)
@@ -4803,7 +4823,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ColorAttachmentCount = (uint)value.Length;
-				refResolveAttachments = new NativeReference ((int)(sizeof(AttachmentReference)*value.Length));
+				refResolveAttachments = new VkNativeReference ((int)(sizeof(AttachmentReference)*value.Length));
 				m->ResolveAttachments = refResolveAttachments.Handle;
 				unsafe
 				{
@@ -4824,7 +4844,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->PreserveAttachmentCount = value; }
 		}
 
-		NativeReference refPreserveAttachments;
+		VkNativeReference refPreserveAttachments;
 		public UInt32[] PreserveAttachments {
 			get {
 				if (m->PreserveAttachmentCount == 0)
@@ -4846,7 +4866,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->PreserveAttachmentCount = (uint)value.Length;
-				refPreserveAttachments = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refPreserveAttachments = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->PreserveAttachments = refPreserveAttachments.Handle;
 				unsafe
 				{
@@ -4868,7 +4888,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.SubpassDescription));
 		}
 
-		internal SubpassDescription (NativePointer pointer)
+		internal SubpassDescription (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -4912,7 +4932,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->AttachmentCount = value; }
 		}
 
-		NativeReference refAttachments;
+		VkNativeReference refAttachments;
 		public AttachmentDescription[] Attachments {
 			get {
 				if (m->AttachmentCount == 0)
@@ -4934,7 +4954,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->AttachmentCount = (uint)value.Length;
-				refAttachments = new NativeReference ((int)(sizeof(AttachmentDescription)*value.Length));
+				refAttachments = new VkNativeReference ((int)(sizeof(AttachmentDescription)*value.Length));
 				m->Attachments = refAttachments.Handle;
 				unsafe
 				{
@@ -4950,7 +4970,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SubpassCount = value; }
 		}
 
-		NativeReference refSubpasses;
+		VkNativeReference refSubpasses;
 		public SubpassDescription[] Subpasses {
 			get {
 				if (m->SubpassCount == 0)
@@ -4974,7 +4994,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SubpassCount = (uint)value.Length;
-				refSubpasses = new NativeReference ((int)(sizeof(Interop.SubpassDescription)*value.Length));
+				refSubpasses = new VkNativeReference ((int)(sizeof(Interop.SubpassDescription)*value.Length));
 				m->Subpasses = refSubpasses.Handle;
 				unsafe
 				{
@@ -4990,7 +5010,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DependencyCount = value; }
 		}
 
-		NativeReference refDependencies;
+		VkNativeReference refDependencies;
 		public SubpassDependency[] Dependencies {
 			get {
 				if (m->DependencyCount == 0)
@@ -5012,7 +5032,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DependencyCount = (uint)value.Length;
-				refDependencies = new NativeReference ((int)(sizeof(SubpassDependency)*value.Length));
+				refDependencies = new VkNativeReference ((int)(sizeof(SubpassDependency)*value.Length));
 				m->Dependencies = refDependencies.Handle;
 				unsafe
 				{
@@ -5035,7 +5055,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal RenderPassCreateInfo (NativePointer pointer)
+		internal RenderPassCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -5080,7 +5100,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal EventCreateInfo (NativePointer pointer)
+		internal EventCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -5113,7 +5133,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal FenceCreateInfo (NativePointer pointer)
+		internal FenceCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -5816,7 +5836,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.PhysicalDeviceLimits));
 		}
 
-		internal PhysicalDeviceLimits (NativePointer pointer)
+		internal PhysicalDeviceLimits (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -5842,7 +5862,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SemaphoreCreateInfo (NativePointer pointer)
+		internal SemaphoreCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -5890,7 +5910,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal QueryPoolCreateInfo (NativePointer pointer)
+		internal QueryPoolCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -5911,8 +5931,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		RenderPass lRenderPass;
-		public RenderPass RenderPass {
+		VkRenderPass lRenderPass;
+		public VkRenderPass RenderPass {
 			get { return lRenderPass; }
 			set { lRenderPass = value; m->RenderPass = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -5922,17 +5942,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->AttachmentCount = value; }
 		}
 
-		NativeReference refAttachments;
-		public ImageView[] Attachments {
+		VkNativeReference refAttachments;
+		public VkImageView[] Attachments {
 			get {
 				if (m->AttachmentCount == 0)
 					return null;
-				var values = new ImageView [m->AttachmentCount];
+				var values = new VkImageView [m->AttachmentCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->Attachments;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new ImageView ();
+						values [i] = new VkImageView ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -5946,7 +5966,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->AttachmentCount = (uint)value.Length;
-				refAttachments = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refAttachments = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->Attachments = refAttachments.Handle;
 				unsafe
 				{
@@ -5984,7 +6004,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal FramebufferCreateInfo (NativePointer pointer)
+		internal FramebufferCreateInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6037,17 +6057,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->WaitSemaphoreCount = value; }
 		}
 
-		NativeReference refWaitSemaphores;
-		public Semaphore[] WaitSemaphores {
+		VkNativeReference refWaitSemaphores;
+		public VkSemaphore[] WaitSemaphores {
 			get {
 				if (m->WaitSemaphoreCount == 0)
 					return null;
-				var values = new Semaphore [m->WaitSemaphoreCount];
+				var values = new VkSemaphore [m->WaitSemaphoreCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->WaitSemaphores;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new Semaphore ();
+						values [i] = new VkSemaphore ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -6061,7 +6081,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->WaitSemaphoreCount = (uint)value.Length;
-				refWaitSemaphores = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refWaitSemaphores = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->WaitSemaphores = refWaitSemaphores.Handle;
 				unsafe
 				{
@@ -6072,7 +6092,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refWaitDstStageMask;
+		VkNativeReference refWaitDstStageMask;
 		public PipelineStageFlags[] WaitDstStageMask {
 			get {
 				if (m->WaitSemaphoreCount == 0)
@@ -6094,7 +6114,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->WaitSemaphoreCount = (uint)value.Length;
-				refWaitDstStageMask = new NativeReference ((int)(sizeof(PipelineStageFlags)*value.Length));
+				refWaitDstStageMask = new VkNativeReference ((int)(sizeof(PipelineStageFlags)*value.Length));
 				m->WaitDstStageMask = refWaitDstStageMask.Handle;
 				unsafe
 				{
@@ -6110,17 +6130,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->CommandBufferCount = value; }
 		}
 
-		NativeReference refCommandBuffers;
-		public CommandBuffer[] CommandBuffers {
+		VkNativeReference refCommandBuffers;
+		public VkCommandBuffer[] CommandBuffers {
 			get {
 				if (m->CommandBufferCount == 0)
 					return null;
-				var values = new CommandBuffer [m->CommandBufferCount];
+				var values = new VkCommandBuffer [m->CommandBufferCount];
 				unsafe
 				{
 					IntPtr* ptr = (IntPtr*)m->CommandBuffers;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new CommandBuffer ();
+						values [i] = new VkCommandBuffer ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -6134,7 +6154,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->CommandBufferCount = (uint)value.Length;
-				refCommandBuffers = new NativeReference ((int)(sizeof(IntPtr)*value.Length));
+				refCommandBuffers = new VkNativeReference ((int)(sizeof(IntPtr)*value.Length));
 				m->CommandBuffers = refCommandBuffers.Handle;
 				unsafe
 				{
@@ -6150,17 +6170,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SignalSemaphoreCount = value; }
 		}
 
-		NativeReference refSignalSemaphores;
-		public Semaphore[] SignalSemaphores {
+		VkNativeReference refSignalSemaphores;
+		public VkSemaphore[] SignalSemaphores {
 			get {
 				if (m->SignalSemaphoreCount == 0)
 					return null;
-				var values = new Semaphore [m->SignalSemaphoreCount];
+				var values = new VkSemaphore [m->SignalSemaphoreCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->SignalSemaphores;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new Semaphore ();
+						values [i] = new VkSemaphore ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -6174,7 +6194,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SignalSemaphoreCount = (uint)value.Length;
-				refSignalSemaphores = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refSignalSemaphores = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->SignalSemaphores = refSignalSemaphores.Handle;
 				unsafe
 				{
@@ -6197,7 +6217,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SubmitInfo (NativePointer pointer)
+		internal SubmitInfo (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6227,8 +6247,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class DisplayPropertiesKhr : MarshalledObject
 	{
-		DisplayKhr lDisplay;
-		public DisplayKhr Display {
+		VkDisplayKhr lDisplay;
+		public VkDisplayKhr Display {
 			get { return lDisplay; }
 			set { lDisplay = value; m->Display = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -6275,7 +6295,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DisplayPropertiesKhr (NativePointer pointer)
+		internal DisplayPropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6290,8 +6310,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class DisplayPlanePropertiesKhr : MarshalledObject
 	{
-		DisplayKhr lCurrentDisplay;
-		public DisplayKhr CurrentDisplay {
+		VkDisplayKhr lCurrentDisplay;
+		public VkDisplayKhr CurrentDisplay {
 			get { return lCurrentDisplay; }
 			set { lCurrentDisplay = value; m->CurrentDisplay = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -6313,7 +6333,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DisplayPlanePropertiesKhr (NativePointer pointer)
+		internal DisplayPlanePropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6334,8 +6354,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class DisplayModePropertiesKhr : MarshalledObject
 	{
-		DisplayModeKhr lDisplayMode;
-		public DisplayModeKhr DisplayMode {
+		VkDisplayModeKhr lDisplayMode;
+		public VkDisplayModeKhr DisplayMode {
 			get { return lDisplayMode; }
 			set { lDisplayMode = value; m->DisplayMode = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -6357,7 +6377,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DisplayModePropertiesKhr (NativePointer pointer)
+		internal DisplayModePropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6394,7 +6414,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DisplayModeCreateInfoKhr (NativePointer pointer)
+		internal DisplayModeCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6428,8 +6448,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		DisplayModeKhr lDisplayMode;
-		public DisplayModeKhr DisplayMode {
+		VkDisplayModeKhr lDisplayMode;
+		public VkDisplayModeKhr DisplayMode {
 			get { return lDisplayMode; }
 			set { lDisplayMode = value; m->DisplayMode = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -6476,7 +6496,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DisplaySurfaceCreateInfoKhr (NativePointer pointer)
+		internal DisplaySurfaceCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6519,7 +6539,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DisplayPresentInfoKhr (NativePointer pointer)
+		internal DisplayPresentInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6571,7 +6591,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ViSurfaceCreateInfoNn (NativePointer pointer)
+		internal ViSurfaceCreateInfoNn (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6598,8 +6618,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		SurfaceKhr lSurface;
-		public SurfaceKhr Surface {
+		VkSurfaceKhr lSurface;
+		public VkSurfaceKhr Surface {
 			get { return lSurface; }
 			set { lSurface = value; m->Surface = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -6644,7 +6664,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->QueueFamilyIndexCount = value; }
 		}
 
-		NativeReference refQueueFamilyIndices;
+		VkNativeReference refQueueFamilyIndices;
 		public UInt32[] QueueFamilyIndices {
 			get {
 				if (m->QueueFamilyIndexCount == 0)
@@ -6666,7 +6686,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->QueueFamilyIndexCount = (uint)value.Length;
-				refQueueFamilyIndices = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refQueueFamilyIndices = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->QueueFamilyIndices = refQueueFamilyIndices.Handle;
 				unsafe
 				{
@@ -6697,8 +6717,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Clipped = value; }
 		}
 
-		SwapchainKhr lOldSwapchain;
-		public SwapchainKhr OldSwapchain {
+		VkSwapchainKhr lOldSwapchain;
+		public VkSwapchainKhr OldSwapchain {
 			get { return lOldSwapchain; }
 			set { lOldSwapchain = value; m->OldSwapchain = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -6715,7 +6735,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SwapchainCreateInfoKhr (NativePointer pointer)
+		internal SwapchainCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6744,17 +6764,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->WaitSemaphoreCount = value; }
 		}
 
-		NativeReference refWaitSemaphores;
-		public Semaphore[] WaitSemaphores {
+		VkNativeReference refWaitSemaphores;
+		public VkSemaphore[] WaitSemaphores {
 			get {
 				if (m->WaitSemaphoreCount == 0)
 					return null;
-				var values = new Semaphore [m->WaitSemaphoreCount];
+				var values = new VkSemaphore [m->WaitSemaphoreCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->WaitSemaphores;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new Semaphore ();
+						values [i] = new VkSemaphore ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -6768,7 +6788,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->WaitSemaphoreCount = (uint)value.Length;
-				refWaitSemaphores = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refWaitSemaphores = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->WaitSemaphores = refWaitSemaphores.Handle;
 				unsafe
 				{
@@ -6784,17 +6804,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SwapchainCount = value; }
 		}
 
-		NativeReference refSwapchains;
-		public SwapchainKhr[] Swapchains {
+		VkNativeReference refSwapchains;
+		public VkSwapchainKhr[] Swapchains {
 			get {
 				if (m->SwapchainCount == 0)
 					return null;
-				var values = new SwapchainKhr [m->SwapchainCount];
+				var values = new VkSwapchainKhr [m->SwapchainCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->Swapchains;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new SwapchainKhr ();
+						values [i] = new VkSwapchainKhr ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -6808,7 +6828,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SwapchainCount = (uint)value.Length;
-				refSwapchains = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refSwapchains = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->Swapchains = refSwapchains.Handle;
 				unsafe
 				{
@@ -6819,7 +6839,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refImageIndices;
+		VkNativeReference refImageIndices;
 		public UInt32[] ImageIndices {
 			get {
 				if (m->SwapchainCount == 0)
@@ -6841,7 +6861,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SwapchainCount = (uint)value.Length;
-				refImageIndices = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refImageIndices = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->ImageIndices = refImageIndices.Handle;
 				unsafe
 				{
@@ -6852,7 +6872,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refResults;
+		VkNativeReference refResults;
 		public Result[] Results {
 			get {
 				if (m->SwapchainCount == 0)
@@ -6874,7 +6894,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SwapchainCount = (uint)value.Length;
-				refResults = new NativeReference ((int)(sizeof(Result)*value.Length));
+				refResults = new VkNativeReference ((int)(sizeof(Result)*value.Length));
 				m->Results = refResults.Handle;
 				unsafe
 				{
@@ -6897,7 +6917,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PresentInfoKhr (NativePointer pointer)
+		internal PresentInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6954,7 +6974,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DebugReportCallbackCreateInfoExt (NativePointer pointer)
+		internal DebugReportCallbackCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -6975,7 +6995,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DisabledValidationCheckCount = value; }
 		}
 
-		NativeReference refDisabledValidationChecks;
+		VkNativeReference refDisabledValidationChecks;
 		public ValidationCheckExt[] DisabledValidationChecks {
 			get {
 				if (m->DisabledValidationCheckCount == 0)
@@ -6997,7 +7017,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DisabledValidationCheckCount = (uint)value.Length;
-				refDisabledValidationChecks = new NativeReference ((int)(sizeof(ValidationCheckExt)*value.Length));
+				refDisabledValidationChecks = new VkNativeReference ((int)(sizeof(ValidationCheckExt)*value.Length));
 				m->DisabledValidationChecks = refDisabledValidationChecks.Handle;
 				unsafe
 				{
@@ -7020,7 +7040,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ValidationFlagsExt (NativePointer pointer)
+		internal ValidationFlagsExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7061,7 +7081,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineRasterizationStateRasterizationOrderAmd (NativePointer pointer)
+		internal PipelineRasterizationStateRasterizationOrderAmd (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7104,7 +7124,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DebugMarkerObjectNameInfoExt (NativePointer pointer)
+		internal DebugMarkerObjectNameInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7157,7 +7177,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DebugMarkerObjectTagInfoExt (NativePointer pointer)
+		internal DebugMarkerObjectTagInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7208,7 +7228,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DebugMarkerMarkerInfoExt (NativePointer pointer)
+		internal DebugMarkerMarkerInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7241,7 +7261,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DedicatedAllocationImageCreateInfoNv (NativePointer pointer)
+		internal DedicatedAllocationImageCreateInfoNv (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7274,7 +7294,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DedicatedAllocationBufferCreateInfoNv (NativePointer pointer)
+		internal DedicatedAllocationBufferCreateInfoNv (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7290,14 +7310,14 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class DedicatedAllocationMemoryAllocateInfoNv : MarshalledObject
 	{
-		Image lImage;
-		public Image Image {
+		VkImage lImage;
+		public VkImage Image {
 			get { return lImage; }
 			set { lImage = value; m->Image = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -7314,7 +7334,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DedicatedAllocationMemoryAllocateInfoNv (NativePointer pointer)
+		internal DedicatedAllocationMemoryAllocateInfoNv (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7355,7 +7375,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExternalMemoryImageCreateInfoNv (NativePointer pointer)
+		internal ExternalMemoryImageCreateInfoNv (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7388,7 +7408,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExportMemoryAllocateInfoNv (NativePointer pointer)
+		internal ExportMemoryAllocateInfoNv (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7421,7 +7441,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGeneratedCommandsFeaturesNvx (NativePointer pointer)
+		internal DeviceGeneratedCommandsFeaturesNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7474,7 +7494,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGeneratedCommandsLimitsNvx (NativePointer pointer)
+		internal DeviceGeneratedCommandsLimitsNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7495,8 +7515,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->TokenType = value; }
 		}
 
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -7518,7 +7538,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal IndirectCommandsTokenNvx (NativePointer pointer)
+		internal IndirectCommandsTokenNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7556,7 +7576,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->TokenCount = value; }
 		}
 
-		NativeReference refTokens;
+		VkNativeReference refTokens;
 		public IndirectCommandsLayoutTokenNvx[] Tokens {
 			get {
 				if (m->TokenCount == 0)
@@ -7578,7 +7598,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->TokenCount = (uint)value.Length;
-				refTokens = new NativeReference ((int)(sizeof(IndirectCommandsLayoutTokenNvx)*value.Length));
+				refTokens = new VkNativeReference ((int)(sizeof(IndirectCommandsLayoutTokenNvx)*value.Length));
 				m->Tokens = refTokens.Handle;
 				unsafe
 				{
@@ -7601,7 +7621,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal IndirectCommandsLayoutCreateInfoNvx (NativePointer pointer)
+		internal IndirectCommandsLayoutCreateInfoNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7625,14 +7645,14 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class CmdProcessCommandsInfoNvx : MarshalledObject
 	{
-		ObjectTableNvx lObjectTable;
-		public ObjectTableNvx ObjectTable {
+		VkObjectTableNvx lObjectTable;
+		public VkObjectTableNvx ObjectTable {
 			get { return lObjectTable; }
 			set { lObjectTable = value; m->ObjectTable = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		IndirectCommandsLayoutNvx lIndirectCommandsLayout;
-		public IndirectCommandsLayoutNvx IndirectCommandsLayout {
+		VkIndirectCommandsLayoutNvx lIndirectCommandsLayout;
+		public VkIndirectCommandsLayoutNvx IndirectCommandsLayout {
 			get { return lIndirectCommandsLayout; }
 			set { lIndirectCommandsLayout = value; m->IndirectCommandsLayout = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -7642,7 +7662,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->IndirectCommandsTokenCount = value; }
 		}
 
-		NativeReference refIndirectCommandsTokens;
+		VkNativeReference refIndirectCommandsTokens;
 		public IndirectCommandsTokenNvx[] IndirectCommandsTokens {
 			get {
 				if (m->IndirectCommandsTokenCount == 0)
@@ -7666,7 +7686,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->IndirectCommandsTokenCount = (uint)value.Length;
-				refIndirectCommandsTokens = new NativeReference ((int)(sizeof(Interop.IndirectCommandsTokenNvx)*value.Length));
+				refIndirectCommandsTokens = new VkNativeReference ((int)(sizeof(Interop.IndirectCommandsTokenNvx)*value.Length));
 				m->IndirectCommandsTokens = refIndirectCommandsTokens.Handle;
 				unsafe
 				{
@@ -7682,14 +7702,14 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->MaxSequencesCount = value; }
 		}
 
-		CommandBuffer lTargetCommandBuffer;
-		public CommandBuffer TargetCommandBuffer {
+		VkCommandBuffer lTargetCommandBuffer;
+		public VkCommandBuffer TargetCommandBuffer {
 			get { return lTargetCommandBuffer; }
 			set { lTargetCommandBuffer = value; m->TargetCommandBuffer = value != null ? (IntPtr)value.m : default(IntPtr); }
 		}
 
-		Buffer lSequencesCountBuffer;
-		public Buffer SequencesCountBuffer {
+		VkBuffer lSequencesCountBuffer;
+		public VkBuffer SequencesCountBuffer {
 			get { return lSequencesCountBuffer; }
 			set { lSequencesCountBuffer = value; m->SequencesCountBuffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -7699,8 +7719,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SequencesCountOffset = value; }
 		}
 
-		Buffer lSequencesIndexBuffer;
-		public Buffer SequencesIndexBuffer {
+		VkBuffer lSequencesIndexBuffer;
+		public VkBuffer SequencesIndexBuffer {
 			get { return lSequencesIndexBuffer; }
 			set { lSequencesIndexBuffer = value; m->SequencesIndexBuffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -7722,7 +7742,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal CmdProcessCommandsInfoNvx (NativePointer pointer)
+		internal CmdProcessCommandsInfoNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7746,14 +7766,14 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class CmdReserveSpaceForCommandsInfoNvx : MarshalledObject
 	{
-		ObjectTableNvx lObjectTable;
-		public ObjectTableNvx ObjectTable {
+		VkObjectTableNvx lObjectTable;
+		public VkObjectTableNvx ObjectTable {
 			get { return lObjectTable; }
 			set { lObjectTable = value; m->ObjectTable = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		IndirectCommandsLayoutNvx lIndirectCommandsLayout;
-		public IndirectCommandsLayoutNvx IndirectCommandsLayout {
+		VkIndirectCommandsLayoutNvx lIndirectCommandsLayout;
+		public VkIndirectCommandsLayoutNvx IndirectCommandsLayout {
 			get { return lIndirectCommandsLayout; }
 			set { lIndirectCommandsLayout = value; m->IndirectCommandsLayout = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -7775,7 +7795,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal CmdReserveSpaceForCommandsInfoNvx (NativePointer pointer)
+		internal CmdReserveSpaceForCommandsInfoNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7796,7 +7816,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ObjectCount = value; }
 		}
 
-		NativeReference refObjectEntryTypes;
+		VkNativeReference refObjectEntryTypes;
 		public ObjectEntryTypeNvx[] ObjectEntryTypes {
 			get {
 				if (m->ObjectCount == 0)
@@ -7818,7 +7838,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ObjectCount = (uint)value.Length;
-				refObjectEntryTypes = new NativeReference ((int)(sizeof(ObjectEntryTypeNvx)*value.Length));
+				refObjectEntryTypes = new VkNativeReference ((int)(sizeof(ObjectEntryTypeNvx)*value.Length));
 				m->ObjectEntryTypes = refObjectEntryTypes.Handle;
 				unsafe
 				{
@@ -7829,7 +7849,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refObjectEntryCounts;
+		VkNativeReference refObjectEntryCounts;
 		public UInt32[] ObjectEntryCounts {
 			get {
 				if (m->ObjectCount == 0)
@@ -7851,7 +7871,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ObjectCount = (uint)value.Length;
-				refObjectEntryCounts = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refObjectEntryCounts = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->ObjectEntryCounts = refObjectEntryCounts.Handle;
 				unsafe
 				{
@@ -7862,7 +7882,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refObjectEntryUsageFlags;
+		VkNativeReference refObjectEntryUsageFlags;
 		public ObjectEntryUsageFlagsNvx[] ObjectEntryUsageFlags {
 			get {
 				if (m->ObjectCount == 0)
@@ -7884,7 +7904,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ObjectCount = (uint)value.Length;
-				refObjectEntryUsageFlags = new NativeReference ((int)(sizeof(ObjectEntryUsageFlagsNvx)*value.Length));
+				refObjectEntryUsageFlags = new VkNativeReference ((int)(sizeof(ObjectEntryUsageFlagsNvx)*value.Length));
 				m->ObjectEntryUsageFlags = refObjectEntryUsageFlags.Handle;
 				unsafe
 				{
@@ -7932,7 +7952,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ObjectTableCreateInfoNvx (NativePointer pointer)
+		internal ObjectTableCreateInfoNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -7976,8 +7996,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		Pipeline lPipeline;
-		public Pipeline Pipeline {
+		VkPipeline lPipeline;
+		public VkPipeline Pipeline {
 			get { return lPipeline; }
 			set { lPipeline = value; m->Pipeline = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -7994,7 +8014,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ObjectTablePipelineEntryNvx (NativePointer pointer)
+		internal ObjectTablePipelineEntryNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8019,14 +8039,14 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		PipelineLayout lPipelineLayout;
-		public PipelineLayout PipelineLayout {
+		VkPipelineLayout lPipelineLayout;
+		public VkPipelineLayout PipelineLayout {
 			get { return lPipelineLayout; }
 			set { lPipelineLayout = value; m->PipelineLayout = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		DescriptorSet lDescriptorSet;
-		public DescriptorSet DescriptorSet {
+		VkDescriptorSet lDescriptorSet;
+		public VkDescriptorSet DescriptorSet {
 			get { return lDescriptorSet; }
 			set { lDescriptorSet = value; m->DescriptorSet = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -8043,7 +8063,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ObjectTableDescriptorSetEntryNvx (NativePointer pointer)
+		internal ObjectTableDescriptorSetEntryNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8068,8 +8088,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -8086,7 +8106,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ObjectTableVertexBufferEntryNvx (NativePointer pointer)
+		internal ObjectTableVertexBufferEntryNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8111,8 +8131,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -8134,7 +8154,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ObjectTableIndexBufferEntryNvx (NativePointer pointer)
+		internal ObjectTableIndexBufferEntryNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8159,8 +8179,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		PipelineLayout lPipelineLayout;
-		public PipelineLayout PipelineLayout {
+		VkPipelineLayout lPipelineLayout;
+		public VkPipelineLayout PipelineLayout {
 			get { return lPipelineLayout; }
 			set { lPipelineLayout = value; m->PipelineLayout = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -8182,7 +8202,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ObjectTablePushConstantEntryNvx (NativePointer pointer)
+		internal ObjectTablePushConstantEntryNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8214,7 +8234,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceFeatures2Khr (NativePointer pointer)
+		internal PhysicalDeviceFeatures2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8248,7 +8268,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceProperties2Khr (NativePointer pointer)
+		internal PhysicalDeviceProperties2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8258,7 +8278,7 @@ namespace MiniEngine.Drivers.Vulkan
 		internal void Initialize ()
 		{
 			m->SType = StructureType.PhysicalDeviceProperties2Khr;
-			lProperties = new PhysicalDeviceProperties (new NativePointer (native.Reference, (IntPtr)(&m->Properties)));
+			lProperties = new PhysicalDeviceProperties (new VkNativePointer (native.Reference, (IntPtr)(&m->Properties)));
 		}
 
 	}
@@ -8282,7 +8302,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal FormatProperties2Khr (NativePointer pointer)
+		internal FormatProperties2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8315,7 +8335,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImageFormatProperties2Khr (NativePointer pointer)
+		internal ImageFormatProperties2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8368,7 +8388,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceImageFormatInfo2Khr (NativePointer pointer)
+		internal PhysicalDeviceImageFormatInfo2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8401,7 +8421,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal QueueFamilyProperties2Khr (NativePointer pointer)
+		internal QueueFamilyProperties2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8435,7 +8455,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceMemoryProperties2Khr (NativePointer pointer)
+		internal PhysicalDeviceMemoryProperties2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8445,7 +8465,7 @@ namespace MiniEngine.Drivers.Vulkan
 		internal void Initialize ()
 		{
 			m->SType = StructureType.PhysicalDeviceMemoryProperties2Khr;
-			lMemoryProperties = new PhysicalDeviceMemoryProperties (new NativePointer (native.Reference, (IntPtr)(&m->MemoryProperties)));
+			lMemoryProperties = new PhysicalDeviceMemoryProperties (new VkNativePointer (native.Reference, (IntPtr)(&m->MemoryProperties)));
 		}
 
 	}
@@ -8469,7 +8489,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SparseImageFormatProperties2Khr (NativePointer pointer)
+		internal SparseImageFormatProperties2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8522,7 +8542,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceSparseImageFormatInfo2Khr (NativePointer pointer)
+		internal PhysicalDeviceSparseImageFormatInfo2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8555,7 +8575,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDevicePushDescriptorPropertiesKhr (NativePointer pointer)
+		internal PhysicalDevicePushDescriptorPropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8576,7 +8596,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SwapchainCount = value; }
 		}
 
-		NativeReference refRegions;
+		VkNativeReference refRegions;
 		public PresentRegionKhr[] Regions {
 			get {
 				if (m->SwapchainCount == 0)
@@ -8600,7 +8620,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SwapchainCount = (uint)value.Length;
-				refRegions = new NativeReference ((int)(sizeof(Interop.PresentRegionKhr)*value.Length));
+				refRegions = new VkNativeReference ((int)(sizeof(Interop.PresentRegionKhr)*value.Length));
 				m->Regions = refRegions.Handle;
 				unsafe
 				{
@@ -8623,7 +8643,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PresentRegionsKhr (NativePointer pointer)
+		internal PresentRegionsKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8652,7 +8672,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->RectangleCount = value; }
 		}
 
-		NativeReference refRectangles;
+		VkNativeReference refRectangles;
 		public RectLayerKhr[] Rectangles {
 			get {
 				if (m->RectangleCount == 0)
@@ -8674,7 +8694,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->RectangleCount = (uint)value.Length;
-				refRectangles = new NativeReference ((int)(sizeof(RectLayerKhr)*value.Length));
+				refRectangles = new VkNativeReference ((int)(sizeof(RectLayerKhr)*value.Length));
 				m->Rectangles = refRectangles.Handle;
 				unsafe
 				{
@@ -8696,7 +8716,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.PresentRegionKhr));
 		}
 
-		internal PresentRegionKhr (NativePointer pointer)
+		internal PresentRegionKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -8742,7 +8762,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceVariablePointerFeaturesKhr (NativePointer pointer)
+		internal PhysicalDeviceVariablePointerFeaturesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8782,7 +8802,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceExternalImageFormatInfoKhr (NativePointer pointer)
+		internal PhysicalDeviceExternalImageFormatInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8815,7 +8835,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExternalImageFormatPropertiesKhr (NativePointer pointer)
+		internal ExternalImageFormatPropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8858,7 +8878,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceExternalBufferInfoKhr (NativePointer pointer)
+		internal PhysicalDeviceExternalBufferInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8891,7 +8911,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExternalBufferPropertiesKhr (NativePointer pointer)
+		internal ExternalBufferPropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -8983,7 +9003,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceIDPropertiesKhr (NativePointer pointer)
+		internal PhysicalDeviceIDPropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9016,7 +9036,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExternalMemoryImageCreateInfoKhr (NativePointer pointer)
+		internal ExternalMemoryImageCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9049,7 +9069,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExternalMemoryBufferCreateInfoKhr (NativePointer pointer)
+		internal ExternalMemoryBufferCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9082,7 +9102,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExportMemoryAllocateInfoKhr (NativePointer pointer)
+		internal ExportMemoryAllocateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9115,7 +9135,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryWin32HandlePropertiesKhr (NativePointer pointer)
+		internal MemoryWin32HandlePropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9131,8 +9151,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class MemoryGetWin32HandleInfoKhr : MarshalledObject
 	{
-		DeviceMemory lMemory;
-		public DeviceMemory Memory {
+		VkDeviceMemory lMemory;
+		public VkDeviceMemory Memory {
 			get { return lMemory; }
 			set { lMemory = value; m->Memory = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -9154,7 +9174,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryGetWin32HandleInfoKhr (NativePointer pointer)
+		internal MemoryGetWin32HandleInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9192,7 +9212,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImportMemoryFdInfoKhr (NativePointer pointer)
+		internal ImportMemoryFdInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9225,7 +9245,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryFdPropertiesKhr (NativePointer pointer)
+		internal MemoryFdPropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9241,8 +9261,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class MemoryGetFdInfoKhr : MarshalledObject
 	{
-		DeviceMemory lMemory;
-		public DeviceMemory Memory {
+		VkDeviceMemory lMemory;
+		public VkDeviceMemory Memory {
 			get { return lMemory; }
 			set { lMemory = value; m->Memory = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -9264,7 +9284,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryGetFdInfoKhr (NativePointer pointer)
+		internal MemoryGetFdInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9285,17 +9305,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->AcquireCount = value; }
 		}
 
-		NativeReference refAcquireSyncs;
-		public DeviceMemory[] AcquireSyncs {
+		VkNativeReference refAcquireSyncs;
+		public VkDeviceMemory[] AcquireSyncs {
 			get {
 				if (m->AcquireCount == 0)
 					return null;
-				var values = new DeviceMemory [m->AcquireCount];
+				var values = new VkDeviceMemory [m->AcquireCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->AcquireSyncs;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new DeviceMemory ();
+						values [i] = new VkDeviceMemory ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -9309,7 +9329,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->AcquireCount = (uint)value.Length;
-				refAcquireSyncs = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refAcquireSyncs = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->AcquireSyncs = refAcquireSyncs.Handle;
 				unsafe
 				{
@@ -9320,7 +9340,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refAcquireKeys;
+		VkNativeReference refAcquireKeys;
 		public UInt64[] AcquireKeys {
 			get {
 				if (m->AcquireCount == 0)
@@ -9342,7 +9362,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->AcquireCount = (uint)value.Length;
-				refAcquireKeys = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refAcquireKeys = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->AcquireKeys = refAcquireKeys.Handle;
 				unsafe
 				{
@@ -9353,7 +9373,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refAcquireTimeouts;
+		VkNativeReference refAcquireTimeouts;
 		public UInt32[] AcquireTimeouts {
 			get {
 				if (m->AcquireCount == 0)
@@ -9375,7 +9395,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->AcquireCount = (uint)value.Length;
-				refAcquireTimeouts = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refAcquireTimeouts = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->AcquireTimeouts = refAcquireTimeouts.Handle;
 				unsafe
 				{
@@ -9391,17 +9411,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ReleaseCount = value; }
 		}
 
-		NativeReference refReleaseSyncs;
-		public DeviceMemory[] ReleaseSyncs {
+		VkNativeReference refReleaseSyncs;
+		public VkDeviceMemory[] ReleaseSyncs {
 			get {
 				if (m->ReleaseCount == 0)
 					return null;
-				var values = new DeviceMemory [m->ReleaseCount];
+				var values = new VkDeviceMemory [m->ReleaseCount];
 				unsafe
 				{
 					UInt64* ptr = (UInt64*)m->ReleaseSyncs;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new DeviceMemory ();
+						values [i] = new VkDeviceMemory ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -9415,7 +9435,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ReleaseCount = (uint)value.Length;
-				refReleaseSyncs = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refReleaseSyncs = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->ReleaseSyncs = refReleaseSyncs.Handle;
 				unsafe
 				{
@@ -9426,7 +9446,7 @@ namespace MiniEngine.Drivers.Vulkan
 			}
 		}
 
-		NativeReference refReleaseKeys;
+		VkNativeReference refReleaseKeys;
 		public UInt64[] ReleaseKeys {
 			get {
 				if (m->ReleaseCount == 0)
@@ -9448,7 +9468,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ReleaseCount = (uint)value.Length;
-				refReleaseKeys = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refReleaseKeys = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->ReleaseKeys = refReleaseKeys.Handle;
 				unsafe
 				{
@@ -9471,7 +9491,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal Win32KeyedMutexAcquireReleaseInfoKhr (NativePointer pointer)
+		internal Win32KeyedMutexAcquireReleaseInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9520,7 +9540,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceExternalSemaphoreInfoKhr (NativePointer pointer)
+		internal PhysicalDeviceExternalSemaphoreInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9563,7 +9583,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExternalSemaphorePropertiesKhr (NativePointer pointer)
+		internal ExternalSemaphorePropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9596,7 +9616,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExportSemaphoreCreateInfoKhr (NativePointer pointer)
+		internal ExportSemaphoreCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9617,7 +9637,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->WaitSemaphoreValuesCount = value; }
 		}
 
-		NativeReference refWaitSemaphoreValues;
+		VkNativeReference refWaitSemaphoreValues;
 		public UInt64[] WaitSemaphoreValues {
 			get {
 				if (m->WaitSemaphoreValuesCount == 0)
@@ -9639,7 +9659,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->WaitSemaphoreValuesCount = (uint)value.Length;
-				refWaitSemaphoreValues = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refWaitSemaphoreValues = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->WaitSemaphoreValues = refWaitSemaphoreValues.Handle;
 				unsafe
 				{
@@ -9655,7 +9675,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SignalSemaphoreValuesCount = value; }
 		}
 
-		NativeReference refSignalSemaphoreValues;
+		VkNativeReference refSignalSemaphoreValues;
 		public UInt64[] SignalSemaphoreValues {
 			get {
 				if (m->SignalSemaphoreValuesCount == 0)
@@ -9677,7 +9697,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SignalSemaphoreValuesCount = (uint)value.Length;
-				refSignalSemaphoreValues = new NativeReference ((int)(sizeof(UInt64)*value.Length));
+				refSignalSemaphoreValues = new VkNativeReference ((int)(sizeof(UInt64)*value.Length));
 				m->SignalSemaphoreValues = refSignalSemaphoreValues.Handle;
 				unsafe
 				{
@@ -9700,7 +9720,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal D3D12FenceSubmitInfoKhr (NativePointer pointer)
+		internal D3D12FenceSubmitInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9726,8 +9746,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class SemaphoreGetWin32HandleInfoKhr : MarshalledObject
 	{
-		Semaphore lSemaphore;
-		public Semaphore Semaphore {
+		VkSemaphore lSemaphore;
+		public VkSemaphore Semaphore {
 			get { return lSemaphore; }
 			set { lSemaphore = value; m->Semaphore = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -9749,7 +9769,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SemaphoreGetWin32HandleInfoKhr (NativePointer pointer)
+		internal SemaphoreGetWin32HandleInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9765,8 +9785,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class ImportSemaphoreFdInfoKhr : MarshalledObject
 	{
-		Semaphore lSemaphore;
-		public Semaphore Semaphore {
+		VkSemaphore lSemaphore;
+		public VkSemaphore Semaphore {
 			get { return lSemaphore; }
 			set { lSemaphore = value; m->Semaphore = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -9798,7 +9818,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImportSemaphoreFdInfoKhr (NativePointer pointer)
+		internal ImportSemaphoreFdInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9814,8 +9834,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class SemaphoreGetFdInfoKhr : MarshalledObject
 	{
-		Semaphore lSemaphore;
-		public Semaphore Semaphore {
+		VkSemaphore lSemaphore;
+		public VkSemaphore Semaphore {
 			get { return lSemaphore; }
 			set { lSemaphore = value; m->Semaphore = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -9837,7 +9857,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SemaphoreGetFdInfoKhr (NativePointer pointer)
+		internal SemaphoreGetFdInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9870,7 +9890,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceExternalFenceInfoKhr (NativePointer pointer)
+		internal PhysicalDeviceExternalFenceInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9913,7 +9933,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExternalFencePropertiesKhr (NativePointer pointer)
+		internal ExternalFencePropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9946,7 +9966,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ExportFenceCreateInfoKhr (NativePointer pointer)
+		internal ExportFenceCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -9962,8 +9982,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class FenceGetWin32HandleInfoKhr : MarshalledObject
 	{
-		Fence lFence;
-		public Fence Fence {
+		VkFence lFence;
+		public VkFence Fence {
 			get { return lFence; }
 			set { lFence = value; m->Fence = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -9985,7 +10005,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal FenceGetWin32HandleInfoKhr (NativePointer pointer)
+		internal FenceGetWin32HandleInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10001,8 +10021,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class ImportFenceFdInfoKhr : MarshalledObject
 	{
-		Fence lFence;
-		public Fence Fence {
+		VkFence lFence;
+		public VkFence Fence {
 			get { return lFence; }
 			set { lFence = value; m->Fence = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -10034,7 +10054,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImportFenceFdInfoKhr (NativePointer pointer)
+		internal ImportFenceFdInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10050,8 +10070,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class FenceGetFdInfoKhr : MarshalledObject
 	{
-		Fence lFence;
-		public Fence Fence {
+		VkFence lFence;
+		public VkFence Fence {
 			get { return lFence; }
 			set { lFence = value; m->Fence = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -10073,7 +10093,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal FenceGetFdInfoKhr (NativePointer pointer)
+		internal FenceGetFdInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10116,7 +10136,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceMultiviewFeaturesKhx (NativePointer pointer)
+		internal PhysicalDeviceMultiviewFeaturesKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10154,7 +10174,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceMultiviewPropertiesKhx (NativePointer pointer)
+		internal PhysicalDeviceMultiviewPropertiesKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10175,7 +10195,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SubpassCount = value; }
 		}
 
-		NativeReference refViewMasks;
+		VkNativeReference refViewMasks;
 		public UInt32[] ViewMasks {
 			get {
 				if (m->SubpassCount == 0)
@@ -10197,7 +10217,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SubpassCount = (uint)value.Length;
-				refViewMasks = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refViewMasks = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->ViewMasks = refViewMasks.Handle;
 				unsafe
 				{
@@ -10213,7 +10233,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DependencyCount = value; }
 		}
 
-		NativeReference refViewOffsets;
+		VkNativeReference refViewOffsets;
 		public Int32[] ViewOffsets {
 			get {
 				if (m->DependencyCount == 0)
@@ -10235,7 +10255,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DependencyCount = (uint)value.Length;
-				refViewOffsets = new NativeReference ((int)(sizeof(Int32)*value.Length));
+				refViewOffsets = new VkNativeReference ((int)(sizeof(Int32)*value.Length));
 				m->ViewOffsets = refViewOffsets.Handle;
 				unsafe
 				{
@@ -10251,7 +10271,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->CorrelationMaskCount = value; }
 		}
 
-		NativeReference refCorrelationMasks;
+		VkNativeReference refCorrelationMasks;
 		public UInt32[] CorrelationMasks {
 			get {
 				if (m->CorrelationMaskCount == 0)
@@ -10273,7 +10293,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->CorrelationMaskCount = (uint)value.Length;
-				refCorrelationMasks = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refCorrelationMasks = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->CorrelationMasks = refCorrelationMasks.Handle;
 				unsafe
 				{
@@ -10296,7 +10316,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal RenderPassMultiviewCreateInfoKhx (NativePointer pointer)
+		internal RenderPassMultiviewCreateInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10391,7 +10411,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SurfaceCapabilities2Ext (NativePointer pointer)
+		internal SurfaceCapabilities2Ext (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10424,7 +10444,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DisplayPowerInfoExt (NativePointer pointer)
+		internal DisplayPowerInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10457,7 +10477,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceEventInfoExt (NativePointer pointer)
+		internal DeviceEventInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10490,7 +10510,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DisplayEventInfoExt (NativePointer pointer)
+		internal DisplayEventInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10523,7 +10543,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SwapchainCounterCreateInfoExt (NativePointer pointer)
+		internal SwapchainCounterCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10561,7 +10581,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryAllocateFlagsInfoKhx (NativePointer pointer)
+		internal MemoryAllocateFlagsInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10577,14 +10597,14 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class BindBufferMemoryInfoKhr : MarshalledObject
 	{
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		DeviceMemory lMemory;
-		public DeviceMemory Memory {
+		VkDeviceMemory lMemory;
+		public VkDeviceMemory Memory {
 			get { return lMemory; }
 			set { lMemory = value; m->Memory = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -10606,7 +10626,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BindBufferMemoryInfoKhr (NativePointer pointer)
+		internal BindBufferMemoryInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10627,7 +10647,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DeviceIndexCount = value; }
 		}
 
-		NativeReference refDeviceIndices;
+		VkNativeReference refDeviceIndices;
 		public UInt32[] DeviceIndices {
 			get {
 				if (m->DeviceIndexCount == 0)
@@ -10649,7 +10669,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DeviceIndexCount = (uint)value.Length;
-				refDeviceIndices = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refDeviceIndices = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->DeviceIndices = refDeviceIndices.Handle;
 				unsafe
 				{
@@ -10672,7 +10692,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BindBufferMemoryDeviceGroupInfoKhx (NativePointer pointer)
+		internal BindBufferMemoryDeviceGroupInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10696,14 +10716,14 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class BindImageMemoryInfoKhr : MarshalledObject
 	{
-		Image lImage;
-		public Image Image {
+		VkImage lImage;
+		public VkImage Image {
 			get { return lImage; }
 			set { lImage = value; m->Image = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		DeviceMemory lMemory;
-		public DeviceMemory Memory {
+		VkDeviceMemory lMemory;
+		public VkDeviceMemory Memory {
 			get { return lMemory; }
 			set { lMemory = value; m->Memory = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -10725,7 +10745,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BindImageMemoryInfoKhr (NativePointer pointer)
+		internal BindImageMemoryInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10746,7 +10766,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DeviceIndexCount = value; }
 		}
 
-		NativeReference refDeviceIndices;
+		VkNativeReference refDeviceIndices;
 		public UInt32[] DeviceIndices {
 			get {
 				if (m->DeviceIndexCount == 0)
@@ -10768,7 +10788,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DeviceIndexCount = (uint)value.Length;
-				refDeviceIndices = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refDeviceIndices = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->DeviceIndices = refDeviceIndices.Handle;
 				unsafe
 				{
@@ -10784,7 +10804,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SfrrectCount = value; }
 		}
 
-		NativeReference refSfrrects;
+		VkNativeReference refSfrrects;
 		public Rect2D[] Sfrrects {
 			get {
 				if (m->SfrrectCount == 0)
@@ -10806,7 +10826,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SfrrectCount = (uint)value.Length;
-				refSfrrects = new NativeReference ((int)(sizeof(Rect2D)*value.Length));
+				refSfrrects = new VkNativeReference ((int)(sizeof(Rect2D)*value.Length));
 				m->Sfrrects = refSfrrects.Handle;
 				unsafe
 				{
@@ -10829,7 +10849,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BindImageMemoryDeviceGroupInfoKhx (NativePointer pointer)
+		internal BindImageMemoryDeviceGroupInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10865,7 +10885,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DeviceRenderAreaCount = value; }
 		}
 
-		NativeReference refDeviceRenderAreas;
+		VkNativeReference refDeviceRenderAreas;
 		public Rect2D[] DeviceRenderAreas {
 			get {
 				if (m->DeviceRenderAreaCount == 0)
@@ -10887,7 +10907,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DeviceRenderAreaCount = (uint)value.Length;
-				refDeviceRenderAreas = new NativeReference ((int)(sizeof(Rect2D)*value.Length));
+				refDeviceRenderAreas = new VkNativeReference ((int)(sizeof(Rect2D)*value.Length));
 				m->DeviceRenderAreas = refDeviceRenderAreas.Handle;
 				unsafe
 				{
@@ -10910,7 +10930,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGroupRenderPassBeginInfoKhx (NativePointer pointer)
+		internal DeviceGroupRenderPassBeginInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10951,7 +10971,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGroupCommandBufferBeginInfoKhx (NativePointer pointer)
+		internal DeviceGroupCommandBufferBeginInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -10972,7 +10992,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->WaitSemaphoreCount = value; }
 		}
 
-		NativeReference refWaitSemaphoreDeviceIndices;
+		VkNativeReference refWaitSemaphoreDeviceIndices;
 		public UInt32[] WaitSemaphoreDeviceIndices {
 			get {
 				if (m->WaitSemaphoreCount == 0)
@@ -10994,7 +11014,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->WaitSemaphoreCount = (uint)value.Length;
-				refWaitSemaphoreDeviceIndices = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refWaitSemaphoreDeviceIndices = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->WaitSemaphoreDeviceIndices = refWaitSemaphoreDeviceIndices.Handle;
 				unsafe
 				{
@@ -11010,7 +11030,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->CommandBufferCount = value; }
 		}
 
-		NativeReference refCommandBufferDeviceMasks;
+		VkNativeReference refCommandBufferDeviceMasks;
 		public UInt32[] CommandBufferDeviceMasks {
 			get {
 				if (m->CommandBufferCount == 0)
@@ -11032,7 +11052,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->CommandBufferCount = (uint)value.Length;
-				refCommandBufferDeviceMasks = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refCommandBufferDeviceMasks = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->CommandBufferDeviceMasks = refCommandBufferDeviceMasks.Handle;
 				unsafe
 				{
@@ -11048,7 +11068,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SignalSemaphoreCount = value; }
 		}
 
-		NativeReference refSignalSemaphoreDeviceIndices;
+		VkNativeReference refSignalSemaphoreDeviceIndices;
 		public UInt32[] SignalSemaphoreDeviceIndices {
 			get {
 				if (m->SignalSemaphoreCount == 0)
@@ -11070,7 +11090,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SignalSemaphoreCount = (uint)value.Length;
-				refSignalSemaphoreDeviceIndices = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refSignalSemaphoreDeviceIndices = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->SignalSemaphoreDeviceIndices = refSignalSemaphoreDeviceIndices.Handle;
 				unsafe
 				{
@@ -11093,7 +11113,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGroupSubmitInfoKhx (NativePointer pointer)
+		internal DeviceGroupSubmitInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11143,7 +11163,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGroupBindSparseInfoKhx (NativePointer pointer)
+		internal DeviceGroupBindSparseInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11194,7 +11214,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGroupPresentCapabilitiesKhx (NativePointer pointer)
+		internal DeviceGroupPresentCapabilitiesKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11210,8 +11230,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class ImageSwapchainCreateInfoKhx : MarshalledObject
 	{
-		SwapchainKhr lSwapchain;
-		public SwapchainKhr Swapchain {
+		VkSwapchainKhr lSwapchain;
+		public VkSwapchainKhr Swapchain {
 			get { return lSwapchain; }
 			set { lSwapchain = value; m->Swapchain = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -11228,7 +11248,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImageSwapchainCreateInfoKhx (NativePointer pointer)
+		internal ImageSwapchainCreateInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11244,8 +11264,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class BindImageMemorySwapchainInfoKhx : MarshalledObject
 	{
-		SwapchainKhr lSwapchain;
-		public SwapchainKhr Swapchain {
+		VkSwapchainKhr lSwapchain;
+		public VkSwapchainKhr Swapchain {
 			get { return lSwapchain; }
 			set { lSwapchain = value; m->Swapchain = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -11267,7 +11287,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BindImageMemorySwapchainInfoKhx (NativePointer pointer)
+		internal BindImageMemorySwapchainInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11283,8 +11303,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class AcquireNextImageInfoKhx : MarshalledObject
 	{
-		SwapchainKhr lSwapchain;
-		public SwapchainKhr Swapchain {
+		VkSwapchainKhr lSwapchain;
+		public VkSwapchainKhr Swapchain {
 			get { return lSwapchain; }
 			set { lSwapchain = value; m->Swapchain = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -11294,14 +11314,14 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Timeout = value; }
 		}
 
-		Semaphore lSemaphore;
-		public Semaphore Semaphore {
+		VkSemaphore lSemaphore;
+		public VkSemaphore Semaphore {
 			get { return lSemaphore; }
 			set { lSemaphore = value; m->Semaphore = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		Fence lFence;
-		public Fence Fence {
+		VkFence lFence;
+		public VkFence Fence {
 			get { return lFence; }
 			set { lFence = value; m->Fence = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -11323,7 +11343,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal AcquireNextImageInfoKhx (NativePointer pointer)
+		internal AcquireNextImageInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11344,7 +11364,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SwapchainCount = value; }
 		}
 
-		NativeReference refDeviceMasks;
+		VkNativeReference refDeviceMasks;
 		public UInt32[] DeviceMasks {
 			get {
 				if (m->SwapchainCount == 0)
@@ -11366,7 +11386,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SwapchainCount = (uint)value.Length;
-				refDeviceMasks = new NativeReference ((int)(sizeof(UInt32)*value.Length));
+				refDeviceMasks = new VkNativeReference ((int)(sizeof(UInt32)*value.Length));
 				m->DeviceMasks = refDeviceMasks.Handle;
 				unsafe
 				{
@@ -11394,7 +11414,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGroupPresentInfoKhx (NativePointer pointer)
+		internal DeviceGroupPresentInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11423,17 +11443,17 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->PhysicalDeviceCount = value; }
 		}
 
-		NativeReference refPhysicalDevices;
-		public PhysicalDevice[] PhysicalDevices {
+		VkNativeReference refPhysicalDevices;
+		public VkPhysicalDevice[] PhysicalDevices {
 			get {
 				if (m->PhysicalDeviceCount == 0)
 					return null;
-				var values = new PhysicalDevice [m->PhysicalDeviceCount];
+				var values = new VkPhysicalDevice [m->PhysicalDeviceCount];
 				unsafe
 				{
 					IntPtr* ptr = (IntPtr*)m->PhysicalDevices;
 					for (int i = 0; i < values.Length; i++) {
-						values [i] = new PhysicalDevice ();
+						values [i] = new VkPhysicalDevice ();
 						values [i].m = ptr [i];
 					}
 				}
@@ -11447,7 +11467,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->PhysicalDeviceCount = (uint)value.Length;
-				refPhysicalDevices = new NativeReference ((int)(sizeof(IntPtr)*value.Length));
+				refPhysicalDevices = new VkNativeReference ((int)(sizeof(IntPtr)*value.Length));
 				m->PhysicalDevices = refPhysicalDevices.Handle;
 				unsafe
 				{
@@ -11470,7 +11490,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGroupDeviceCreateInfoKhx (NativePointer pointer)
+		internal DeviceGroupDeviceCreateInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11511,7 +11531,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceGroupSwapchainCreateInfoKhx (NativePointer pointer)
+		internal DeviceGroupSwapchainCreateInfoKhx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11547,7 +11567,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DescriptorUpdateEntryCount = value; }
 		}
 
-		NativeReference refDescriptorUpdateEntries;
+		VkNativeReference refDescriptorUpdateEntries;
 		public DescriptorUpdateTemplateEntryKhr[] DescriptorUpdateEntries {
 			get {
 				if (m->DescriptorUpdateEntryCount == 0)
@@ -11569,7 +11589,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DescriptorUpdateEntryCount = (uint)value.Length;
-				refDescriptorUpdateEntries = new NativeReference ((int)(sizeof(DescriptorUpdateTemplateEntryKhr)*value.Length));
+				refDescriptorUpdateEntries = new VkNativeReference ((int)(sizeof(DescriptorUpdateTemplateEntryKhr)*value.Length));
 				m->DescriptorUpdateEntries = refDescriptorUpdateEntries.Handle;
 				unsafe
 				{
@@ -11585,8 +11605,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->TemplateType = value; }
 		}
 
-		DescriptorSetLayout lDescriptorSetLayout;
-		public DescriptorSetLayout DescriptorSetLayout {
+		VkDescriptorSetLayout lDescriptorSetLayout;
+		public VkDescriptorSetLayout DescriptorSetLayout {
 			get { return lDescriptorSetLayout; }
 			set { lDescriptorSetLayout = value; m->DescriptorSetLayout = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -11596,8 +11616,8 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->PipelineBindPoint = value; }
 		}
 
-		PipelineLayout lPipelineLayout;
-		public PipelineLayout PipelineLayout {
+		VkPipelineLayout lPipelineLayout;
+		public VkPipelineLayout PipelineLayout {
 			get { return lPipelineLayout; }
 			set { lPipelineLayout = value; m->PipelineLayout = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -11619,7 +11639,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DescriptorUpdateTemplateCreateInfoKhr (NativePointer pointer)
+		internal DescriptorUpdateTemplateCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11701,7 +11721,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal HdrMetadataExt (NativePointer pointer)
+		internal HdrMetadataExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11736,7 +11756,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SwapchainCount = value; }
 		}
 
-		NativeReference refTimes;
+		VkNativeReference refTimes;
 		public PresentTimeGoogle[] Times {
 			get {
 				if (m->SwapchainCount == 0)
@@ -11758,7 +11778,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SwapchainCount = (uint)value.Length;
-				refTimes = new NativeReference ((int)(sizeof(PresentTimeGoogle)*value.Length));
+				refTimes = new VkNativeReference ((int)(sizeof(PresentTimeGoogle)*value.Length));
 				m->Times = refTimes.Handle;
 				unsafe
 				{
@@ -11781,7 +11801,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PresentTimesInfoGoogle (NativePointer pointer)
+		internal PresentTimesInfoGoogle (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11833,7 +11853,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal IOSSurfaceCreateInfoMvk (NativePointer pointer)
+		internal IOSSurfaceCreateInfoMvk (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11871,7 +11891,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MacOSSurfaceCreateInfoMvk (NativePointer pointer)
+		internal MacOSSurfaceCreateInfoMvk (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11903,7 +11923,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ViewportCount = value; }
 		}
 
-		NativeReference refViewportWscalings;
+		VkNativeReference refViewportWscalings;
 		public ViewportWScalingNv[] ViewportWscalings {
 			get {
 				if (m->ViewportCount == 0)
@@ -11925,7 +11945,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ViewportCount = (uint)value.Length;
-				refViewportWscalings = new NativeReference ((int)(sizeof(ViewportWScalingNv)*value.Length));
+				refViewportWscalings = new VkNativeReference ((int)(sizeof(ViewportWScalingNv)*value.Length));
 				m->ViewportWscalings = refViewportWscalings.Handle;
 				unsafe
 				{
@@ -11948,7 +11968,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineViewportWScalingStateCreateInfoNv (NativePointer pointer)
+		internal PipelineViewportWScalingStateCreateInfoNv (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -11990,7 +12010,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ViewportCount = value; }
 		}
 
-		NativeReference refViewportSwizzles;
+		VkNativeReference refViewportSwizzles;
 		public ViewportSwizzleNv[] ViewportSwizzles {
 			get {
 				if (m->ViewportCount == 0)
@@ -12012,7 +12032,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ViewportCount = (uint)value.Length;
-				refViewportSwizzles = new NativeReference ((int)(sizeof(ViewportSwizzleNv)*value.Length));
+				refViewportSwizzles = new VkNativeReference ((int)(sizeof(ViewportSwizzleNv)*value.Length));
 				m->ViewportSwizzles = refViewportSwizzles.Handle;
 				unsafe
 				{
@@ -12035,7 +12055,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineViewportSwizzleStateCreateInfoNv (NativePointer pointer)
+		internal PipelineViewportSwizzleStateCreateInfoNv (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12076,7 +12096,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceDiscardRectanglePropertiesExt (NativePointer pointer)
+		internal PhysicalDeviceDiscardRectanglePropertiesExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12107,7 +12127,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->DiscardRectangleCount = value; }
 		}
 
-		NativeReference refDiscardRectangles;
+		VkNativeReference refDiscardRectangles;
 		public Rect2D[] DiscardRectangles {
 			get {
 				if (m->DiscardRectangleCount == 0)
@@ -12129,7 +12149,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->DiscardRectangleCount = (uint)value.Length;
-				refDiscardRectangles = new NativeReference ((int)(sizeof(Rect2D)*value.Length));
+				refDiscardRectangles = new VkNativeReference ((int)(sizeof(Rect2D)*value.Length));
 				m->DiscardRectangles = refDiscardRectangles.Handle;
 				unsafe
 				{
@@ -12152,7 +12172,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineDiscardRectangleStateCreateInfoExt (NativePointer pointer)
+		internal PipelineDiscardRectangleStateCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12193,7 +12213,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceMultiviewPerViewAttributesPropertiesNvx (NativePointer pointer)
+		internal PhysicalDeviceMultiviewPerViewAttributesPropertiesNvx (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12221,7 +12241,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->AspectReferenceCount = value; }
 		}
 
-		NativeReference refAspectReferences;
+		VkNativeReference refAspectReferences;
 		public InputAttachmentAspectReferenceKhr[] AspectReferences {
 			get {
 				if (m->AspectReferenceCount == 0)
@@ -12243,7 +12263,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->AspectReferenceCount = (uint)value.Length;
-				refAspectReferences = new NativeReference ((int)(sizeof(InputAttachmentAspectReferenceKhr)*value.Length));
+				refAspectReferences = new VkNativeReference ((int)(sizeof(InputAttachmentAspectReferenceKhr)*value.Length));
 				m->AspectReferences = refAspectReferences.Handle;
 				unsafe
 				{
@@ -12266,7 +12286,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal RenderPassInputAttachmentAspectCreateInfoKhr (NativePointer pointer)
+		internal RenderPassInputAttachmentAspectCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12290,8 +12310,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class PhysicalDeviceSurfaceInfo2Khr : MarshalledObject
 	{
-		SurfaceKhr lSurface;
-		public SurfaceKhr Surface {
+		VkSurfaceKhr lSurface;
+		public VkSurfaceKhr Surface {
 			get { return lSurface; }
 			set { lSurface = value; m->Surface = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -12308,7 +12328,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceSurfaceInfo2Khr (NativePointer pointer)
+		internal PhysicalDeviceSurfaceInfo2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12341,7 +12361,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SurfaceCapabilities2Khr (NativePointer pointer)
+		internal SurfaceCapabilities2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12374,7 +12394,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SurfaceFormat2Khr (NativePointer pointer)
+		internal SurfaceFormat2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12407,7 +12427,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SharedPresentSurfaceCapabilitiesKhr (NativePointer pointer)
+		internal SharedPresentSurfaceCapabilitiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12455,7 +12475,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDevice16BitStorageFeaturesKhr (NativePointer pointer)
+		internal PhysicalDevice16BitStorageFeaturesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12471,8 +12491,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class BufferMemoryRequirementsInfo2Khr : MarshalledObject
 	{
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -12489,7 +12509,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BufferMemoryRequirementsInfo2Khr (NativePointer pointer)
+		internal BufferMemoryRequirementsInfo2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12505,8 +12525,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class ImageMemoryRequirementsInfo2Khr : MarshalledObject
 	{
-		Image lImage;
-		public Image Image {
+		VkImage lImage;
+		public VkImage Image {
 			get { return lImage; }
 			set { lImage = value; m->Image = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -12523,7 +12543,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImageMemoryRequirementsInfo2Khr (NativePointer pointer)
+		internal ImageMemoryRequirementsInfo2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12539,8 +12559,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class ImageSparseMemoryRequirementsInfo2Khr : MarshalledObject
 	{
-		Image lImage;
-		public Image Image {
+		VkImage lImage;
+		public VkImage Image {
 			get { return lImage; }
 			set { lImage = value; m->Image = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -12557,7 +12577,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImageSparseMemoryRequirementsInfo2Khr (NativePointer pointer)
+		internal ImageSparseMemoryRequirementsInfo2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12590,7 +12610,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryRequirements2Khr (NativePointer pointer)
+		internal MemoryRequirements2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12623,7 +12643,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SparseImageMemoryRequirements2Khr (NativePointer pointer)
+		internal SparseImageMemoryRequirements2Khr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12656,7 +12676,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDevicePointClippingPropertiesKhr (NativePointer pointer)
+		internal PhysicalDevicePointClippingPropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12694,7 +12714,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryDedicatedRequirementsKhr (NativePointer pointer)
+		internal MemoryDedicatedRequirementsKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12710,14 +12730,14 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class MemoryDedicatedAllocateInfoKhr : MarshalledObject
 	{
-		Image lImage;
-		public Image Image {
+		VkImage lImage;
+		public VkImage Image {
 			get { return lImage; }
 			set { lImage = value; m->Image = value != null ? (UInt64)value.m : default(UInt64); }
 		}
 
-		Buffer lBuffer;
-		public Buffer Buffer {
+		VkBuffer lBuffer;
+		public VkBuffer Buffer {
 			get { return lBuffer; }
 			set { lBuffer = value; m->Buffer = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -12734,7 +12754,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryDedicatedAllocateInfoKhr (NativePointer pointer)
+		internal MemoryDedicatedAllocateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12767,7 +12787,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImageViewUsageCreateInfoKhr (NativePointer pointer)
+		internal ImageViewUsageCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12800,7 +12820,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineTessellationDomainOriginStateCreateInfoKhr (NativePointer pointer)
+		internal PipelineTessellationDomainOriginStateCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12816,8 +12836,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class SamplerYcbcrConversionInfoKhr : MarshalledObject
 	{
-		SamplerYcbcrConversionKhr lConversion;
-		public SamplerYcbcrConversionKhr Conversion {
+		VkSamplerYcbcrConversionKhr lConversion;
+		public VkSamplerYcbcrConversionKhr Conversion {
 			get { return lConversion; }
 			set { lConversion = value; m->Conversion = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -12834,7 +12854,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SamplerYcbcrConversionInfoKhr (NativePointer pointer)
+		internal SamplerYcbcrConversionInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12902,7 +12922,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SamplerYcbcrConversionCreateInfoKhr (NativePointer pointer)
+		internal SamplerYcbcrConversionCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12935,7 +12955,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal BindImagePlaneMemoryInfoKhr (NativePointer pointer)
+		internal BindImagePlaneMemoryInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -12968,7 +12988,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImagePlaneMemoryRequirementsInfoKhr (NativePointer pointer)
+		internal ImagePlaneMemoryRequirementsInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13001,7 +13021,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceSamplerYcbcrConversionFeaturesKhr (NativePointer pointer)
+		internal PhysicalDeviceSamplerYcbcrConversionFeaturesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13034,7 +13054,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SamplerYcbcrConversionImageFormatPropertiesKhr (NativePointer pointer)
+		internal SamplerYcbcrConversionImageFormatPropertiesKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13067,7 +13087,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal TextureLODGatherFormatPropertiesAmd (NativePointer pointer)
+		internal TextureLODGatherFormatPropertiesAmd (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13110,7 +13130,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineCoverageToColorStateCreateInfoNv (NativePointer pointer)
+		internal PipelineCoverageToColorStateCreateInfoNv (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13148,7 +13168,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceSamplerFilterMinmaxPropertiesExt (NativePointer pointer)
+		internal PhysicalDeviceSamplerFilterMinmaxPropertiesExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13185,7 +13205,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->SampleLocationsCount = value; }
 		}
 
-		NativeReference refSampleLocations;
+		VkNativeReference refSampleLocations;
 		public SampleLocationExt[] SampleLocations {
 			get {
 				if (m->SampleLocationsCount == 0)
@@ -13207,7 +13227,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->SampleLocationsCount = (uint)value.Length;
-				refSampleLocations = new NativeReference ((int)(sizeof(SampleLocationExt)*value.Length));
+				refSampleLocations = new VkNativeReference ((int)(sizeof(SampleLocationExt)*value.Length));
 				m->SampleLocations = refSampleLocations.Handle;
 				unsafe
 				{
@@ -13230,7 +13250,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SampleLocationsInfoExt (NativePointer pointer)
+		internal SampleLocationsInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13277,7 +13297,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal AttachmentSampleLocationsExt (NativePointer pointer)
+		internal AttachmentSampleLocationsExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13286,7 +13306,7 @@ namespace MiniEngine.Drivers.Vulkan
 
 		internal void Initialize ()
 		{
-			lSampleLocationsInfo = new SampleLocationsInfoExt (new NativePointer (native.Reference, (IntPtr)(&m->SampleLocationsInfo)));
+			lSampleLocationsInfo = new SampleLocationsInfoExt (new VkNativePointer (native.Reference, (IntPtr)(&m->SampleLocationsInfo)));
 		}
 
 	}
@@ -13316,7 +13336,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SubpassSampleLocationsExt (NativePointer pointer)
+		internal SubpassSampleLocationsExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13325,7 +13345,7 @@ namespace MiniEngine.Drivers.Vulkan
 
 		internal void Initialize ()
 		{
-			lSampleLocationsInfo = new SampleLocationsInfoExt (new NativePointer (native.Reference, (IntPtr)(&m->SampleLocationsInfo)));
+			lSampleLocationsInfo = new SampleLocationsInfoExt (new VkNativePointer (native.Reference, (IntPtr)(&m->SampleLocationsInfo)));
 		}
 
 	}
@@ -13337,7 +13357,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->AttachmentInitialSampleLocationsCount = value; }
 		}
 
-		NativeReference refAttachmentInitialSampleLocations;
+		VkNativeReference refAttachmentInitialSampleLocations;
 		public AttachmentSampleLocationsExt[] AttachmentInitialSampleLocations {
 			get {
 				if (m->AttachmentInitialSampleLocationsCount == 0)
@@ -13361,7 +13381,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->AttachmentInitialSampleLocationsCount = (uint)value.Length;
-				refAttachmentInitialSampleLocations = new NativeReference ((int)(sizeof(Interop.AttachmentSampleLocationsExt)*value.Length));
+				refAttachmentInitialSampleLocations = new VkNativeReference ((int)(sizeof(Interop.AttachmentSampleLocationsExt)*value.Length));
 				m->AttachmentInitialSampleLocations = refAttachmentInitialSampleLocations.Handle;
 				unsafe
 				{
@@ -13377,7 +13397,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->PostSubpassSampleLocationsCount = value; }
 		}
 
-		NativeReference refPostSubpassSampleLocations;
+		VkNativeReference refPostSubpassSampleLocations;
 		public SubpassSampleLocationsExt[] PostSubpassSampleLocations {
 			get {
 				if (m->PostSubpassSampleLocationsCount == 0)
@@ -13401,7 +13421,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->PostSubpassSampleLocationsCount = (uint)value.Length;
-				refPostSubpassSampleLocations = new NativeReference ((int)(sizeof(Interop.SubpassSampleLocationsExt)*value.Length));
+				refPostSubpassSampleLocations = new VkNativeReference ((int)(sizeof(Interop.SubpassSampleLocationsExt)*value.Length));
 				m->PostSubpassSampleLocations = refPostSubpassSampleLocations.Handle;
 				unsafe
 				{
@@ -13424,7 +13444,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal RenderPassSampleLocationsBeginInfoExt (NativePointer pointer)
+		internal RenderPassSampleLocationsBeginInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13473,7 +13493,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineSampleLocationsStateCreateInfoExt (NativePointer pointer)
+		internal PipelineSampleLocationsStateCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13483,7 +13503,7 @@ namespace MiniEngine.Drivers.Vulkan
 		internal void Initialize ()
 		{
 			m->SType = StructureType.PipelineSampleLocationsStateCreateInfoExt;
-			lSampleLocationsInfo = new SampleLocationsInfoExt (new NativePointer (native.Reference, (IntPtr)(&m->SampleLocationsInfo)));
+			lSampleLocationsInfo = new SampleLocationsInfoExt (new VkNativePointer (native.Reference, (IntPtr)(&m->SampleLocationsInfo)));
 		}
 
 	}
@@ -13540,7 +13560,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceSampleLocationsPropertiesExt (NativePointer pointer)
+		internal PhysicalDeviceSampleLocationsPropertiesExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13573,7 +13593,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MultisamplePropertiesExt (NativePointer pointer)
+		internal MultisamplePropertiesExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13606,7 +13626,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal SamplerReductionModeCreateInfoExt (NativePointer pointer)
+		internal SamplerReductionModeCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13639,7 +13659,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceBlendOperationAdvancedFeaturesExt (NativePointer pointer)
+		internal PhysicalDeviceBlendOperationAdvancedFeaturesExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13697,7 +13717,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceBlendOperationAdvancedPropertiesExt (NativePointer pointer)
+		internal PhysicalDeviceBlendOperationAdvancedPropertiesExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13740,7 +13760,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineColorBlendAdvancedStateCreateInfoExt (NativePointer pointer)
+		internal PipelineColorBlendAdvancedStateCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13776,7 +13796,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->CoverageModulationTableCount = value; }
 		}
 
-		NativeReference refCoverageModulationTable;
+		VkNativeReference refCoverageModulationTable;
 		public float[] CoverageModulationTable {
 			get {
 				if (m->CoverageModulationTableCount == 0)
@@ -13798,7 +13818,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->CoverageModulationTableCount = (uint)value.Length;
-				refCoverageModulationTable = new NativeReference ((int)(sizeof(float)*value.Length));
+				refCoverageModulationTable = new VkNativeReference ((int)(sizeof(float)*value.Length));
 				m->CoverageModulationTable = refCoverageModulationTable.Handle;
 				unsafe
 				{
@@ -13821,7 +13841,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineCoverageModulationStateCreateInfoNv (NativePointer pointer)
+		internal PipelineCoverageModulationStateCreateInfoNv (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13850,7 +13870,7 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->ViewFormatCount = value; }
 		}
 
-		NativeReference refViewFormats;
+		VkNativeReference refViewFormats;
 		public Format[] ViewFormats {
 			get {
 				if (m->ViewFormatCount == 0)
@@ -13872,7 +13892,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->ViewFormatCount = (uint)value.Length;
-				refViewFormats = new NativeReference ((int)(sizeof(Format)*value.Length));
+				refViewFormats = new VkNativeReference ((int)(sizeof(Format)*value.Length));
 				m->ViewFormats = refViewFormats.Handle;
 				unsafe
 				{
@@ -13895,7 +13915,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImageFormatListCreateInfoKhr (NativePointer pointer)
+		internal ImageFormatListCreateInfoKhr (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13946,7 +13966,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ValidationCacheCreateInfoExt (NativePointer pointer)
+		internal ValidationCacheCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -13962,8 +13982,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class ShaderModuleValidationCacheCreateInfoExt : MarshalledObject
 	{
-		ValidationCacheExt lValidationCache;
-		public ValidationCacheExt ValidationCache {
+		VkValidationCacheExt lValidationCache;
+		public VkValidationCacheExt ValidationCache {
 			get { return lValidationCache; }
 			set { lValidationCache = value; m->ValidationCache = value != null ? (UInt64)value.m : default(UInt64); }
 		}
@@ -13980,7 +14000,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ShaderModuleValidationCacheCreateInfoExt (NativePointer pointer)
+		internal ShaderModuleValidationCacheCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -14064,7 +14084,7 @@ namespace MiniEngine.Drivers.Vulkan
 			native = Interop.Structure.Allocate (typeof (Interop.ShaderStatisticsInfoAmd));
 		}
 
-		internal ShaderStatisticsInfoAmd (NativePointer pointer)
+		internal ShaderStatisticsInfoAmd (VkNativePointer pointer)
 		{
 			native = pointer;
 		}
@@ -14090,7 +14110,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal DeviceQueueGlobalPriorityCreateInfoExt (NativePointer pointer)
+		internal DeviceQueueGlobalPriorityCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -14128,7 +14148,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal ImportMemoryHostPointerInfoExt (NativePointer pointer)
+		internal ImportMemoryHostPointerInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -14161,7 +14181,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal MemoryHostPointerPropertiesExt (NativePointer pointer)
+		internal MemoryHostPointerPropertiesExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -14194,7 +14214,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceExternalMemoryHostPropertiesExt (NativePointer pointer)
+		internal PhysicalDeviceExternalMemoryHostPropertiesExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -14267,7 +14287,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PhysicalDeviceConservativeRasterizationPropertiesExt (NativePointer pointer)
+		internal PhysicalDeviceConservativeRasterizationPropertiesExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -14310,7 +14330,7 @@ namespace MiniEngine.Drivers.Vulkan
 			Initialize ();
 		}
 
-		internal PipelineRasterizationConservativeStateCreateInfoExt (NativePointer pointer)
+		internal PipelineRasterizationConservativeStateCreateInfoExt (VkNativePointer pointer)
 		{
 			native = pointer;
 			Initialize ();
@@ -14371,6 +14391,7 @@ namespace MiniEngine.Drivers.Vulkan
 
     unsafe public partial class ClearColorValue : MarshalledObject
     {
+
         public float[] Float32
         {
             get
@@ -14447,9 +14468,24 @@ namespace MiniEngine.Drivers.Vulkan
             native = Interop.Structure.Allocate(typeof(Interop.ClearColorValue));
         }
 
-        internal ClearColorValue(NativePointer pointer)
+        internal ClearColorValue(VkNativePointer pointer)
         {
             native = pointer;
+        }
+
+        public ClearColorValue(float[] floatArray) : this()
+        {
+            Float32 = floatArray;
+        }
+
+        public ClearColorValue(int[] intArray) : this()
+        {
+            Int32 = intArray;
+        }
+
+        public ClearColorValue(uint[] uintArray) : this()
+        {
+            Uint32 = uintArray;
         }
 
     }
@@ -14483,7 +14519,7 @@ namespace MiniEngine.Drivers.Vulkan
             Initialize();
         }
 
-        internal ClearValue(NativePointer pointer)
+        internal ClearValue(VkNativePointer pointer)
         {
             native = pointer;
             Initialize();
@@ -14492,7 +14528,7 @@ namespace MiniEngine.Drivers.Vulkan
 
         internal void Initialize()
         {
-            lColor = new ClearColorValue(new NativePointer(native.Reference, (IntPtr)(&m->Color)));
+            lColor = new ClearColorValue(new VkNativePointer(native.Reference, (IntPtr)(&m->Color)));
         }
 
     }
@@ -14515,16 +14551,32 @@ namespace MiniEngine.Drivers.Vulkan
         }
     }
 
-    public class Version
+    public class VkVersion
     {
-        public static uint Make(uint major, uint minor, uint patch)
+		public uint Major;
+        public uint Minor;
+        public uint Patch;
+
+		public VkVersion(uint major, uint minor, uint patch)
+		{
+			Major = major;
+			Minor = minor;
+            Patch = patch;
+        }
+
+        public uint ToUInt()
+        {
+            return (Major << 22) | (Minor << 12) | Patch;
+        }
+
+        public static uint ToUInt(uint major, uint minor, uint patch)
         {
             return (major << 22) | (minor << 12) | patch;
         }
 
-        public static string ToString(uint version)
+        public override string ToString()
         {
-            return string.Format("{0}.{1}.{2}", version >> 22, (version >> 12) & 0x3ff, version & 0xfff);
+            return string.Format("{0}.{1}.{2}", Major, Minor, Patch);
         }
     }
 

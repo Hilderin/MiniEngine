@@ -1,4 +1,5 @@
 using MiniEngine.Assets;
+using MiniEngine.Rendering.Vulkan;
 using MiniEngine.Drivers.Vulkan;
 using MiniEngine.Drivers.Vulkan.Windows;
 using MiniEngine.PrimitiveMeshes;
@@ -61,7 +62,7 @@ void main() {
 ");
 
 
-            Renderer = new VkRenderer("Test", CreateSurface, DebugCallback);
+            Renderer = new VkRenderer("Test", new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), CreateSurface, DebugCallback);
 
             //AssetManager assetManager = new AssetManager();
             ////var texture = assetManager.GetTexture2DFromFile(TEXTURE_PATH);
@@ -82,7 +83,7 @@ void main() {
 
         }
 
-        private SurfaceKhr CreateSurface(VkInstance vk)
+        private VkSurfaceKhr CreateSurface(VkInstance vk)
         {
             return vk.CreateWin32SurfaceKHR(
                 new Win32SurfaceCreateInfoKhr

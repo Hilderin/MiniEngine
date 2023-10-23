@@ -28,7 +28,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return null;
 
 				int size = Marshal.SizeOf (typeof (Interop.LayerProperties));
-				var refpProperties = new NativeReference ((int)(size * pPropertyCount));
+				var refpProperties = new VkNativeReference ((int)(size * pPropertyCount));
 				var ptrpProperties = refpProperties.Handle;
 				result = Interop.NativeMethods.vkEnumerateInstanceLayerProperties (&pPropertyCount, (Interop.LayerProperties*)ptrpProperties);
 				if (result != Result.Success)
@@ -38,7 +38,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return null;
 				var arr = new LayerProperties [pPropertyCount];
 				for (int i = 0; i < pPropertyCount; i++) {
-					arr [i] = new LayerProperties (new NativePointer (refpProperties, (IntPtr)(&((Interop.LayerProperties*)ptrpProperties) [i])));
+					arr [i] = new LayerProperties (new VkNativePointer (refpProperties, (IntPtr)(&((Interop.LayerProperties*)ptrpProperties) [i])));
 				}
 
 				return arr;
@@ -57,7 +57,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return null;
 
 				int size = Marshal.SizeOf (typeof (Interop.ExtensionProperties));
-				var refpProperties = new NativeReference ((int)(size * pPropertyCount));
+				var refpProperties = new VkNativeReference ((int)(size * pPropertyCount));
 				var ptrpProperties = refpProperties.Handle;
 				result = Interop.NativeMethods.vkEnumerateInstanceExtensionProperties (pLayerName, &pPropertyCount, (Interop.ExtensionProperties*)ptrpProperties);
 				if (result != Result.Success)
@@ -67,7 +67,7 @@ namespace MiniEngine.Drivers.Vulkan
 					return null;
 				var arr = new ExtensionProperties [pPropertyCount];
 				for (int i = 0; i < pPropertyCount; i++) {
-					arr [i] = new ExtensionProperties (new NativePointer (refpProperties, (IntPtr)(&((Interop.ExtensionProperties*)ptrpProperties) [i])));
+					arr [i] = new ExtensionProperties (new VkNativePointer (refpProperties, (IntPtr)(&((Interop.ExtensionProperties*)ptrpProperties) [i])));
 				}
 
 				return arr;

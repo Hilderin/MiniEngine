@@ -9,14 +9,14 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Encapsulate a buffer
     /// </summary>
-    public class VkBuffer: IDisposable
+    public class VkBufferWrapper: IDisposable
     {
         public int Size;
-        public Device Device;
-        public Buffer Buffer;
-        public DeviceMemory DeviceMemory;
+        public VkDevice Device;
+        public VkBuffer Buffer;
+        public VkDeviceMemory DeviceMemory;
 
-        public VkBuffer(Device device, Buffer buffer, DeviceMemory deviceMemory, int length)
+        public VkBufferWrapper(VkDevice device, VkBuffer buffer, VkDeviceMemory deviceMemory, int length)
         {
             Device = device;
             Buffer = buffer;
@@ -44,12 +44,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Implicit conversion to a Buffer
         /// </summary>
-        public static implicit operator Buffer(VkBuffer buffer) { return buffer.Buffer; }
+        public static implicit operator VkBuffer(VkBufferWrapper buffer) { return buffer.Buffer; }
 
         /// <summary>
         /// Implicit conversion to a DeviceMemory
         /// </summary>
-        public static implicit operator DeviceMemory(VkBuffer buffer) { return buffer.DeviceMemory; }
+        public static implicit operator VkDeviceMemory(VkBufferWrapper buffer) { return buffer.DeviceMemory; }
 
     }
 }

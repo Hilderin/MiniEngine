@@ -1,14 +1,8 @@
 ﻿using MiniEngine.GLFW;
-using System;
-using System.Collections.Generic;
+using MiniEngine.Drivers.Vulkan;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using static MiniEngine.Drivers.Vulkan.VkInstance;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Vulkan renderer
@@ -18,21 +12,23 @@ namespace MiniEngine.Drivers.Vulkan
         #region Internal members
 
         internal VkInstance vk;
-        internal SurfaceKhr Surface;
-        internal PhysicalDevice PhysicalDevice;
-        internal Device Device;
-        internal Queue Queue;
-        internal SwapchainKhr Swapchain;
-        internal Image[] SwapChainImages;
-        internal ImageView[] SwapChainImagesView;
-        internal RenderPass RenderPass;
-        internal Framebuffer[] Framebuffers;
-        internal Fence Fence;
-        internal Semaphore Semaphore;
-        internal Extent2D CurrentExtent;
-        internal Vector2 ClientSize;
-        internal CommandPool CommandPool;
-        internal CommandBuffer[] CommandBuffers;
+        //internal PhysicalDevice PhysicalDevice;
+        internal VkDevice Device;
+        internal VkQueue Queue;
+        internal VkFence Fence;
+        internal VkRenderPass RenderPass;
+        internal VkSwapchain SwapChain;
+
+        //internal SwapchainKhr Swapchain;
+        //internal Image[] SwapChainImages;
+        //internal ImageView[] SwapChainImagesView;
+        //internal Framebuffer[] Framebuffers;
+        //internal Fence Fence;
+        //internal Semaphore Semaphore;
+        //internal Extent2D CurrentExtent;
+        //internal Vector2 ClientSize;
+        internal VkCommandPool CommandPool;
+        internal VkCommandBuffer[] CommandBuffers;
 
         internal Matrix4 MVPMatrix;
 
@@ -52,7 +48,8 @@ namespace MiniEngine.Drivers.Vulkan
         private List<VkMeshRenderer> _meshRenderers = new List<VkMeshRenderer>();
         private Window _window;
         private string _applicationName;
-        private Func<VkInstance, SurfaceKhr> _surfaceCreationCallback;
+        private VkVersion _applicationVersion;
+        private Func<VkInstance, VkSurfaceKhr> _surfaceCreationCallback;
         private DebugReportCallback _debugCallback;
         private bool _initialized = false;
 
@@ -63,9 +60,10 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkRenderer(string applicationName, Func<VkInstance, SurfaceKhr> surfaceCreationCallback = null, DebugReportCallback debugCallback = null)
+        public VkRenderer(string applicationName, VkVersion applicationVersion, Func<VkInstance, VkSurfaceKhr> surfaceCreationCallback = null, DebugReportCallback debugCallback = null)
         {
             _applicationName = applicationName;
+            _applicationVersion = applicationVersion;
             _surfaceCreationCallback = surfaceCreationCallback;
             _debugCallback = debugCallback;
 
@@ -86,61 +84,7 @@ namespace MiniEngine.Drivers.Vulkan
             foreach (VkMeshRenderer vkMeshRenderer in _meshRenderers)
                 vkMeshRenderer.Dispose();
 
-            if (CommandPool != null)
-            {
-                Device.DestroyCommandPool(CommandPool);
-                CommandPool = null;
-            }
-
-            if (Fence != null)
-            {
-                Device.DestroyFence(Fence);
-                Fence = null;
-            }
-
-            if (Semaphore != null)
-            {
-                Device.DestroySemaphore(Semaphore);
-                Semaphore = null;
-            }
-
-            if (Framebuffers != null)
-            {
-                foreach (Framebuffer framebuffer in Framebuffers)
-                    Device.DestroyFramebuffer(framebuffer);
-                Framebuffers = null;
-            }
-
-            if (RenderPass != null)
-            {
-                Device.DestroyRenderPass(RenderPass);
-                RenderPass = null;
-            }
-
-            if (SwapChainImagesView != null)
-            {
-                foreach (ImageView imageView in SwapChainImagesView)
-                    Device.DestroyImageView(imageView);
-                SwapChainImagesView = null;
-            }
-
-            if (Swapchain != null)
-            {
-                Device.DestroySwapchainKHR(Swapchain);
-                Swapchain = null;
-            }
-
-            if (Device != null)
-            {
-                Device.Destroy();
-                Device = null;
-            }
-
-            if (Surface != null)
-            {
-                vk.DestroySurfaceKHR(Surface);
-                Surface = null;
-            }
+            
 
             vk.Dispose();
             vk = null;
@@ -165,36 +109,34 @@ namespace MiniEngine.Drivers.Vulkan
             if (_initialized)
                 throw new Exception("Already initialized.");
 
-            vk = VkBootstrapper.CreateInstance(_applicationName, _debugCallback);
+            vk = new VkInstance(_applicationName, _applicationVersion, (i) =>
+            {
+                //Function to create a Surface...
+                if (_surfaceCreationCallback != null)
+                    return _surfaceCreationCallback(i);
+                else if (_window != null)
+                    return i.CreateSurfaceFromWindow(_window);
+                else
+                    throw new Exception("Impossible to create the surface. No window and no surfaceCreationCallback exist.");
 
-            if (_surfaceCreationCallback != null)
-                Surface = _surfaceCreationCallback(vk);
-            else if (_window != null)
-                Surface = CreateSurfaceFromWindow(_window);
-            else
-                throw new Exception("Impossible to create the surface. No window and no surfaceCreationCallback exist.");
+            }
+            , _debugCallback);
 
 
-            PhysicalDevice = VkBootstrapper.PickPhysicalDevice(vk);
+            VkPhysicalDevice physicalDevice = vk.PickPhysicalDevice();
 
-            var surfaceCapabilities = PhysicalDevice.GetSurfaceCapabilitiesKHR(Surface);
-            CurrentExtent = surfaceCapabilities.CurrentExtent;
-            ClientSize = new Vector2(CurrentExtent.Width, CurrentExtent.Height);
-
-            Device = VkBootstrapper.CreateDevice(PhysicalDevice, Surface);
+            Device = physicalDevice.CreateDevice(vk.Surface);
 
             Queue = Device.GetQueue(0, 0);
-
-            var surfaceFormat = PhysicalDevice.GetSurfaceFormat(Surface, new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear });
-            Swapchain = Device.CreateSwapchain(Surface, surfaceCapabilities, surfaceFormat, PresentModeKhr.Mailbox);
-            SwapChainImages = Device.GetSwapchainImagesKHR(Swapchain);
-            SwapChainImagesView = Device.CreateImageViews(SwapChainImages, surfaceFormat);
-
-            RenderPass = Device.CreateRenderPass(surfaceFormat);
-            Framebuffers = Device.CreateFramebuffers(RenderPass, SwapChainImagesView, CurrentExtent);
-
             Fence = Device.CreateFence();
-            Semaphore = Device.CreateSemaphore();
+
+            SwapChain = Device.CreateSwapchain(new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox);
+
+            RenderPass = Device.CreateRenderPass(SwapChain.SurfaceFormat);
+
+            SwapChain.InitFramebuffers(RenderPass);
+
+            
 
             var createPoolInfo = new CommandPoolCreateInfo { Flags = CommandPoolCreateFlags.ResetCommandBuffer };
             CommandPool = Device.CreateCommandPool(createPoolInfo);
@@ -203,7 +145,7 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 Level = CommandBufferLevel.Primary,
                 CommandPool = CommandPool,
-                CommandBufferCount = (uint)SwapChainImages.Length
+                CommandBufferCount = (uint)SwapChain.SwapChainImages.Length
             };
 
             CommandBuffers = Device.AllocateCommandBuffers(commandBufferAllocateInfo);
@@ -228,7 +170,7 @@ namespace MiniEngine.Drivers.Vulkan
                 Init();
 
             //The camera needs to be the same size has the client...
-            scene.Camera.ClientSize = ClientSize;
+            scene.Camera.ClientSize = Device.ClientSize;
 
             //Update MVP Matrix...
             Matrix4 viewMat2 = scene.Camera.GetMatrix();
@@ -283,13 +225,13 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a buffer on the GPU
         /// </summary>
-        public VkBuffer CreateBufferOnGPU<T>(T[] values, BufferUsageFlags usageFlags)
+        public VkBufferWrapper CreateBufferOnGPU<T>(T[] values, BufferUsageFlags usageFlags)
         {
             //Create a stating buffer available from the CPU... so we can copy values into it...
-            using (VkBuffer stagingBuffer = Device.CreateBuffer(values, BufferUsageFlags.TransferSrc, MemoryPropertyFlags.HostVisible | MemoryPropertyFlags.HostCoherent))
+            using (VkBufferWrapper stagingBuffer = Device.CreateBuffer(values, BufferUsageFlags.TransferSrc, MemoryPropertyFlags.HostVisible | MemoryPropertyFlags.HostCoherent))
             {
                 //Create a buffer on the GPU..
-                VkBuffer gpuBuffer = Device.CreateBuffer(stagingBuffer.Size, BufferUsageFlags.TransferDst | usageFlags, MemoryPropertyFlags.DeviceLocal);
+                VkBufferWrapper gpuBuffer = Device.CreateBuffer(stagingBuffer.Size, BufferUsageFlags.TransferDst | usageFlags, MemoryPropertyFlags.DeviceLocal);
 
                 //Copy the data to the GPU...
                 CopyBuffer(stagingBuffer, gpuBuffer);
@@ -303,9 +245,8 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Copy a buffer
         /// </summary>
-        public void CopyBuffer(VkBuffer bufferSource, VkBuffer bufferDest)
+        public void CopyBuffer(VkBufferWrapper bufferSource, VkBufferWrapper bufferDest)
         {
-
             var commandBuffer = Device.AllocateCommandBuffer(CommandPool);
 
             commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
@@ -336,21 +277,19 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void RenderFrame(Scene scene)
         {
-            uint nextImageIndex = Device.AcquireNextImageKHR(Swapchain, ulong.MaxValue, Semaphore);
-            Device.ResetFence(Fence);
+            uint nextImageIndex = SwapChain.AcquireNextImage();
 
 
-
-            CommandBuffer commandBuffer = CommandBuffers[nextImageIndex];
+            VkCommandBuffer commandBuffer = CommandBuffers[nextImageIndex];
 
             commandBuffer.Begin();
             var renderPassBeginInfo = new RenderPassBeginInfo
             {
-                Framebuffer = Framebuffers[nextImageIndex],
+                Framebuffer = SwapChain.Framebuffers[nextImageIndex],
                 RenderPass = RenderPass,
                 //ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { DateTime.Now.Millisecond % 100f / 100f, 0.87f, 0.75f, 1.0f }) } },
                 ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { 0f, 0.87f, 0.75f, 1.0f }) } },
-                RenderArea = new Rect2D { Extent = CurrentExtent }
+                RenderArea = new Rect2D { Extent = Device.CurrentExtent }
             };
             commandBuffer.CmdBeginRenderPass(renderPassBeginInfo, SubpassContents.Inline);
 
@@ -364,40 +303,23 @@ namespace MiniEngine.Drivers.Vulkan
             commandBuffer.CmdEndRenderPass();
             commandBuffer.End();
 
+
+
+            Device.ResetFence(Fence);
             var submitInfo = new SubmitInfo
             {
-                WaitSemaphores = new Semaphore[] { Semaphore },
+                WaitSemaphores = new VkSemaphore[] { SwapChain.Semaphore },
                 WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
-                CommandBuffers = new CommandBuffer[] { commandBuffer }
+                CommandBuffers = new VkCommandBuffer[] { commandBuffer }
             };
             Queue.Submit(submitInfo, Fence);
+            Queue.WaitIdle();
             Device.WaitForFence(Fence, true, 100000000);
-            var presentInfo = new PresentInfoKhr
-            {
-                Swapchains = new SwapchainKhr[] { Swapchain },
-                ImageIndices = new uint[] { nextImageIndex }
-            };
-            Queue.PresentKHR(presentInfo);
+
+            SwapChain.Present(nextImageIndex);
         }
 
-
-        /// <summary>
-        /// Create a surface
-        /// </summary>
-        private SurfaceKhr CreateSurfaceFromWindow(Window window)
-        {
-            unsafe
-            {
-                SurfaceKhr surface = new SurfaceKhr();
-
-                fixed (ulong* ptr = &surface.m)
-                {
-                    _window.CreateSurface(vk.m, (IntPtr)ptr);
-                }
-                return surface;
-            }
-        }
-
+        
         #endregion
 
     }

@@ -1,259 +1,363 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using MiniEngine.Drivers.Vulkan.Interop;
 
 namespace MiniEngine.Drivers.Vulkan
 {
-	public partial class VkInstance : IDisposable
-	{
-		NativeMethods.vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT;
-		NativeMethods.vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT;
-		NativeMethods.vkDebugReportMessageEXT vkDebugReportMessageEXT;
+    public partial class VkInstance : IMarshalling, IDisposable
+    {
+        /// <summary>
+        /// Physical device
+        /// </summary>
+        public VkPhysicalDevice PhysicalDevice;
 
-		Delegate GetMethod (string name, Type type)
-		{
-			var funcPtr = GetProcAddr (name);
+        /// <summary>
+        /// Surface where to render
+        /// </summary>
+        public VkSurfaceKhr Surface;
 
-			if (funcPtr == IntPtr.Zero)
-				return null;
 
-			return Marshal.GetDelegateForFunctionPointer (funcPtr, type);
-		}
+        internal IntPtr m;
 
-		void InitializeFunctions ()
-		{
+        private NativeMethods.vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT;
+        private NativeMethods.vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT;
+        private NativeMethods.vkDebugReportMessageEXT vkDebugReportMessageEXT;
 
-			vkCreateDebugReportCallbackEXT = (NativeMethods.vkCreateDebugReportCallbackEXT)GetMethod ("vkCreateDebugReportCallbackEXT", typeof (NativeMethods.vkCreateDebugReportCallbackEXT));
-			vkDestroyDebugReportCallbackEXT = (NativeMethods.vkDestroyDebugReportCallbackEXT)GetMethod ("vkDestroyDebugReportCallbackEXT", typeof (NativeMethods.vkDestroyDebugReportCallbackEXT));
-			vkDebugReportMessageEXT = (NativeMethods.vkDebugReportMessageEXT)GetMethod ("vkDebugReportMessageEXT", typeof (NativeMethods.vkDebugReportMessageEXT));
-		}
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public VkInstance(string applicationName, VkVersion applicationVersion, Func<VkInstance, VkSurfaceKhr> surfaceCreationCallback, DebugReportCallback debugCallback = null)
+        {
 
-		public VkInstance (InstanceCreateInfo CreateInfo, AllocationCallbacks Allocator = null)
-		{
-			Result result;
+            var layerProperties = VkCommands.EnumerateInstanceLayerProperties();
 
-			unsafe {
-				fixed (IntPtr* ptrInstance = &m) {
-					result = Interop.NativeMethods.vkCreateInstance (CreateInfo.m, Allocator != null ? Allocator.m : null, ptrInstance);
-				}
-			}
+            string[] layersToEnable = new string[0];
+            if (debugCallback != null)
+            {
+                if (!layerProperties.Any(l => l.LayerName == "VK_LAYER_KHRONOS_validation"))
+                    throw new NotSupportedException("Layer 'VK_LAYER_KHRONOS_validation' not supported, impossible to enable debug mode.");
 
-			if (result != Result.Success)
-				throw new ResultException (result);
+                layersToEnable = new[] { "VK_LAYER_KHRONOS_validation" };
+            };
 
-			InitializeFunctions ();
-		}
 
-		public VkInstance () : this (new InstanceCreateInfo ())
-		{
-		}
+            CreateInstance(new InstanceCreateInfo
+            {
+                EnabledExtensionNames = new string[] { "VK_KHR_surface", "VK_KHR_win32_surface", "VK_EXT_debug_report" },
+                EnabledLayerNames = layersToEnable,
+                ApplicationInfo = new ApplicationInfo
+                {
+                    ApplicationName = applicationName,
+                    ApplicationVersion = applicationVersion.ToUInt(),
+                    EngineName = "MiniEngine",
+                    EngineVersion = MiniEngine.Drivers.Vulkan.VkVersion.ToUInt(1, 0, 0),
+                    ApiVersion = MiniEngine.Drivers.Vulkan.VkVersion.ToUInt(1, 2, 0)
+                }
+            });
 
-		public void Dispose ()
-		{
-			if (debugCallback != null && vkDestroyDebugReportCallbackEXT != null) {
-				DestroyDebugReportCallbackEXT (debugCallback);
-				debugCallback = null;
-				debugCallbackFuncInternal = null;
-				debugCallbackDelegate = null;
+            if (debugCallback != null)
+                EnableDebug(debugCallback);
+
+            //Surface creation...
+            Surface = surfaceCreationCallback(this);
+        }
+
+
+
+        /// <summary>
+        /// Create a surface
+        /// </summary>
+        public VkSurfaceKhr CreateSurfaceFromWindow(Window window)
+        {
+            unsafe
+            {
+                VkSurfaceKhr surface = new VkSurfaceKhr();
+
+                fixed (ulong* ptr = &surface.m)
+                {
+                    window.CreateSurface(this.m, (IntPtr)ptr);
+                }
+                return surface;
             }
-			if (m != IntPtr.Zero) {
-				Destroy ();
-				m = IntPtr.Zero;
-			}
-		}
+        }
+
+        /// <summary>
+        /// Get the right Physical device
+        /// </summary>
+        public VkPhysicalDevice PickPhysicalDevice()
+        {
+            //TODO: Check the physical device suitable for our project
+            PhysicalDevice = EnumeratePhysicalDevices()[0];
+
+            return PhysicalDevice;
+        }
+
+        /// <summary>
+        /// Dispose high level objects
+        /// </summary>
+        private void DisposeHighLevelObjects()
+        {
+            if (PhysicalDevice != null)
+            {
+                PhysicalDevice.Dispose();
+                PhysicalDevice = null;
+            }
 
 
-        DebugReportCallbackExt debugCallback;
-		/// <summary>
-		/// Important the create a variable so the garbage collector will not destroy it
-		/// </summary>
+            if (Surface != null)
+            {
+                DestroySurfaceKHR(Surface);
+                Surface = null;
+            }
+        }
+
+        private Delegate GetMethod(string name, Type type)
+        {
+            var funcPtr = GetProcAddr(name);
+
+            if (funcPtr == IntPtr.Zero)
+                return null;
+
+            return Marshal.GetDelegateForFunctionPointer(funcPtr, type);
+        }
+
+        private void InitializeFunctions()
+        {
+
+            vkCreateDebugReportCallbackEXT = (NativeMethods.vkCreateDebugReportCallbackEXT)GetMethod("vkCreateDebugReportCallbackEXT", typeof(NativeMethods.vkCreateDebugReportCallbackEXT));
+            vkDestroyDebugReportCallbackEXT = (NativeMethods.vkDestroyDebugReportCallbackEXT)GetMethod("vkDestroyDebugReportCallbackEXT", typeof(NativeMethods.vkDestroyDebugReportCallbackEXT));
+            vkDebugReportMessageEXT = (NativeMethods.vkDebugReportMessageEXT)GetMethod("vkDebugReportMessageEXT", typeof(NativeMethods.vkDebugReportMessageEXT));
+        }
+
+        private void CreateInstance(InstanceCreateInfo CreateInfo, AllocationCallbacks Allocator = null)
+        {
+            Result result;
+
+            unsafe
+            {
+                fixed (IntPtr* ptrInstance = &m)
+                {
+                    result = Interop.NativeMethods.vkCreateInstance(CreateInfo.m, Allocator != null ? Allocator.m : null, ptrInstance);
+                }
+            }
+
+            if (result != Result.Success)
+                throw new ResultException(result);
+
+            InitializeFunctions();
+        }
+
+
+        public void Dispose()
+        {
+            DisposeHighLevelObjects();
+
+            if (debugCallback != null && vkDestroyDebugReportCallbackEXT != null)
+            {
+                DestroyDebugReportCallbackEXT(debugCallback);
+                debugCallback = null;
+                debugCallbackFuncInternal = null;
+                debugCallbackDelegate = null;
+            }
+            if (m != IntPtr.Zero)
+            {
+                Destroy();
+                m = IntPtr.Zero;
+            }
+        }
+
+
+        VkDebugReportCallbackExt debugCallback;
+        /// <summary>
+        /// Important the create a variable so the garbage collector will not destroy it
+        /// </summary>
         DebugReportCallbackInternal debugCallbackFuncInternal;
         DebugReportCallback debugCallbackDelegate;
 
         private delegate Bool32 DebugReportCallbackInternal(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, ulong objectHandle, IntPtr location, int messageCode, IntPtr layerPrefix, IntPtr message, IntPtr userData);
 
-		public void EnableDebug(DebugReportCallback callback, DebugReportFlagsExt flags = DebugReportFlagsExt.Debug | DebugReportFlagsExt.Error | DebugReportFlagsExt.Information | DebugReportFlagsExt.PerformanceWarning | DebugReportFlagsExt.Warning)
-		{
-			if (vkCreateDebugReportCallbackEXT == null)
-				throw new InvalidOperationException ("vkCreateDebugReportCallbackEXT is not available, possibly you might be missing VK_EXT_debug_report extension. Try to enable it when creating the Instance.");
+        public void EnableDebug(DebugReportCallback callback, DebugReportFlagsExt flags = DebugReportFlagsExt.Debug | DebugReportFlagsExt.Error | DebugReportFlagsExt.Information | DebugReportFlagsExt.PerformanceWarning | DebugReportFlagsExt.Warning)
+        {
+            if (vkCreateDebugReportCallbackEXT == null)
+                throw new InvalidOperationException("vkCreateDebugReportCallbackEXT is not available, possibly you might be missing VK_EXT_debug_report extension. Try to enable it when creating the Instance.");
 
-			debugCallbackFuncInternal = DebugCallbackInternal;
-			debugCallbackDelegate = callback;
+            debugCallbackFuncInternal = DebugCallbackInternal;
+            debugCallbackDelegate = callback;
 
-            var debugCreateInfo = new DebugReportCallbackCreateInfoExt () {
-				Flags = flags,
-				PfnCallback = Marshal.GetFunctionPointerForDelegate (debugCallbackFuncInternal)
-			};
+            var debugCreateInfo = new DebugReportCallbackCreateInfoExt()
+            {
+                Flags = flags,
+                PfnCallback = Marshal.GetFunctionPointerForDelegate(debugCallbackFuncInternal)
+            };
 
-			if (debugCallback != null)
-				DestroyDebugReportCallbackEXT (debugCallback);
-			debugCallback = CreateDebugReportCallbackEXT (debugCreateInfo);
-		}
+            if (debugCallback != null)
+                DestroyDebugReportCallbackEXT(debugCallback);
+            debugCallback = CreateDebugReportCallbackEXT(debugCreateInfo);
+        }
 
 
         private Bool32 DebugCallbackInternal(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, ulong objectHandle, IntPtr location, int messageCode, IntPtr layerPrefix, IntPtr message, IntPtr userData)
         {
-			string messageStr = Marshal.PtrToStringAnsi(message);
+            string messageStr = Marshal.PtrToStringAnsi(message);
             return debugCallbackDelegate(flags, objectType, messageCode, messageStr);
+        }
+   
+        IntPtr IMarshalling.Handle
+        {
+            get
+            {
+                return m;
+            }
+        }
+
+        public void Destroy(AllocationCallbacks pAllocator = null)
+        {
+            unsafe
+            {
+                Interop.NativeMethods.vkDestroyInstance(this.m, pAllocator != null ? pAllocator.m : null);
+            }
+        }
+
+        public VkPhysicalDevice[] EnumeratePhysicalDevices()
+        {
+            Result result;
+            unsafe
+            {
+                UInt32 pPhysicalDeviceCount;
+                result = Interop.NativeMethods.vkEnumeratePhysicalDevices(this.m, &pPhysicalDeviceCount, null);
+                if (result != Result.Success)
+                    throw new ResultException(result);
+                if (pPhysicalDeviceCount <= 0)
+                    return null;
+
+                int size = Marshal.SizeOf(typeof(IntPtr));
+                var refpPhysicalDevices = new VkNativeReference((int)(size * pPhysicalDeviceCount));
+                var ptrpPhysicalDevices = refpPhysicalDevices.Handle;
+                result = Interop.NativeMethods.vkEnumeratePhysicalDevices(this.m, &pPhysicalDeviceCount, (IntPtr*)ptrpPhysicalDevices);
+                if (result != Result.Success)
+                    throw new ResultException(result);
+
+                if (pPhysicalDeviceCount <= 0)
+                    return null;
+                var arr = new VkPhysicalDevice[pPhysicalDeviceCount];
+                for (int i = 0; i < pPhysicalDeviceCount; i++)
+                {
+                    arr[i] = new VkPhysicalDevice();
+                    arr[i].m = ((IntPtr*)ptrpPhysicalDevices)[i];
+                }
+
+                return arr;
+            }
+        }
+
+        public IntPtr GetProcAddr(string pName)
+        {
+            unsafe
+            {
+                return Interop.NativeMethods.vkGetInstanceProcAddr(this.m, pName);
+            }
+        }
+
+        public VkSurfaceKhr CreateDisplayPlaneSurfaceKHR(DisplaySurfaceCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
+        {
+            Result result;
+            VkSurfaceKhr pSurface;
+            unsafe
+            {
+                pSurface = new VkSurfaceKhr();
+
+                fixed (UInt64* ptrpSurface = &pSurface.m)
+                {
+                    result = Interop.NativeMethods.vkCreateDisplayPlaneSurfaceKHR(this.m, pCreateInfo != null ? pCreateInfo.m : (Interop.DisplaySurfaceCreateInfoKhr*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
+                }
+                if (result != Result.Success)
+                    throw new ResultException(result);
+
+                return pSurface;
+            }
+        }
+
+        public void DestroySurfaceKHR(VkSurfaceKhr surface = null, AllocationCallbacks pAllocator = null)
+        {
+            unsafe
+            {
+                Interop.NativeMethods.vkDestroySurfaceKHR(this.m, surface != null ? surface.m : default(UInt64), pAllocator != null ? pAllocator.m : null);
+            }
+        }
+
+        public VkSurfaceKhr CreateViSurfaceNN(ViSurfaceCreateInfoNn pCreateInfo, AllocationCallbacks pAllocator = null)
+        {
+            Result result;
+            VkSurfaceKhr pSurface;
+            unsafe
+            {
+                pSurface = new VkSurfaceKhr();
+
+                fixed (UInt64* ptrpSurface = &pSurface.m)
+                {
+                    result = Interop.NativeMethods.vkCreateViSurfaceNN(this.m, pCreateInfo != null ? pCreateInfo.m : (Interop.ViSurfaceCreateInfoNn*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
+                }
+                if (result != Result.Success)
+                    throw new ResultException(result);
+
+                return pSurface;
+            }
+        }
+
+        public VkDebugReportCallbackExt CreateDebugReportCallbackEXT(DebugReportCallbackCreateInfoExt pCreateInfo, AllocationCallbacks pAllocator = null)
+        {
+            Result result;
+            VkDebugReportCallbackExt pCallback;
+            unsafe
+            {
+                pCallback = new VkDebugReportCallbackExt();
+
+                fixed (UInt64* ptrpCallback = &pCallback.m)
+                {
+                    result = vkCreateDebugReportCallbackEXT(this.m, pCreateInfo != null ? pCreateInfo.m : (Interop.DebugReportCallbackCreateInfoExt*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpCallback);
+                }
+                if (result != Result.Success)
+                    throw new ResultException(result);
+
+                return pCallback;
+            }
+        }
+
+        public void DestroyDebugReportCallbackEXT(VkDebugReportCallbackExt callback, AllocationCallbacks pAllocator = null)
+        {
+            unsafe
+            {
+                vkDestroyDebugReportCallbackEXT(this.m, callback != null ? callback.m : default(UInt64), pAllocator != null ? pAllocator.m : null);
+            }
+        }
+
+        public void DebugReportMessageEXT(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, UInt64 @object, UIntPtr location, Int32 messageCode, string pLayerPrefix, string pMessage)
+        {
+            unsafe
+            {
+                vkDebugReportMessageEXT(this.m, flags, objectType, @object, location, messageCode, pLayerPrefix, pMessage);
+            }
+        }
+
+        public VkSurfaceKhr CreateMacOSSurfaceMVK(MacOSSurfaceCreateInfoMvk pCreateInfo, AllocationCallbacks pAllocator = null)
+        {
+            Result result;
+            VkSurfaceKhr pSurface;
+            unsafe
+            {
+                pSurface = new VkSurfaceKhr();
+
+                fixed (UInt64* ptrpSurface = &pSurface.m)
+                {
+                    result = Interop.NativeMethods.vkCreateMacOSSurfaceMVK(this.m, pCreateInfo != null ? pCreateInfo.m : (Interop.MacOSSurfaceCreateInfoMvk*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
+                }
+                if (result != Result.Success)
+                    throw new ResultException(result);
+
+                return pSurface;
+            }
         }
     }
 
-	unsafe public partial class ShaderModuleCreateInfo
-	{
-		public byte [] CodeBytes {
-			set {
-				/* todo free allocated memory when already set */
-				if (value == null) {
-					m->CodeSize = UIntPtr.Zero;
-					m->Code = IntPtr.Zero;
-					return;
-				}
-				m->CodeSize = (UIntPtr)value.Length;
-				m->Code = Marshal.AllocHGlobal (value.Length);
-				Marshal.Copy (value, 0, m->Code, value.Length);
-			}
-		}
-	}
-
-	public partial class Device
-	{
-		public PhysicalDevice PhysicalDevice;
-
-		public ShaderModule CreateShaderModule (byte [] shaderCode, uint flags = 0, AllocationCallbacks allocator = null)
-		{
-			ShaderModuleCreateInfo createInfo = new ShaderModuleCreateInfo {
-				CodeBytes = shaderCode,
-				Flags = flags
-			};
-			return CreateShaderModule (createInfo, allocator);
-		}
-	}
-
-	unsafe public partial class ClearColorValue
-	{
-		public ClearColorValue (float [] floatArray) : this ()
-		{
-			Float32 = floatArray;
-		}
-
-		public ClearColorValue (int [] intArray) : this ()
-		{
-			Int32 = intArray;
-		}
-
-		public ClearColorValue (uint [] uintArray) : this ()
-		{
-			Uint32 = uintArray;
-		}
-	}
-
-	public interface IMarshalling
-	{
-		IntPtr Handle { get; }
-	}
-
-	public interface INonDispatchableHandleMarshalling
-	{
-		UInt64 Handle { get; }
-	}
-
-	internal class NativeReference : IDisposable
-	{
-		internal IntPtr Handle { get; private set; }
-
-		internal NativeReference (int size, bool zero = false)
-		{
-			Handle = Marshal.AllocHGlobal (size);
-			if (NativeMemoryDebug.Enabled) {
-				lock (NativeMemoryDebug.Allocations) {
-					NativeMemoryDebug.Allocations [Handle] = size;
-					NativeMemoryDebug.AllocatedSize += size;
-				}
-			}
-			if (!zero)
-				return;
-			unsafe
-			{
-				byte* bptr = (byte*)Handle;
-				for (int i = 0; i < size; i++)
-					bptr [i] = 0;
-			}
-		}
-
-		public void Dispose ()
-		{
-			if (Handle != IntPtr.Zero) {
-				if (NativeMemoryDebug.Enabled) {
-					lock (NativeMemoryDebug.Allocations) {
-						NativeMemoryDebug.AllocatedSize -= NativeMemoryDebug.Allocations [Handle];
-						if (NativeMemoryDebug.Allocations.ContainsKey (Handle))
-							NativeMemoryDebug.Allocations.Remove (Handle);
-						else
-							NativeMemoryDebug.Report ("unknown handle found: {0}", Handle);
-					}
-				}
-				Marshal.FreeHGlobal (Handle);
-			}
-			Handle = IntPtr.Zero;
-		}
-
-		~NativeReference ()
-		{
-			Dispose ();
-		}
-	}
-
-	internal class NativePointer
-	{
-		internal NativeReference Reference { get; private set; }
-		internal IntPtr Handle { get; private set; }
-
-		internal NativePointer (NativeReference reference, IntPtr pointer)
-		{
-			Reference = reference;
-			Handle = pointer;
-		}
-
-		internal NativePointer (NativeReference reference)
-		{
-			Reference = reference;
-			Handle = reference.Handle;
-		}
-
-		internal void Release ()
-		{
-			Reference = null;
-			Handle = IntPtr.Zero;
-		}
-	}
-
-	public class MarshalledObject : IDisposable, IMarshalling
-	{
-		internal NativePointer native;
-
-		IntPtr IMarshalling.Handle {
-			get {
-				return native.Handle;
-			}
-		}
-
-		public void Dispose ()
-		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		public virtual void Dispose (bool disposing)
-		{
-			if (!disposing)
-				return;
-			native.Release ();
-			native = null;
-		}
-
-		~MarshalledObject ()
-		{
-			Dispose (false);
-		}
-	}
 }

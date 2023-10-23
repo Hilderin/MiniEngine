@@ -1,11 +1,12 @@
-﻿using MiniEngine.Shaders;
+﻿using MiniEngine.Drivers.Vulkan;
+using MiniEngine.Shaders;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static MiniEngine.Mesh;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Renderer for the meshes
@@ -59,7 +60,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Render the mesh
         /// </summary>
-        public void PopulateCommandBuffers(CommandBuffer commandBuffer)
+        public void PopulateCommandBuffers(VkCommandBuffer commandBuffer)
         {
 
             Matrix4 mvp = _vi.MVPMatrix * _mesh.GetMatrix();
@@ -157,7 +158,7 @@ namespace MiniEngine.Drivers.Vulkan
             for (int i = 0; i < _subMeshes.Count; i++)
             {
                 _vulkanMeshDatas[i].ShaderBinder = ShaderCompiler.BuildBinder(_materials[_subMeshes[i].MaterialIndex].Shader);
-                _vulkanMeshDatas[i].Pipeline = new VkPipeline(_vi, _vulkanMeshDatas[i].ShaderBinder);
+                _vulkanMeshDatas[i].Pipeline = new VkPipelineWrapper(_vi.Device, _vi.RenderPass, _vulkanMeshDatas[i].ShaderBinder);
             }
 
         }
@@ -197,10 +198,10 @@ namespace MiniEngine.Drivers.Vulkan
 
     public struct VulkanMeshData
     {
-        public VkBuffer vertexBuffer;
-        public VkBuffer indexBuffer;
+        public VkBufferWrapper vertexBuffer;
+        public VkBufferWrapper indexBuffer;
         public int indexBufferLength;
-        public VkPipeline Pipeline;
+        public VkPipelineWrapper Pipeline;
         public ShaderBinder ShaderBinder;
         //public CommandBuffer[] CommandBuffers;
     }

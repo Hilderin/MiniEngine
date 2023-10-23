@@ -1,0 +1,130 @@
+﻿using System;
+using System.Runtime.InteropServices;
+
+namespace MiniEngine.Drivers.Vulkan
+{
+    /// <summary>
+    /// Vukan Queue
+    /// </summary>
+    public partial class VkQueue : IMarshalling
+    {
+        internal VkQueue() { }
+
+        internal IntPtr m;
+
+        IntPtr IMarshalling.Handle
+        {
+            get
+            {
+                return m;
+            }
+        }
+
+        public void Submit(VkCommandBuffer commandBuffer, VkFence fence = null)
+        {
+            SubmitInfo submitInfo = new()
+            {
+                CommandBufferCount = 1,
+                CommandBuffers = new VkCommandBuffer[] { commandBuffer }
+            };
+            Submit(submitInfo, fence);
+        }
+
+
+        public void Submit(SubmitInfo[] pSubmits, VkFence fence = null)
+        {
+            Result result;
+            unsafe
+            {
+                var arraypSubmits = pSubmits == null ? IntPtr.Zero : Marshal.AllocHGlobal(pSubmits.Length * sizeof(Interop.SubmitInfo));
+                var lenpSubmits = pSubmits == null ? 0 : pSubmits.Length;
+                if (pSubmits != null)
+                    for (int i = 0; i < pSubmits.Length; i++)
+                        ((Interop.SubmitInfo*)arraypSubmits)[i] = *(pSubmits[i].m);
+                result = Interop.NativeMethods.vkQueueSubmit(this.m, (uint)lenpSubmits, (Interop.SubmitInfo*)arraypSubmits, fence != null ? fence.m : default(UInt64));
+                Marshal.FreeHGlobal(arraypSubmits);
+                if (result != Result.Success)
+                    throw new ResultException(result);
+            }
+        }
+
+        public void Submit(SubmitInfo pSubmit, VkFence fence = null)
+        {
+            Result result;
+            unsafe
+            {
+                result = Interop.NativeMethods.vkQueueSubmit(this.m, (UInt32)(pSubmit != null ? 1 : 0), pSubmit != null ? pSubmit.m : (Interop.SubmitInfo*)default(IntPtr), fence != null ? fence.m : default(UInt64));
+                if (result != Result.Success)
+                    throw new ResultException(result);
+            }
+        }
+
+        public void WaitIdle()
+        {
+            Result result;
+            unsafe
+            {
+                result = Interop.NativeMethods.vkQueueWaitIdle(this.m);
+                if (result != Result.Success)
+                    throw new ResultException(result);
+            }
+        }
+
+        public void BindSparse(BindSparseInfo[] pBindInfo, VkFence fence = null)
+        {
+            Result result;
+            unsafe
+            {
+                var arraypBindInfo = pBindInfo == null ? IntPtr.Zero : Marshal.AllocHGlobal(pBindInfo.Length * sizeof(Interop.BindSparseInfo));
+                var lenpBindInfo = pBindInfo == null ? 0 : pBindInfo.Length;
+                if (pBindInfo != null)
+                    for (int i = 0; i < pBindInfo.Length; i++)
+                        ((Interop.BindSparseInfo*)arraypBindInfo)[i] = *(pBindInfo[i].m);
+                result = Interop.NativeMethods.vkQueueBindSparse(this.m, (uint)lenpBindInfo, (Interop.BindSparseInfo*)arraypBindInfo, fence != null ? fence.m : default(UInt64));
+                Marshal.FreeHGlobal(arraypBindInfo);
+                if (result != Result.Success)
+                    throw new ResultException(result);
+            }
+        }
+
+        public void BindSparse(BindSparseInfo pBindInfo, VkFence fence = null)
+        {
+            Result result;
+            unsafe
+            {
+                result = Interop.NativeMethods.vkQueueBindSparse(this.m, (UInt32)(pBindInfo != null ? 1 : 0), pBindInfo != null ? pBindInfo.m : (Interop.BindSparseInfo*)default(IntPtr), fence != null ? fence.m : default(UInt64));
+                if (result != Result.Success)
+                    throw new ResultException(result);
+            }
+        }
+
+        public void PresentKHR(PresentInfoKhr pPresentInfo)
+        {
+            Result result;
+            unsafe
+            {
+                result = Interop.NativeMethods.vkQueuePresentKHR(this.m, pPresentInfo != null ? pPresentInfo.m : (Interop.PresentInfoKhr*)default(IntPtr));
+                if (result != Result.Success)
+                    throw new ResultException(result);
+            }
+        }
+
+        public int SignalReleaseImageANDROID(UInt32 waitSemaphoreCount, VkSemaphore pWaitSemaphores, VkImage image)
+        {
+            Result result;
+            int pNativeFenceFd;
+            unsafe
+            {
+                fixed (UInt64* ptrpWaitSemaphores = &pWaitSemaphores.m)
+                {
+                    pNativeFenceFd = new int();
+                    result = Interop.NativeMethods.vkQueueSignalReleaseImageANDROID(this.m, waitSemaphoreCount, ptrpWaitSemaphores, image != null ? image.m : default(UInt64), &pNativeFenceFd);
+                }
+                if (result != Result.Success)
+                    throw new ResultException(result);
+
+                return pNativeFenceFd;
+            }
+        }
+    }
+}

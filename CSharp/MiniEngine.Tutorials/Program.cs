@@ -1,7 +1,4 @@
-
-
 using MiniEngine.Rendering.OpenGL;
-using MiniEngine.Rendering.Vulkan;
 using System;
 using System.Windows.Forms;
 

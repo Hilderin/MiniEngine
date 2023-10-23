@@ -1,4 +1,5 @@
 using MiniEngine.Drivers.Vulkan;
+using MiniEngine.Rendering.Vulkan;
 using System.Diagnostics;
 
 namespace MiniEngine.Tutorials.Drivers.Vulkan
@@ -30,7 +31,7 @@ namespace MiniEngine.Tutorials.Drivers.Vulkan
                 //vk.MainLoop();
                 //vk.Dispose();
 
-                using (Context context = new Context(new VkRenderer("Test", null, DebugCallback)))
+                using (Context context = new Context(new VkRenderer("Test", new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), null, DebugCallback)))
                 //using (Context context = new Context(new VulkanRenderer("MiniEngine Tutorial", true)))
                 {
                     var t = new Tutorial_Cube_Vulkan();
