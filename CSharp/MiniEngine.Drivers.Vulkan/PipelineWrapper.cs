@@ -12,20 +12,20 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Contains a pipeline
     /// </summary>
-    public class VkPipelineWrapper : IDisposable
+    public class PipelineWrapper : IDisposable
     {
-        private VkDevice _device;
+        private Device _device;
         private ShaderBinder _shaderBinder;
-        private VkRenderPass _renderPass;
+        private RenderPass _renderPass;
 
-        private VkCommandBuffer[] commandBuffers;
-        private VkDescriptorSet[] descriptorSets;
-        private VkDescriptorSetLayout descriptorSetLayout;
-        public VkPipelineLayout pipelineLayout;
-        private VkBuffer uniformBuffer;
-        public VkPipeline pipeline;
+        private CommandBuffer[] commandBuffers;
+        private DescriptorSet[] descriptorSets;
+        private DescriptorSetLayout descriptorSetLayout;
+        public PipelineLayout pipelineLayout;
+        private Buffer uniformBuffer;
+        public Pipeline pipeline;
 
-        public VkPipelineWrapper(VkDevice device, VkRenderPass renderPass, ShaderBinder shaderBinder)
+        public PipelineWrapper(Device device, RenderPass renderPass, ShaderBinder shaderBinder)
         {
             _device = device;
             _shaderBinder = shaderBinder;
@@ -71,7 +71,7 @@ namespace MiniEngine.Drivers.Vulkan
         public void Build()
         {
             //Descriptor set layout creation from shader...
-            descriptorSetLayout = VkShaderHelper.CreateDescriptorSetLayout(_device, _shaderBinder);
+            descriptorSetLayout = ShaderHelper.CreateDescriptorSetLayout(_device, _shaderBinder);
 
             PushConstantRange[] constantRanges = {
                 new() {
@@ -84,8 +84,8 @@ namespace MiniEngine.Drivers.Vulkan
             pipelineLayout = _device.CreatePipelineLayout(descriptorSetLayout, constantRanges);
 
 
-            var vertShaderCode = VkShaderHelper.Compile(_shaderBinder.Shader.VertexCode, ShaderStageFlags.Vertex);
-            var fragShaderCode = VkShaderHelper.Compile(_shaderBinder.Shader.FragmentCode, ShaderStageFlags.Fragment);
+            var vertShaderCode = ShaderHelper.Compile(_shaderBinder.Shader.VertexCode, ShaderStageFlags.Vertex);
+            var fragShaderCode = ShaderHelper.Compile(_shaderBinder.Shader.FragmentCode, ShaderStageFlags.Fragment);
 
 
             var vertexShaderModule = _device.CreateShaderModule(vertShaderCode);
@@ -233,7 +233,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Implicit conversion to a Pipeline
         /// </summary>
-        public static implicit operator VkPipeline(VkPipelineWrapper pipeline) { return pipeline.pipeline; }
+        public static implicit operator Pipeline(PipelineWrapper pipeline) { return pipeline.pipeline; }
 
     }
 }

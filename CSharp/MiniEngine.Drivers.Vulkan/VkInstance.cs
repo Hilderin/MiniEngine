@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Runtime.InteropServices;
 using MiniEngine.Drivers.Vulkan.Interop;
+using MiniEngine.Drivers.Vulkan.Windows;
 
 namespace MiniEngine.Drivers.Vulkan
 {
@@ -10,12 +11,17 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Physical device
         /// </summary>
-        public VkPhysicalDevice PhysicalDevice;
+        public PhysicalDevice PhysicalDevice;
 
         /// <summary>
         /// Surface where to render
         /// </summary>
-        public VkSurfaceKhr Surface;
+        public SurfaceKhr Surface;
+
+        /// <summary>
+        /// Device used
+        /// </summary>
+        public Device Device;
 
 
         internal IntPtr m;
@@ -27,7 +33,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkInstance(string applicationName, VkVersion applicationVersion, Func<VkInstance, VkSurfaceKhr> surfaceCreationCallback, DebugReportCallback debugCallback = null)
+        public VkInstance(string applicationName, VkVersion applicationVersion, Func<VkInstance, SurfaceKhr> surfaceCreationCallback, DebugReportCallback debugCallback = null)
         {
 
             var layerProperties = VkCommands.EnumerateInstanceLayerProperties();
@@ -61,6 +67,12 @@ namespace MiniEngine.Drivers.Vulkan
 
             //Surface creation...
             Surface = surfaceCreationCallback(this);
+
+            //Physical device...
+            PhysicalDevice = PickPhysicalDevice();
+
+            //And we can create a device...
+            Device = PhysicalDevice.CreateDevice(Surface);
         }
 
 
@@ -68,11 +80,11 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a surface
         /// </summary>
-        public VkSurfaceKhr CreateSurfaceFromWindow(Window window)
+        public SurfaceKhr CreateSurfaceFromWindow(Window window)
         {
             unsafe
             {
-                VkSurfaceKhr surface = new VkSurfaceKhr();
+                SurfaceKhr surface = new SurfaceKhr();
 
                 fixed (ulong* ptr = &surface.m)
                 {
@@ -85,7 +97,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Get the right Physical device
         /// </summary>
-        public VkPhysicalDevice PickPhysicalDevice()
+        public PhysicalDevice PickPhysicalDevice()
         {
             //TODO: Check the physical device suitable for our project
             PhysicalDevice = EnumeratePhysicalDevices()[0];
@@ -168,7 +180,7 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-        VkDebugReportCallbackExt debugCallback;
+        DebugReportCallbackExt debugCallback;
         /// <summary>
         /// Important the create a variable so the garbage collector will not destroy it
         /// </summary>
@@ -219,7 +231,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkPhysicalDevice[] EnumeratePhysicalDevices()
+        public PhysicalDevice[] EnumeratePhysicalDevices()
         {
             Result result;
             unsafe
@@ -232,7 +244,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(IntPtr));
-                var refpPhysicalDevices = new VkNativeReference((int)(size * pPhysicalDeviceCount));
+                var refpPhysicalDevices = new NativeReference((int)(size * pPhysicalDeviceCount));
                 var ptrpPhysicalDevices = refpPhysicalDevices.Handle;
                 result = Interop.NativeMethods.vkEnumeratePhysicalDevices(this.m, &pPhysicalDeviceCount, (IntPtr*)ptrpPhysicalDevices);
                 if (result != Result.Success)
@@ -240,10 +252,10 @@ namespace MiniEngine.Drivers.Vulkan
 
                 if (pPhysicalDeviceCount <= 0)
                     return null;
-                var arr = new VkPhysicalDevice[pPhysicalDeviceCount];
+                var arr = new PhysicalDevice[pPhysicalDeviceCount];
                 for (int i = 0; i < pPhysicalDeviceCount; i++)
                 {
-                    arr[i] = new VkPhysicalDevice();
+                    arr[i] = new PhysicalDevice();
                     arr[i].m = ((IntPtr*)ptrpPhysicalDevices)[i];
                 }
 
@@ -259,13 +271,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkSurfaceKhr CreateDisplayPlaneSurfaceKHR(DisplaySurfaceCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
+        public SurfaceKhr CreateDisplayPlaneSurfaceKHR(DisplaySurfaceCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkSurfaceKhr pSurface;
+            SurfaceKhr pSurface;
             unsafe
             {
-                pSurface = new VkSurfaceKhr();
+                pSurface = new SurfaceKhr();
 
                 fixed (UInt64* ptrpSurface = &pSurface.m)
                 {
@@ -278,7 +290,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroySurfaceKHR(VkSurfaceKhr surface = null, AllocationCallbacks pAllocator = null)
+        public void DestroySurfaceKHR(SurfaceKhr surface = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -286,13 +298,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkSurfaceKhr CreateViSurfaceNN(ViSurfaceCreateInfoNn pCreateInfo, AllocationCallbacks pAllocator = null)
+        public SurfaceKhr CreateViSurfaceNN(ViSurfaceCreateInfoNn pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkSurfaceKhr pSurface;
+            SurfaceKhr pSurface;
             unsafe
             {
-                pSurface = new VkSurfaceKhr();
+                pSurface = new SurfaceKhr();
 
                 fixed (UInt64* ptrpSurface = &pSurface.m)
                 {
@@ -305,13 +317,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkDebugReportCallbackExt CreateDebugReportCallbackEXT(DebugReportCallbackCreateInfoExt pCreateInfo, AllocationCallbacks pAllocator = null)
+        public DebugReportCallbackExt CreateDebugReportCallbackEXT(DebugReportCallbackCreateInfoExt pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkDebugReportCallbackExt pCallback;
+            DebugReportCallbackExt pCallback;
             unsafe
             {
-                pCallback = new VkDebugReportCallbackExt();
+                pCallback = new DebugReportCallbackExt();
 
                 fixed (UInt64* ptrpCallback = &pCallback.m)
                 {
@@ -324,7 +336,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyDebugReportCallbackEXT(VkDebugReportCallbackExt callback, AllocationCallbacks pAllocator = null)
+        public void DestroyDebugReportCallbackEXT(DebugReportCallbackExt callback, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -340,13 +352,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkSurfaceKhr CreateMacOSSurfaceMVK(MacOSSurfaceCreateInfoMvk pCreateInfo, AllocationCallbacks pAllocator = null)
+        public SurfaceKhr CreateMacOSSurfaceMVK(MacOSSurfaceCreateInfoMvk pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkSurfaceKhr pSurface;
+            SurfaceKhr pSurface;
             unsafe
             {
-                pSurface = new VkSurfaceKhr();
+                pSurface = new SurfaceKhr();
 
                 fixed (UInt64* ptrpSurface = &pSurface.m)
                 {

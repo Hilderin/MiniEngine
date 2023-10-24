@@ -5,9 +5,9 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Vulkan DeviceMemory
     /// </summary>
-    public partial class VkDeviceMemory : INonDispatchableHandleMarshalling
+    public partial class DeviceMemory : INonDispatchableHandleMarshalling
     {
-        internal VkDeviceMemory() { }
+        internal DeviceMemory() { }
 
         internal UInt64 m;
 

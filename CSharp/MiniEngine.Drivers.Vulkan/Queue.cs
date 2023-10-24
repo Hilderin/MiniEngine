@@ -6,9 +6,9 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Vukan Queue
     /// </summary>
-    public partial class VkQueue : IMarshalling
+    public partial class Queue : IMarshalling
     {
-        internal VkQueue() { }
+        internal Queue() { }
 
         internal IntPtr m;
 
@@ -20,18 +20,18 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void Submit(VkCommandBuffer commandBuffer, VkFence fence = null)
+        public void Submit(CommandBuffer commandBuffer, Fence fence = null)
         {
             SubmitInfo submitInfo = new()
             {
                 CommandBufferCount = 1,
-                CommandBuffers = new VkCommandBuffer[] { commandBuffer }
+                CommandBuffers = new CommandBuffer[] { commandBuffer }
             };
             Submit(submitInfo, fence);
         }
 
 
-        public void Submit(SubmitInfo[] pSubmits, VkFence fence = null)
+        public void Submit(SubmitInfo[] pSubmits, Fence fence = null)
         {
             Result result;
             unsafe
@@ -48,7 +48,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void Submit(SubmitInfo pSubmit, VkFence fence = null)
+        public void Submit(SubmitInfo pSubmit, Fence fence = null)
         {
             Result result;
             unsafe
@@ -70,7 +70,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void BindSparse(BindSparseInfo[] pBindInfo, VkFence fence = null)
+        public void BindSparse(BindSparseInfo[] pBindInfo, Fence fence = null)
         {
             Result result;
             unsafe
@@ -87,7 +87,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void BindSparse(BindSparseInfo pBindInfo, VkFence fence = null)
+        public void BindSparse(BindSparseInfo pBindInfo, Fence fence = null)
         {
             Result result;
             unsafe
@@ -109,7 +109,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public int SignalReleaseImageANDROID(UInt32 waitSemaphoreCount, VkSemaphore pWaitSemaphores, VkImage image)
+        public int SignalReleaseImageANDROID(UInt32 waitSemaphoreCount, Semaphore pWaitSemaphores, Image image)
         {
             Result result;
             int pNativeFenceFd;

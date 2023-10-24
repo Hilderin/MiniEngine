@@ -8,27 +8,28 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Vulkan Device
     /// </summary>
-    public partial class VkDevice : IMarshalling, IDisposable
+    public partial class Device : IMarshalling, IDisposable
     {
         internal IntPtr m;
 
         public bool IsDisposed { get; private set; } = false;
 
-        public VkPhysicalDevice PhysicalDevice;
-        public VkSurfaceKhr Surface;
+        public PhysicalDevice PhysicalDevice;
+        public SurfaceKhr Surface;
         public Extent2D CurrentExtent;
         public Vector2 ClientSize;
         public SurfaceCapabilitiesKhr SurfaceCapabilities;
-        public List<VkFence> Fences = new List<VkFence>();
-        public List<VkSwapchain> Swapchains = new List<VkSwapchain>();
-        public List<VkCommandPool> CommandPools = new List<VkCommandPool>();
-        public List<VkRenderPass> RenderPasses = new List<VkRenderPass>();
+        public List<Fence> Fences = new List<Fence>();
+        public List<Semaphore> Semaphores = new List<Semaphore>();
+        public List<Swapchain> Swapchains = new List<Swapchain>();
+        public List<CommandPool> CommandPools = new List<CommandPool>();
+        public List<RenderPass> RenderPasses = new List<RenderPass>();
 
 
-        internal VkDevice() { }
+        internal Device() { }
 
 
-        public VkShaderModule CreateShaderModule(byte[] shaderCode, uint flags = 0, AllocationCallbacks allocator = null)
+        public ShaderModule CreateShaderModule(byte[] shaderCode, uint flags = 0, AllocationCallbacks allocator = null)
         {
             ShaderModuleCreateInfo createInfo = new ShaderModuleCreateInfo
             {
@@ -52,7 +53,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a swapchain
         /// </summary>
-        public VkSwapchain CreateSwapchain(Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode)
+        public Swapchain CreateSwapchain(Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode)
         {
             SurfaceFormatKhr surfaceFormat = PhysicalDevice.GetSurfaceFormat(Surface, expectedFormats, expectedColorSpaces);
 
@@ -84,7 +85,7 @@ namespace MiniEngine.Drivers.Vulkan
 
             var swapchainKhr = CreateSwapchainKHR(swapchainInfo);
 
-            VkSwapchain swapChain = new VkSwapchain(this, swapchainKhr, surfaceFormat, presentMode);
+            Swapchain swapChain = new Swapchain(this, swapchainKhr, surfaceFormat, presentMode);
 
             Swapchains.Add(swapChain);
 
@@ -96,22 +97,25 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public void Dispose()
         {
-            foreach (VkCommandPool commandPool in CommandPools)
-                DestroyCommandPool(commandPool);
+            foreach (CommandPool commandPool in CommandPools)
+                DestroyCommandPoolInternal(commandPool);
             CommandPools.Clear();
 
+            foreach (Semaphore semaphore in Semaphores)
+                DestroySemaphoreInternal(semaphore);
+            Semaphores.Clear();
 
-            foreach (VkFence fence in Fences)
+            foreach (Fence fence in Fences)
                 DestroyFenceInternal(fence);
             Fences.Clear();
 
-            foreach (VkSwapchain swapchain in Swapchains)
+            foreach (Swapchain swapchain in Swapchains.ToArray())
                 swapchain.Dispose();
             Swapchains.Clear();
 
 
-            foreach (VkRenderPass renderPass in RenderPasses)
-                DestroyRenderPass(renderPass);
+            foreach (RenderPass renderPass in RenderPasses)
+                DestroyRenderPassInternal(renderPass);
             RenderPasses.Clear();
 
             if (!IsDisposed)
@@ -126,9 +130,9 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create ImageViews from Images
         /// </summary>
-        public VkImageView[] CreateImageViews(VkImage[] images, SurfaceFormatKhr surfaceFormat)
+        public ImageView[] CreateImageViews(Image[] images, SurfaceFormatKhr surfaceFormat)
         {
-            var displayViews = new VkImageView[images.Length];
+            var displayViews = new ImageView[images.Length];
 
             for (int i = 0; i < images.Length; i++)
             {
@@ -161,9 +165,9 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create framebuffers from imageviews
         /// </summary>
-        public VkFramebuffer[] CreateFramebuffers(VkRenderPass renderPass, VkImageView[] displayViews, Extent2D extent)
+        public Framebuffer[] CreateFramebuffers(RenderPass renderPass, ImageView[] displayViews, Extent2D extent)
         {
-            var framebuffers = new VkFramebuffer[displayViews.Length];
+            var framebuffers = new Framebuffer[displayViews.Length];
 
             for (int i = 0; i < displayViews.Length; i++)
             {
@@ -171,7 +175,7 @@ namespace MiniEngine.Drivers.Vulkan
                 {
                     Layers = 1,
                     RenderPass = renderPass,
-                    Attachments = new VkImageView[] { displayViews[i] },
+                    Attachments = new ImageView[] { displayViews[i] },
                     Width = extent.Width,
                     Height = extent.Height
                 };
@@ -182,49 +186,11 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-        /// <summary>
-        /// Create the render pass
-        /// </summary>
-        public VkRenderPass CreateRenderPass(SurfaceFormatKhr surfaceFormat)
-        {
-            //TODO: Remettre le Depth test
-            var attDesc = new AttachmentDescription
-            {
-                Format = surfaceFormat.Format,
-                Samples = SampleCountFlags.Count1,
-                LoadOp = AttachmentLoadOp.Clear,
-                StoreOp = AttachmentStoreOp.Store,
-                StencilLoadOp = AttachmentLoadOp.DontCare,
-                StencilStoreOp = AttachmentStoreOp.DontCare,
-                InitialLayout = ImageLayout.Undefined,
-                FinalLayout = ImageLayout.PresentSrcKhr       //TODO: À voir
-                //FinalLayout = ImageLayout.ColorAttachmentOptimal
-            };
-            var attRef = new AttachmentReference { Attachment = 0, Layout = ImageLayout.ColorAttachmentOptimal };
-
-
-            var subpassDesc = new SubpassDescription
-            {
-                PipelineBindPoint = PipelineBindPoint.Graphics,
-                ColorAttachments = new AttachmentReference[] { attRef }
-            };
-            var renderPassCreateInfo = new RenderPassCreateInfo
-            {
-                Attachments = new AttachmentDescription[] { attDesc },
-                Subpasses = new SubpassDescription[] { subpassDesc }
-            };
-
-            VkRenderPass renderPass = this.CreateRenderPass(renderPassCreateInfo);
-
-            this.RenderPasses.Add(renderPass);
-
-            return renderPass;
-        }
-
+       
         /// <summary>
         /// Copy data to a buffer
         /// </summary>
-        public unsafe void CopyToBuffer<T>(VkBufferWrapper buffer, T[] values)
+        public unsafe void CopyToBuffer<T>(BufferWrapper buffer, T[] values)
         {
             Type type = typeof(T);
             var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
@@ -240,12 +206,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a buffer
         /// </summary>
-        public unsafe VkBufferWrapper CreateBuffer<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        public unsafe BufferWrapper CreateBuffer<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
         {
             Type type = typeof(T);
             var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
 
-            VkBufferWrapper buffer = CreateBuffer(size, usageFlags, memoryPropertyFlags);
+            BufferWrapper buffer = CreateBuffer(size, usageFlags, memoryPropertyFlags);
 
             CopyToBuffer(buffer, values);
 
@@ -255,7 +221,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a buffer
         /// </summary>
-        public unsafe VkBufferWrapper CreateBuffer(int size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        public unsafe BufferWrapper CreateBuffer(int size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
         {
             var createBufferInfo = new BufferCreateInfo
             {
@@ -270,14 +236,14 @@ namespace MiniEngine.Drivers.Vulkan
 
             this.BindBufferMemory(buffer, deviceMemory, 0);
 
-            return new VkBufferWrapper(this, buffer, deviceMemory, size);
+            return new BufferWrapper(this, buffer, deviceMemory, size);
         }
 
 
         /// <summary>
         /// Allocate a DeviceMemory
         /// </summary>
-        public VkDeviceMemory CreateDeviceMemory(VkBuffer buffer, MemoryPropertyFlags memoryPropertyFlags)
+        public DeviceMemory CreateDeviceMemory(Buffer buffer, MemoryPropertyFlags memoryPropertyFlags)
         {
             var memoryReq = this.GetBufferMemoryRequirements(buffer);
 
@@ -350,12 +316,12 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkQueue GetQueue(UInt32 queueFamilyIndex, UInt32 queueIndex)
+        public Queue GetQueue(UInt32 queueFamilyIndex, UInt32 queueIndex)
         {
-            VkQueue pQueue;
+            Queue pQueue;
             unsafe
             {
-                pQueue = new VkQueue();
+                pQueue = new Queue();
 
                 fixed (IntPtr* ptrpQueue = &pQueue.m)
                 {
@@ -377,13 +343,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkDeviceMemory AllocateMemory(MemoryAllocateInfo pAllocateInfo, AllocationCallbacks pAllocator = null)
+        public DeviceMemory AllocateMemory(MemoryAllocateInfo pAllocateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkDeviceMemory pMemory;
+            DeviceMemory pMemory;
             unsafe
             {
-                pMemory = new VkDeviceMemory();
+                pMemory = new DeviceMemory();
 
                 fixed (UInt64* ptrpMemory = &pMemory.m)
                 {
@@ -396,7 +362,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void FreeMemory(VkDeviceMemory memory = null, AllocationCallbacks pAllocator = null)
+        public void FreeMemory(DeviceMemory memory = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -404,7 +370,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public IntPtr MapMemory(VkDeviceMemory memory, DeviceSize offset, DeviceSize size, UInt32 flags = 0)
+        public IntPtr MapMemory(DeviceMemory memory, DeviceSize offset, DeviceSize size, UInt32 flags = 0)
         {
             Result result;
             IntPtr ppData;
@@ -419,7 +385,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void UnmapMemory(VkDeviceMemory memory)
+        public void UnmapMemory(DeviceMemory memory)
         {
             unsafe
             {
@@ -483,7 +449,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public DeviceSize GetMemoryCommitment(VkDeviceMemory memory)
+        public DeviceSize GetMemoryCommitment(DeviceMemory memory)
         {
             DeviceSize pCommittedMemoryInBytes;
             unsafe
@@ -495,7 +461,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public MemoryRequirements GetBufferMemoryRequirements(VkBuffer buffer)
+        public MemoryRequirements GetBufferMemoryRequirements(Buffer buffer)
         {
             MemoryRequirements pMemoryRequirements;
             unsafe
@@ -507,7 +473,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void BindBufferMemory(VkBuffer buffer, VkDeviceMemory memory, DeviceSize memoryOffset)
+        public void BindBufferMemory(Buffer buffer, DeviceMemory memory, DeviceSize memoryOffset)
         {
             Result result;
             unsafe
@@ -518,7 +484,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public MemoryRequirements GetImageMemoryRequirements(VkImage image)
+        public MemoryRequirements GetImageMemoryRequirements(Image image)
         {
             MemoryRequirements pMemoryRequirements;
             unsafe
@@ -530,7 +496,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void BindImageMemory(VkImage image, VkDeviceMemory memory, DeviceSize memoryOffset)
+        public void BindImageMemory(Image image, DeviceMemory memory, DeviceSize memoryOffset)
         {
             Result result;
             unsafe
@@ -541,7 +507,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public SparseImageMemoryRequirements[] GetImageSparseMemoryRequirements(VkImage image)
+        public SparseImageMemoryRequirements[] GetImageSparseMemoryRequirements(Image image)
         {
             unsafe
             {
@@ -551,7 +517,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(SparseImageMemoryRequirements));
-                var refpSparseMemoryRequirements = new VkNativeReference((int)(size * pSparseMemoryRequirementCount));
+                var refpSparseMemoryRequirements = new NativeReference((int)(size * pSparseMemoryRequirementCount));
                 var ptrpSparseMemoryRequirements = refpSparseMemoryRequirements.Handle;
                 Interop.NativeMethods.vkGetImageSparseMemoryRequirements(this.m, image != null ? image.m : default(UInt64), &pSparseMemoryRequirementCount, (SparseImageMemoryRequirements*)ptrpSparseMemoryRequirements);
 
@@ -567,19 +533,19 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkFence CreateFence()
+        public Fence CreateFence()
         {
             var fenceInfo = new FenceCreateInfo();
             return CreateFence(fenceInfo);
         }
 
-        public VkFence CreateFence(FenceCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public Fence CreateFence(FenceCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkFence pFence;
+            Fence pFence;
             unsafe
             {
-                pFence = new VkFence();
+                pFence = new Fence(this);
 
                 fixed (UInt64* ptrpFence = &pFence.m)
                 {
@@ -588,13 +554,22 @@ namespace MiniEngine.Drivers.Vulkan
                 if (result != Result.Success)
                     throw new ResultException(result);
 
-                Fences.Add(pFence);
 
                 return pFence;
             }
         }
 
-        public void DestroyFence(VkFence fence = null, AllocationCallbacks pAllocator = null)
+        public Fence[] CreateFences(int count)
+        {
+            Fence[] fences = new Fence[count];
+            for (int i = 0; i < count; i++)
+            {
+                fences[i] = CreateFence();
+            }
+            return fences;            
+        }
+
+        public void DestroyFence(Fence fence = null, AllocationCallbacks pAllocator = null)
         {
             DestroyFenceInternal(fence, pAllocator);
 
@@ -602,7 +577,7 @@ namespace MiniEngine.Drivers.Vulkan
 
         }
 
-        private void DestroyFenceInternal(VkFence fence = null, AllocationCallbacks pAllocator = null)
+        private void DestroyFenceInternal(Fence fence = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -610,7 +585,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void ResetFences(VkFence[] pFences)
+        public void ResetFences(Fence[] pFences)
         {
             Result result;
             unsafe
@@ -627,7 +602,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void ResetFence(VkFence pFence)
+        public void ResetFence(Fence pFence)
         {
             Result result;
             unsafe
@@ -641,7 +616,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void GetFenceStatus(VkFence fence)
+        public void GetFenceStatus(Fence fence)
         {
             Result result;
             unsafe
@@ -652,7 +627,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void WaitForFences(VkFence[] pFences, Bool32 waitAll, UInt64 timeout)
+        public void WaitForFences(Fence[] pFences, Bool32 waitAll, UInt64 timeout)
         {
             Result result;
             unsafe
@@ -669,7 +644,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void WaitForFence(VkFence pFence, Bool32 waitAll, UInt64 timeout)
+        public void WaitForFence(Fence pFence, Bool32 waitAll, UInt64 timeout)
         {
             Result result;
             unsafe
@@ -683,19 +658,19 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkSemaphore CreateSemaphore()
+        public Semaphore CreateSemaphore()
         {
             var semaphoreInfo = new SemaphoreCreateInfo();
             return CreateSemaphore(semaphoreInfo);
         }
 
-        public VkSemaphore CreateSemaphore(SemaphoreCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public Semaphore CreateSemaphore(SemaphoreCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkSemaphore pSemaphore;
+            Semaphore pSemaphore;
             unsafe
             {
-                pSemaphore = new VkSemaphore();
+                pSemaphore = new Semaphore(this);
 
                 fixed (UInt64* ptrpSemaphore = &pSemaphore.m)
                 {
@@ -708,7 +683,24 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroySemaphore(VkSemaphore semaphore = null, AllocationCallbacks pAllocator = null)
+        public Semaphore[] CreateSemaphores(int count)
+        {
+            Semaphore[] semaphores = new Semaphore[count];
+            for (int i = 0; i < count; i++)
+            {
+                semaphores[i] = CreateSemaphore();
+            }
+            return semaphores;
+        }
+
+        public void DestroySemaphore(Semaphore semaphore = null, AllocationCallbacks pAllocator = null)
+        {
+            DestroySemaphoreInternal(semaphore, pAllocator);
+
+            Semaphores.Remove(semaphore);
+        }
+
+        private void DestroySemaphoreInternal(Semaphore semaphore = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -716,13 +708,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkEvent CreateEvent(EventCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public Event CreateEvent(EventCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkEvent pEvent;
+            Event pEvent;
             unsafe
             {
-                pEvent = new VkEvent();
+                pEvent = new Event();
 
                 fixed (UInt64* ptrpEvent = &pEvent.m)
                 {
@@ -735,7 +727,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyEvent(VkEvent @event = null, AllocationCallbacks pAllocator = null)
+        public void DestroyEvent(Event @event = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -743,7 +735,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void GetEventStatus(VkEvent @event)
+        public void GetEventStatus(Event @event)
         {
             Result result;
             unsafe
@@ -754,7 +746,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void SetEvent(VkEvent @event)
+        public void SetEvent(Event @event)
         {
             Result result;
             unsafe
@@ -765,7 +757,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void ResetEvent(VkEvent @event)
+        public void ResetEvent(Event @event)
         {
             Result result;
             unsafe
@@ -776,13 +768,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkQueryPool CreateQueryPool(QueryPoolCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public QueryPool CreateQueryPool(QueryPoolCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkQueryPool pQueryPool;
+            QueryPool pQueryPool;
             unsafe
             {
-                pQueryPool = new VkQueryPool();
+                pQueryPool = new QueryPool();
 
                 fixed (UInt64* ptrpQueryPool = &pQueryPool.m)
                 {
@@ -795,7 +787,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyQueryPool(VkQueryPool queryPool = null, AllocationCallbacks pAllocator = null)
+        public void DestroyQueryPool(QueryPool queryPool = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -803,7 +795,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public IntPtr GetQueryPoolResults(VkQueryPool queryPool, UInt32 firstQuery, UInt32 queryCount, UIntPtr dataSize, DeviceSize stride, QueryResultFlags flags = (QueryResultFlags)0)
+        public IntPtr GetQueryPoolResults(QueryPool queryPool, UInt32 firstQuery, UInt32 queryCount, UIntPtr dataSize, DeviceSize stride, QueryResultFlags flags = (QueryResultFlags)0)
         {
             Result result;
             IntPtr pData;
@@ -818,13 +810,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkBuffer CreateBuffer(BufferCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public Buffer CreateBuffer(BufferCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkBuffer pBuffer;
+            Buffer pBuffer;
             unsafe
             {
-                pBuffer = new VkBuffer();
+                pBuffer = new Buffer();
 
                 fixed (UInt64* ptrpBuffer = &pBuffer.m)
                 {
@@ -837,7 +829,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyBuffer(VkBuffer buffer = null, AllocationCallbacks pAllocator = null)
+        public void DestroyBuffer(Buffer buffer = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -845,13 +837,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkBufferView CreateBufferView(BufferViewCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public BufferView CreateBufferView(BufferViewCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkBufferView pView;
+            BufferView pView;
             unsafe
             {
-                pView = new VkBufferView();
+                pView = new BufferView();
 
                 fixed (UInt64* ptrpView = &pView.m)
                 {
@@ -864,7 +856,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyBufferView(VkBufferView bufferView = null, AllocationCallbacks pAllocator = null)
+        public void DestroyBufferView(BufferView bufferView = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -872,13 +864,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkImage CreateImage(ImageCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public Image CreateImage(ImageCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkImage pImage;
+            Image pImage;
             unsafe
             {
-                pImage = new VkImage();
+                pImage = new Image();
 
                 fixed (UInt64* ptrpImage = &pImage.m)
                 {
@@ -891,7 +883,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyImage(VkImage image = null, AllocationCallbacks pAllocator = null)
+        public void DestroyImage(Image image = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -899,7 +891,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public SubresourceLayout GetImageSubresourceLayout(VkImage image, ImageSubresource pSubresource)
+        public SubresourceLayout GetImageSubresourceLayout(Image image, ImageSubresource pSubresource)
         {
             SubresourceLayout pLayout;
             unsafe
@@ -911,13 +903,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkImageView CreateImageView(ImageViewCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public ImageView CreateImageView(ImageViewCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkImageView pView;
+            ImageView pView;
             unsafe
             {
-                pView = new VkImageView();
+                pView = new ImageView();
 
                 fixed (UInt64* ptrpView = &pView.m)
                 {
@@ -930,7 +922,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyImageView(VkImageView imageView = null, AllocationCallbacks pAllocator = null)
+        public void DestroyImageView(ImageView imageView = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -938,13 +930,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkShaderModule CreateShaderModule(ShaderModuleCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public ShaderModule CreateShaderModule(ShaderModuleCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkShaderModule pShaderModule;
+            ShaderModule pShaderModule;
             unsafe
             {
-                pShaderModule = new VkShaderModule();
+                pShaderModule = new ShaderModule();
 
                 fixed (UInt64* ptrpShaderModule = &pShaderModule.m)
                 {
@@ -957,7 +949,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyShaderModule(VkShaderModule shaderModule = null, AllocationCallbacks pAllocator = null)
+        public void DestroyShaderModule(ShaderModule shaderModule = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -965,13 +957,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkPipelineCache CreatePipelineCache(PipelineCacheCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public PipelineCache CreatePipelineCache(PipelineCacheCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkPipelineCache pPipelineCache;
+            PipelineCache pPipelineCache;
             unsafe
             {
-                pPipelineCache = new VkPipelineCache();
+                pPipelineCache = new PipelineCache();
 
                 fixed (UInt64* ptrpPipelineCache = &pPipelineCache.m)
                 {
@@ -984,7 +976,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyPipelineCache(VkPipelineCache pipelineCache = null, AllocationCallbacks pAllocator = null)
+        public void DestroyPipelineCache(PipelineCache pipelineCache = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -992,7 +984,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void GetPipelineCacheData(VkPipelineCache pipelineCache, out UIntPtr pDataSize, IntPtr pData = default(IntPtr))
+        public void GetPipelineCacheData(PipelineCache pipelineCache, out UIntPtr pDataSize, IntPtr pData = default(IntPtr))
         {
             Result result;
             unsafe
@@ -1006,7 +998,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void MergePipelineCaches(VkPipelineCache dstCache, VkPipelineCache[] pSrcCaches)
+        public void MergePipelineCaches(PipelineCache dstCache, PipelineCache[] pSrcCaches)
         {
             Result result;
             unsafe
@@ -1023,7 +1015,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void MergePipelineCache(VkPipelineCache dstCache, VkPipelineCache pSrcCache)
+        public void MergePipelineCache(PipelineCache dstCache, PipelineCache pSrcCache)
         {
             Result result;
             unsafe
@@ -1037,7 +1029,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkPipeline[] CreateGraphicsPipelines(VkPipelineCache pipelineCache, GraphicsPipelineCreateInfo[] pCreateInfos, AllocationCallbacks pAllocator = null)
+        public Pipeline[] CreateGraphicsPipelines(PipelineCache pipelineCache, GraphicsPipelineCreateInfo[] pCreateInfos, AllocationCallbacks pAllocator = null)
         {
             Result result;
             unsafe
@@ -1046,7 +1038,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
-                var refpPipelines = new VkNativeReference((int)(size * pCreateInfos.Length));
+                var refpPipelines = new NativeReference((int)(size * pCreateInfos.Length));
                 var ptrpPipelines = refpPipelines.Handle;
                 var arraypCreateInfos = pCreateInfos == null ? IntPtr.Zero : Marshal.AllocHGlobal(pCreateInfos.Length * sizeof(Interop.GraphicsPipelineCreateInfo));
                 var lenpCreateInfos = pCreateInfos == null ? 0 : pCreateInfos.Length;
@@ -1060,10 +1052,10 @@ namespace MiniEngine.Drivers.Vulkan
 
                 if (pCreateInfos.Length <= 0)
                     return null;
-                var arr = new VkPipeline[pCreateInfos.Length];
+                var arr = new Pipeline[pCreateInfos.Length];
                 for (int i = 0; i < pCreateInfos.Length; i++)
                 {
-                    arr[i] = new VkPipeline();
+                    arr[i] = new Pipeline();
                     arr[i].m = ((UInt64*)ptrpPipelines)[i];
                 }
 
@@ -1071,7 +1063,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkPipeline[] CreateComputePipelines(VkPipelineCache pipelineCache, ComputePipelineCreateInfo[] pCreateInfos, AllocationCallbacks pAllocator = null)
+        public Pipeline[] CreateComputePipelines(PipelineCache pipelineCache, ComputePipelineCreateInfo[] pCreateInfos, AllocationCallbacks pAllocator = null)
         {
             Result result;
             unsafe
@@ -1080,7 +1072,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
-                var refpPipelines = new VkNativeReference((int)(size * pCreateInfos.Length));
+                var refpPipelines = new NativeReference((int)(size * pCreateInfos.Length));
                 var ptrpPipelines = refpPipelines.Handle;
                 var arraypCreateInfos = pCreateInfos == null ? IntPtr.Zero : Marshal.AllocHGlobal(pCreateInfos.Length * sizeof(Interop.ComputePipelineCreateInfo));
                 var lenpCreateInfos = pCreateInfos == null ? 0 : pCreateInfos.Length;
@@ -1094,10 +1086,10 @@ namespace MiniEngine.Drivers.Vulkan
 
                 if (pCreateInfos.Length <= 0)
                     return null;
-                var arr = new VkPipeline[pCreateInfos.Length];
+                var arr = new Pipeline[pCreateInfos.Length];
                 for (int i = 0; i < pCreateInfos.Length; i++)
                 {
-                    arr[i] = new VkPipeline();
+                    arr[i] = new Pipeline();
                     arr[i].m = ((UInt64*)ptrpPipelines)[i];
                 }
 
@@ -1105,7 +1097,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyPipeline(VkPipeline pipeline = null, AllocationCallbacks pAllocator = null)
+        public void DestroyPipeline(Pipeline pipeline = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1113,33 +1105,33 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkPipelineLayout CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout)
+        public PipelineLayout CreatePipelineLayout(DescriptorSetLayout descriptorSetLayout)
         {
             var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
             {
-                SetLayouts = new VkDescriptorSetLayout[] { descriptorSetLayout }
+                SetLayouts = new DescriptorSetLayout[] { descriptorSetLayout }
             };
             return CreatePipelineLayout(pipelineLayoutCreateInfo);
         }
 
-        public VkPipelineLayout CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout, PushConstantRange[] constantRanges)
+        public PipelineLayout CreatePipelineLayout(DescriptorSetLayout descriptorSetLayout, PushConstantRange[] constantRanges)
         {
             var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
             {
-                SetLayouts = new VkDescriptorSetLayout[] { descriptorSetLayout },
+                SetLayouts = new DescriptorSetLayout[] { descriptorSetLayout },
                 PushConstantRanges = constantRanges
             };
             return CreatePipelineLayout(pipelineLayoutCreateInfo);
         }
 
 
-        public VkPipelineLayout CreatePipelineLayout(PipelineLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public PipelineLayout CreatePipelineLayout(PipelineLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkPipelineLayout pPipelineLayout;
+            PipelineLayout pPipelineLayout;
             unsafe
             {
-                pPipelineLayout = new VkPipelineLayout();
+                pPipelineLayout = new PipelineLayout();
 
                 fixed (UInt64* ptrpPipelineLayout = &pPipelineLayout.m)
                 {
@@ -1152,7 +1144,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyPipelineLayout(VkPipelineLayout pipelineLayout = null, AllocationCallbacks pAllocator = null)
+        public void DestroyPipelineLayout(PipelineLayout pipelineLayout = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1160,13 +1152,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkSampler CreateSampler(SamplerCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public Sampler CreateSampler(SamplerCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkSampler pSampler;
+            Sampler pSampler;
             unsafe
             {
-                pSampler = new VkSampler();
+                pSampler = new Sampler();
 
                 fixed (UInt64* ptrpSampler = &pSampler.m)
                 {
@@ -1179,7 +1171,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroySampler(VkSampler sampler = null, AllocationCallbacks pAllocator = null)
+        public void DestroySampler(Sampler sampler = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1187,13 +1179,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkDescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public DescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkDescriptorSetLayout pSetLayout;
+            DescriptorSetLayout pSetLayout;
             unsafe
             {
-                pSetLayout = new VkDescriptorSetLayout();
+                pSetLayout = new DescriptorSetLayout();
 
                 fixed (UInt64* ptrpSetLayout = &pSetLayout.m)
                 {
@@ -1206,7 +1198,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyDescriptorSetLayout(VkDescriptorSetLayout descriptorSetLayout = null, AllocationCallbacks pAllocator = null)
+        public void DestroyDescriptorSetLayout(DescriptorSetLayout descriptorSetLayout = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1214,13 +1206,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkDescriptorPool CreateDescriptorPool(DescriptorPoolCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public DescriptorPool CreateDescriptorPool(DescriptorPoolCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkDescriptorPool pDescriptorPool;
+            DescriptorPool pDescriptorPool;
             unsafe
             {
-                pDescriptorPool = new VkDescriptorPool();
+                pDescriptorPool = new DescriptorPool();
 
                 fixed (UInt64* ptrpDescriptorPool = &pDescriptorPool.m)
                 {
@@ -1233,7 +1225,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyDescriptorPool(VkDescriptorPool descriptorPool = null, AllocationCallbacks pAllocator = null)
+        public void DestroyDescriptorPool(DescriptorPool descriptorPool = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1241,7 +1233,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void ResetDescriptorPool(VkDescriptorPool descriptorPool, UInt32 flags = 0)
+        public void ResetDescriptorPool(DescriptorPool descriptorPool, UInt32 flags = 0)
         {
             Result result;
             unsafe
@@ -1252,7 +1244,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkDescriptorSet[] AllocateDescriptorSets(DescriptorSetAllocateInfo pAllocateInfo)
+        public DescriptorSet[] AllocateDescriptorSets(DescriptorSetAllocateInfo pAllocateInfo)
         {
             Result result;
             unsafe
@@ -1261,7 +1253,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
-                var refpDescriptorSets = new VkNativeReference((int)(size * pAllocateInfo.DescriptorSetCount));
+                var refpDescriptorSets = new NativeReference((int)(size * pAllocateInfo.DescriptorSetCount));
                 var ptrpDescriptorSets = refpDescriptorSets.Handle;
                 result = Interop.NativeMethods.vkAllocateDescriptorSets(this.m, pAllocateInfo != null ? pAllocateInfo.m : (Interop.DescriptorSetAllocateInfo*)default(IntPtr), (UInt64*)ptrpDescriptorSets);
                 if (result != Result.Success)
@@ -1269,10 +1261,10 @@ namespace MiniEngine.Drivers.Vulkan
 
                 if (pAllocateInfo.DescriptorSetCount <= 0)
                     return null;
-                var arr = new VkDescriptorSet[pAllocateInfo.DescriptorSetCount];
+                var arr = new DescriptorSet[pAllocateInfo.DescriptorSetCount];
                 for (int i = 0; i < pAllocateInfo.DescriptorSetCount; i++)
                 {
-                    arr[i] = new VkDescriptorSet();
+                    arr[i] = new DescriptorSet();
                     arr[i].m = ((UInt64*)ptrpDescriptorSets)[i];
                 }
 
@@ -1280,7 +1272,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void FreeDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSet[] pDescriptorSets)
+        public void FreeDescriptorSets(DescriptorPool descriptorPool, DescriptorSet[] pDescriptorSets)
         {
             Result result;
             unsafe
@@ -1297,7 +1289,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void FreeDescriptorSet(VkDescriptorPool descriptorPool, VkDescriptorSet pDescriptorSet)
+        public void FreeDescriptorSet(DescriptorPool descriptorPool, DescriptorSet pDescriptorSet)
         {
             Result result;
             unsafe
@@ -1339,13 +1331,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkFramebuffer CreateFramebuffer(FramebufferCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public Framebuffer CreateFramebuffer(FramebufferCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkFramebuffer pFramebuffer;
+            Framebuffer pFramebuffer;
             unsafe
             {
-                pFramebuffer = new VkFramebuffer();
+                pFramebuffer = new Framebuffer();
 
                 fixed (UInt64* ptrpFramebuffer = &pFramebuffer.m)
                 {
@@ -1358,7 +1350,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyFramebuffer(VkFramebuffer framebuffer = null, AllocationCallbacks pAllocator = null)
+        public void DestroyFramebuffer(Framebuffer framebuffer = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1366,13 +1358,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkRenderPass CreateRenderPass(RenderPassCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public RenderPass CreateRenderPass(RenderPassCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkRenderPass pRenderPass;
+            RenderPass pRenderPass;
             unsafe
             {
-                pRenderPass = new VkRenderPass();
+                pRenderPass = new RenderPass(this);
 
                 fixed (UInt64* ptrpRenderPass = &pRenderPass.m)
                 {
@@ -1385,7 +1377,14 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyRenderPass(VkRenderPass renderPass = null, AllocationCallbacks pAllocator = null)
+        public void DestroyRenderPass(RenderPass renderPass = null, AllocationCallbacks pAllocator = null)
+        {
+            DestroyRenderPassInternal(renderPass, pAllocator);
+
+            RenderPasses.Remove(renderPass);
+        }
+
+        private void DestroyRenderPassInternal(RenderPass renderPass = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1393,7 +1392,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public Extent2D GetRenderAreaGranularity(VkRenderPass renderPass)
+        public Extent2D GetRenderAreaGranularity(RenderPass renderPass)
         {
             Extent2D pGranularity;
             unsafe
@@ -1405,13 +1404,19 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkCommandPool CreateCommandPool(CommandPoolCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public CommandPool CreateCommandPool(CommandPoolCreateFlags flags)
+        {
+            var createPoolInfo = new CommandPoolCreateInfo { Flags = CommandPoolCreateFlags.ResetCommandBuffer };
+            return CreateCommandPool(createPoolInfo);
+        }
+
+        public CommandPool CreateCommandPool(CommandPoolCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkCommandPool pCommandPool;
+            CommandPool pCommandPool;
             unsafe
             {
-                pCommandPool = new VkCommandPool();
+                pCommandPool = new CommandPool(this);
 
                 fixed (UInt64* ptrpCommandPool = &pCommandPool.m)
                 {
@@ -1420,14 +1425,18 @@ namespace MiniEngine.Drivers.Vulkan
                 if (result != Result.Success)
                     throw new ResultException(result);
 
-
-                CommandPools.Add(pCommandPool);
-
                 return pCommandPool;
             }
         }
 
-        public void DestroyCommandPool(VkCommandPool commandPool = null, AllocationCallbacks pAllocator = null)
+        public void DestroyCommandPool(CommandPool commandPool = null, AllocationCallbacks pAllocator = null)
+        {
+            DestroyCommandPoolInternal(commandPool, pAllocator);
+
+            CommandPools.Remove(commandPool);
+        }
+
+        private void DestroyCommandPoolInternal(CommandPool commandPool = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1435,7 +1444,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void ResetCommandPool(VkCommandPool commandPool, CommandPoolResetFlags flags = (CommandPoolResetFlags)0)
+        public void ResetCommandPool(CommandPool commandPool, CommandPoolResetFlags flags = (CommandPoolResetFlags)0)
         {
             Result result;
             unsafe
@@ -1451,7 +1460,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         /// <param name="commandPool"></param>
         /// <returns></returns>
-        public VkCommandBuffer AllocateCommandBuffer(VkCommandPool commandPool)
+        public CommandBuffer AllocateCommandBuffer(CommandPool commandPool)
         {
             var commandBufferAllocateInfo = new CommandBufferAllocateInfo
             {
@@ -1465,7 +1474,7 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-        public VkCommandBuffer[] AllocateCommandBuffers(CommandBufferAllocateInfo pAllocateInfo)
+        public CommandBuffer[] AllocateCommandBuffers(CommandBufferAllocateInfo pAllocateInfo)
         {
             Result result;
             unsafe
@@ -1474,7 +1483,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(IntPtr));
-                var refpCommandBuffers = new VkNativeReference((int)(size * pAllocateInfo.CommandBufferCount));
+                var refpCommandBuffers = new NativeReference((int)(size * pAllocateInfo.CommandBufferCount));
                 var ptrpCommandBuffers = refpCommandBuffers.Handle;
                 result = Interop.NativeMethods.vkAllocateCommandBuffers(this.m, pAllocateInfo != null ? pAllocateInfo.m : (Interop.CommandBufferAllocateInfo*)default(IntPtr), (IntPtr*)ptrpCommandBuffers);
                 if (result != Result.Success)
@@ -1482,10 +1491,10 @@ namespace MiniEngine.Drivers.Vulkan
 
                 if (pAllocateInfo.CommandBufferCount <= 0)
                     return null;
-                var arr = new VkCommandBuffer[pAllocateInfo.CommandBufferCount];
+                var arr = new CommandBuffer[pAllocateInfo.CommandBufferCount];
                 for (int i = 0; i < pAllocateInfo.CommandBufferCount; i++)
                 {
-                    arr[i] = new VkCommandBuffer();
+                    arr[i] = new CommandBuffer();
                     arr[i].m = ((IntPtr*)ptrpCommandBuffers)[i];
                 }
 
@@ -1493,7 +1502,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void FreeCommandBuffers(VkCommandPool commandPool, VkCommandBuffer[] pCommandBuffers)
+        public void FreeCommandBuffers(CommandPool commandPool, CommandBuffer[] pCommandBuffers)
         {
             unsafe
             {
@@ -1507,7 +1516,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void FreeCommandBuffer(VkCommandPool commandPool, VkCommandBuffer pCommandBuffer)
+        public void FreeCommandBuffer(CommandPool commandPool, CommandBuffer pCommandBuffer)
         {
             unsafe
             {
@@ -1518,7 +1527,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkSwapchainKhr[] CreateSharedSwapchainsKHR(SwapchainCreateInfoKhr[] pCreateInfos, AllocationCallbacks pAllocator = null)
+        public SwapchainKhr[] CreateSharedSwapchainsKHR(SwapchainCreateInfoKhr[] pCreateInfos, AllocationCallbacks pAllocator = null)
         {
             Result result;
             unsafe
@@ -1527,7 +1536,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
-                var refpSwapchains = new VkNativeReference((int)(size * pCreateInfos.Length));
+                var refpSwapchains = new NativeReference((int)(size * pCreateInfos.Length));
                 var ptrpSwapchains = refpSwapchains.Handle;
                 var arraypCreateInfos = pCreateInfos == null ? IntPtr.Zero : Marshal.AllocHGlobal(pCreateInfos.Length * sizeof(Interop.SwapchainCreateInfoKhr));
                 var lenpCreateInfos = pCreateInfos == null ? 0 : pCreateInfos.Length;
@@ -1541,10 +1550,10 @@ namespace MiniEngine.Drivers.Vulkan
 
                 if (pCreateInfos.Length <= 0)
                     return null;
-                var arr = new VkSwapchainKhr[pCreateInfos.Length];
+                var arr = new SwapchainKhr[pCreateInfos.Length];
                 for (int i = 0; i < pCreateInfos.Length; i++)
                 {
-                    arr[i] = new VkSwapchainKhr();
+                    arr[i] = new SwapchainKhr();
                     arr[i].m = ((UInt64*)ptrpSwapchains)[i];
                 }
 
@@ -1552,13 +1561,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkSwapchainKhr CreateSwapchainKHR(SwapchainCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
+        public SwapchainKhr CreateSwapchainKHR(SwapchainCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkSwapchainKhr pSwapchain;
+            SwapchainKhr pSwapchain;
             unsafe
             {
-                pSwapchain = new VkSwapchainKhr();
+                pSwapchain = new SwapchainKhr();
 
                 fixed (UInt64* ptrpSwapchain = &pSwapchain.m)
                 {
@@ -1571,7 +1580,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroySwapchainKHR(VkSwapchainKhr swapchain = null, AllocationCallbacks pAllocator = null)
+        public void DestroySwapchainKHR(SwapchainKhr swapchain = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1579,7 +1588,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkImage[] GetSwapchainImagesKHR(VkSwapchainKhr swapchain)
+        public Image[] GetSwapchainImagesKHR(SwapchainKhr swapchain)
         {
             Result result;
             unsafe
@@ -1592,7 +1601,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
-                var refpSwapchainImages = new VkNativeReference((int)(size * pSwapchainImageCount));
+                var refpSwapchainImages = new NativeReference((int)(size * pSwapchainImageCount));
                 var ptrpSwapchainImages = refpSwapchainImages.Handle;
                 result = Interop.NativeMethods.vkGetSwapchainImagesKHR(this.m, swapchain != null ? swapchain.m : default(UInt64), &pSwapchainImageCount, (UInt64*)ptrpSwapchainImages);
                 if (result != Result.Success)
@@ -1600,10 +1609,10 @@ namespace MiniEngine.Drivers.Vulkan
 
                 if (pSwapchainImageCount <= 0)
                     return null;
-                var arr = new VkImage[pSwapchainImageCount];
+                var arr = new Image[pSwapchainImageCount];
                 for (int i = 0; i < pSwapchainImageCount; i++)
                 {
-                    arr[i] = new VkImage();
+                    arr[i] = new Image();
                     arr[i].m = ((UInt64*)ptrpSwapchainImages)[i];
                 }
 
@@ -1611,7 +1620,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public UInt32 AcquireNextImageKHR(VkSwapchainKhr swapchain, UInt64 timeout, VkSemaphore semaphore = null, VkFence fence = null)
+        public UInt32 AcquireNextImageKHR(SwapchainKhr swapchain, UInt64 timeout, Semaphore semaphore = null, Fence fence = null)
         {
             Result result;
             UInt32 pImageIndex;
@@ -1648,13 +1657,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkIndirectCommandsLayoutNvx CreateIndirectCommandsLayoutNVX(IndirectCommandsLayoutCreateInfoNvx pCreateInfo, AllocationCallbacks pAllocator = null)
+        public IndirectCommandsLayoutNvx CreateIndirectCommandsLayoutNVX(IndirectCommandsLayoutCreateInfoNvx pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkIndirectCommandsLayoutNvx pIndirectCommandsLayout;
+            IndirectCommandsLayoutNvx pIndirectCommandsLayout;
             unsafe
             {
-                pIndirectCommandsLayout = new VkIndirectCommandsLayoutNvx();
+                pIndirectCommandsLayout = new IndirectCommandsLayoutNvx();
 
                 fixed (UInt64* ptrpIndirectCommandsLayout = &pIndirectCommandsLayout.m)
                 {
@@ -1667,7 +1676,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyIndirectCommandsLayoutNVX(VkIndirectCommandsLayoutNvx indirectCommandsLayout, AllocationCallbacks pAllocator = null)
+        public void DestroyIndirectCommandsLayoutNVX(IndirectCommandsLayoutNvx indirectCommandsLayout, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1675,13 +1684,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkObjectTableNvx CreateObjectTableNVX(ObjectTableCreateInfoNvx pCreateInfo, AllocationCallbacks pAllocator = null)
+        public ObjectTableNvx CreateObjectTableNVX(ObjectTableCreateInfoNvx pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkObjectTableNvx pObjectTable;
+            ObjectTableNvx pObjectTable;
             unsafe
             {
-                pObjectTable = new VkObjectTableNvx();
+                pObjectTable = new ObjectTableNvx();
 
                 fixed (UInt64* ptrpObjectTable = &pObjectTable.m)
                 {
@@ -1694,7 +1703,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyObjectTableNVX(VkObjectTableNvx objectTable, AllocationCallbacks pAllocator = null)
+        public void DestroyObjectTableNVX(ObjectTableNvx objectTable, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1702,7 +1711,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void RegisterObjectsNVX(VkObjectTableNvx objectTable, ObjectTableEntryNvx[] ppObjectTableEntries, UInt32[] pObjectIndices)
+        public void RegisterObjectsNVX(ObjectTableNvx objectTable, ObjectTableEntryNvx[] ppObjectTableEntries, UInt32[] pObjectIndices)
         {
             Result result;
             unsafe
@@ -1725,7 +1734,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void RegisterObjectsNVX(VkObjectTableNvx objectTable, ObjectTableEntryNvx? ppObjectTableEntrie, UInt32? pObjectIndice)
+        public void RegisterObjectsNVX(ObjectTableNvx objectTable, ObjectTableEntryNvx? ppObjectTableEntrie, UInt32? pObjectIndice)
         {
             Result result;
             unsafe
@@ -1740,7 +1749,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void UnregisterObjectsNVX(VkObjectTableNvx objectTable, ObjectEntryTypeNvx[] pObjectEntryTypes, UInt32[] pObjectIndices)
+        public void UnregisterObjectsNVX(ObjectTableNvx objectTable, ObjectEntryTypeNvx[] pObjectEntryTypes, UInt32[] pObjectIndices)
         {
             Result result;
             unsafe
@@ -1763,7 +1772,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void UnregisterObjectsNVX(VkObjectTableNvx objectTable, ObjectEntryTypeNvx pObjectEntryType, UInt32? pObjectIndice)
+        public void UnregisterObjectsNVX(ObjectTableNvx objectTable, ObjectEntryTypeNvx pObjectEntryType, UInt32? pObjectIndice)
         {
             Result result;
             unsafe
@@ -1776,7 +1785,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void TrimCommandPoolKHR(VkCommandPool commandPool, UInt32 flags = 0)
+        public void TrimCommandPoolKHR(CommandPool commandPool, UInt32 flags = 0)
         {
             unsafe
             {
@@ -1926,7 +1935,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DisplayPowerControlEXT(VkDisplayKhr display, DisplayPowerInfoExt pDisplayPowerInfo)
+        public void DisplayPowerControlEXT(DisplayKhr display, DisplayPowerInfoExt pDisplayPowerInfo)
         {
             Result result;
             unsafe
@@ -1937,13 +1946,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkFence RegisterDeviceEventEXT(DeviceEventInfoExt pDeviceEventInfo, AllocationCallbacks pAllocator = null)
+        public Fence RegisterDeviceEventEXT(DeviceEventInfoExt pDeviceEventInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkFence pFence;
+            Fence pFence;
             unsafe
             {
-                pFence = new VkFence();
+                pFence = new Fence(this);
 
                 fixed (UInt64* ptrpFence = &pFence.m)
                 {
@@ -1956,13 +1965,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkFence RegisterDisplayEventEXT(VkDisplayKhr display, DisplayEventInfoExt pDisplayEventInfo, AllocationCallbacks pAllocator = null)
+        public Fence RegisterDisplayEventEXT(DisplayKhr display, DisplayEventInfoExt pDisplayEventInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkFence pFence;
+            Fence pFence;
             unsafe
             {
-                pFence = new VkFence();
+                pFence = new Fence(this);
 
                 fixed (UInt64* ptrpFence = &pFence.m)
                 {
@@ -1975,7 +1984,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public UInt64 GetSwapchainCounterEXT(VkSwapchainKhr swapchain, SurfaceCounterFlagsExt counter)
+        public UInt64 GetSwapchainCounterEXT(SwapchainKhr swapchain, SurfaceCounterFlagsExt counter)
         {
             Result result;
             UInt64 pCounterValue;
@@ -2073,7 +2082,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public DeviceGroupPresentModeFlagsKhx GetGroupSurfacePresentModesKHX(VkSurfaceKhr surface)
+        public DeviceGroupPresentModeFlagsKhx GetGroupSurfacePresentModesKHX(SurfaceKhr surface)
         {
             Result result;
             DeviceGroupPresentModeFlagsKhx pModes;
@@ -2103,13 +2112,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkDescriptorUpdateTemplateKhr CreateDescriptorUpdateTemplateKHR(DescriptorUpdateTemplateCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
+        public DescriptorUpdateTemplateKhr CreateDescriptorUpdateTemplateKHR(DescriptorUpdateTemplateCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkDescriptorUpdateTemplateKhr pDescriptorUpdateTemplate;
+            DescriptorUpdateTemplateKhr pDescriptorUpdateTemplate;
             unsafe
             {
-                pDescriptorUpdateTemplate = new VkDescriptorUpdateTemplateKhr();
+                pDescriptorUpdateTemplate = new DescriptorUpdateTemplateKhr();
 
                 fixed (UInt64* ptrpDescriptorUpdateTemplate = &pDescriptorUpdateTemplate.m)
                 {
@@ -2122,7 +2131,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyDescriptorUpdateTemplateKHR(VkDescriptorUpdateTemplateKhr descriptorUpdateTemplate = null, AllocationCallbacks pAllocator = null)
+        public void DestroyDescriptorUpdateTemplateKHR(DescriptorUpdateTemplateKhr descriptorUpdateTemplate = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -2130,7 +2139,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void UpdateDescriptorSetWithTemplateKHR(VkDescriptorSet descriptorSet, VkDescriptorUpdateTemplateKhr descriptorUpdateTemplate, IntPtr pData)
+        public void UpdateDescriptorSetWithTemplateKHR(DescriptorSet descriptorSet, DescriptorUpdateTemplateKhr descriptorUpdateTemplate, IntPtr pData)
         {
             unsafe
             {
@@ -2138,7 +2147,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void SetHdrMetadataEXT(VkSwapchainKhr[] pSwapchains, HdrMetadataExt[] pMetadata)
+        public void SetHdrMetadataEXT(SwapchainKhr[] pSwapchains, HdrMetadataExt[] pMetadata)
         {
             unsafe
             {
@@ -2158,7 +2167,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void SetHdrMetadataEXT(VkSwapchainKhr pSwapchain, HdrMetadataExt pMetadata)
+        public void SetHdrMetadataEXT(SwapchainKhr pSwapchain, HdrMetadataExt pMetadata)
         {
             unsafe
             {
@@ -2169,7 +2178,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void GetSwapchainStatusKHR(VkSwapchainKhr swapchain)
+        public void GetSwapchainStatusKHR(SwapchainKhr swapchain)
         {
             Result result;
             unsafe
@@ -2180,7 +2189,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public RefreshCycleDurationGoogle GetRefreshCycleDurationGOOGLE(VkSwapchainKhr swapchain)
+        public RefreshCycleDurationGoogle GetRefreshCycleDurationGOOGLE(SwapchainKhr swapchain)
         {
             Result result;
             RefreshCycleDurationGoogle pDisplayTimingProperties;
@@ -2195,7 +2204,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public PastPresentationTimingGoogle[] GetPastPresentationTimingGOOGLE(VkSwapchainKhr swapchain)
+        public PastPresentationTimingGoogle[] GetPastPresentationTimingGOOGLE(SwapchainKhr swapchain)
         {
             Result result;
             unsafe
@@ -2208,7 +2217,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(PastPresentationTimingGoogle));
-                var refpPresentationTimings = new VkNativeReference((int)(size * pPresentationTimingCount));
+                var refpPresentationTimings = new NativeReference((int)(size * pPresentationTimingCount));
                 var ptrpPresentationTimings = refpPresentationTimings.Handle;
                 result = Interop.NativeMethods.vkGetPastPresentationTimingGOOGLE(this.m, swapchain != null ? swapchain.m : default(UInt64), &pPresentationTimingCount, (PastPresentationTimingGoogle*)ptrpPresentationTimings);
                 if (result != Result.Success)
@@ -2260,7 +2269,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.SparseImageMemoryRequirements2Khr));
-                var refpSparseMemoryRequirements = new VkNativeReference((int)(size * pSparseMemoryRequirementCount));
+                var refpSparseMemoryRequirements = new NativeReference((int)(size * pSparseMemoryRequirementCount));
                 var ptrpSparseMemoryRequirements = refpSparseMemoryRequirements.Handle;
                 Interop.NativeMethods.vkGetImageSparseMemoryRequirements2KHR(this.m, pInfo != null ? pInfo.m : (Interop.ImageSparseMemoryRequirementsInfo2Khr*)default(IntPtr), &pSparseMemoryRequirementCount, (Interop.SparseImageMemoryRequirements2Khr*)ptrpSparseMemoryRequirements);
 
@@ -2269,20 +2278,20 @@ namespace MiniEngine.Drivers.Vulkan
                 var arr = new SparseImageMemoryRequirements2Khr[pSparseMemoryRequirementCount];
                 for (int i = 0; i < pSparseMemoryRequirementCount; i++)
                 {
-                    arr[i] = new SparseImageMemoryRequirements2Khr(new VkNativePointer(refpSparseMemoryRequirements, (IntPtr)(&((Interop.SparseImageMemoryRequirements2Khr*)ptrpSparseMemoryRequirements)[i])));
+                    arr[i] = new SparseImageMemoryRequirements2Khr(new NativePointer(refpSparseMemoryRequirements, (IntPtr)(&((Interop.SparseImageMemoryRequirements2Khr*)ptrpSparseMemoryRequirements)[i])));
                 }
 
                 return arr;
             }
         }
 
-        public VkSamplerYcbcrConversionKhr CreateSamplerYcbcrConversionKHR(SamplerYcbcrConversionCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
+        public SamplerYcbcrConversionKhr CreateSamplerYcbcrConversionKHR(SamplerYcbcrConversionCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkSamplerYcbcrConversionKhr pYcbcrConversion;
+            SamplerYcbcrConversionKhr pYcbcrConversion;
             unsafe
             {
-                pYcbcrConversion = new VkSamplerYcbcrConversionKhr();
+                pYcbcrConversion = new SamplerYcbcrConversionKhr();
 
                 fixed (UInt64* ptrpYcbcrConversion = &pYcbcrConversion.m)
                 {
@@ -2295,7 +2304,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroySamplerYcbcrConversionKHR(VkSamplerYcbcrConversionKhr ycbcrConversion = null, AllocationCallbacks pAllocator = null)
+        public void DestroySamplerYcbcrConversionKHR(SamplerYcbcrConversionKhr ycbcrConversion = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -2303,13 +2312,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public VkValidationCacheExt CreateValidationCacheEXT(ValidationCacheCreateInfoExt pCreateInfo, AllocationCallbacks pAllocator = null)
+        public ValidationCacheExt CreateValidationCacheEXT(ValidationCacheCreateInfoExt pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkValidationCacheExt pValidationCache;
+            ValidationCacheExt pValidationCache;
             unsafe
             {
-                pValidationCache = new VkValidationCacheExt();
+                pValidationCache = new ValidationCacheExt();
 
                 fixed (UInt64* ptrpValidationCache = &pValidationCache.m)
                 {
@@ -2322,7 +2331,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void DestroyValidationCacheEXT(VkValidationCacheExt validationCache = null, AllocationCallbacks pAllocator = null)
+        public void DestroyValidationCacheEXT(ValidationCacheExt validationCache = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -2330,7 +2339,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void GetValidationCacheDataEXT(VkValidationCacheExt validationCache, out UIntPtr pDataSize, IntPtr pData = default(IntPtr))
+        public void GetValidationCacheDataEXT(ValidationCacheExt validationCache, out UIntPtr pDataSize, IntPtr pData = default(IntPtr))
         {
             Result result;
             unsafe
@@ -2344,7 +2353,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void MergeValidationCachesEXT(VkValidationCacheExt dstCache, VkValidationCacheExt[] pSrcCaches)
+        public void MergeValidationCachesEXT(ValidationCacheExt dstCache, ValidationCacheExt[] pSrcCaches)
         {
             Result result;
             unsafe
@@ -2361,7 +2370,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void MergeValidationCachesEXT(VkValidationCacheExt dstCache, VkValidationCacheExt pSrcCache)
+        public void MergeValidationCachesEXT(ValidationCacheExt dstCache, ValidationCacheExt pSrcCache)
         {
             Result result;
             unsafe
@@ -2390,7 +2399,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void AcquireImageANDROID(VkImage image, int nativeFenceFd, VkSemaphore semaphore, VkFence fence)
+        public void AcquireImageANDROID(Image image, int nativeFenceFd, Semaphore semaphore, Fence fence)
         {
             Result result;
             unsafe
@@ -2401,7 +2410,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void GetShaderInfoAMD(VkPipeline pipeline, ShaderStageFlags shaderStage, ShaderInfoTypeAmd infoType, out UIntPtr pInfoSize, IntPtr pInfo = default(IntPtr))
+        public void GetShaderInfoAMD(Pipeline pipeline, ShaderStageFlags shaderStage, ShaderInfoTypeAmd infoType, out UIntPtr pInfoSize, IntPtr pInfo = default(IntPtr))
         {
             Result result;
             unsafe

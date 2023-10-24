@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 namespace MiniEngine.Drivers.Vulkan
 {
 
-    internal class VkNativeReference : IDisposable
+    internal class NativeReference : IDisposable
     {
         internal IntPtr Handle { get; private set; }
 
-        internal VkNativeReference(int size, bool zero = false)
+        internal NativeReference(int size, bool zero = false)
         {
             Handle = Marshal.AllocHGlobal(size);
             if (NativeMemoryDebug.Enabled)
@@ -53,24 +53,24 @@ namespace MiniEngine.Drivers.Vulkan
             Handle = IntPtr.Zero;
         }
 
-        ~VkNativeReference()
+        ~NativeReference()
         {
             Dispose();
         }
     }
 
-    internal class VkNativePointer
+    internal class NativePointer
     {
-        internal VkNativeReference Reference { get; private set; }
+        internal NativeReference Reference { get; private set; }
         internal IntPtr Handle { get; private set; }
 
-        internal VkNativePointer(VkNativeReference reference, IntPtr pointer)
+        internal NativePointer(NativeReference reference, IntPtr pointer)
         {
             Reference = reference;
             Handle = pointer;
         }
 
-        internal VkNativePointer(VkNativeReference reference)
+        internal NativePointer(NativeReference reference)
         {
             Reference = reference;
             Handle = reference.Handle;
@@ -85,7 +85,7 @@ namespace MiniEngine.Drivers.Vulkan
 
     public class MarshalledObject : IDisposable, IMarshalling
     {
-        internal VkNativePointer native;
+        internal NativePointer native;
 
         IntPtr IMarshalling.Handle
         {

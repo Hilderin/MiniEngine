@@ -9,16 +9,17 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Encapsulate a buffer
     /// </summary>
-    public class VkBufferWrapper: IDisposable
+    public class BufferWrapper: IDisposable
     {
-        public int Size;
-        public VkDevice Device;
-        public VkBuffer Buffer;
-        public VkDeviceMemory DeviceMemory;
+        private Device _device;
 
-        public VkBufferWrapper(VkDevice device, VkBuffer buffer, VkDeviceMemory deviceMemory, int length)
+        public int Size;        
+        public Buffer Buffer;
+        public DeviceMemory DeviceMemory;
+
+        public BufferWrapper(Device device, Buffer buffer, DeviceMemory deviceMemory, int length)
         {
-            Device = device;
+            _device = device;
             Buffer = buffer;
             DeviceMemory = deviceMemory;
             Size = length;
@@ -28,13 +29,13 @@ namespace MiniEngine.Drivers.Vulkan
         {
             if (DeviceMemory != null)
             {
-                Device.FreeMemory(DeviceMemory);
+                _device.FreeMemory(DeviceMemory);
                 DeviceMemory = null;
             }
 
             if (Buffer != null)
             {
-                Device.DestroyBuffer(Buffer);
+                _device.DestroyBuffer(Buffer);
                 Buffer = null;
             }
 
@@ -44,12 +45,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Implicit conversion to a Buffer
         /// </summary>
-        public static implicit operator VkBuffer(VkBufferWrapper buffer) { return buffer.Buffer; }
+        public static implicit operator Buffer(BufferWrapper buffer) { return buffer.Buffer; }
 
         /// <summary>
         /// Implicit conversion to a DeviceMemory
         /// </summary>
-        public static implicit operator VkDeviceMemory(VkBufferWrapper buffer) { return buffer.DeviceMemory; }
+        public static implicit operator DeviceMemory(BufferWrapper buffer) { return buffer.DeviceMemory; }
 
     }
 }

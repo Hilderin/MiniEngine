@@ -8,13 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Silk.NET.Assimp" Version="2.17.1" PrivateAssets="compile" />
-    <PackageReference Include="Silk.NET.Vulkan" Version="2.17.1" PrivateAssets="compile" />
-    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.17.1" PrivateAssets="compile" />
-    <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.17.1" PrivateAssets="compile" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\MiniEngine.Assets\MiniEngine.Assets.csproj" />
     <ProjectReference Include="..\MiniEngine.Drivers.Vulkan\MiniEngine.Drivers.Vulkan.csproj" />
     <ProjectReference Include="..\MiniEngine\MiniEngine.csproj" />

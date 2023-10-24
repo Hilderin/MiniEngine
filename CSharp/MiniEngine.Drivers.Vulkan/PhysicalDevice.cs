@@ -8,15 +8,15 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Vulkan Physical device
     /// </summary>
-    public partial class VkPhysicalDevice : IMarshalling, IDisposable
+    public partial class PhysicalDevice : IMarshalling, IDisposable
     {
         /// <summary>
         /// Device
         /// </summary>
-        public List<VkDevice> Devices = new List<VkDevice>();
+        public List<Device> Devices = new List<Device>();
 
 
-        internal VkPhysicalDevice() { }
+        internal PhysicalDevice() { }
 
         internal IntPtr m;
 
@@ -50,7 +50,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(QueueFamilyProperties));
-                var refpQueueFamilyProperties = new VkNativeReference((int)(size * pQueueFamilyPropertyCount));
+                var refpQueueFamilyProperties = new NativeReference((int)(size * pQueueFamilyPropertyCount));
                 var ptrpQueueFamilyProperties = refpQueueFamilyProperties.Handle;
                 Interop.NativeMethods.vkGetPhysicalDeviceQueueFamilyProperties(this.m, &pQueueFamilyPropertyCount, (QueueFamilyProperties*)ptrpQueueFamilyProperties);
 
@@ -122,7 +122,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create the device with it's queues
         /// </summary>
-        public VkDevice CreateDevice(VkSurfaceKhr surface)
+        public Device CreateDevice(SurfaceKhr surface)
         {
             var queueFamilyProperties = GetQueueFamilyProperties();
 
@@ -150,13 +150,13 @@ namespace MiniEngine.Drivers.Vulkan
 
         }
 
-        public VkDevice CreateDevice(DeviceCreateInfo pCreateInfo, VkSurfaceKhr surface, AllocationCallbacks pAllocator = null)
+        public Device CreateDevice(DeviceCreateInfo pCreateInfo, SurfaceKhr surface, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkDevice pDevice;
+            Device pDevice;
             unsafe
             {
-                pDevice = new VkDevice();
+                pDevice = new Device();
 
                 fixed (IntPtr* ptrpDevice = &pDevice.m)
                 {
@@ -189,7 +189,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.LayerProperties));
-                var refpProperties = new VkNativeReference((int)(size * pPropertyCount));
+                var refpProperties = new NativeReference((int)(size * pPropertyCount));
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkEnumerateDeviceLayerProperties(this.m, &pPropertyCount, (Interop.LayerProperties*)ptrpProperties);
                 if (result != Result.Success)
@@ -200,7 +200,7 @@ namespace MiniEngine.Drivers.Vulkan
                 var arr = new LayerProperties[pPropertyCount];
                 for (int i = 0; i < pPropertyCount; i++)
                 {
-                    arr[i] = new LayerProperties(new VkNativePointer(refpProperties, (IntPtr)(&((Interop.LayerProperties*)ptrpProperties)[i])));
+                    arr[i] = new LayerProperties(new NativePointer(refpProperties, (IntPtr)(&((Interop.LayerProperties*)ptrpProperties)[i])));
                 }
 
                 return arr;
@@ -220,7 +220,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.ExtensionProperties));
-                var refpProperties = new VkNativeReference((int)(size * pPropertyCount));
+                var refpProperties = new NativeReference((int)(size * pPropertyCount));
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkEnumerateDeviceExtensionProperties(this.m, pLayerName, &pPropertyCount, (Interop.ExtensionProperties*)ptrpProperties);
                 if (result != Result.Success)
@@ -231,7 +231,7 @@ namespace MiniEngine.Drivers.Vulkan
                 var arr = new ExtensionProperties[pPropertyCount];
                 for (int i = 0; i < pPropertyCount; i++)
                 {
-                    arr[i] = new ExtensionProperties(new VkNativePointer(refpProperties, (IntPtr)(&((Interop.ExtensionProperties*)ptrpProperties)[i])));
+                    arr[i] = new ExtensionProperties(new NativePointer(refpProperties, (IntPtr)(&((Interop.ExtensionProperties*)ptrpProperties)[i])));
                 }
 
                 return arr;
@@ -248,7 +248,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(SparseImageFormatProperties));
-                var refpProperties = new VkNativeReference((int)(size * pPropertyCount));
+                var refpProperties = new NativeReference((int)(size * pPropertyCount));
                 var ptrpProperties = refpProperties.Handle;
                 Interop.NativeMethods.vkGetPhysicalDeviceSparseImageFormatProperties(this.m, format, type, samples, usage, tiling, &pPropertyCount, (SparseImageFormatProperties*)ptrpProperties);
 
@@ -277,7 +277,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.DisplayPropertiesKhr));
-                var refpProperties = new VkNativeReference((int)(size * pPropertyCount));
+                var refpProperties = new NativeReference((int)(size * pPropertyCount));
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDeviceDisplayPropertiesKHR(this.m, &pPropertyCount, (Interop.DisplayPropertiesKhr*)ptrpProperties);
                 if (result != Result.Success)
@@ -288,7 +288,7 @@ namespace MiniEngine.Drivers.Vulkan
                 var arr = new DisplayPropertiesKhr[pPropertyCount];
                 for (int i = 0; i < pPropertyCount; i++)
                 {
-                    arr[i] = new DisplayPropertiesKhr(new VkNativePointer(refpProperties, (IntPtr)(&((Interop.DisplayPropertiesKhr*)ptrpProperties)[i])));
+                    arr[i] = new DisplayPropertiesKhr(new NativePointer(refpProperties, (IntPtr)(&((Interop.DisplayPropertiesKhr*)ptrpProperties)[i])));
                 }
 
                 return arr;
@@ -308,7 +308,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.DisplayPlanePropertiesKhr));
-                var refpProperties = new VkNativeReference((int)(size * pPropertyCount));
+                var refpProperties = new NativeReference((int)(size * pPropertyCount));
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDeviceDisplayPlanePropertiesKHR(this.m, &pPropertyCount, (Interop.DisplayPlanePropertiesKhr*)ptrpProperties);
                 if (result != Result.Success)
@@ -319,14 +319,14 @@ namespace MiniEngine.Drivers.Vulkan
                 var arr = new DisplayPlanePropertiesKhr[pPropertyCount];
                 for (int i = 0; i < pPropertyCount; i++)
                 {
-                    arr[i] = new DisplayPlanePropertiesKhr(new VkNativePointer(refpProperties, (IntPtr)(&((Interop.DisplayPlanePropertiesKhr*)ptrpProperties)[i])));
+                    arr[i] = new DisplayPlanePropertiesKhr(new NativePointer(refpProperties, (IntPtr)(&((Interop.DisplayPlanePropertiesKhr*)ptrpProperties)[i])));
                 }
 
                 return arr;
             }
         }
 
-        public VkDisplayKhr[] GetDisplayPlaneSupportedDisplaysKHR(UInt32 planeIndex)
+        public DisplayKhr[] GetDisplayPlaneSupportedDisplaysKHR(UInt32 planeIndex)
         {
             Result result;
             unsafe
@@ -339,7 +339,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
-                var refpDisplays = new VkNativeReference((int)(size * pDisplayCount));
+                var refpDisplays = new NativeReference((int)(size * pDisplayCount));
                 var ptrpDisplays = refpDisplays.Handle;
                 result = Interop.NativeMethods.vkGetDisplayPlaneSupportedDisplaysKHR(this.m, planeIndex, &pDisplayCount, (UInt64*)ptrpDisplays);
                 if (result != Result.Success)
@@ -347,10 +347,10 @@ namespace MiniEngine.Drivers.Vulkan
 
                 if (pDisplayCount <= 0)
                     return null;
-                var arr = new VkDisplayKhr[pDisplayCount];
+                var arr = new DisplayKhr[pDisplayCount];
                 for (int i = 0; i < pDisplayCount; i++)
                 {
-                    arr[i] = new VkDisplayKhr();
+                    arr[i] = new DisplayKhr();
                     arr[i].m = ((UInt64*)ptrpDisplays)[i];
                 }
 
@@ -358,7 +358,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public DisplayModePropertiesKhr[] GetDisplayModePropertiesKHR(VkDisplayKhr display)
+        public DisplayModePropertiesKhr[] GetDisplayModePropertiesKHR(DisplayKhr display)
         {
             Result result;
             unsafe
@@ -371,7 +371,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.DisplayModePropertiesKhr));
-                var refpProperties = new VkNativeReference((int)(size * pPropertyCount));
+                var refpProperties = new NativeReference((int)(size * pPropertyCount));
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkGetDisplayModePropertiesKHR(this.m, display != null ? display.m : default(UInt64), &pPropertyCount, (Interop.DisplayModePropertiesKhr*)ptrpProperties);
                 if (result != Result.Success)
@@ -382,20 +382,20 @@ namespace MiniEngine.Drivers.Vulkan
                 var arr = new DisplayModePropertiesKhr[pPropertyCount];
                 for (int i = 0; i < pPropertyCount; i++)
                 {
-                    arr[i] = new DisplayModePropertiesKhr(new VkNativePointer(refpProperties, (IntPtr)(&((Interop.DisplayModePropertiesKhr*)ptrpProperties)[i])));
+                    arr[i] = new DisplayModePropertiesKhr(new NativePointer(refpProperties, (IntPtr)(&((Interop.DisplayModePropertiesKhr*)ptrpProperties)[i])));
                 }
 
                 return arr;
             }
         }
 
-        public VkDisplayModeKhr CreateDisplayModeKHR(VkDisplayKhr display, DisplayModeCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
+        public DisplayModeKhr CreateDisplayModeKHR(DisplayKhr display, DisplayModeCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkDisplayModeKhr pMode;
+            DisplayModeKhr pMode;
             unsafe
             {
-                pMode = new VkDisplayModeKhr();
+                pMode = new DisplayModeKhr();
 
                 fixed (UInt64* ptrpMode = &pMode.m)
                 {
@@ -408,7 +408,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public DisplayPlaneCapabilitiesKhr GetDisplayPlaneCapabilitiesKHR(VkDisplayModeKhr mode, UInt32 planeIndex)
+        public DisplayPlaneCapabilitiesKhr GetDisplayPlaneCapabilitiesKHR(DisplayModeKhr mode, UInt32 planeIndex)
         {
             Result result;
             DisplayPlaneCapabilitiesKhr pCapabilities;
@@ -423,7 +423,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public Bool32 GetSurfaceSupportKHR(UInt32 queueFamilyIndex, VkSurfaceKhr surface)
+        public Bool32 GetSurfaceSupportKHR(UInt32 queueFamilyIndex, SurfaceKhr surface)
         {
             Result result;
             Bool32 pSupported;
@@ -438,7 +438,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public SurfaceCapabilitiesKhr GetSurfaceCapabilitiesKHR(VkSurfaceKhr surface)
+        public SurfaceCapabilitiesKhr GetSurfaceCapabilitiesKHR(SurfaceKhr surface)
         {
             Result result;
             SurfaceCapabilitiesKhr pSurfaceCapabilities;
@@ -453,7 +453,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public SurfaceFormatKhr[] GetSurfaceFormatsKHR(VkSurfaceKhr surface)
+        public SurfaceFormatKhr[] GetSurfaceFormatsKHR(SurfaceKhr surface)
         {
             Result result;
             unsafe
@@ -466,7 +466,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(SurfaceFormatKhr));
-                var refpSurfaceFormats = new VkNativeReference((int)(size * pSurfaceFormatCount));
+                var refpSurfaceFormats = new NativeReference((int)(size * pSurfaceFormatCount));
                 var ptrpSurfaceFormats = refpSurfaceFormats.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormatsKHR(this.m, surface != null ? surface.m : default(UInt64), &pSurfaceFormatCount, (SurfaceFormatKhr*)ptrpSurfaceFormats);
                 if (result != Result.Success)
@@ -484,7 +484,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public PresentModeKhr[] GetSurfacePresentModesKHR(VkSurfaceKhr surface)
+        public PresentModeKhr[] GetSurfacePresentModesKHR(SurfaceKhr surface)
         {
             Result result;
             unsafe
@@ -497,7 +497,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = 4;
-                var refpPresentModes = new VkNativeReference((int)(size * pPresentModeCount));
+                var refpPresentModes = new NativeReference((int)(size * pPresentModeCount));
                 var ptrpPresentModes = refpPresentModes.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDeviceSurfacePresentModesKHR(this.m, surface != null ? surface.m : default(UInt64), &pPresentModeCount, (PresentModeKhr*)ptrpPresentModes);
                 if (result != Result.Success)
@@ -602,7 +602,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.QueueFamilyProperties2Khr));
-                var refpQueueFamilyProperties = new VkNativeReference((int)(size * pQueueFamilyPropertyCount));
+                var refpQueueFamilyProperties = new NativeReference((int)(size * pQueueFamilyPropertyCount));
                 var ptrpQueueFamilyProperties = refpQueueFamilyProperties.Handle;
                 Interop.NativeMethods.vkGetPhysicalDeviceQueueFamilyProperties2KHR(this.m, &pQueueFamilyPropertyCount, (Interop.QueueFamilyProperties2Khr*)ptrpQueueFamilyProperties);
 
@@ -611,7 +611,7 @@ namespace MiniEngine.Drivers.Vulkan
                 var arr = new QueueFamilyProperties2Khr[pQueueFamilyPropertyCount];
                 for (int i = 0; i < pQueueFamilyPropertyCount; i++)
                 {
-                    arr[i] = new QueueFamilyProperties2Khr(new VkNativePointer(refpQueueFamilyProperties, (IntPtr)(&((Interop.QueueFamilyProperties2Khr*)ptrpQueueFamilyProperties)[i])));
+                    arr[i] = new QueueFamilyProperties2Khr(new NativePointer(refpQueueFamilyProperties, (IntPtr)(&((Interop.QueueFamilyProperties2Khr*)ptrpQueueFamilyProperties)[i])));
                 }
 
                 return arr;
@@ -640,7 +640,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.SparseImageFormatProperties2Khr));
-                var refpProperties = new VkNativeReference((int)(size * pPropertyCount));
+                var refpProperties = new NativeReference((int)(size * pPropertyCount));
                 var ptrpProperties = refpProperties.Handle;
                 Interop.NativeMethods.vkGetPhysicalDeviceSparseImageFormatProperties2KHR(this.m, pFormatInfo != null ? pFormatInfo.m : (Interop.PhysicalDeviceSparseImageFormatInfo2Khr*)default(IntPtr), &pPropertyCount, (Interop.SparseImageFormatProperties2Khr*)ptrpProperties);
 
@@ -649,7 +649,7 @@ namespace MiniEngine.Drivers.Vulkan
                 var arr = new SparseImageFormatProperties2Khr[pPropertyCount];
                 for (int i = 0; i < pPropertyCount; i++)
                 {
-                    arr[i] = new SparseImageFormatProperties2Khr(new VkNativePointer(refpProperties, (IntPtr)(&((Interop.SparseImageFormatProperties2Khr*)ptrpProperties)[i])));
+                    arr[i] = new SparseImageFormatProperties2Khr(new NativePointer(refpProperties, (IntPtr)(&((Interop.SparseImageFormatProperties2Khr*)ptrpProperties)[i])));
                 }
 
                 return arr;
@@ -692,7 +692,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void ReleaseDisplayEXT(VkDisplayKhr display)
+        public void ReleaseDisplayEXT(DisplayKhr display)
         {
             Result result;
             unsafe
@@ -703,7 +703,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public IntPtr AcquireXlibDisplayEXT(VkDisplayKhr display)
+        public IntPtr AcquireXlibDisplayEXT(DisplayKhr display)
         {
             Result result;
             IntPtr dpy;
@@ -718,12 +718,12 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void GetRandROutputDisplayEXT(out IntPtr dpy, UInt32 rrOutput, out VkDisplayKhr pDisplay)
+        public void GetRandROutputDisplayEXT(out IntPtr dpy, UInt32 rrOutput, out DisplayKhr pDisplay)
         {
             Result result;
             unsafe
             {
-                pDisplay = new VkDisplayKhr();
+                pDisplay = new DisplayKhr();
 
                 fixed (IntPtr* ptrdpy = &dpy)
                 {
@@ -737,7 +737,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public SurfaceCapabilities2Ext GetSurfaceCapabilities2EXT(VkSurfaceKhr surface)
+        public SurfaceCapabilities2Ext GetSurfaceCapabilities2EXT(SurfaceKhr surface)
         {
             Result result;
             SurfaceCapabilities2Ext pSurfaceCapabilities;
@@ -752,7 +752,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public Rect2D[] GetPresentRectanglesKHX(VkSurfaceKhr surface)
+        public Rect2D[] GetPresentRectanglesKHX(SurfaceKhr surface)
         {
             Result result;
             unsafe
@@ -765,7 +765,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Rect2D));
-                var refpRects = new VkNativeReference((int)(size * pRectCount));
+                var refpRects = new NativeReference((int)(size * pRectCount));
                 var ptrpRects = refpRects.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDevicePresentRectanglesKHX(this.m, surface != null ? surface.m : default(UInt64), &pRectCount, (Rect2D*)ptrpRects);
                 if (result != Result.Success)
@@ -823,7 +823,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.SurfaceFormat2Khr));
-                var refpSurfaceFormats = new VkNativeReference((int)(size * pSurfaceFormatCount));
+                var refpSurfaceFormats = new NativeReference((int)(size * pSurfaceFormatCount));
                 var ptrpSurfaceFormats = refpSurfaceFormats.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormats2KHR(this.m, pSurfaceInfo != null ? pSurfaceInfo.m : (Interop.PhysicalDeviceSurfaceInfo2Khr*)default(IntPtr), &pSurfaceFormatCount, (Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats);
                 if (result != Result.Success)
@@ -834,7 +834,7 @@ namespace MiniEngine.Drivers.Vulkan
                 var arr = new SurfaceFormat2Khr[pSurfaceFormatCount];
                 for (int i = 0; i < pSurfaceFormatCount; i++)
                 {
-                    arr[i] = new SurfaceFormat2Khr(new VkNativePointer(refpSurfaceFormats, (IntPtr)(&((Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats)[i])));
+                    arr[i] = new SurfaceFormat2Khr(new NativePointer(refpSurfaceFormats, (IntPtr)(&((Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats)[i])));
                 }
 
                 return arr;
@@ -843,7 +843,7 @@ namespace MiniEngine.Drivers.Vulkan
 
         public void Dispose()
         {
-            foreach (VkDevice device in Devices)
+            foreach (Device device in Devices)
                 device.Dispose();
 
             Devices.Clear();
@@ -852,7 +852,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Return the format supported by the surface
         /// </summary>
-        public SurfaceFormatKhr GetSurfaceFormat(VkSurfaceKhr surface, Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces)
+        public SurfaceFormatKhr GetSurfaceFormat(SurfaceKhr surface, Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces)
         {
             foreach (var f in GetSurfaceFormatsKHR(surface))
             {

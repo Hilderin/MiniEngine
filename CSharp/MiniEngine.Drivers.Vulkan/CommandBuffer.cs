@@ -5,9 +5,9 @@ namespace MiniEngine.Drivers.Vulkan
 {
 
 
-    public partial class VkCommandBuffer : IMarshalling
+    public partial class CommandBuffer : IMarshalling
     {
-        internal VkCommandBuffer() { }
+        internal CommandBuffer() { }
 
         internal IntPtr m;
 
@@ -67,7 +67,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdBindPipeline(PipelineBindPoint pipelineBindPoint, VkPipeline pipeline)
+        public void CmdBindPipeline(PipelineBindPoint pipelineBindPoint, Pipeline pipeline)
         {
             unsafe
             {
@@ -179,7 +179,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdBindDescriptorSets(PipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, UInt32 firstSet, VkDescriptorSet[] pDescriptorSets, UInt32[] pDynamicOffsets)
+        public void CmdBindDescriptorSets(PipelineBindPoint pipelineBindPoint, PipelineLayout layout, UInt32 firstSet, DescriptorSet[] pDescriptorSets, UInt32[] pDynamicOffsets)
         {
             unsafe
             {
@@ -199,7 +199,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdBindDescriptorSet(PipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, UInt32 firstSet, VkDescriptorSet pDescriptorSet, UInt32? pDynamicOffset)
+        public void CmdBindDescriptorSet(PipelineBindPoint pipelineBindPoint, PipelineLayout layout, UInt32 firstSet, DescriptorSet pDescriptorSet, UInt32? pDynamicOffset)
         {
             unsafe
             {
@@ -212,7 +212,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdBindIndexBuffer(VkBuffer buffer, DeviceSize offset, IndexType indexType)
+        public void CmdBindIndexBuffer(Buffer buffer, DeviceSize offset, IndexType indexType)
         {
             unsafe
             {
@@ -220,7 +220,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdBindVertexBuffers(UInt32 firstBinding, VkBuffer[] pBuffers, DeviceSize[] pOffsets)
+        public void CmdBindVertexBuffers(UInt32 firstBinding, Buffer[] pBuffers, DeviceSize[] pOffsets)
         {
             unsafe
             {
@@ -240,7 +240,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdBindVertexBuffer(UInt32 firstBinding, VkBuffer pBuffer, DeviceSize pOffset)
+        public void CmdBindVertexBuffer(UInt32 firstBinding, Buffer pBuffer, DeviceSize pOffset)
         {
             unsafe
             {
@@ -282,7 +282,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdDrawIndirect(VkBuffer buffer, DeviceSize offset, UInt32 drawCount, UInt32 stride)
+        public void CmdDrawIndirect(Buffer buffer, DeviceSize offset, UInt32 drawCount, UInt32 stride)
         {
             unsafe
             {
@@ -290,7 +290,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdDrawIndexedIndirect(VkBuffer buffer, DeviceSize offset, UInt32 drawCount, UInt32 stride)
+        public void CmdDrawIndexedIndirect(Buffer buffer, DeviceSize offset, UInt32 drawCount, UInt32 stride)
         {
             unsafe
             {
@@ -306,7 +306,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdDispatchIndirect(VkBuffer buffer, DeviceSize offset)
+        public void CmdDispatchIndirect(Buffer buffer, DeviceSize offset)
         {
             unsafe
             {
@@ -314,7 +314,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdCopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, BufferCopy[] pRegions)
+        public void CmdCopyBuffer(Buffer srcBuffer, Buffer dstBuffer, BufferCopy[] pRegions)
         {
             unsafe
             {
@@ -328,7 +328,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdCopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, BufferCopy? pRegion)
+        public void CmdCopyBuffer(Buffer srcBuffer, Buffer dstBuffer, BufferCopy? pRegion)
         {
             unsafe
             {
@@ -338,7 +338,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdCopyImage(VkImage srcImage, ImageLayout srcImageLayout, VkImage dstImage, ImageLayout dstImageLayout, ImageCopy[] pRegions)
+        public void CmdCopyImage(Image srcImage, ImageLayout srcImageLayout, Image dstImage, ImageLayout dstImageLayout, ImageCopy[] pRegions)
         {
             unsafe
             {
@@ -352,7 +352,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdCopyImage(VkImage srcImage, ImageLayout srcImageLayout, VkImage dstImage, ImageLayout dstImageLayout, ImageCopy? pRegion)
+        public void CmdCopyImage(Image srcImage, ImageLayout srcImageLayout, Image dstImage, ImageLayout dstImageLayout, ImageCopy? pRegion)
         {
             unsafe
             {
@@ -362,7 +362,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdBlitImage(VkImage srcImage, ImageLayout srcImageLayout, VkImage dstImage, ImageLayout dstImageLayout, ImageBlit[] pRegions, Filter filter)
+        public void CmdBlitImage(Image srcImage, ImageLayout srcImageLayout, Image dstImage, ImageLayout dstImageLayout, ImageBlit[] pRegions, Filter filter)
         {
             unsafe
             {
@@ -376,7 +376,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdBlitImage(VkImage srcImage, ImageLayout srcImageLayout, VkImage dstImage, ImageLayout dstImageLayout, ImageBlit pRegion, Filter filter)
+        public void CmdBlitImage(Image srcImage, ImageLayout srcImageLayout, Image dstImage, ImageLayout dstImageLayout, ImageBlit pRegion, Filter filter)
         {
             unsafe
             {
@@ -384,7 +384,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdCopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, ImageLayout dstImageLayout, BufferImageCopy[] pRegions)
+        public void CmdCopyBufferToImage(Buffer srcBuffer, Image dstImage, ImageLayout dstImageLayout, BufferImageCopy[] pRegions)
         {
             unsafe
             {
@@ -398,7 +398,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdCopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, ImageLayout dstImageLayout, BufferImageCopy? pRegion)
+        public void CmdCopyBufferToImage(Buffer srcBuffer, Image dstImage, ImageLayout dstImageLayout, BufferImageCopy? pRegion)
         {
             unsafe
             {
@@ -408,7 +408,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdCopyImageToBuffer(VkImage srcImage, ImageLayout srcImageLayout, VkBuffer dstBuffer, BufferImageCopy[] pRegions)
+        public void CmdCopyImageToBuffer(Image srcImage, ImageLayout srcImageLayout, Buffer dstBuffer, BufferImageCopy[] pRegions)
         {
             unsafe
             {
@@ -422,7 +422,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdCopyImageToBuffer(VkImage srcImage, ImageLayout srcImageLayout, VkBuffer dstBuffer, BufferImageCopy? pRegion)
+        public void CmdCopyImageToBuffer(Image srcImage, ImageLayout srcImageLayout, Buffer dstBuffer, BufferImageCopy? pRegion)
         {
             unsafe
             {
@@ -432,7 +432,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdUpdateBuffer(VkBuffer dstBuffer, DeviceSize dstOffset, DeviceSize dataSize, IntPtr pData)
+        public void CmdUpdateBuffer(Buffer dstBuffer, DeviceSize dstOffset, DeviceSize dataSize, IntPtr pData)
         {
             unsafe
             {
@@ -440,7 +440,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdFillBuffer(VkBuffer dstBuffer, DeviceSize dstOffset, DeviceSize size, UInt32 data)
+        public void CmdFillBuffer(Buffer dstBuffer, DeviceSize dstOffset, DeviceSize size, UInt32 data)
         {
             unsafe
             {
@@ -448,7 +448,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdClearColorImage(VkImage image, ImageLayout imageLayout, ClearColorValue pColor, ImageSubresourceRange[] pRanges)
+        public void CmdClearColorImage(Image image, ImageLayout imageLayout, ClearColorValue pColor, ImageSubresourceRange[] pRanges)
         {
             unsafe
             {
@@ -462,7 +462,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdClearColorImage(VkImage image, ImageLayout imageLayout, ClearColorValue pColor, ImageSubresourceRange? pRange)
+        public void CmdClearColorImage(Image image, ImageLayout imageLayout, ClearColorValue pColor, ImageSubresourceRange? pRange)
         {
             unsafe
             {
@@ -472,7 +472,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdClearDepthStencilImage(VkImage image, ImageLayout imageLayout, ClearDepthStencilValue pDepthStencil, ImageSubresourceRange[] pRanges)
+        public void CmdClearDepthStencilImage(Image image, ImageLayout imageLayout, ClearDepthStencilValue pDepthStencil, ImageSubresourceRange[] pRanges)
         {
             unsafe
             {
@@ -486,7 +486,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdClearDepthStencilImage(VkImage image, ImageLayout imageLayout, ClearDepthStencilValue pDepthStencil, ImageSubresourceRange? pRange)
+        public void CmdClearDepthStencilImage(Image image, ImageLayout imageLayout, ClearDepthStencilValue pDepthStencil, ImageSubresourceRange? pRange)
         {
             unsafe
             {
@@ -526,7 +526,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdResolveImage(VkImage srcImage, ImageLayout srcImageLayout, VkImage dstImage, ImageLayout dstImageLayout, ImageResolve[] pRegions)
+        public void CmdResolveImage(Image srcImage, ImageLayout srcImageLayout, Image dstImage, ImageLayout dstImageLayout, ImageResolve[] pRegions)
         {
             unsafe
             {
@@ -540,7 +540,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdResolveImage(VkImage srcImage, ImageLayout srcImageLayout, VkImage dstImage, ImageLayout dstImageLayout, ImageResolve? pRegion)
+        public void CmdResolveImage(Image srcImage, ImageLayout srcImageLayout, Image dstImage, ImageLayout dstImageLayout, ImageResolve? pRegion)
         {
             unsafe
             {
@@ -550,7 +550,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdSetEvent(VkEvent @event, PipelineStageFlags stageMask)
+        public void CmdSetEvent(Event @event, PipelineStageFlags stageMask)
         {
             unsafe
             {
@@ -558,7 +558,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdResetEvent(VkEvent @event, PipelineStageFlags stageMask)
+        public void CmdResetEvent(Event @event, PipelineStageFlags stageMask)
         {
             unsafe
             {
@@ -566,7 +566,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdWaitEvents(VkEvent[] pEvents, PipelineStageFlags srcStageMask, PipelineStageFlags dstStageMask, MemoryBarrier[] pMemoryBarriers, BufferMemoryBarrier[] pBufferMemoryBarriers, ImageMemoryBarrier[] pImageMemoryBarriers)
+        public void CmdWaitEvents(Event[] pEvents, PipelineStageFlags srcStageMask, PipelineStageFlags dstStageMask, MemoryBarrier[] pMemoryBarriers, BufferMemoryBarrier[] pBufferMemoryBarriers, ImageMemoryBarrier[] pImageMemoryBarriers)
         {
             unsafe
             {
@@ -598,7 +598,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdWaitEvent(VkEvent pEvent, PipelineStageFlags srcStageMask, PipelineStageFlags dstStageMask, MemoryBarrier pMemoryBarrier, BufferMemoryBarrier pBufferMemoryBarrier, ImageMemoryBarrier pImageMemoryBarrier)
+        public void CmdWaitEvent(Event pEvent, PipelineStageFlags srcStageMask, PipelineStageFlags dstStageMask, MemoryBarrier pMemoryBarrier, BufferMemoryBarrier pBufferMemoryBarrier, ImageMemoryBarrier pImageMemoryBarrier)
         {
             unsafe
             {
@@ -643,7 +643,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdBeginQuery(VkQueryPool queryPool, UInt32 query, QueryControlFlags flags = (QueryControlFlags)0)
+        public void CmdBeginQuery(QueryPool queryPool, UInt32 query, QueryControlFlags flags = (QueryControlFlags)0)
         {
             unsafe
             {
@@ -651,7 +651,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdEndQuery(VkQueryPool queryPool, UInt32 query)
+        public void CmdEndQuery(QueryPool queryPool, UInt32 query)
         {
             unsafe
             {
@@ -659,7 +659,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdResetQueryPool(VkQueryPool queryPool, UInt32 firstQuery, UInt32 queryCount)
+        public void CmdResetQueryPool(QueryPool queryPool, UInt32 firstQuery, UInt32 queryCount)
         {
             unsafe
             {
@@ -667,7 +667,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdWriteTimestamp(PipelineStageFlags pipelineStage, VkQueryPool queryPool, UInt32 query)
+        public void CmdWriteTimestamp(PipelineStageFlags pipelineStage, QueryPool queryPool, UInt32 query)
         {
             unsafe
             {
@@ -675,7 +675,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdCopyQueryPoolResults(VkQueryPool queryPool, UInt32 firstQuery, UInt32 queryCount, VkBuffer dstBuffer, DeviceSize dstOffset, DeviceSize stride, QueryResultFlags flags = (QueryResultFlags)0)
+        public void CmdCopyQueryPoolResults(QueryPool queryPool, UInt32 firstQuery, UInt32 queryCount, Buffer dstBuffer, DeviceSize dstOffset, DeviceSize stride, QueryResultFlags flags = (QueryResultFlags)0)
         {
             unsafe
             {
@@ -683,7 +683,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdPushConstants<T>(VkPipelineLayout layout, ShaderStageFlags stageFlags, UInt32 offset, ref T pValues)
+        public void CmdPushConstants<T>(PipelineLayout layout, ShaderStageFlags stageFlags, UInt32 offset, ref T pValues)
         {
             unsafe
             {
@@ -697,7 +697,7 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-        public void CmdPushConstants(VkPipelineLayout layout, ShaderStageFlags stageFlags, UInt32 offset, UInt32 size, IntPtr pValues)
+        public void CmdPushConstants(PipelineLayout layout, ShaderStageFlags stageFlags, UInt32 offset, UInt32 size, IntPtr pValues)
         {
             unsafe
             {
@@ -729,7 +729,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdExecuteCommands(VkCommandBuffer[] pCommandBuffers)
+        public void CmdExecuteCommands(CommandBuffer[] pCommandBuffers)
         {
             unsafe
             {
@@ -743,7 +743,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdExecuteCommand(VkCommandBuffer pCommandBuffer)
+        public void CmdExecuteCommand(CommandBuffer pCommandBuffer)
         {
             unsafe
             {
@@ -778,7 +778,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdDrawIndirectCountAMD(VkBuffer buffer, DeviceSize offset, VkBuffer countBuffer, DeviceSize countBufferOffset, UInt32 maxDrawCount, UInt32 stride)
+        public void CmdDrawIndirectCountAMD(Buffer buffer, DeviceSize offset, Buffer countBuffer, DeviceSize countBufferOffset, UInt32 maxDrawCount, UInt32 stride)
         {
             unsafe
             {
@@ -786,7 +786,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdDrawIndexedIndirectCountAMD(VkBuffer buffer, DeviceSize offset, VkBuffer countBuffer, DeviceSize countBufferOffset, UInt32 maxDrawCount, UInt32 stride)
+        public void CmdDrawIndexedIndirectCountAMD(Buffer buffer, DeviceSize offset, Buffer countBuffer, DeviceSize countBufferOffset, UInt32 maxDrawCount, UInt32 stride)
         {
             unsafe
             {
@@ -810,7 +810,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdPushDescriptorSetKHR(PipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, UInt32 set, WriteDescriptorSet[] pDescriptorWrites)
+        public void CmdPushDescriptorSetKHR(PipelineBindPoint pipelineBindPoint, PipelineLayout layout, UInt32 set, WriteDescriptorSet[] pDescriptorWrites)
         {
             unsafe
             {
@@ -824,7 +824,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdPushDescriptorSetKHR(PipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, UInt32 set, WriteDescriptorSet pDescriptorWrite)
+        public void CmdPushDescriptorSetKHR(PipelineBindPoint pipelineBindPoint, PipelineLayout layout, UInt32 set, WriteDescriptorSet pDescriptorWrite)
         {
             unsafe
             {
@@ -848,7 +848,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdPushDescriptorSetWithTemplateKHR(VkDescriptorUpdateTemplateKhr descriptorUpdateTemplate, VkPipelineLayout layout, UInt32 set, IntPtr pData)
+        public void CmdPushDescriptorSetWithTemplateKHR(DescriptorUpdateTemplateKhr descriptorUpdateTemplate, PipelineLayout layout, UInt32 set, IntPtr pData)
         {
             unsafe
             {
@@ -912,7 +912,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void CmdWriteBufferMarkerAMD(PipelineStageFlags pipelineStage, VkBuffer dstBuffer, DeviceSize dstOffset, UInt32 marker)
+        public void CmdWriteBufferMarkerAMD(PipelineStageFlags pipelineStage, Buffer dstBuffer, DeviceSize dstOffset, UInt32 marker)
         {
             unsafe
             {

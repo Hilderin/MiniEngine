@@ -17,13 +17,13 @@ namespace MiniEngine.Drivers.Vulkan
 {
 	public partial class VkInstance
 	{
-        public VkSurfaceKhr CreateWin32SurfaceKHR(Win32SurfaceCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
+        public SurfaceKhr CreateWin32SurfaceKHR(Win32SurfaceCreateInfoKhr pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
-            VkSurfaceKhr pSurface;
+            SurfaceKhr pSurface;
             unsafe
             {
-                pSurface = new VkSurfaceKhr();
+                pSurface = new SurfaceKhr();
 
                 fixed (UInt64* ptrpSurface = &pSurface.m)
                 {

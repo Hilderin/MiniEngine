@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using MiniEngine.Assets;
 using MiniEngine.PrimitiveMeshes;
 
@@ -121,6 +122,10 @@ void main() {
                 Scene.AmbientLight.Intensity += 0.01f;
             if (Context.Input.IsKeyPressed(Keys.NumpadSubtract))
                 Scene.AmbientLight.Intensity -= 0.01f;
+            if (Context.Input.IsKeyPressed(Keys.Z))
+                Camera.RotatePitch(-0.1f);
+            if (Context.Input.IsKeyPressed(Keys.X))
+                Camera.RotatePitch(0.1f);
 
             if (Context.Input.IsKeyPressed(Keys.PageUp))
             {
@@ -141,10 +146,13 @@ void main() {
                 Vector2 mouseMovement = Context.Input.MouseMovement;
                 Camera.RotatePitch(mouseMovement.Y * -0.1f);
                 Camera.RotateYaw(mouseMovement.X * 0.1f);
+                Debug.Print(mouseMovement.ToString());
             }
 
 
             //_currentMesh.RotateY(0.01f);
+
+            System.Threading.Thread.Sleep(1000 / 60);
 
         }
 

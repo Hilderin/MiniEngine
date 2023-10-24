@@ -14,27 +14,11 @@ namespace MiniEngine.Drivers.Vulkan
 {
 
 	
-    /// <summary>
-    /// Vulkan CommandPool
-    /// </summary>
-    public partial class VkCommandPool : INonDispatchableHandleMarshalling
-    {
-        internal VkCommandPool() { }
+    
 
-        internal UInt64 m;
-
-        UInt64 INonDispatchableHandleMarshalling.Handle
-        {
-            get
-            {
-                return m;
-            }
-        }
-    }
-
-	public partial class VkBuffer : INonDispatchableHandleMarshalling
+	public partial class Buffer : INonDispatchableHandleMarshalling
 	{
-		internal VkBuffer() {}
+		internal Buffer() {}
 
 		internal UInt64 m;
 
@@ -45,9 +29,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkBufferView : INonDispatchableHandleMarshalling
+	public partial class BufferView : INonDispatchableHandleMarshalling
 	{
-		internal VkBufferView() {}
+		internal BufferView() {}
 
 		internal UInt64 m;
 
@@ -58,9 +42,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkImage : INonDispatchableHandleMarshalling
+	public partial class Image : INonDispatchableHandleMarshalling
 	{
-		internal VkImage() {}
+		internal Image() {}
 
 		internal UInt64 m;
 
@@ -71,9 +55,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkImageView : INonDispatchableHandleMarshalling
+	public partial class ImageView : INonDispatchableHandleMarshalling
 	{
-		internal VkImageView() {}
+		internal ImageView() {}
 
 		internal UInt64 m;
 
@@ -84,9 +68,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkShaderModule : INonDispatchableHandleMarshalling
+	public partial class ShaderModule : INonDispatchableHandleMarshalling
 	{
-		internal VkShaderModule() {}
+		internal ShaderModule() {}
 
 		internal UInt64 m;
 
@@ -97,9 +81,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkPipeline : INonDispatchableHandleMarshalling
+	public partial class Pipeline : INonDispatchableHandleMarshalling
 	{
-		internal VkPipeline() {}
+		internal Pipeline() {}
 
 		internal UInt64 m;
 
@@ -110,9 +94,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkPipelineLayout : INonDispatchableHandleMarshalling
+	public partial class PipelineLayout : INonDispatchableHandleMarshalling
 	{
-		internal VkPipelineLayout() {}
+		internal PipelineLayout() {}
 
 		internal UInt64 m;
 
@@ -123,9 +107,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkSampler : INonDispatchableHandleMarshalling
+	public partial class Sampler : INonDispatchableHandleMarshalling
 	{
-		internal VkSampler() {}
+		internal Sampler() {}
 
 		internal UInt64 m;
 
@@ -136,9 +120,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkDescriptorSet : INonDispatchableHandleMarshalling
+	public partial class DescriptorSet : INonDispatchableHandleMarshalling
 	{
-		internal VkDescriptorSet() {}
+		internal DescriptorSet() {}
 
 		internal UInt64 m;
 
@@ -149,9 +133,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkDescriptorSetLayout : INonDispatchableHandleMarshalling
+	public partial class DescriptorSetLayout : INonDispatchableHandleMarshalling
 	{
-		internal VkDescriptorSetLayout() {}
+		internal DescriptorSetLayout() {}
 
 		internal UInt64 m;
 
@@ -162,9 +146,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkDescriptorPool : INonDispatchableHandleMarshalling
+	public partial class DescriptorPool : INonDispatchableHandleMarshalling
 	{
-		internal VkDescriptorPool() {}
+		internal DescriptorPool() {}
 
 		internal UInt64 m;
 
@@ -175,9 +159,11 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkFence : INonDispatchableHandleMarshalling
+	
+
+	public partial class Event : INonDispatchableHandleMarshalling
 	{
-		internal VkFence() {}
+		internal Event() {}
 
 		internal UInt64 m;
 
@@ -188,9 +174,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkSemaphore : INonDispatchableHandleMarshalling
+	public partial class QueryPool : INonDispatchableHandleMarshalling
 	{
-		internal VkSemaphore() {}
+		internal QueryPool() {}
 
 		internal UInt64 m;
 
@@ -201,9 +187,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkEvent : INonDispatchableHandleMarshalling
+	public partial class Framebuffer : INonDispatchableHandleMarshalling
 	{
-		internal VkEvent() {}
+		internal Framebuffer() {}
 
 		internal UInt64 m;
 
@@ -214,9 +200,10 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkQueryPool : INonDispatchableHandleMarshalling
+
+	public partial class PipelineCache : INonDispatchableHandleMarshalling
 	{
-		internal VkQueryPool() {}
+		internal PipelineCache() {}
 
 		internal UInt64 m;
 
@@ -227,9 +214,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkFramebuffer : INonDispatchableHandleMarshalling
+	public partial class ObjectTableNvx : INonDispatchableHandleMarshalling
 	{
-		internal VkFramebuffer() {}
+		internal ObjectTableNvx() {}
 
 		internal UInt64 m;
 
@@ -240,9 +227,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkRenderPass : INonDispatchableHandleMarshalling
+	public partial class IndirectCommandsLayoutNvx : INonDispatchableHandleMarshalling
 	{
-		internal VkRenderPass() {}
+		internal IndirectCommandsLayoutNvx() {}
 
 		internal UInt64 m;
 
@@ -253,9 +240,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkPipelineCache : INonDispatchableHandleMarshalling
+	public partial class DescriptorUpdateTemplateKhr : INonDispatchableHandleMarshalling
 	{
-		internal VkPipelineCache() {}
+		internal DescriptorUpdateTemplateKhr() {}
 
 		internal UInt64 m;
 
@@ -266,9 +253,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkObjectTableNvx : INonDispatchableHandleMarshalling
+	public partial class SamplerYcbcrConversionKhr : INonDispatchableHandleMarshalling
 	{
-		internal VkObjectTableNvx() {}
+		internal SamplerYcbcrConversionKhr() {}
 
 		internal UInt64 m;
 
@@ -279,9 +266,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkIndirectCommandsLayoutNvx : INonDispatchableHandleMarshalling
+	public partial class ValidationCacheExt : INonDispatchableHandleMarshalling
 	{
-		internal VkIndirectCommandsLayoutNvx() {}
+		internal ValidationCacheExt() {}
 
 		internal UInt64 m;
 
@@ -292,9 +279,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkDescriptorUpdateTemplateKhr : INonDispatchableHandleMarshalling
+	public partial class DisplayKhr : INonDispatchableHandleMarshalling
 	{
-		internal VkDescriptorUpdateTemplateKhr() {}
+		internal DisplayKhr() {}
 
 		internal UInt64 m;
 
@@ -305,9 +292,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkSamplerYcbcrConversionKhr : INonDispatchableHandleMarshalling
+	public partial class DisplayModeKhr : INonDispatchableHandleMarshalling
 	{
-		internal VkSamplerYcbcrConversionKhr() {}
+		internal DisplayModeKhr() {}
 
 		internal UInt64 m;
 
@@ -318,9 +305,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkValidationCacheExt : INonDispatchableHandleMarshalling
+	public partial class SurfaceKhr : INonDispatchableHandleMarshalling
 	{
-		internal VkValidationCacheExt() {}
+		internal SurfaceKhr() {}
 
 		internal UInt64 m;
 
@@ -331,9 +318,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkDisplayKhr : INonDispatchableHandleMarshalling
+	public partial class SwapchainKhr : INonDispatchableHandleMarshalling
 	{
-		internal VkDisplayKhr() {}
+		internal SwapchainKhr() {}
 
 		internal UInt64 m;
 
@@ -344,48 +331,9 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 	}
 
-	public partial class VkDisplayModeKhr : INonDispatchableHandleMarshalling
+	public partial class DebugReportCallbackExt : INonDispatchableHandleMarshalling
 	{
-		internal VkDisplayModeKhr() {}
-
-		internal UInt64 m;
-
-		UInt64 INonDispatchableHandleMarshalling.Handle {
-			get {
-				return m;
-			}
-		}
-	}
-
-	public partial class VkSurfaceKhr : INonDispatchableHandleMarshalling
-	{
-		internal VkSurfaceKhr() {}
-
-		internal UInt64 m;
-
-		UInt64 INonDispatchableHandleMarshalling.Handle {
-			get {
-				return m;
-			}
-		}
-	}
-
-	public partial class VkSwapchainKhr : INonDispatchableHandleMarshalling
-	{
-		internal VkSwapchainKhr() {}
-
-		internal UInt64 m;
-
-		UInt64 INonDispatchableHandleMarshalling.Handle {
-			get {
-				return m;
-			}
-		}
-	}
-
-	public partial class VkDebugReportCallbackExt : INonDispatchableHandleMarshalling
-	{
-		internal VkDebugReportCallbackExt() {}
+		internal DebugReportCallbackExt() {}
 
 		internal UInt64 m;
 

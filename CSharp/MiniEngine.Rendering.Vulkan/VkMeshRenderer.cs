@@ -60,23 +60,23 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Render the mesh
         /// </summary>
-        public void PopulateCommandBuffers(VkCommandBuffer commandBuffer)
+        public void PopulateCommandBuffers(CommandBuffer commandBuffer)
         {
 
             Matrix4 mvp = _vi.MVPMatrix * _mesh.GetMatrix();
-            Matrix4 mvpTransposed = Matrix4.Transpose(ref mvp);
+            //Matrix4 mvpTransposed = Matrix4.Transpose(ref mvp);
 
-            Debug.Print("--------------");
-            Debug.Print("mvp:" + mvp.ToString());
-            foreach (var subMesh in _subMeshes)
-            {
-                foreach (var vector in subMesh.Positions)
-                {
-                    Vector4 vector4 = new Vector4(vector, 1);
-                    Vector4 vector4Res = mvp * vector4;
-                    Debug.Print(vector.ToString() + " => " + vector4Res.ToString());
-                }
-            }
+            //Debug.Print("--------------");
+            //Debug.Print("mvp:" + mvp.ToString());
+            //foreach (var subMesh in _subMeshes)
+            //{
+            //    foreach (var vector in subMesh.Positions)
+            //    {
+            //        Vector4 vector4 = new Vector4(vector, 1);
+            //        Vector4 vector4Res = mvp * vector4;
+            //        Debug.Print(vector.ToString() + " => " + vector4Res.ToString());
+            //    }
+            //}
 
 
 
@@ -89,7 +89,7 @@ namespace MiniEngine.Rendering.Vulkan
                 {
                     //fixed (Matrix4* ptr = &_vi.MVPMatrix)
                     //{
-                        commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, (uint)sizeof(Matrix4), (nint)(&mvpTransposed));
+                        commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, (uint)sizeof(Matrix4), (nint)(&mvp));
                     //}
                 }
                 //commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, ref _vi.MVPMatrix);
@@ -158,7 +158,7 @@ namespace MiniEngine.Rendering.Vulkan
             for (int i = 0; i < _subMeshes.Count; i++)
             {
                 _vulkanMeshDatas[i].ShaderBinder = ShaderCompiler.BuildBinder(_materials[_subMeshes[i].MaterialIndex].Shader);
-                _vulkanMeshDatas[i].Pipeline = new VkPipelineWrapper(_vi.Device, _vi.RenderPass, _vulkanMeshDatas[i].ShaderBinder);
+                _vulkanMeshDatas[i].Pipeline = new PipelineWrapper(_vi.Device, _vi.RenderPass, _vulkanMeshDatas[i].ShaderBinder);
             }
 
         }
@@ -198,10 +198,10 @@ namespace MiniEngine.Rendering.Vulkan
 
     public struct VulkanMeshData
     {
-        public VkBufferWrapper vertexBuffer;
-        public VkBufferWrapper indexBuffer;
+        public BufferWrapper vertexBuffer;
+        public BufferWrapper indexBuffer;
         public int indexBufferLength;
-        public VkPipelineWrapper Pipeline;
+        public PipelineWrapper Pipeline;
         public ShaderBinder ShaderBinder;
         //public CommandBuffer[] CommandBuffers;
     }

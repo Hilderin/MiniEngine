@@ -12,24 +12,13 @@ namespace MiniEngine.Rendering.Vulkan
         #region Internal members
 
         internal VkInstance vk;
-        //internal PhysicalDevice PhysicalDevice;
-        internal VkDevice Device;
-        internal VkQueue Queue;
-        internal VkFence Fence;
-        internal VkRenderPass RenderPass;
-        internal VkSwapchain SwapChain;
-
-        //internal SwapchainKhr Swapchain;
-        //internal Image[] SwapChainImages;
-        //internal ImageView[] SwapChainImagesView;
-        //internal Framebuffer[] Framebuffers;
-        //internal Fence Fence;
-        //internal Semaphore Semaphore;
-        //internal Extent2D CurrentExtent;
-        //internal Vector2 ClientSize;
-        internal VkCommandPool CommandPool;
-        internal VkCommandBuffer[] CommandBuffers;
-
+        internal Device Device;
+        internal Queue Queue;
+        internal Fence Fence;
+        internal RenderPass RenderPass;
+        internal Swapchain SwapChain;
+        internal CommandPool CommandPool;
+        internal CommandBuffer[] CommandBuffers;
         internal Matrix4 MVPMatrix;
 
         #endregion
@@ -49,7 +38,7 @@ namespace MiniEngine.Rendering.Vulkan
         private Window _window;
         private string _applicationName;
         private VkVersion _applicationVersion;
-        private Func<VkInstance, VkSurfaceKhr> _surfaceCreationCallback;
+        private Func<VkInstance, SurfaceKhr> _surfaceCreationCallback;
         private DebugReportCallback _debugCallback;
         private bool _initialized = false;
 
@@ -60,7 +49,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkRenderer(string applicationName, VkVersion applicationVersion, Func<VkInstance, VkSurfaceKhr> surfaceCreationCallback = null, DebugReportCallback debugCallback = null)
+        public VkRenderer(string applicationName, VkVersion applicationVersion, Func<VkInstance, SurfaceKhr> surfaceCreationCallback = null, DebugReportCallback debugCallback = null)
         {
             _applicationName = applicationName;
             _applicationVersion = applicationVersion;
@@ -109,48 +98,40 @@ namespace MiniEngine.Rendering.Vulkan
             if (_initialized)
                 throw new Exception("Already initialized.");
 
-            vk = new VkInstance(_applicationName, _applicationVersion, (i) =>
-            {
-                //Function to create a Surface...
-                if (_surfaceCreationCallback != null)
-                    return _surfaceCreationCallback(i);
-                else if (_window != null)
-                    return i.CreateSurfaceFromWindow(_window);
-                else
-                    throw new Exception("Impossible to create the surface. No window and no surfaceCreationCallback exist.");
+            vk = new VkInstance(_applicationName, _applicationVersion, CreateSurface, _debugCallback);
 
-            }
-            , _debugCallback);
-
-
-            VkPhysicalDevice physicalDevice = vk.PickPhysicalDevice();
-
-            Device = physicalDevice.CreateDevice(vk.Surface);
+            Device = vk.Device;
 
             Queue = Device.GetQueue(0, 0);
             Fence = Device.CreateFence();
 
             SwapChain = Device.CreateSwapchain(new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox);
 
-            RenderPass = Device.CreateRenderPass(SwapChain.SurfaceFormat);
+            RenderPass = SwapChain.CreateRenderPass();
 
-            SwapChain.InitFramebuffers(RenderPass);
+            CommandPool = Device.CreateCommandPool(CommandPoolCreateFlags.ResetCommandBuffer);
 
-            
-
-            var createPoolInfo = new CommandPoolCreateInfo { Flags = CommandPoolCreateFlags.ResetCommandBuffer };
-            CommandPool = Device.CreateCommandPool(createPoolInfo);
-
-            var commandBufferAllocateInfo = new CommandBufferAllocateInfo
-            {
-                Level = CommandBufferLevel.Primary,
-                CommandPool = CommandPool,
-                CommandBufferCount = (uint)SwapChain.SwapChainImages.Length
-            };
-
-            CommandBuffers = Device.AllocateCommandBuffers(commandBufferAllocateInfo);
+            CommandBuffers = CommandPool.AllocateCommandBuffers(CommandBufferLevel.Primary, SwapChain.SwapChainImages.Length);
 
             _initialized = true;
+        }
+
+        /// <summary>
+        /// Create the surface
+        /// </summary>
+        /// <param name="vi"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        private SurfaceKhr CreateSurface(VkInstance vi)
+        {
+            //Function to create a Surface...
+            if (_surfaceCreationCallback != null)
+                return _surfaceCreationCallback(vi);
+            else if (_window != null)
+                return vi.CreateSurfaceFromWindow(_window);
+            else
+                throw new Exception("Impossible to create the surface. No window and no surfaceCreationCallback exist.");
+
         }
 
         /// <summary>
@@ -169,49 +150,12 @@ namespace MiniEngine.Rendering.Vulkan
             if (!_initialized)
                 Init();
 
-            //The camera needs to be the same size has the client...
-            scene.Camera.ClientSize = Device.ClientSize;
-
-            //Update MVP Matrix...
-            Matrix4 viewMat2 = scene.Camera.GetMatrix();
-            //Matrix4 viewMat = Matrix4.CreateLookAt(scene.Camera.Location, scene.Camera.Forward, scene.Camera.Up);
-            //Matrix4 viewMat = Matrix4.CreateLookAt(scene.Camera.Location, new Vector3(0, 0, -1f), new Vector3(0, 1f, 0));
-            Matrix4 projMat = scene.Camera.GetProjectionMatrixVulkan();
-
-
-            //Matrix4 model = Matrix4.Identity * Matrix4.CreateFromAxisAngle(new Vector3(0, 0, 1), Math.DegToRad(90.0f));
-            //Matrix4 view = Matrix4.CreateLookAt(new Vector3(2, 2, 2), new Vector3(0, 0, 0), new Vector3(0, 0, 1));
-            //Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView(Math.DegToRad(45.0f), (float)CurrentExtent.Width / CurrentExtent.Height, 0.1f, 10.0f);
-
-            //Inverse because coords are inverted on Y in vulkan
-            this.MVPMatrix = projMat * viewMat2;
-            //this.MVPMatrix.M22 *= -1;
-            Debug.Print("MVPMatrix: " + this.MVPMatrix.ToString());
-
-            List <Mesh> meshes = scene.Meshes;
-            for (int iMesh = 0; iMesh < meshes.Count; iMesh++)
-            {
-                Mesh mesh = meshes[iMesh];
-
-                if (meshes[iMesh].RendererStateObj == null)
-                {
-                    //Initialization of the mesh renderer...
-                    VkMeshRenderer meshRenderer = new VkMeshRenderer(mesh, this);
-                    mesh.RendererStateObj = meshRenderer;
-                    _meshRenderers.Add(meshRenderer);
-
-                    //Initialisation of the materials...
-                    //PrepareMaterials(meshRenderer.Materials);
-                }
-
-            }
-
-
-
+            RecalculateNextFrame(scene);
 
             //Render the frame...
             RenderFrame(scene);
         }
+
 
         /// <summary>
         /// Tale a screenshot
@@ -225,13 +169,13 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a buffer on the GPU
         /// </summary>
-        public VkBufferWrapper CreateBufferOnGPU<T>(T[] values, BufferUsageFlags usageFlags)
+        public BufferWrapper CreateBufferOnGPU<T>(T[] values, BufferUsageFlags usageFlags)
         {
             //Create a stating buffer available from the CPU... so we can copy values into it...
-            using (VkBufferWrapper stagingBuffer = Device.CreateBuffer(values, BufferUsageFlags.TransferSrc, MemoryPropertyFlags.HostVisible | MemoryPropertyFlags.HostCoherent))
+            using (BufferWrapper stagingBuffer = Device.CreateBuffer(values, BufferUsageFlags.TransferSrc, MemoryPropertyFlags.HostVisible | MemoryPropertyFlags.HostCoherent))
             {
                 //Create a buffer on the GPU..
-                VkBufferWrapper gpuBuffer = Device.CreateBuffer(stagingBuffer.Size, BufferUsageFlags.TransferDst | usageFlags, MemoryPropertyFlags.DeviceLocal);
+                BufferWrapper gpuBuffer = Device.CreateBuffer(stagingBuffer.Size, BufferUsageFlags.TransferDst | usageFlags, MemoryPropertyFlags.DeviceLocal);
 
                 //Copy the data to the GPU...
                 CopyBuffer(stagingBuffer, gpuBuffer);
@@ -245,7 +189,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Copy a buffer
         /// </summary>
-        public void CopyBuffer(VkBufferWrapper bufferSource, VkBufferWrapper bufferDest)
+        public void CopyBuffer(BufferWrapper bufferSource, BufferWrapper bufferDest)
         {
             var commandBuffer = Device.AllocateCommandBuffer(CommandPool);
 
@@ -273,6 +217,50 @@ namespace MiniEngine.Rendering.Vulkan
         #region Private methods
 
         /// <summary>
+        /// Recalculate information for the next frame
+        /// </summary>
+        private void RecalculateNextFrame(Scene scene)
+        {
+
+            //The camera needs to be the same size has the client...
+            scene.Camera.ClientSize = Device.ClientSize;
+
+            //Update MVP Matrix...
+            Matrix4 viewMat2 = scene.Camera.GetMatrix();
+            //Matrix4 viewMat = Matrix4.CreateLookAt(scene.Camera.Location, scene.Camera.Forward, scene.Camera.Up);
+            //Matrix4 viewMat = Matrix4.CreateLookAt(scene.Camera.Location, new Vector3(0, 0, -1f), new Vector3(0, 1f, 0));
+            Matrix4 projMat = scene.Camera.GetProjectionMatrixVulkan();
+
+
+            //Matrix4 model = Matrix4.Identity * Matrix4.CreateFromAxisAngle(new Vector3(0, 0, 1), Math.DegToRad(90.0f));
+            //Matrix4 view = Matrix4.CreateLookAt(new Vector3(2, 2, 2), new Vector3(0, 0, 0), new Vector3(0, 0, 1));
+            //Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView(Math.DegToRad(45.0f), (float)CurrentExtent.Width / CurrentExtent.Height, 0.1f, 10.0f);
+
+            //Inverse because coords are inverted on Y in vulkan
+            this.MVPMatrix = projMat * viewMat2;
+            //this.MVPMatrix.M22 *= -1;
+            //Debug.Print("MVPMatrix: " + this.MVPMatrix.ToString());
+
+            List<Mesh> meshes = scene.Meshes;
+            for (int iMesh = 0; iMesh < meshes.Count; iMesh++)
+            {
+                Mesh mesh = meshes[iMesh];
+
+                if (meshes[iMesh].RendererStateObj == null)
+                {
+                    //Initialization of the mesh renderer...
+                    VkMeshRenderer meshRenderer = new VkMeshRenderer(mesh, this);
+                    mesh.RendererStateObj = meshRenderer;
+                    _meshRenderers.Add(meshRenderer);
+
+                    //Initialisation of the materials...
+                    //PrepareMaterials(meshRenderer.Materials);
+                }
+
+            }
+        }
+
+        /// <summary>
         /// Render the next frame
         /// </summary>
         private void RenderFrame(Scene scene)
@@ -280,7 +268,7 @@ namespace MiniEngine.Rendering.Vulkan
             uint nextImageIndex = SwapChain.AcquireNextImage();
 
 
-            VkCommandBuffer commandBuffer = CommandBuffers[nextImageIndex];
+            CommandBuffer commandBuffer = CommandBuffers[nextImageIndex];
 
             commandBuffer.Begin();
             var renderPassBeginInfo = new RenderPassBeginInfo
@@ -304,19 +292,8 @@ namespace MiniEngine.Rendering.Vulkan
             commandBuffer.End();
 
 
-
-            Device.ResetFence(Fence);
-            var submitInfo = new SubmitInfo
-            {
-                WaitSemaphores = new VkSemaphore[] { SwapChain.Semaphore },
-                WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
-                CommandBuffers = new VkCommandBuffer[] { commandBuffer }
-            };
-            Queue.Submit(submitInfo, Fence);
-            Queue.WaitIdle();
-            Device.WaitForFence(Fence, true, 100000000);
-
-            SwapChain.Present(nextImageIndex);
+            //Execute the command buffer and show the result on surface...
+            SwapChain.Present(commandBuffer, nextImageIndex);
         }
 
         

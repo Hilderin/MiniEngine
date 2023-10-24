@@ -83,7 +83,7 @@ void main() {
 
         }
 
-        private VkSurfaceKhr CreateSurface(VkInstance vk)
+        private SurfaceKhr CreateSurface(VkInstance vk)
         {
             return vk.CreateWin32SurfaceKHR(
                 new Win32SurfaceCreateInfoKhr

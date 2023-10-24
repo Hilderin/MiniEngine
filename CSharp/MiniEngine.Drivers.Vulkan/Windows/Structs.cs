@@ -48,7 +48,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
             Initialize();
         }
 
-        internal Win32SurfaceCreateInfoKhr(VkNativePointer pointer)
+        internal Win32SurfaceCreateInfoKhr(NativePointer pointer)
         {
             native = pointer;
             Initialize();
@@ -90,7 +90,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
             Initialize();
         }
 
-        internal ImportMemoryWin32HandleInfoNv(VkNativePointer pointer)
+        internal ImportMemoryWin32HandleInfoNv(NativePointer pointer)
         {
             native = pointer;
             Initialize();
@@ -132,7 +132,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
             Initialize();
         }
 
-        internal ExportMemoryWin32HandleInfoNv(VkNativePointer pointer)
+        internal ExportMemoryWin32HandleInfoNv(NativePointer pointer)
         {
             native = pointer;
             Initialize();
@@ -154,20 +154,20 @@ namespace MiniEngine.Drivers.Vulkan.Windows
             set { m->AcquireCount = value; }
         }
 
-        VkNativeReference refAcquireSyncs;
-        public VkDeviceMemory[] AcquireSyncs
+        NativeReference refAcquireSyncs;
+        public DeviceMemory[] AcquireSyncs
         {
             get
             {
                 if (m->AcquireCount == 0)
                     return null;
-                var values = new VkDeviceMemory[m->AcquireCount];
+                var values = new DeviceMemory[m->AcquireCount];
                 unsafe
                 {
                     UInt64* ptr = (UInt64*)m->AcquireSyncs;
                     for (int i = 0; i < values.Length; i++)
                     {
-                        values[i] = new VkDeviceMemory();
+                        values[i] = new DeviceMemory();
                         values[i].m = ptr[i];
                     }
                 }
@@ -183,7 +183,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
                     return;
                 }
                 m->AcquireCount = (uint)value.Length;
-                refAcquireSyncs = new VkNativeReference((int)(sizeof(UInt64) * value.Length));
+                refAcquireSyncs = new NativeReference((int)(sizeof(UInt64) * value.Length));
                 m->AcquireSyncs = refAcquireSyncs.Handle;
                 unsafe
                 {
@@ -194,7 +194,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
             }
         }
 
-        VkNativeReference refAcquireKeys;
+        NativeReference refAcquireKeys;
         public UInt64[] AcquireKeys
         {
             get
@@ -220,7 +220,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
                     return;
                 }
                 m->AcquireCount = (uint)value.Length;
-                refAcquireKeys = new VkNativeReference((int)(sizeof(UInt64) * value.Length));
+                refAcquireKeys = new NativeReference((int)(sizeof(UInt64) * value.Length));
                 m->AcquireKeys = refAcquireKeys.Handle;
                 unsafe
                 {
@@ -231,7 +231,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
             }
         }
 
-        VkNativeReference refAcquireTimeoutMilliseconds;
+        NativeReference refAcquireTimeoutMilliseconds;
         public UInt32[] AcquireTimeoutMilliseconds
         {
             get
@@ -257,7 +257,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
                     return;
                 }
                 m->AcquireCount = (uint)value.Length;
-                refAcquireTimeoutMilliseconds = new VkNativeReference((int)(sizeof(UInt32) * value.Length));
+                refAcquireTimeoutMilliseconds = new NativeReference((int)(sizeof(UInt32) * value.Length));
                 m->AcquireTimeoutMilliseconds = refAcquireTimeoutMilliseconds.Handle;
                 unsafe
                 {
@@ -274,20 +274,20 @@ namespace MiniEngine.Drivers.Vulkan.Windows
             set { m->ReleaseCount = value; }
         }
 
-        VkNativeReference refReleaseSyncs;
-        public VkDeviceMemory[] ReleaseSyncs
+        NativeReference refReleaseSyncs;
+        public DeviceMemory[] ReleaseSyncs
         {
             get
             {
                 if (m->ReleaseCount == 0)
                     return null;
-                var values = new VkDeviceMemory[m->ReleaseCount];
+                var values = new DeviceMemory[m->ReleaseCount];
                 unsafe
                 {
                     UInt64* ptr = (UInt64*)m->ReleaseSyncs;
                     for (int i = 0; i < values.Length; i++)
                     {
-                        values[i] = new VkDeviceMemory();
+                        values[i] = new DeviceMemory();
                         values[i].m = ptr[i];
                     }
                 }
@@ -303,7 +303,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
                     return;
                 }
                 m->ReleaseCount = (uint)value.Length;
-                refReleaseSyncs = new VkNativeReference((int)(sizeof(UInt64) * value.Length));
+                refReleaseSyncs = new NativeReference((int)(sizeof(UInt64) * value.Length));
                 m->ReleaseSyncs = refReleaseSyncs.Handle;
                 unsafe
                 {
@@ -314,7 +314,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
             }
         }
 
-        VkNativeReference refReleaseKeys;
+        NativeReference refReleaseKeys;
         public UInt64[] ReleaseKeys
         {
             get
@@ -340,7 +340,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
                     return;
                 }
                 m->ReleaseCount = (uint)value.Length;
-                refReleaseKeys = new VkNativeReference((int)(sizeof(UInt64) * value.Length));
+                refReleaseKeys = new NativeReference((int)(sizeof(UInt64) * value.Length));
                 m->ReleaseKeys = refReleaseKeys.Handle;
                 unsafe
                 {
@@ -365,7 +365,7 @@ namespace MiniEngine.Drivers.Vulkan.Windows
             Initialize();
         }
 
-        internal Win32KeyedMutexAcquireReleaseInfoNv(VkNativePointer pointer)
+        internal Win32KeyedMutexAcquireReleaseInfoNv(NativePointer pointer)
         {
             native = pointer;
             Initialize();
