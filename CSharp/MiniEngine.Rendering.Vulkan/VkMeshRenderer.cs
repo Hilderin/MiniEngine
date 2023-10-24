@@ -83,20 +83,11 @@ namespace MiniEngine.Rendering.Vulkan
             for (int i = 0; i < _vulkanMeshDatas.Length; i++)
             {
                 //Push constant...
-                
-
-                unsafe
-                {
-                    //fixed (Matrix4* ptr = &_vi.MVPMatrix)
-                    //{
-                        commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, (uint)sizeof(Matrix4), (nint)(&mvp));
-                    //}
-                }
-                //commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, ref _vi.MVPMatrix);
+                commandBuffer.CmdPushConstants(_vulkanMeshDatas[i].Pipeline.pipelineLayout, ShaderStageFlags.Vertex, 0, ref mvp);
 
 
                 //buffers[i].CmdBindDescriptorSets(PipelineBindPoint.Graphics, pipelineLayout, 0, descriptorSets, null);
-                    commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _vulkanMeshDatas[i].Pipeline);
+                commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _vulkanMeshDatas[i].Pipeline);
                 commandBuffer.CmdBindVertexBuffer(0, _vulkanMeshDatas[i].vertexBuffer, 0);
                 commandBuffer.CmdBindIndexBuffer(_vulkanMeshDatas[i].indexBuffer, 0, IndexType.Uint32);
                 commandBuffer.CmdDrawIndexed((uint)_vulkanMeshDatas[i].indexBufferLength, 1, 0, 0, 0);

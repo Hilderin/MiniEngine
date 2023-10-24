@@ -16,11 +16,6 @@ namespace MiniEngine.Rendering.Vulkan
         internal Swapchain Swapchain;
         internal MemoryManager MemoryManager;
 
-
-
-
-
-
         internal Matrix4 MVPMatrix;
 
         #endregion
@@ -232,7 +227,7 @@ namespace MiniEngine.Rendering.Vulkan
             commandBuffer.End();
 
 
-            //Execute the command buffer and show the result on surface...
+            //Execute the command buffer and show the results on surface...
             Swapchain.Present(commandBuffer);
         }
 

@@ -695,8 +695,6 @@ namespace MiniEngine.Drivers.Vulkan
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
             }
         }
-
-
         public void CmdPushConstants(PipelineLayout layout, ShaderStageFlags stageFlags, UInt32 offset, UInt32 size, IntPtr pValues)
         {
             unsafe

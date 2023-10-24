@@ -11,7 +11,6 @@ namespace MiniEngine
     /// </summary>
     public class WorldTransform
     {
-
         /// <summary>
         /// Location in the world
         /// </summary>
@@ -42,7 +41,15 @@ namespace MiniEngine
         /// <summary>
         /// Get the left vector
         /// </summary>
-        public Vector3 Left => Vector3.Up.Cross(Forward);
+        public Vector3 Left
+        {
+            get
+            {
+                //Vector3.Up.Cross(Forward);
+                var q = Quaternion.CreateFromYawPitchRoll(Rotation.Yaw, -Rotation.Pitch, Rotation.Roll);
+                return Vector3.Transform(Vector3.Left, q);
+            }
+        }
 
         /// <summary>
         /// Get the right vector
@@ -52,7 +59,16 @@ namespace MiniEngine
         /// <summary>
         /// Get the up vector
         /// </summary>
-        public Vector3 Up => Forward.Cross(Left);
+        public Vector3 Up
+        {
+            get
+            {
+                //                Forward.Cross(Left);
+                var q = Quaternion.CreateFromYawPitchRoll(Rotation.Yaw, -Rotation.Pitch, Rotation.Roll);
+                return Vector3.Transform(Vector3.Up, q);
+            }
+        }
+
 
         /// <summary>
         /// Get the back vector
@@ -118,7 +134,7 @@ namespace MiniEngine
                 this.Location += this.Left * directions.X * -distance;
             if (!Math.IsZero(directions.Y))
                 this.Location += this.Up * directions.Y * distance;
-            
+
         }
 
         /// <summary>

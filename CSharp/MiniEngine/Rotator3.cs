@@ -43,7 +43,7 @@ namespace MiniEngine
         /// <summary>
         /// Rotation on X in degrees
         /// </summary>
-        public float PitchDegree
+        public float PitchDeg
         {
             get { return Math.RadToDeg(Pitch); }
             set { Pitch = Math.RadToDeg(value); }
@@ -177,7 +177,7 @@ namespace MiniEngine
         /// </summary>
         public override string ToString()
         {
-            return $"{PitchDegree.ToString("0.###")}°, {YawDeg.ToString("0.###")}°, {RollDeg.ToString("0.###")}° ({Pitch}, {Yaw}, {Roll})";
+            return $"{PitchDeg.ToString("0.###")}°, {YawDeg.ToString("0.###")}°, {RollDeg.ToString("0.###")}° ({Pitch}, {Yaw}, {Roll})";
         }
 
 

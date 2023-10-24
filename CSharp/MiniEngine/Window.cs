@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -216,7 +217,18 @@ namespace MiniEngine
         public CursorMode CursorMode
         {
             get => (CursorMode)Glfw.GetInputMode(_glfwWindow, InputMode.Cursor);
-            set => Glfw.SetInputMode(_glfwWindow, InputMode.Cursor, (int)value);
+            set
+            {
+                Glfw.SetInputMode(_glfwWindow, InputMode.Cursor, (int)value);
+
+                if (Glfw.RawMouseMotionSupported())
+                {
+                    if (value == CursorMode.Disabled)
+                        Glfw.SetInputMode(_glfwWindow, InputMode.RawMouseMotion, (int)GLFW.Constants.True);
+                    else
+                        Glfw.SetInputMode(_glfwWindow, InputMode.RawMouseMotion, (int)GLFW.Constants.False);
+                }
+            }
         }
 
 
@@ -613,6 +625,7 @@ namespace MiniEngine
         /// </summary>
         private void OnCursorPosition(GLFW.Window window, double x, double y)
         {
+            Debug.Print("mouse pos: " + x + ", " + y);
             _context.Input.SetMousePosition(new Vector2((float)x, (float)y));
         }
 
