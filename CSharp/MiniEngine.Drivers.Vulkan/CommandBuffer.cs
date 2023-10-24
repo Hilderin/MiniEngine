@@ -20,7 +20,7 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
         private readonly static CommandBufferBeginInfo _emptyCommandBufferBeginInfo = new CommandBufferBeginInfo();
-        public void Begin()
+        public virtual void Begin()
         {
             Begin(_emptyCommandBufferBeginInfo);
         }
@@ -45,7 +45,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public void End()
+        public virtual void End()
         {
             Result result;
             unsafe

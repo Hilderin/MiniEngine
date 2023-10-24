@@ -97,9 +97,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public void Dispose()
         {
-            foreach (CommandPool commandPool in CommandPools)
-                DestroyCommandPoolInternal(commandPool);
-            CommandPools.Clear();
+            
 
             foreach (Semaphore semaphore in Semaphores)
                 DestroySemaphoreInternal(semaphore);
@@ -117,6 +115,10 @@ namespace MiniEngine.Drivers.Vulkan
             foreach (RenderPass renderPass in RenderPasses)
                 DestroyRenderPassInternal(renderPass);
             RenderPasses.Clear();
+
+            foreach (CommandPool commandPool in CommandPools)
+                DestroyCommandPoolInternal(commandPool);
+            CommandPools.Clear();
 
             if (!IsDisposed)
             {
@@ -1358,13 +1360,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public RenderPass CreateRenderPass(RenderPassCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
+        public RenderPass CreateRenderPass(RenderPassCreateInfo pCreateInfo, Swapchain swapChain = null, AllocationCallbacks pAllocator = null)
         {
             Result result;
             RenderPass pRenderPass;
             unsafe
             {
-                pRenderPass = new RenderPass(this);
+                pRenderPass = new RenderPass(this, swapChain);
 
                 fixed (UInt64* ptrpRenderPass = &pRenderPass.m)
                 {
@@ -1476,6 +1478,11 @@ namespace MiniEngine.Drivers.Vulkan
 
         public CommandBuffer[] AllocateCommandBuffers(CommandBufferAllocateInfo pAllocateInfo)
         {
+            return AllocateCommandBuffers<CommandBuffer>(pAllocateInfo, () => new CommandBuffer());
+        }
+
+        public T[] AllocateCommandBuffers<T>(CommandBufferAllocateInfo pAllocateInfo, Func<T> createNewBufferFunc) where T: CommandBuffer
+        {
             Result result;
             unsafe
             {
@@ -1491,10 +1498,10 @@ namespace MiniEngine.Drivers.Vulkan
 
                 if (pAllocateInfo.CommandBufferCount <= 0)
                     return null;
-                var arr = new CommandBuffer[pAllocateInfo.CommandBufferCount];
+                var arr = new T[pAllocateInfo.CommandBufferCount];
                 for (int i = 0; i < pAllocateInfo.CommandBufferCount; i++)
                 {
-                    arr[i] = new CommandBuffer();
+                    arr[i] = createNewBufferFunc();
                     arr[i].m = ((IntPtr*)ptrpCommandBuffers)[i];
                 }
 

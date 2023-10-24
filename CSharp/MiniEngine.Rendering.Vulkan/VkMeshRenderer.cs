@@ -158,7 +158,7 @@ namespace MiniEngine.Rendering.Vulkan
             for (int i = 0; i < _subMeshes.Count; i++)
             {
                 _vulkanMeshDatas[i].ShaderBinder = ShaderCompiler.BuildBinder(_materials[_subMeshes[i].MaterialIndex].Shader);
-                _vulkanMeshDatas[i].Pipeline = new PipelineWrapper(_vi.Device, _vi.RenderPass, _vulkanMeshDatas[i].ShaderBinder);
+                _vulkanMeshDatas[i].Pipeline = new PipelineWrapper(_vi.Device, _vi.Swapchain.RenderPass, _vulkanMeshDatas[i].ShaderBinder);
             }
 
         }
@@ -182,14 +182,14 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
             //vulkanMeshData.vertexBuffer = _vi.Device.CreateBuffer(vertices, BufferUsageFlags.VertexBuffer);
-            vulkanMeshData.vertexBuffer = _vi.CreateBufferOnGPU(vertices, BufferUsageFlags.VertexBuffer);
+            vulkanMeshData.vertexBuffer = _vi.MemoryManager.CreateBufferOnGPU(vertices, BufferUsageFlags.VertexBuffer);
 
         }
 
         private void CreateIndexBuffer(SubMeshData subMeshData, ref VulkanMeshData vulkanMeshData)
         {
             vulkanMeshData.indexBufferLength = subMeshData.Indices.Length;
-            vulkanMeshData.indexBuffer = _vi.CreateBufferOnGPU(subMeshData.Indices, BufferUsageFlags.IndexBuffer);
+            vulkanMeshData.indexBuffer = _vi.MemoryManager.CreateBufferOnGPU(subMeshData.Indices, BufferUsageFlags.IndexBuffer);
 
         }
 

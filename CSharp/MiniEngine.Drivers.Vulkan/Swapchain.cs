@@ -7,20 +7,30 @@ using System.Threading.Tasks;
 namespace MiniEngine.Drivers.Vulkan
 {
     /// <summary>
-    /// Represent a High level reprensentation of a SwapChain
+    /// Represent a High level reprensentation of a Swapchain
     /// </summary>
     public class Swapchain: IDisposable
     {
         private Device _device;
 
-        public Queue Queue;
-        public Fence Fence;
-        public SwapchainKhr SwapchainKhr;
-        public Image[] SwapChainImages;
-        public ImageView[] SwapChainImagesView;
-        public Framebuffer[] Framebuffers;
-        public Semaphore Semaphore;
-        public SurfaceFormatKhr SurfaceFormat;
+        private Queue Queue;
+        private Fence Fence;
+        private SwapchainKhr SwapchainKhr;
+        private Image[] SwapchainImages;
+        private ImageView[] SwapchainImagesView;
+        private Framebuffer[] _framebuffers;
+        private Semaphore Semaphore;
+        private SurfaceFormatKhr SurfaceFormat;
+
+        private RenderPass _renderPass;
+        private CommandPool CommandPool;
+        private RenderCommandBuffer[] RenderCommandBuffers;
+
+        public RenderPass RenderPass => _renderPass;
+        public Framebuffer[] Framebuffers => _framebuffers;
+
+
+        public int IndexNextImage;
 
         /// <summary>
         /// Constructor
@@ -34,19 +44,36 @@ namespace MiniEngine.Drivers.Vulkan
             SwapchainKhr = swapchainKhr;
             SurfaceFormat = surfaceFormat;
 
-            SwapChainImages = device.GetSwapchainImagesKHR(SwapchainKhr);
-            SwapChainImagesView = device.CreateImageViews(SwapChainImages, SurfaceFormat);
+            SwapchainImages = device.GetSwapchainImagesKHR(SwapchainKhr);
+            SwapchainImagesView = device.CreateImageViews(SwapchainImages, SurfaceFormat);
 
             Queue = _device.GetQueue(0, 0);
             Fence = _device.CreateFence();
             Semaphore = _device.CreateSemaphore();
 
+
+            _renderPass = CreateRenderPass();
+
+            CommandPool = device.CreateCommandPool(CommandPoolCreateFlags.ResetCommandBuffer);
+
+            RenderCommandBuffers = CreateRenderCommandBuffers();
+        }
+
+
+        /// <summary>
+        /// Create the render command buffer
+        /// </summary>
+        /// <returns></returns>
+        private RenderCommandBuffer[] CreateRenderCommandBuffers()
+        {
+            int imageIndex = 0;
+            return CommandPool.AllocateCommandBuffers(CommandBufferLevel.Primary, SwapchainImages.Length, () => new RenderCommandBuffer(_renderPass, imageIndex++));
         }
 
         /// <summary>
         /// Create the render pass
         /// </summary>
-        public RenderPass CreateRenderPass()
+        protected virtual RenderPass CreateRenderPass()
         {
             //TODO: Remettre le Depth test
             var attDesc = new AttachmentDescription
@@ -75,7 +102,8 @@ namespace MiniEngine.Drivers.Vulkan
                 Subpasses = new SubpassDescription[] { subpassDesc }
             };
 
-            RenderPass renderPass = _device.CreateRenderPass(renderPassCreateInfo);
+            RenderPass renderPass = _device.CreateRenderPass(renderPassCreateInfo, this);
+
 
             //Now that we have our render pass, we can init the framebuffers...
             InitFramebuffers(renderPass);
@@ -85,26 +113,36 @@ namespace MiniEngine.Drivers.Vulkan
 
 
         /// <summary>
+        /// Get the next render command buffer
+        /// </summary>
+        public RenderCommandBuffer GetNextRenderCommandBuffer()
+        {
+            IndexNextImage = AcquireNextImage();
+
+            return RenderCommandBuffers[IndexNextImage];
+
+        }
+
+        /// <summary>
         /// Create the frame buffers for a render pass
         /// </summary>
-        public void InitFramebuffers(RenderPass renderPass)
+        private void InitFramebuffers(RenderPass renderPass)
         {
-            Framebuffers = _device.CreateFramebuffers(renderPass, SwapChainImagesView, _device.CurrentExtent);
+            _framebuffers = _device.CreateFramebuffers(renderPass, SwapchainImagesView, _device.CurrentExtent);
         }
 
         /// <summary>
         /// Acquire next image
         /// </summary>
-        public uint AcquireNextImage()
+        private int AcquireNextImage()
         {
-            uint nextImageIndex = _device.AcquireNextImageKHR(SwapchainKhr, ulong.MaxValue, Semaphore);
-            return nextImageIndex;
+            return (int)_device.AcquireNextImageKHR(SwapchainKhr, ulong.MaxValue, Semaphore);
         }
 
         /// <summary>
         /// Present the rendered image...
         /// </summary>
-        public void Present(CommandBuffer commandBuffer, uint imageIndex)
+        public void Present(CommandBuffer commandBuffer)
         {
             //Execute the command buffer...
             // submit the commandbuffer to the queue
@@ -127,28 +165,28 @@ namespace MiniEngine.Drivers.Vulkan
             var presentInfo = new PresentInfoKhr
             {
                 Swapchains = new SwapchainKhr[] { SwapchainKhr },
-                ImageIndices = new uint[] { imageIndex },
+                ImageIndices = new uint[] { (uint)IndexNextImage },
             };
             Queue.PresentKHR(presentInfo);
         }
 
         /// <summary>
-        /// Dispose of the SwapChain
+        /// Dispose of the Swapchain
         /// </summary>
         public void Dispose()
         {
-            if (Framebuffers != null)
+            if (_framebuffers != null)
             {
-                foreach (Framebuffer framebuffer in Framebuffers)
+                foreach (Framebuffer framebuffer in _framebuffers)
                     _device.DestroyFramebuffer(framebuffer);
-                Framebuffers = null;
+                _framebuffers = null;
             }
 
-            if (SwapChainImagesView != null)
+            if (SwapchainImagesView != null)
             {
-                foreach (ImageView imageView in SwapChainImagesView)
+                foreach (ImageView imageView in SwapchainImagesView)
                     _device.DestroyImageView(imageView);
-                SwapChainImagesView = null;
+                SwapchainImagesView = null;
             }
 
             if (SwapchainKhr != null)
@@ -156,6 +194,24 @@ namespace MiniEngine.Drivers.Vulkan
                 _device.DestroySwapchainKHR(SwapchainKhr);
                 SwapchainKhr = null;
             }
+
+            if (_renderPass != null)
+            {
+                _renderPass.Dispose();
+                _renderPass = null;
+            }
+
+
+            if (CommandPool != null)
+            {
+
+                foreach (RenderCommandBuffer renderCommandBuffer in RenderCommandBuffers)
+                    _device.FreeCommandBuffer(CommandPool, renderCommandBuffer);
+                
+                CommandPool.Dispose();
+                CommandPool = null;
+            }
+
 
             _device.Swapchains.Remove(this);
         }

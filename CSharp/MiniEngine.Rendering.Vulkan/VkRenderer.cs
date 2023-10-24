@@ -13,12 +13,14 @@ namespace MiniEngine.Rendering.Vulkan
 
         internal VkInstance vk;
         internal Device Device;
-        internal Queue Queue;
-        internal Fence Fence;
-        internal RenderPass RenderPass;
-        internal Swapchain SwapChain;
-        internal CommandPool CommandPool;
-        internal CommandBuffer[] CommandBuffers;
+        internal Swapchain Swapchain;
+        internal MemoryManager MemoryManager;
+
+
+
+
+
+
         internal Matrix4 MVPMatrix;
 
         #endregion
@@ -102,16 +104,10 @@ namespace MiniEngine.Rendering.Vulkan
 
             Device = vk.Device;
 
-            Queue = Device.GetQueue(0, 0);
-            Fence = Device.CreateFence();
+            MemoryManager = new MemoryManager(Device);
 
-            SwapChain = Device.CreateSwapchain(new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox);
+            Swapchain = Device.CreateSwapchain(new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox);
 
-            RenderPass = SwapChain.CreateRenderPass();
-
-            CommandPool = Device.CreateCommandPool(CommandPoolCreateFlags.ResetCommandBuffer);
-
-            CommandBuffers = CommandPool.AllocateCommandBuffers(CommandBufferLevel.Primary, SwapChain.SwapChainImages.Length);
 
             _initialized = true;
         }
@@ -165,51 +161,6 @@ namespace MiniEngine.Rendering.Vulkan
             throw new NotImplementedException();
         }
 
-
-        /// <summary>
-        /// Create a buffer on the GPU
-        /// </summary>
-        public BufferWrapper CreateBufferOnGPU<T>(T[] values, BufferUsageFlags usageFlags)
-        {
-            //Create a stating buffer available from the CPU... so we can copy values into it...
-            using (BufferWrapper stagingBuffer = Device.CreateBuffer(values, BufferUsageFlags.TransferSrc, MemoryPropertyFlags.HostVisible | MemoryPropertyFlags.HostCoherent))
-            {
-                //Create a buffer on the GPU..
-                BufferWrapper gpuBuffer = Device.CreateBuffer(stagingBuffer.Size, BufferUsageFlags.TransferDst | usageFlags, MemoryPropertyFlags.DeviceLocal);
-
-                //Copy the data to the GPU...
-                CopyBuffer(stagingBuffer, gpuBuffer);
-
-                return gpuBuffer;
-            }
-
-
-        }
-
-        /// <summary>
-        /// Copy a buffer
-        /// </summary>
-        public void CopyBuffer(BufferWrapper bufferSource, BufferWrapper bufferDest)
-        {
-            var commandBuffer = Device.AllocateCommandBuffer(CommandPool);
-
-            commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
-
-            BufferCopy copyRegion = new()
-            {
-                Size = bufferSource.Size,
-            };
-
-            commandBuffer.CmdCopyBuffer(bufferSource.Buffer, bufferDest.Buffer, copyRegion);
-
-            commandBuffer.End();
-
-            Queue.Submit(commandBuffer);
-            Queue.WaitIdle();
-
-
-            Device.FreeCommandBuffer(CommandPool, commandBuffer);
-        }
 
         #endregion
 
@@ -265,21 +216,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void RenderFrame(Scene scene)
         {
-            uint nextImageIndex = SwapChain.AcquireNextImage();
-
-
-            CommandBuffer commandBuffer = CommandBuffers[nextImageIndex];
+            RenderCommandBuffer commandBuffer = Swapchain.GetNextRenderCommandBuffer();
 
             commandBuffer.Begin();
-            var renderPassBeginInfo = new RenderPassBeginInfo
-            {
-                Framebuffer = SwapChain.Framebuffers[nextImageIndex],
-                RenderPass = RenderPass,
-                //ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { DateTime.Now.Millisecond % 100f / 100f, 0.87f, 0.75f, 1.0f }) } },
-                ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { 0f, 0.87f, 0.75f, 1.0f }) } },
-                RenderArea = new Rect2D { Extent = Device.CurrentExtent }
-            };
-            commandBuffer.CmdBeginRenderPass(renderPassBeginInfo, SubpassContents.Inline);
+            
 
             //If no camera.. then.. nothing on screen...
             if (scene.Camera != null)
@@ -288,12 +228,12 @@ namespace MiniEngine.Rendering.Vulkan
                     meshRenderer.PopulateCommandBuffers(commandBuffer);
             }
 
-            commandBuffer.CmdEndRenderPass();
+            
             commandBuffer.End();
 
 
             //Execute the command buffer and show the result on surface...
-            SwapChain.Present(commandBuffer, nextImageIndex);
+            Swapchain.Present(commandBuffer);
         }
 
         

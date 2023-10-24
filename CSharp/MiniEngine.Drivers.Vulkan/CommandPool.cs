@@ -47,6 +47,21 @@ namespace MiniEngine.Drivers.Vulkan
             return _device.AllocateCommandBuffers(commandBufferAllocateInfo);
         }
 
+        /// <summary>
+        /// Allocate command buffers
+        /// </summary>
+        public T[] AllocateCommandBuffers<T>(CommandBufferLevel level, int count, Func<T> createNewBufferFunc) where T: CommandBuffer
+        {
+            var commandBufferAllocateInfo = new CommandBufferAllocateInfo
+            {
+                Level = level,
+                CommandPool = this,
+                CommandBufferCount = (uint)count
+            };
+
+            return _device.AllocateCommandBuffers<T>(commandBufferAllocateInfo, createNewBufferFunc);
+        }
+
         public void Dispose()
         {
             if (_device != null && m != 0)
