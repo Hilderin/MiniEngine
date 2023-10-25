@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniEngine.Rendering.Vulkan;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,11 +18,22 @@ namespace MiniEngine.Tests
         public static bool IsRecording = false;
 
         /// <summary>
+        /// Create the test 
+        /// </summary>
+        public static Context SetupTest(this Context context)
+        {
+            //TODO: Init a window...
+            context.SetRenderer(new VkRenderer("Test", new Drivers.Vulkan.VkVersion(1, 0, 0)));
+
+            return context;
+        }
+
+        /// <summary>
         /// Test the 
         /// </summary>
         public static void TestScreenshot(this Context context, string testName)
         {
-            context.CreateTest(WIDTH, HEIGHT)
+            context.SetupTest()
                        .Init()
                        .RenderOneFramebuffer();
 

@@ -307,13 +307,14 @@ namespace MiniEngine.Drivers.Vulkan
 
 	public partial class SurfaceKhr : INonDispatchableHandleMarshalling
 	{
-		internal SurfaceKhr() {}
+		public SurfaceKhr() {}
 
-		internal UInt64 m;
+       
+        public UInt64 Handle;
 
 		UInt64 INonDispatchableHandleMarshalling.Handle {
 			get {
-				return m;
+				return Handle;
 			}
 		}
 	}

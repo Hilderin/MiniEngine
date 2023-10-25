@@ -430,7 +430,7 @@ namespace MiniEngine.Drivers.Vulkan
             unsafe
             {
                 pSupported = new Bool32();
-                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceSupportKHR(this.m, queueFamilyIndex, surface != null ? surface.m : default(UInt64), &pSupported);
+                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceSupportKHR(this.m, queueFamilyIndex, surface != null ? surface.Handle : default(UInt64), &pSupported);
                 if (result != Result.Success)
                     throw new ResultException(result);
 
@@ -445,7 +445,7 @@ namespace MiniEngine.Drivers.Vulkan
             unsafe
             {
                 pSurfaceCapabilities = new SurfaceCapabilitiesKhr();
-                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.m, surface != null ? surface.m : default(UInt64), &pSurfaceCapabilities);
+                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.m, surface != null ? surface.Handle : default(UInt64), &pSurfaceCapabilities);
                 if (result != Result.Success)
                     throw new ResultException(result);
 
@@ -459,7 +459,7 @@ namespace MiniEngine.Drivers.Vulkan
             unsafe
             {
                 UInt32 pSurfaceFormatCount;
-                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormatsKHR(this.m, surface != null ? surface.m : default(UInt64), &pSurfaceFormatCount, null);
+                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormatsKHR(this.m, surface != null ? surface.Handle : default(UInt64), &pSurfaceFormatCount, null);
                 if (result != Result.Success)
                     throw new ResultException(result);
                 if (pSurfaceFormatCount <= 0)
@@ -468,7 +468,7 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(SurfaceFormatKhr));
                 var refpSurfaceFormats = new NativeReference((int)(size * pSurfaceFormatCount));
                 var ptrpSurfaceFormats = refpSurfaceFormats.Handle;
-                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormatsKHR(this.m, surface != null ? surface.m : default(UInt64), &pSurfaceFormatCount, (SurfaceFormatKhr*)ptrpSurfaceFormats);
+                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormatsKHR(this.m, surface != null ? surface.Handle : default(UInt64), &pSurfaceFormatCount, (SurfaceFormatKhr*)ptrpSurfaceFormats);
                 if (result != Result.Success)
                     throw new ResultException(result);
 
@@ -490,7 +490,7 @@ namespace MiniEngine.Drivers.Vulkan
             unsafe
             {
                 UInt32 pPresentModeCount;
-                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfacePresentModesKHR(this.m, surface != null ? surface.m : default(UInt64), &pPresentModeCount, null);
+                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfacePresentModesKHR(this.m, surface != null ? surface.Handle : default(UInt64), &pPresentModeCount, null);
                 if (result != Result.Success)
                     throw new ResultException(result);
                 if (pPresentModeCount <= 0)
@@ -499,7 +499,7 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = 4;
                 var refpPresentModes = new NativeReference((int)(size * pPresentModeCount));
                 var ptrpPresentModes = refpPresentModes.Handle;
-                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfacePresentModesKHR(this.m, surface != null ? surface.m : default(UInt64), &pPresentModeCount, (PresentModeKhr*)ptrpPresentModes);
+                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfacePresentModesKHR(this.m, surface != null ? surface.Handle : default(UInt64), &pPresentModeCount, (PresentModeKhr*)ptrpPresentModes);
                 if (result != Result.Success)
                     throw new ResultException(result);
 
@@ -744,7 +744,7 @@ namespace MiniEngine.Drivers.Vulkan
             unsafe
             {
                 pSurfaceCapabilities = new SurfaceCapabilities2Ext();
-                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceCapabilities2EXT(this.m, surface != null ? surface.m : default(UInt64), pSurfaceCapabilities != null ? pSurfaceCapabilities.m : (Interop.SurfaceCapabilities2Ext*)default(IntPtr));
+                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceCapabilities2EXT(this.m, surface != null ? surface.Handle : default(UInt64), pSurfaceCapabilities != null ? pSurfaceCapabilities.m : (Interop.SurfaceCapabilities2Ext*)default(IntPtr));
                 if (result != Result.Success)
                     throw new ResultException(result);
 
@@ -758,7 +758,7 @@ namespace MiniEngine.Drivers.Vulkan
             unsafe
             {
                 UInt32 pRectCount;
-                result = Interop.NativeMethods.vkGetPhysicalDevicePresentRectanglesKHX(this.m, surface != null ? surface.m : default(UInt64), &pRectCount, null);
+                result = Interop.NativeMethods.vkGetPhysicalDevicePresentRectanglesKHX(this.m, surface != null ? surface.Handle : default(UInt64), &pRectCount, null);
                 if (result != Result.Success)
                     throw new ResultException(result);
                 if (pRectCount <= 0)
@@ -767,7 +767,7 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(Rect2D));
                 var refpRects = new NativeReference((int)(size * pRectCount));
                 var ptrpRects = refpRects.Handle;
-                result = Interop.NativeMethods.vkGetPhysicalDevicePresentRectanglesKHX(this.m, surface != null ? surface.m : default(UInt64), &pRectCount, (Rect2D*)ptrpRects);
+                result = Interop.NativeMethods.vkGetPhysicalDevicePresentRectanglesKHX(this.m, surface != null ? surface.Handle : default(UInt64), &pRectCount, (Rect2D*)ptrpRects);
                 if (result != Result.Success)
                     throw new ResultException(result);
 

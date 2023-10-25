@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using MiniEngine.GLFW;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace MiniEngine
@@ -33,10 +32,10 @@ namespace MiniEngine
         /// </summary>
         private bool _isDisposed = false;
 
-        /// <summary>
-        /// ClientSize
-        /// </summary>
-        private Vector2 _clientSize = new Vector2(1200, 800);
+        ///// <summary>
+        ///// ClientSize
+        ///// </summary>
+        //private Vector2 _clientSize = new Vector2(1200, 800);
 
         /// <summary>
         /// Current context
@@ -47,7 +46,7 @@ namespace MiniEngine
         /// <summary>
         /// Window
         /// </summary>
-        private Window _window;
+        private IWindow _window;
 
 
         /// <summary>
@@ -66,14 +65,14 @@ namespace MiniEngine
         public Scene Scene = new Scene();
 
 
-        /// <summary>
-        /// ClientSize
-        /// </summary>
-        public Vector2 ClientSize
-        { 
-            get { return _clientSize; }
-            set { Resize(value.X, value.Y); }
-        }
+        ///// <summary>
+        ///// ClientSize
+        ///// </summary>
+        //public Vector2 ClientSize
+        //{ 
+        //    get { return _clientSize; }
+        //    set { Resize(value.X, value.Y); }
+        //}
 
 
         /// <summary>
@@ -96,57 +95,79 @@ namespace MiniEngine
         /// <summary>
         /// Constructor
         /// </summary>
-        public Context(IRenderer renderer)
+        public Context()
         {
             _current = this;
-
-            renderer.PreInitGlfw();
-
-            _renderer = renderer;
 
             Input = new Input();
         }
 
         /// <summary>
-        /// Open the window
+        /// Set the current renderer
         /// </summary>
-        public Context OpenWindow(float width, float height, string title)
+        public Context SetRenderer(IRenderer render)
         {
-            if (this._window == null)
-            {
-                this._window = new Window((int)width, (int)height, title, this);
+            _renderer = render;
 
-                _clientSize = new Vector2(width, height);
-
-                Renderer.SetWindow(this._window);
-
-                this.CenterOnScreen();
-
-            }
-            else
-            {
-                //Ensure that the window is visible...
-                Resize(width, height);
-
-                this.Show();
-            }
+            if (_window != null)
+                _renderer.SetWindow(_window);
 
             return this;
         }
 
         /// <summary>
-        /// Create the context for testing only
+        /// Set the current window
         /// </summary>
-        public Context CreateTest(int width, int height)
+        public Context SetWindow(IWindow window)
         {
-            this._window = new Window(width, height, "Test", this);
+            _window = window;
 
-            _clientSize = new Vector2(width, height);
-
-            this.Hide();
+            if (_renderer != null)
+                _renderer.SetWindow(window);
 
             return this;
         }
+
+        ///// <summary>
+        ///// Open the window
+        ///// </summary>
+        //public Context OpenWindow(float width, float height, string title)
+        //{
+        //    if (_window == null)
+        //    {
+        //        _window = new Window((int)width, (int)height, title, this);
+
+        //        _clientSize = new Vector2(width, height);
+
+        //        Renderer.SetWindow(_window);
+
+        //        this.CenterOnScreen();
+
+        //    }
+        //    else
+        //    {
+        //        //Ensure that the window is visible...
+        //        Resize(width, height);
+
+        //        this.Show();
+        //    }
+
+        //    return this;
+        //}
+
+        ///// <summary>
+        ///// Create the context for testing only
+        ///// </summary>
+        //public Context CreateTest(int width, int height)
+        //{
+        //    _window = new Window(width, height, "Test", this);
+
+        //    _clientSize = new Vector2(width, height);
+
+        //    this.Hide();
+
+        //    return this;
+        //}
 
         /// <summary>
         /// Center the window on screen
@@ -160,7 +181,19 @@ namespace MiniEngine
             return this;
         }
 
-        
+        /// <summary>
+        /// Sets the window fullscreen on the primary monitor.
+        /// </summary>
+        public Context Fullscreen()
+        {
+            EnsureWindowExists();
+
+            _window.Fullscreen();
+
+            return this;
+        }
+
+
 
         /// <summary>
         /// Lock the cursor in the window
@@ -169,7 +202,7 @@ namespace MiniEngine
         {
             EnsureWindowExists();
 
-            _window.CursorMode = CursorMode.Disabled;
+            _window.LockCursor();
 
             return this;
         }
@@ -181,63 +214,63 @@ namespace MiniEngine
         {
             EnsureWindowExists();
 
-            _window.CursorMode = CursorMode.Normal;
+            _window.UnlockCursor();
 
             return this;
         }
 
 
-        /// <summary>
-        /// Show the screen
-        /// </summary>
-        public Context Show()
-        {
-            EnsureWindowExists();
+        ///// <summary>
+        ///// Show the screen
+        ///// </summary>
+        //public Context Show()
+        //{
+        //    EnsureWindowExists();
 
-            _window.Visible = true;
+        //    _window.Visible = true;
 
-            return this;
-        }
+        //    return this;
+        //}
 
-        /// <summary>
-        /// Hide the screen
-        /// </summary>
-        public Context Hide()
-        {
-            EnsureWindowExists();
+        ///// <summary>
+        ///// Hide the screen
+        ///// </summary>
+        //public Context Hide()
+        //{
+        //    EnsureWindowExists();
 
-            _window.Visible = false;
+        //    _window.Visible = false;
 
-            return this;
-        }
+        //    return this;
+        //}
 
-        /// <summary>
-        /// Resize the screen
-        /// </summary>
-        public Context Resize(float width, float height)
-        {
-            EnsureWindowExists();
+        ///// <summary>
+        ///// Resize the screen
+        ///// </summary>
+        //public Context Resize(float width, float height)
+        //{
+        //    EnsureWindowExists();
 
-            Vector2 newSize = new Vector2((float)width, (float)height);
-            this._window.ClientSize = _clientSize;
-            _clientSize = newSize;
+        //    Vector2 newSize = new Vector2((float)width, (float)height);
+        //    _window.ClientSize = _clientSize;
+        //    _clientSize = newSize;
 
-            return this;
+        //    return this;
 
-        }
+        //}
 
-        /// <summary>
-        /// Set the title of the screen
-        /// </summary>
-        public Context SetTitle(string title)
-        {
-            EnsureWindowExists();
+        ///// <summary>
+        ///// Set the title of the screen
+        ///// </summary>
+        //public Context SetTitle(string title)
+        //{
+        //    EnsureWindowExists();
 
-            this._window.Title = title;
+        //    _window.Title = title;
 
-            return this;
+        //    return this;
 
-        }
+        //}
 
         /// <summary>
         /// Init the game/application
@@ -264,7 +297,7 @@ namespace MiniEngine
             InitInternal();
 
             //And we are looping...
-            while (!this._window.IsClosing)
+            while (!_window.IsClosing)
             {
 
                 
@@ -273,12 +306,9 @@ namespace MiniEngine
                 if (runHandler != null)
                     runHandler();
 
-                if (this._window.IsClosing)
+                if (_window.IsClosing)
                     break;
-
-                //Updating Camera Client Size...
-                Scene.Camera.ClientSize = _clientSize;
-                
+                                
                 //Rendering...
                 Renderer.Render(Scene);
 
@@ -287,7 +317,7 @@ namespace MiniEngine
                 Input.OnNewFrame();
 
                 //Get new mouse and keyboard pulls
-                Glfw.PollEvents();
+                _window.DoEvents();
             }
 
         }
@@ -308,7 +338,7 @@ namespace MiniEngine
             if (runHandler != null)
                 runHandler();
 
-            if (this._window.IsClosing)
+            if (_window.IsClosing)
                 return;
 
             //Rendering...
@@ -321,8 +351,8 @@ namespace MiniEngine
         /// </summary>
         public void Quit()
         {
-            if (this._window != null)
-                this._window.Close();
+            if (_window != null)
+                _window.Close();
         }
 
 
@@ -395,9 +425,7 @@ namespace MiniEngine
         private void EnsureWindowExists()
         {
             if (_window == null)
-            {
-                this._window = new Window((int)_clientSize.X, (int)_clientSize.Y, "MiniEngine", this);
-            }
+                throw new InvalidOperationException("The Window has not been setupped, you must call SetWindow before this method.");
         }
 
 

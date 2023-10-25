@@ -25,9 +25,9 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 pSurface = new SurfaceKhr();
 
-                fixed (UInt64* ptrpSurface = &pSurface.m)
+                fixed (UInt64* ptrpSurface = &pSurface.Handle)
                 {
-                    result = NativeMethods.vkCreateWin32SurfaceKHR(m, pCreateInfo != null ? pCreateInfo.m : (MiniEngine.Drivers.Vulkan.Interop.Windows.Win32SurfaceCreateInfoKhr*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
+                    result = NativeMethods.vkCreateWin32SurfaceKHR(Handle, pCreateInfo != null ? pCreateInfo.m : (MiniEngine.Drivers.Vulkan.Interop.Windows.Win32SurfaceCreateInfoKhr*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
                 }
                 if (result != Result.Success)
                     throw new ResultException(result);

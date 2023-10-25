@@ -1,5 +1,4 @@
-﻿using MiniEngine.GLFW;
-using MiniEngine.Drivers.Vulkan;
+﻿using MiniEngine.Drivers.Vulkan;
 using System.Diagnostics;
 
 namespace MiniEngine.Rendering.Vulkan
@@ -32,7 +31,7 @@ namespace MiniEngine.Rendering.Vulkan
         #region Private members
 
         private List<VkMeshRenderer> _meshRenderers = new List<VkMeshRenderer>();
-        private Window _window;
+        private IWindow _window;
         private string _applicationName;
         private VkVersion _applicationVersion;
         private Func<VkInstance, SurfaceKhr> _surfaceCreationCallback;
@@ -77,15 +76,6 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
 
-        /// <summary>
-        /// Update the window options specific to the engine
-        /// </summary>
-        public void PreInitGlfw()
-        {
-            // No API
-            Glfw.WindowHint(Hint.ClientApi, ClientApi.None);
-
-        }
 
         /// <summary>
         /// Init the renderer
@@ -119,16 +109,35 @@ namespace MiniEngine.Rendering.Vulkan
             if (_surfaceCreationCallback != null)
                 return _surfaceCreationCallback(vi);
             else if (_window != null)
-                return vi.CreateSurfaceFromWindow(_window);
+                return CreateSurfaceFromWindow(vi, _window);
             else
                 throw new Exception("Impossible to create the surface. No window and no surfaceCreationCallback exist.");
 
         }
 
+
+
+        /// <summary>
+        /// Create a surface
+        /// </summary>
+        public SurfaceKhr CreateSurfaceFromWindow(VkInstance vi, IWindow window)
+        {
+            unsafe
+            {
+                SurfaceKhr surface = new SurfaceKhr();
+
+                fixed (ulong* ptr = &surface.Handle)
+                {
+                    window.CreateSurface(vi.Handle, (IntPtr)ptr);
+                }
+                return surface;
+            }
+        }
+
         /// <summary>
         /// Pass the window to the render when it's created
         /// </summary>
-        public void SetWindow(Window window)
+        public void SetWindow(IWindow window)
         {
             _window = window;
         }
@@ -169,7 +178,8 @@ namespace MiniEngine.Rendering.Vulkan
         {
 
             //The camera needs to be the same size has the client...
-            scene.Camera.ClientSize = Device.ClientSize;
+            if (Device.CurrentExtent.Width != scene.Camera.ClientSize.X || Device.CurrentExtent.Height != scene.Camera.ClientSize.Y)
+                scene.Camera.ClientSize = new Vector2(Device.CurrentExtent.Width, Device.CurrentExtent.Height);
 
             //Update MVP Matrix...
             Matrix4 viewMat2 = scene.Camera.GetMatrix();
@@ -231,7 +241,7 @@ namespace MiniEngine.Rendering.Vulkan
             Swapchain.Present(commandBuffer);
         }
 
-        
+
         #endregion
 
     }

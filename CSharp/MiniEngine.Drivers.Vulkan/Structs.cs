@@ -6621,7 +6621,7 @@ namespace MiniEngine.Drivers.Vulkan
 		SurfaceKhr lSurface;
 		public SurfaceKhr Surface {
 			get { return lSurface; }
-			set { lSurface = value; m->Surface = value != null ? (UInt64)value.m : default(UInt64); }
+			set { lSurface = value; m->Surface = value != null ? (UInt64)value.Handle : default(UInt64); }
 		}
 
 		public UInt32 MinImageCount {
@@ -12313,7 +12313,7 @@ namespace MiniEngine.Drivers.Vulkan
 		SurfaceKhr lSurface;
 		public SurfaceKhr Surface {
 			get { return lSurface; }
-			set { lSurface = value; m->Surface = value != null ? (UInt64)value.m : default(UInt64); }
+			set { lSurface = value; m->Surface = value != null ? (UInt64)value.Handle : default(UInt64); }
 		}
 		internal Interop.PhysicalDeviceSurfaceInfo2Khr* m {
 

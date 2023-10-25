@@ -1,9 +1,4 @@
 ﻿using MiniEngine.Drivers.Vulkan;
-using MiniEngine.Shaders;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using static MiniEngine.Mesh;
 
 namespace MiniEngine.Rendering.Vulkan
@@ -148,12 +143,11 @@ namespace MiniEngine.Rendering.Vulkan
             //Pipeline creation...
             for (int i = 0; i < _subMeshes.Count; i++)
             {
-                _vulkanMeshDatas[i].ShaderBinder = ShaderCompiler.BuildBinder(_materials[_subMeshes[i].MaterialIndex].Shader);
-                _vulkanMeshDatas[i].Pipeline = new PipelineWrapper(_vi.Device, _vi.Swapchain.RenderPass, _vulkanMeshDatas[i].ShaderBinder);
+                _vulkanMeshDatas[i].Shader = ShaderConverter.ConvertToVulkanShader(_materials[_subMeshes[i].MaterialIndex].Shader);
+                _vulkanMeshDatas[i].Pipeline = new PipelineWrapper(_vi.Device, _vi.Swapchain.RenderPass, _vulkanMeshDatas[i].Shader);
             }
 
         }
-
 
         /// <summary>
         /// Create the vertex buffer
@@ -193,7 +187,7 @@ namespace MiniEngine.Rendering.Vulkan
         public BufferWrapper indexBuffer;
         public int indexBufferLength;
         public PipelineWrapper Pipeline;
-        public ShaderBinder ShaderBinder;
+        public VkShader Shader;
         //public CommandBuffer[] CommandBuffers;
     }
 }

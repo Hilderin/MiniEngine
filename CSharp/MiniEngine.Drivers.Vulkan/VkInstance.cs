@@ -24,7 +24,7 @@ namespace MiniEngine.Drivers.Vulkan
         public Device Device;
 
 
-        internal IntPtr m;
+        public IntPtr Handle;
 
         private NativeMethods.vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT;
         private NativeMethods.vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT;
@@ -73,25 +73,6 @@ namespace MiniEngine.Drivers.Vulkan
 
             //And we can create a device...
             Device = PhysicalDevice.CreateDevice(Surface);
-        }
-
-
-
-        /// <summary>
-        /// Create a surface
-        /// </summary>
-        public SurfaceKhr CreateSurfaceFromWindow(Window window)
-        {
-            unsafe
-            {
-                SurfaceKhr surface = new SurfaceKhr();
-
-                fixed (ulong* ptr = &surface.m)
-                {
-                    window.CreateSurface(this.m, (IntPtr)ptr);
-                }
-                return surface;
-            }
         }
 
         /// <summary>
@@ -148,7 +129,7 @@ namespace MiniEngine.Drivers.Vulkan
 
             unsafe
             {
-                fixed (IntPtr* ptrInstance = &m)
+                fixed (IntPtr* ptrInstance = &Handle)
                 {
                     result = Interop.NativeMethods.vkCreateInstance(CreateInfo.m, Allocator != null ? Allocator.m : null, ptrInstance);
                 }
@@ -172,10 +153,10 @@ namespace MiniEngine.Drivers.Vulkan
                 debugCallbackFuncInternal = null;
                 debugCallbackDelegate = null;
             }
-            if (m != IntPtr.Zero)
+            if (Handle != IntPtr.Zero)
             {
                 Destroy();
-                m = IntPtr.Zero;
+                Handle = IntPtr.Zero;
             }
         }
 
@@ -219,7 +200,7 @@ namespace MiniEngine.Drivers.Vulkan
         {
             get
             {
-                return m;
+                return Handle;
             }
         }
 
@@ -227,7 +208,7 @@ namespace MiniEngine.Drivers.Vulkan
         {
             unsafe
             {
-                Interop.NativeMethods.vkDestroyInstance(this.m, pAllocator != null ? pAllocator.m : null);
+                Interop.NativeMethods.vkDestroyInstance(this.Handle, pAllocator != null ? pAllocator.m : null);
             }
         }
 
@@ -237,7 +218,7 @@ namespace MiniEngine.Drivers.Vulkan
             unsafe
             {
                 UInt32 pPhysicalDeviceCount;
-                result = Interop.NativeMethods.vkEnumeratePhysicalDevices(this.m, &pPhysicalDeviceCount, null);
+                result = Interop.NativeMethods.vkEnumeratePhysicalDevices(this.Handle, &pPhysicalDeviceCount, null);
                 if (result != Result.Success)
                     throw new ResultException(result);
                 if (pPhysicalDeviceCount <= 0)
@@ -246,7 +227,7 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(IntPtr));
                 var refpPhysicalDevices = new NativeReference((int)(size * pPhysicalDeviceCount));
                 var ptrpPhysicalDevices = refpPhysicalDevices.Handle;
-                result = Interop.NativeMethods.vkEnumeratePhysicalDevices(this.m, &pPhysicalDeviceCount, (IntPtr*)ptrpPhysicalDevices);
+                result = Interop.NativeMethods.vkEnumeratePhysicalDevices(this.Handle, &pPhysicalDeviceCount, (IntPtr*)ptrpPhysicalDevices);
                 if (result != Result.Success)
                     throw new ResultException(result);
 
@@ -267,7 +248,7 @@ namespace MiniEngine.Drivers.Vulkan
         {
             unsafe
             {
-                return Interop.NativeMethods.vkGetInstanceProcAddr(this.m, pName);
+                return Interop.NativeMethods.vkGetInstanceProcAddr(this.Handle, pName);
             }
         }
 
@@ -279,9 +260,9 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 pSurface = new SurfaceKhr();
 
-                fixed (UInt64* ptrpSurface = &pSurface.m)
+                fixed (UInt64* ptrpSurface = &pSurface.Handle)
                 {
-                    result = Interop.NativeMethods.vkCreateDisplayPlaneSurfaceKHR(this.m, pCreateInfo != null ? pCreateInfo.m : (Interop.DisplaySurfaceCreateInfoKhr*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
+                    result = Interop.NativeMethods.vkCreateDisplayPlaneSurfaceKHR(this.Handle, pCreateInfo != null ? pCreateInfo.m : (Interop.DisplaySurfaceCreateInfoKhr*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
                 }
                 if (result != Result.Success)
                     throw new ResultException(result);
@@ -294,7 +275,7 @@ namespace MiniEngine.Drivers.Vulkan
         {
             unsafe
             {
-                Interop.NativeMethods.vkDestroySurfaceKHR(this.m, surface != null ? surface.m : default(UInt64), pAllocator != null ? pAllocator.m : null);
+                Interop.NativeMethods.vkDestroySurfaceKHR(this.Handle, surface != null ? surface.Handle : default(UInt64), pAllocator != null ? pAllocator.m : null);
             }
         }
 
@@ -306,9 +287,9 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 pSurface = new SurfaceKhr();
 
-                fixed (UInt64* ptrpSurface = &pSurface.m)
+                fixed (UInt64* ptrpSurface = &pSurface.Handle)
                 {
-                    result = Interop.NativeMethods.vkCreateViSurfaceNN(this.m, pCreateInfo != null ? pCreateInfo.m : (Interop.ViSurfaceCreateInfoNn*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
+                    result = Interop.NativeMethods.vkCreateViSurfaceNN(this.Handle, pCreateInfo != null ? pCreateInfo.m : (Interop.ViSurfaceCreateInfoNn*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
                 }
                 if (result != Result.Success)
                     throw new ResultException(result);
@@ -327,7 +308,7 @@ namespace MiniEngine.Drivers.Vulkan
 
                 fixed (UInt64* ptrpCallback = &pCallback.m)
                 {
-                    result = vkCreateDebugReportCallbackEXT(this.m, pCreateInfo != null ? pCreateInfo.m : (Interop.DebugReportCallbackCreateInfoExt*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpCallback);
+                    result = vkCreateDebugReportCallbackEXT(this.Handle, pCreateInfo != null ? pCreateInfo.m : (Interop.DebugReportCallbackCreateInfoExt*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpCallback);
                 }
                 if (result != Result.Success)
                     throw new ResultException(result);
@@ -340,7 +321,7 @@ namespace MiniEngine.Drivers.Vulkan
         {
             unsafe
             {
-                vkDestroyDebugReportCallbackEXT(this.m, callback != null ? callback.m : default(UInt64), pAllocator != null ? pAllocator.m : null);
+                vkDestroyDebugReportCallbackEXT(this.Handle, callback != null ? callback.m : default(UInt64), pAllocator != null ? pAllocator.m : null);
             }
         }
 
@@ -348,7 +329,7 @@ namespace MiniEngine.Drivers.Vulkan
         {
             unsafe
             {
-                vkDebugReportMessageEXT(this.m, flags, objectType, @object, location, messageCode, pLayerPrefix, pMessage);
+                vkDebugReportMessageEXT(this.Handle, flags, objectType, @object, location, messageCode, pLayerPrefix, pMessage);
             }
         }
 
@@ -360,9 +341,9 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 pSurface = new SurfaceKhr();
 
-                fixed (UInt64* ptrpSurface = &pSurface.m)
+                fixed (UInt64* ptrpSurface = &pSurface.Handle)
                 {
-                    result = Interop.NativeMethods.vkCreateMacOSSurfaceMVK(this.m, pCreateInfo != null ? pCreateInfo.m : (Interop.MacOSSurfaceCreateInfoMvk*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
+                    result = Interop.NativeMethods.vkCreateMacOSSurfaceMVK(this.Handle, pCreateInfo != null ? pCreateInfo.m : (Interop.MacOSSurfaceCreateInfoMvk*)default(IntPtr), pAllocator != null ? pAllocator.m : null, ptrpSurface);
                 }
                 if (result != Result.Success)
                     throw new ResultException(result);

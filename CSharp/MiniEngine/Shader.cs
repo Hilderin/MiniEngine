@@ -6,18 +6,15 @@ using System.Threading.Tasks;
 
 namespace MiniEngine
 {
-    /// <summary>
-    /// A shader
-    /// </summary>
     public class Shader
     {
         /// <summary>
-        /// Code for the vertex shader
+        /// Code for vertex shader
         /// </summary>
         public string VertexCode;
 
         /// <summary>
-        /// Code for the fragment shader
+        /// Code for fragment shader
         /// </summary>
         public string FragmentCode;
 
@@ -26,8 +23,8 @@ namespace MiniEngine
         /// </summary>
         public Shader(string vertexCode, string fragmentCode)
         {
-            this.VertexCode = vertexCode;
-            this.FragmentCode = fragmentCode;
+            VertexCode = vertexCode;
+            FragmentCode = fragmentCode;
         }
     }
 }

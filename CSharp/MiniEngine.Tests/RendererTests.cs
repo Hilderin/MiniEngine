@@ -1,18 +1,12 @@
 using MiniEngine.PrimitiveMeshes;
-using MiniEngine.Rendering.OpenGL;
+using MiniEngine.Rendering.Vulkan;
 
 namespace MiniEngine.Tests
 {
     [TestClass]
     public class RendererTests
     {
-        private IRenderer CreateRendererTest()
-        {
-            return new OpenGLRenderer()
-            {
-                ShouldSwapBuffer = false
-            };
-        }
+        
 
         /// <summary>
         /// Basic cube with a centered camera at FOV 60 (default)
@@ -20,8 +14,10 @@ namespace MiniEngine.Tests
         [TestMethod]
         public void BasicScene_CubeCenterFOV60()
         {
-            using (Context context = new Context(CreateRendererTest()))
+            using (Context context = new Context())
             {
+                context.SetupTest();
+
                 context.Scene.AmbientLight.Intensity = 1f;
                 context.Scene.Camera.Location.Z = -3f;
 
@@ -40,8 +36,10 @@ namespace MiniEngine.Tests
         public void BasicScene_CubeCenterFOV90()
         {
 
-            using (Context context = new Context(CreateRendererTest()))
+            using (Context context = new Context())
             {
+                context.SetupTest();
+
                 context.Scene.AmbientLight.Intensity = 1f;
                 context.Scene.Camera.Location.Z = -3f;
                 context.Scene.Camera.FOV = 90;

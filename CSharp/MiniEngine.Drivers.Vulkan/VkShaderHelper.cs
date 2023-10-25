@@ -1,39 +1,24 @@
-﻿using MiniEngine.Shaders;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MiniEngine.Drivers.Vulkan
 {
     /// <summary>
     /// Helper for the shader
     /// </summary>
-    public static class ShaderHelper
+    public static class VkShaderHelper
     {
-
         /// <summary>
-        /// Create a descriptor set layout for a shader
+        /// Create a vulkan shader
         /// </summary>
-        public static DescriptorSetLayout CreateDescriptorSetLayout(Device device, ShaderBinder shaderBinder)
+        public static VkShader CreateShader(string vertexCode, string fragmentCode)
         {
-            var layoutBinding = new DescriptorSetLayoutBinding
-            {
-                DescriptorType = DescriptorType.UniformBuffer,
-                DescriptorCount = 1,
-                StageFlags = ShaderStageFlags.Vertex
-            };
-            var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
-            {
-                Bindings = new DescriptorSetLayoutBinding[] { layoutBinding }
-            };
+            byte[] vertexSpivr = Compile(vertexCode, ShaderStageFlags.Vertex);
+            byte[] fragmentSpivr = Compile(fragmentCode, ShaderStageFlags.Fragment);
 
-            return device.CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo);
+            return new VkShader(vertexSpivr, fragmentSpivr);
         }
-
 
 
         /// <summary>

@@ -11,10 +11,10 @@ namespace MiniEngine
     /// </summary>
     public interface IRenderer: IDisposable
     {
-        /// <summary>
-        /// Update the window options specific to the engine
-        /// </summary>
-        void PreInitGlfw();
+        ///// <summary>
+        ///// Update the window options specific to the engine
+        ///// </summary>
+        //void PreInitGlfw();
 
         /// <summary>
         /// Initialize the rendering engine
@@ -24,7 +24,7 @@ namespace MiniEngine
         /// <summary>
         /// Pass the window to the render when it's created
         /// </summary>
-        void SetWindow(Window window);
+        void SetWindow(IWindow window);
 
         /// <summary>
         /// Render the scene

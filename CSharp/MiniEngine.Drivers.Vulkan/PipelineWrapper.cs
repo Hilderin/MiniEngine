@@ -1,11 +1,4 @@
-﻿using MiniEngine.Shaders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace MiniEngine.Drivers.Vulkan
 {
@@ -15,7 +8,7 @@ namespace MiniEngine.Drivers.Vulkan
     public class PipelineWrapper : IDisposable
     {
         private Device _device;
-        private ShaderBinder _shaderBinder;
+        private VkShader _shader;
         private RenderPass _renderPass;
 
         private CommandBuffer[] commandBuffers;
@@ -25,10 +18,10 @@ namespace MiniEngine.Drivers.Vulkan
         private Buffer uniformBuffer;
         public Pipeline pipeline;
 
-        public PipelineWrapper(Device device, RenderPass renderPass, ShaderBinder shaderBinder)
+        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader)
         {
             _device = device;
-            _shaderBinder = shaderBinder;
+            _shader = shader;
             _renderPass = renderPass;
 
             Build();
@@ -71,25 +64,16 @@ namespace MiniEngine.Drivers.Vulkan
         public void Build()
         {
             //Descriptor set layout creation from shader...
-            descriptorSetLayout = ShaderHelper.CreateDescriptorSetLayout(_device, _shaderBinder);
+            descriptorSetLayout = _device.CreateDescriptorSetLayout(_shader.Bindings.ToArray());
 
-            PushConstantRange[] constantRanges = {
-                new() {
-                    Size = (uint)Marshal.SizeOf<Matrix4>(),
-                    StageFlags = ShaderStageFlags.Vertex
-                }
-            };
+            PushConstantRange[] constantRanges = _shader.Constants.ToArray();
 
             //Pipeline layout creation...
             pipelineLayout = _device.CreatePipelineLayout(descriptorSetLayout, constantRanges);
 
 
-            var vertShaderCode = ShaderHelper.Compile(_shaderBinder.Shader.VertexCode, ShaderStageFlags.Vertex);
-            var fragShaderCode = ShaderHelper.Compile(_shaderBinder.Shader.FragmentCode, ShaderStageFlags.Fragment);
-
-
-            var vertexShaderModule = _device.CreateShaderModule(vertShaderCode);
-            var fragmentShaderModule = _device.CreateShaderModule(fragShaderCode);
+            var vertexShaderModule = _device.CreateShaderModule(_shader.VertexSpirv);
+            var fragmentShaderModule = _device.CreateShaderModule(_shader.FragmentSpirv);
 
             PipelineShaderStageCreateInfo[] pipelineShaderStages = {
                 new PipelineShaderStageCreateInfo {
@@ -154,8 +138,8 @@ namespace MiniEngine.Drivers.Vulkan
 
             var vertexInputStateCreateInfo = new PipelineVertexInputStateCreateInfo
             {
-                VertexBindingDescriptions = new VertexInputBindingDescription[] { GetVertexBindingDescription() },
-                VertexAttributeDescriptions = GetVertexAttributeDescriptions()
+                VertexBindingDescriptions = _shader.VertexBindings.ToArray(),
+                VertexAttributeDescriptions = _shader.VertexInputAttributes.ToArray()
             };
 
             var pipelineCreateInfo = new GraphicsPipelineCreateInfo
@@ -182,53 +166,6 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-        /// <summary>
-        /// Get the Vertex struct Binding Description
-        /// </summary>
-        public VertexInputBindingDescription GetVertexBindingDescription()
-        {
-            VertexInputBindingDescription bindingDescription = new()
-            {
-                Binding = 0,
-                Stride = (uint)Unsafe.SizeOf<Vertex>(),
-                InputRate = VertexInputRate.Vertex,
-            };
-
-            return bindingDescription;
-        }
-
-        /// <summary>
-        /// Get the Vertex struct Binding Attributes Description
-        /// </summary>
-        public static VertexInputAttributeDescription[] GetVertexAttributeDescriptions()
-        {
-            var attributeDescriptions = new[]
-            {
-                new VertexInputAttributeDescription()
-                {
-                    Binding = 0,
-                    Location = 0,
-                    Format = Format.R32G32B32Sfloat,
-                    Offset = (uint)Marshal.OffsetOf<Vertex>(nameof(Vertex.Pos)),
-                },
-                new VertexInputAttributeDescription()
-                {
-                    Binding = 0,
-                    Location = 1,
-                    Format = Format.R32G32B32Sfloat,
-                    Offset = (uint)Marshal.OffsetOf<Vertex>(nameof(Vertex.Color)),
-                },
-                new VertexInputAttributeDescription()
-                {
-                    Binding = 0,
-                    Location = 2,
-                    Format = Format.R32G32Sfloat,
-                    Offset = (uint)Marshal.OffsetOf<Vertex>(nameof(Vertex.TexCoord)),
-                }
-            };
-
-            return attributeDescriptions;
-        }
 
         /// <summary>
         /// Implicit conversion to a Pipeline

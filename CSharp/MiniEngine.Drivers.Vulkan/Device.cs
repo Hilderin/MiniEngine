@@ -17,7 +17,7 @@ namespace MiniEngine.Drivers.Vulkan
         public PhysicalDevice PhysicalDevice;
         public SurfaceKhr Surface;
         public Extent2D CurrentExtent;
-        public Vector2 ClientSize;
+        //public Vector2 ClientSize;
         public SurfaceCapabilitiesKhr SurfaceCapabilities;
         public List<Fence> Fences = new List<Fence>();
         public List<Semaphore> Semaphores = new List<Semaphore>();
@@ -47,7 +47,6 @@ namespace MiniEngine.Drivers.Vulkan
             SurfaceCapabilities = PhysicalDevice.GetSurfaceCapabilitiesKHR(Surface);
 
             CurrentExtent = SurfaceCapabilities.CurrentExtent;
-            ClientSize = new Vector2(CurrentExtent.Width, CurrentExtent.Height);
         }
 
         /// <summary>
@@ -1181,6 +1180,18 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
+
+        public DescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutBinding[] bindings, AllocationCallbacks pAllocator = null)
+        {
+            var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
+            {
+                Bindings = bindings
+            };
+
+            return CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo, pAllocator);
+        }
+        
+
         public DescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
@@ -2096,7 +2107,7 @@ namespace MiniEngine.Drivers.Vulkan
             unsafe
             {
                 pModes = new DeviceGroupPresentModeFlagsKhx();
-                result = Interop.NativeMethods.vkGetDeviceGroupSurfacePresentModesKHX(this.m, surface != null ? surface.m : default(UInt64), &pModes);
+                result = Interop.NativeMethods.vkGetDeviceGroupSurfacePresentModesKHX(this.m, surface != null ? surface.Handle : default(UInt64), &pModes);
                 if (result != Result.Success)
                     throw new ResultException(result);
 

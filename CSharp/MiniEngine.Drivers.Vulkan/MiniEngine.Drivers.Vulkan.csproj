@@ -23,8 +23,4 @@
     <None Include="Windows\NativeMethods.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MiniEngine\MiniEngine.csproj" />
-  </ItemGroup>
-
 </Project>
