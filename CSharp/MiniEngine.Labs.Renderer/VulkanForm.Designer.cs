@@ -1,4 +1,4 @@
-﻿namespace MiniEngine.Tutorials.Drivers.Vulkan
+﻿namespace MiniEngine.Labs.Renderer
 {
     partial class VulkanForm
     {

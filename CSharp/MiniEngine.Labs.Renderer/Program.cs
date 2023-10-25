@@ -1,8 +1,9 @@
 using MiniEngine.Drivers.Vulkan;
 using MiniEngine.Rendering.Vulkan;
 using System.Diagnostics;
+using MiniEngine.Presentations.Glfw;
 
-namespace MiniEngine.Tutorials.Drivers.Vulkan
+namespace MiniEngine.Labs.Renderer
 {
     internal static class Program
     {
@@ -31,12 +32,13 @@ namespace MiniEngine.Tutorials.Drivers.Vulkan
                 //vk.MainLoop();
                 //vk.Dispose();
 
-                using (Context context = new Context(new VkRenderer("Test", new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), null, DebugCallback)))
+                using (Context context = new Context())
                 //using (Context context = new Context(new VulkanRenderer("MiniEngine Tutorial", true)))
                 {
                     var t = new Tutorial_Cube_Vulkan();
 
-                    context.OpenWindow(WIDTH, HEIGHT, TITLE)
+                    context.SetRenderer(new VkRenderer("Test", new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), null, DebugCallback))
+                           .SetWindow(new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
                            .Init(() =>
                            {
                                t.Init();

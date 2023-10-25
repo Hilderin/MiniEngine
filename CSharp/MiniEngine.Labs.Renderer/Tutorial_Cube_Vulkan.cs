@@ -3,7 +3,7 @@ using System.Diagnostics;
 using MiniEngine.Assets;
 using MiniEngine.PrimitiveMeshes;
 
-namespace MiniEngine.Tutorials.Drivers.Vulkan
+namespace MiniEngine.Labs.Renderer
 {
     internal class Tutorial_Cube_Vulkan
     {
@@ -37,25 +37,21 @@ layout( push_constant ) uniform constants
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
-layout(location = 2) in vec3 inTexCoord;
+layout(location = 2) in vec2 inTexCoord;
 
 layout(location = 0) out vec3 fragColor;
-
-//[1, 0, 0, -1][0, 1, 0, 0][0, 0, 1, 0][0, 0, 0, 1]
-mat4 aMat4 = mat4(1.0, 0.0, 0.0, -1.0,  // 1. column
-                  0.0, 1.0, 0.0, 0.0,  // 2. column
-                  0.0, 0.0, 1.0, 0.0,  // 3. column
-                  0.0, 0.0, 0.0, 1.0); // 4. column
+layout(location = 1) out vec2 fragTexCoord;
 
 void main() {
     gl_Position = PushConstants.render_matrix * vec4(inPosition, 1.0);
-    //gl_Position.y = -gl_Position.y;
-    fragColor = vec3(PushConstants.render_matrix * vec4(inPosition, 1.0));
+    
     fragColor = inColor;
+    fragTexCoord = inTexCoord;
 }
 ", @"#version 450
 
 layout(location = 0) in vec3 fragColor;
+layout(location = 1) in vec2 fragTexCoord;
 
 layout(location = 0) out vec4 outColor;
 
@@ -149,13 +145,13 @@ void main() {
             if (Scene.DirectionalLight != null)
                 Scene.DirectionalLight.Intensity = Math.Clamp(Scene.DirectionalLight.Intensity, 0f, 1f);
 
-            if (Context.Input.IsJustMouseMoved)
-            {
-                Vector2 mouseMovement = Context.Input.MouseMovement;
-                Camera.RotatePitch(mouseMovement.Y * -0.1f);
-                //Camera.RotateYaw(mouseMovement.X * 0.1f);
-                Debug.Print(mouseMovement.ToString());
-            }
+            //if (Context.Input.IsJustMouseMoved)
+            //{
+            //    Vector2 mouseMovement = Context.Input.MouseMovement;
+            //    Camera.RotatePitch(mouseMovement.Y * -0.1f);
+            //    //Camera.RotateYaw(mouseMovement.X * 0.1f);
+            //    Debug.Print(mouseMovement.ToString());
+            //}
 
 
             //_currentMesh.RotateY(0.01f);

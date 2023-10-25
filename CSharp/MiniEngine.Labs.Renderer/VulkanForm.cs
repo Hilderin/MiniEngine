@@ -6,7 +6,7 @@ using MiniEngine.PrimitiveMeshes;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace MiniEngine.Tutorials.Drivers.Vulkan
+namespace MiniEngine.Labs.Renderer
 {
     public partial class VulkanForm : Form
     {
