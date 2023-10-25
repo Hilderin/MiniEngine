@@ -8,11 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MiniEngine.Drivers.Glfw\MiniEngine.Drivers.Glfw.csproj" />
-    <ProjectReference Include="..\MiniEngine\MiniEngine.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="Ressources\Resources.Designer.cs">
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>

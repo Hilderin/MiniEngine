@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using MiniEngine.Drivers.Glfw;
 
 namespace MiniEngine.Presentations.Glfw
 {
@@ -639,9 +640,9 @@ namespace MiniEngine.Presentations.Glfw
         /// <summary>
         /// OnKeypress
         /// </summary>
-        private void OnKey(Window window, Keys key, int scanCode, InputState state, ModifierKeys mods)
+        private void OnKey(Window window, MiniEngine.Drivers.Glfw.Keys key, int scanCode, InputState state, ModifierKeys mods)
         {
-            _context.Input.SetKeyState(key, (state != InputState.Release));
+            _context.Input.SetKeyState((MiniEngine.Keys)key, (state != InputState.Release));
         }
 
         /// <summary>
