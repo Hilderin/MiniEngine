@@ -8,7 +8,7 @@ namespace MiniEngine.Labs.Renderer
     internal static class Program
     {
         private const string TITLE = "Simple Window";
-        public const int WIDTH = 800;
+        public const int WIDTH = 1200;
         public const int HEIGHT = 800;
 
 
@@ -25,17 +25,10 @@ namespace MiniEngine.Labs.Renderer
 
             try
             {
-                //VkInstance vk = new VkInstance();
-
-                //vk.InitWindow();
-                //vk.InitVulkan();
-                //vk.MainLoop();
-                //vk.Dispose();
-
+                
                 using (Context context = new Context())
-                //using (Context context = new Context(new VulkanRenderer("MiniEngine Tutorial", true)))
                 {
-                    var t = new Tutorial_Cube_Vulkan();
+                    var t = new Test_ImGUI();
 
                     context.SetRenderer(new VkRenderer("Test", new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), null, DebugCallback))
                            .SetWindow(new GlfwWindow(WIDTH, HEIGHT, TITLE, context))

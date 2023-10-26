@@ -2596,6 +2596,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class DescriptorSetLayoutBinding : MarshalledObject
 	{
+		public string Name;
+
 		public UInt32 Binding {
 			get { return m->Binding; }
 			set { m->Binding = value; }
@@ -3138,6 +3140,7 @@ namespace MiniEngine.Drivers.Vulkan
 		public UInt32 Binding;
 		public Format Format;
 		public UInt32 Offset;
+		public string Name;
 	}
 
 	unsafe public partial class PipelineVertexInputStateCreateInfo : MarshalledObject
@@ -4139,6 +4142,7 @@ namespace MiniEngine.Drivers.Vulkan
 		public ShaderStageFlags StageFlags;
 		public UInt32 Offset;
 		public UInt32 Size;
+		public string Name;
 	}
 
 	unsafe public partial class PipelineLayoutCreateInfo : MarshalledObject

@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ImGui.NET" Version="1.89.9.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MiniEngine.Assets\MiniEngine.Assets.csproj" />
     <ProjectReference Include="..\MiniEngine.Drivers.Vulkan\MiniEngine.Drivers.Vulkan.csproj" />
     <ProjectReference Include="..\MiniEngine.Presentations.Glfw\MiniEngine.Presentations.Glfw.csproj" />

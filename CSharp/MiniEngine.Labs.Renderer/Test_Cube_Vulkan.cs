@@ -5,7 +5,7 @@ using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Labs.Renderer
 {
-    internal class Tutorial_Cube_Vulkan
+    internal class Test_Cube_Vulkan
     {
        
         private Mesh _currentMesh;

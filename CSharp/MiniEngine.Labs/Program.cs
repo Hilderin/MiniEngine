@@ -11,7 +11,7 @@ namespace MiniEngine.Labs
                 Stopwatch sw = Stopwatch.StartNew();
 
 
-                var lab = new Lab_GenerateScan0WhitePixel();
+                var lab = new Lab_SpirvParser();
 
                 lab.Test();
 
