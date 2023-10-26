@@ -28,9 +28,9 @@ namespace MiniEngine.Labs.Renderer
                 
                 using (Context context = new Context())
                 {
-                    var t = new Test_ImGUI();
+                    var t = new Test_Cube_Vulkan();
 
-                    context.SetRenderer(new VkRenderer("Test", new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), null, DebugCallback))
+                    context.SetRenderer(new VkRenderer(t.GetType().Name, new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), null, DebugCallback))
                            .SetWindow(new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
                            .Init(() =>
                            {

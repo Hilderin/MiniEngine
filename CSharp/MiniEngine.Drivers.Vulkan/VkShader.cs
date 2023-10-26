@@ -45,7 +45,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkShader(byte[] vertexSpirv, byte[] fragmentSpirv)
+        internal VkShader(byte[] vertexSpirv, byte[] fragmentSpirv)
         {
             this.VertexSpirv = vertexSpirv;
             this.FragmentSpirv = fragmentSpirv;

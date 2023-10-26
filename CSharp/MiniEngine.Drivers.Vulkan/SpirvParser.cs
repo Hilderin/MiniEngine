@@ -140,6 +140,10 @@ namespace MiniEngine.Drivers.Vulkan
                         decoration = (SpvDecoration)data[word_index + 2];
                         switch (decoration)
                         {
+                            case SpvDecoration.SpvDecorationLocation:
+                                id.location = data[word_index + 3];
+                                break;
+
                             case SpvDecoration.SpvDecorationBinding:
                                 id.binding = data[word_index + 3];
                                 break;
@@ -360,18 +364,19 @@ namespace MiniEngine.Drivers.Vulkan
 
             //--------------------------------------
             //Vertex buffer...
+            List<uint> stride_per_set = new List<uint>();
+            List<uint> binding_per_set = new List<uint>();
             foreach (uint entry_variable_index in entry_variables_index)
             {
-                
-
                 id = ids[entry_variable_index];
-
                 if (id.storage_class == SpvStorageClass.SpvStorageClassInput)
                 {
-                    while(shader.VertexBindings.Count <= id.set)
-                        shader.VertexBindings.Add(new VertexInputBindingDescription());
-                    
-                    var bindingSet = shader.VertexBindings[(int)id.set];
+                    while (stride_per_set.Count <= id.set)
+                    {
+                        stride_per_set.Add(0);
+                        binding_per_set.Add(0);
+                    }
+
                     Id typeid = ids[id.type_index];
 
                     // If the type is a pointer, resolve it
@@ -380,25 +385,31 @@ namespace MiniEngine.Drivers.Vulkan
                         typeid = ids[typeid.type_index];
                     }
 
+                    uint stride = stride_per_set[(int)id.set];
 
                     VertexInputAttributeDescription vertexInputAttribute = new VertexInputAttributeDescription();
-                    vertexInputAttribute.Location = id.binding;
-                    vertexInputAttribute.Binding = id.set;
-                    vertexInputAttribute.Offset = bindingSet.Stride;
+                    vertexInputAttribute.Location = id.location;
+                    vertexInputAttribute.Binding = id.binding;
+                    vertexInputAttribute.Offset = stride;
                     vertexInputAttribute.Format = GetMemberFormat(typeid, ids);
-                    vertexInputAttribute.Name = id.name;
                     shader.VertexInputAttributes.Add(vertexInputAttribute);
 
 
+                    stride_per_set[(int)id.set] = stride + GetMemberWidth(typeid, ids);
+                    binding_per_set[(int)id.set] = id.binding;
 
-                    bindingSet.Stride += GetMemberWidth(typeid, ids);
 
-                    
 
                 }
+            }
 
-
-                
+            for (int i = 0; i < stride_per_set.Count; i++)
+            {
+                shader.VertexBindings.Add(new VertexInputBindingDescription()
+                {
+                    Binding = binding_per_set[i],
+                    Stride = stride_per_set[i]
+                });
             }
 
 
@@ -428,33 +439,21 @@ namespace MiniEngine.Drivers.Vulkan
 
                             DescriptorSetLayoutBinding binding = new DescriptorSetLayoutBinding();
 
-                            binding.Name = id.name;
                             binding.Binding = id.binding;
-                            binding.StageFlags |= stage;
-
-                            //DescriptorSetLayoutCreation::Binding binding{ };    
-                            //binding.start = id.binding;
-                            //binding.count = 1;
+                            binding.StageFlags = binding.StageFlags | stage;
 
                             switch (uniform_type.op)
                             {
                                 case SpvOp.SpvOpTypeStruct:
                                     binding.DescriptorType = DescriptorType.UniformBuffer;
-                                    //binding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                                    //binding.name = uniform_type.name.text;
+                                    binding.DescriptorCount = 1;
                                     break;
 
                                 case SpvOp.SpvOpTypeSampledImage:
                                     binding.DescriptorType = DescriptorType.CombinedImageSampler;
-                                    //binding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                                    //binding.name = id.name.text;
+                                    binding.DescriptorCount = 1;
                                     break;
                             }
-
-                            //setLayout.add_binding_at_index(binding, id.binding);
-
-                            //parse_result->set_count = max(parse_result->set_count, (id.set + 1));
-
                             shader.Bindings.Add(binding);
 
                             break;
@@ -475,7 +474,8 @@ namespace MiniEngine.Drivers.Vulkan
                                 PushConstantRange pushConstant = new PushConstantRange();
                                 pushConstant.Size = member_id.width;
                                 pushConstant.Offset = mc.offset;
-                                pushConstant.Name = mc.name;
+                                pushConstant.StageFlags = pushConstant.StageFlags | stage;
+                                //pushConstant.StageFlags = ShaderStageFlags.Vertex;
                                 shader.Constants.Add(pushConstant);
 
                             }
@@ -611,6 +611,7 @@ namespace MiniEngine.Drivers.Vulkan
             public SpvOp op;
             public uint set;
             public uint binding;
+            public uint location;
 
             // For integers and floats
             public byte width;

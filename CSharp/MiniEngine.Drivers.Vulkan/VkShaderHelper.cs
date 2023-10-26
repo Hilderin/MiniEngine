@@ -17,7 +17,7 @@ namespace MiniEngine.Drivers.Vulkan
             byte[] vertexSpivr = Compile(vertexCode, ShaderStageFlags.Vertex);
             byte[] fragmentSpivr = Compile(fragmentCode, ShaderStageFlags.Fragment);
 
-            return new VkShader(vertexSpivr, fragmentSpivr);
+            return SpirvParser.Parse(vertexSpivr, fragmentSpivr);
         }
 
 
