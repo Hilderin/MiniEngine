@@ -22,16 +22,14 @@ namespace MiniEngine.Drivers.Vulkan
         public DescriptorPool DescriptorPool;
         public BufferWrapper UniformBuffer;
 
-        private CommandBuffer[] commandBuffers;
-        //public PipelineWrapperDescriptorSet[] descriptorSets;
         private DescriptorSetLayout descriptorSetLayout;
-        public PipelineLayout pipelineLayout;
-        //private Buffer uniformBuffer;
-        public Pipeline pipeline;
+        private PipelineLayout _pipelineLayout;
+        private Pipeline _pipeline;
 
-        
+        public Pipeline Pipeline { get { return _pipeline; } }
+        public PipelineLayout PipelineLayout { get { return _pipelineLayout; } }
 
-        
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -63,16 +61,16 @@ namespace MiniEngine.Drivers.Vulkan
                 descriptorSetLayout = null;
             }
 
-            if (pipeline != null)
+            if (_pipeline != null)
             {
-                _device.DestroyPipeline(pipeline);
-                pipeline = null;
+                _device.DestroyPipeline(_pipeline);
+                _pipeline = null;
             }
 
-            if (pipelineLayout != null)
+            if (_pipelineLayout != null)
             {
-                _device.DestroyPipelineLayout(pipelineLayout);
-                pipelineLayout = null;
+                _device.DestroyPipelineLayout(_pipelineLayout);
+                _pipelineLayout = null;
             }
 
             if (descriptorSetLayout != null)
@@ -112,7 +110,7 @@ namespace MiniEngine.Drivers.Vulkan
             PushConstantRange[] constantRanges = _shader.Constants.ToArray();
 
             //Pipeline layout creation...
-            pipelineLayout = _device.CreatePipelineLayout(descriptorSetLayout, constantRanges);
+            _pipelineLayout = _device.CreatePipelineLayout(descriptorSetLayout, constantRanges);
 
 
             var vertexShaderModule = _device.CreateShaderModule(_shader.VertexSpirv);
@@ -187,7 +185,7 @@ namespace MiniEngine.Drivers.Vulkan
 
             var pipelineCreateInfo = new GraphicsPipelineCreateInfo
             {
-                Layout = pipelineLayout,
+                Layout = _pipelineLayout,
                 ViewportState = viewportCreateInfo,
                 Stages = pipelineShaderStages,
                 MultisampleState = multisampleCreateInfo,
@@ -201,7 +199,7 @@ namespace MiniEngine.Drivers.Vulkan
             //var pipelines = _device.CreateGraphicsPipelines(_device.CreatePipelineCache(new PipelineCacheCreateInfo()), new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
             var pipelines = _device.CreateGraphicsPipelines(null, new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
 
-            pipeline = pipelines[0];
+            _pipeline = pipelines[0];
 
             //We don't need it anymore...
             _device.DestroyShaderModule(vertexShaderModule);
@@ -308,10 +306,10 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-        /// <summary>
-        /// Implicit conversion to a Pipeline
-        /// </summary>
-        public static implicit operator Pipeline(PipelineWrapper pipeline) { return pipeline.pipeline; }
+        ///// <summary>
+        ///// Implicit conversion to a Pipeline
+        ///// </summary>
+        //public static implicit operator Pipeline(PipelineWrapper pipeline) { return pipeline._pipeline; }
 
     }
 

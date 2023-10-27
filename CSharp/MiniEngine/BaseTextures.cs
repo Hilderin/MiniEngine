@@ -16,6 +16,11 @@ namespace MiniEngine
         private static Texture2D _white;
 
         /// <summary>
+        /// Get pixel data for white texture
+        /// </summary>
+        public static byte[] WhitePixelData => Resources.PixelWhite;
+
+        /// <summary>
         /// Get a basic white textre
         /// </summary>
         public static Texture2D White
@@ -26,7 +31,7 @@ namespace MiniEngine
                 {
                     _white = Context.Current.CreateTexture2D(new Texture2DDefinition()
                     {
-                        Data = Resources.PixelWhite
+                        Data = WhitePixelData
                     });
                 }
                 return _white;

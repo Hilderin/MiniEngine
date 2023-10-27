@@ -15,7 +15,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a triangle mesh
         /// </summary>
-        public static Mesh CreateTriangleMesh()
+        public static MeshDefinition CreateTriangleMeshDefinition()
         {
             MeshDefinition meshDef = new MeshDefinition();
 
@@ -52,7 +52,15 @@ namespace MiniEngine
                 TexCoords = texCoords
             });
 
-            return Context.Current.CreateMesh(meshDef);
+            return meshDef;
+        }
+
+        /// <summary>
+        /// Create a Triangle mesh actor
+        /// </summary>
+        public static Mesh CreateTriangleMesh()
+        {
+            return Context.Current.CreateMesh(CreateTriangleMeshDefinition());
         }
 
         /// <summary>

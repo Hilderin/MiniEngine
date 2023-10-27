@@ -75,16 +75,16 @@ namespace MiniEngine.Rendering.Vulkan
             //Constants...
             for (int iConst = 0; iConst < shader.Constants.Count; iConst++)
             {
-                commandBuffer.CmdPushConstants(renderData.Pipeline.pipelineLayout, shader.Constants[iConst].StageFlags, 0, ref mvp);
+                commandBuffer.CmdPushConstants(renderData.Pipeline.PipelineLayout, shader.Constants[iConst].StageFlags, 0, ref mvp);
             }
 
             //DescriptorSets...
             if (pipeline.DescriptorSets != null)
             {
-                commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, pipeline.pipelineLayout, 0, pipeline.DescriptorSets, null);
+                commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, pipeline.PipelineLayout, 0, pipeline.DescriptorSets, null);
             }
 
-            commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, pipeline);
+            commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, pipeline.Pipeline);
             commandBuffer.CmdBindVertexBuffer(0, meshData.vertexBuffer, 0);
             commandBuffer.CmdBindIndexBuffer(meshData.indexBuffer, 0, IndexType.Uint32);
             commandBuffer.CmdDrawIndexed((uint)meshData.nbIndices, 1, 0, 0, 0);
@@ -142,7 +142,6 @@ namespace MiniEngine.Rendering.Vulkan
     {
         public PipelineWrapper Pipeline;
         public VkShader Shader;
-        public CommandBuffer[] CommandBuffers;
     }
 
 }
