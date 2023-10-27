@@ -1,4 +1,6 @@
-﻿namespace MiniEngine.Labs.Renderer
+﻿using System.Drawing;
+
+namespace MiniEngine.Labs.Renderer
 {
     partial class VulkanForm
     {
@@ -40,7 +42,7 @@
             // VulkanForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new Size(1184, 761);
             Name = "VulkanForm";
             Text = "Vulkan form";

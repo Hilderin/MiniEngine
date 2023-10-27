@@ -5,6 +5,8 @@ using MiniEngine.Drivers.Vulkan.Windows;
 using MiniEngine.PrimitiveMeshes;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using System;
 
 namespace MiniEngine.Labs.Renderer
 {

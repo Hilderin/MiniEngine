@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MiniEngine.Drivers.Vulkan
 {
@@ -16,7 +17,8 @@ namespace MiniEngine.Drivers.Vulkan
         {
             VkShader shader = new VkShader(vertexBytes, fragmentBytes);
 
-            ParseBytes(vertexBytes, ShaderStageFlags.Vertex, shader);
+            ParseBytes(vertexBytes, shader);
+            ParseBytes(fragmentBytes, shader);
 
 
             return shader;
@@ -25,7 +27,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Parse the byte codes for a shader
         /// </summary>
-        private unsafe static void ParseBytes(byte[] dataBytes, ShaderStageFlags stageFlags, VkShader shader)
+        private unsafe static void ParseBytes(byte[] dataBytes, VkShader shader)
         {
             if (dataBytes.Length % 4 != 0)
                 throw new ArgumentException("Invalid spirv, length % 4 != 0");
@@ -72,17 +74,21 @@ namespace MiniEngine.Drivers.Vulkan
 
                     case SpvOp.SpvOpEntryPoint:
 
+                        string entrypoint_name = GetStringFromData(dataBytes, (word_index + 3) * 4);
+
                         SpvExecutionModel model = (SpvExecutionModel)data[word_index + 1];
                         switch (model)
                         {
                             case SpvExecutionModel.SpvExecutionModelVertex:
                                 stage = ShaderStageFlags.Vertex;
+                                shader.VertexEntryPoint = entrypoint_name;
                                 break;
                             case SpvExecutionModel.SpvExecutionModelGeometry:
                                 stage = ShaderStageFlags.Geometry;
                                 break;
                             case SpvExecutionModel.SpvExecutionModelFragment:
                                 stage = ShaderStageFlags.Fragment;
+                                shader.FragmentEntryPoint = entrypoint_name;
                                 break;
                             case SpvExecutionModel.SpvExecutionModelKernel:
                             case SpvExecutionModel.SpvExecutionModelGLCompute:
@@ -116,16 +122,17 @@ namespace MiniEngine.Drivers.Vulkan
                         }
 
 
-                        string entrypoint_name = GetStringFromData(dataBytes, (word_index + 3) * 4);
-
-                        //Round up on 4 digits (including the ending zero)
-                        int entrypoint_name_len = ((entrypoint_name.Length + 1) / 4) + ((entrypoint_name.Length + 1) % 4);
-
-                        for (int var_index = word_index + 3 + entrypoint_name_len; var_index < word_index + word_count; var_index++)
+                        //When take the entrypoints variables only for vertex shaders...
+                        if (stage == ShaderStageFlags.Vertex)
                         {
-                            entry_variables_index.Add(data[var_index]);
-                        }
+                            //Round up on 4 digits (including the ending zero)
+                            int entrypoint_name_len = ((entrypoint_name.Length + 1) / 4) + ((entrypoint_name.Length + 1) % 4);
 
+                            for (int var_index = word_index + 3 + entrypoint_name_len; var_index < word_index + word_count; var_index++)
+                            {
+                                entry_variables_index.Add(data[var_index]);
+                            }
+                        }
 
                         break;
 
@@ -364,17 +371,15 @@ namespace MiniEngine.Drivers.Vulkan
 
             //--------------------------------------
             //Vertex buffer...
-            List<uint> stride_per_set = new List<uint>();
-            List<uint> binding_per_set = new List<uint>();
+            List<BindingSet> binding_sets = new List<BindingSet>();
             foreach (uint entry_variable_index in entry_variables_index)
             {
                 id = ids[entry_variable_index];
                 if (id.storage_class == SpvStorageClass.SpvStorageClassInput)
                 {
-                    while (stride_per_set.Count <= id.set)
+                    while (binding_sets.Count <= id.set)
                     {
-                        stride_per_set.Add(0);
-                        binding_per_set.Add(0);
+                        binding_sets.Add(new BindingSet());
                     }
 
                     Id typeid = ids[id.type_index];
@@ -385,31 +390,34 @@ namespace MiniEngine.Drivers.Vulkan
                         typeid = ids[typeid.type_index];
                     }
 
-                    uint stride = stride_per_set[(int)id.set];
+                    BindingSet bindingSet = binding_sets[(int)id.set];
 
                     VertexInputAttributeDescription vertexInputAttribute = new VertexInputAttributeDescription();
                     vertexInputAttribute.Location = id.location;
                     vertexInputAttribute.Binding = id.binding;
-                    vertexInputAttribute.Offset = stride;
+                    vertexInputAttribute.Offset = bindingSet.Stride;
                     vertexInputAttribute.Format = GetMemberFormat(typeid, ids);
                     shader.VertexInputAttributes.Add(vertexInputAttribute);
 
 
-                    stride_per_set[(int)id.set] = stride + GetMemberWidth(typeid, ids);
-                    binding_per_set[(int)id.set] = id.binding;
+                    bindingSet.Stride += GetMemberWidth(typeid, ids);
+                    bindingSet.Binding = id.binding;
 
 
 
                 }
             }
 
-            for (int i = 0; i < stride_per_set.Count; i++)
+            for (int i = 0; i < binding_sets.Count; i++)
             {
-                shader.VertexBindings.Add(new VertexInputBindingDescription()
+                if (!shader.VertexBindings.Any(b => b.Binding == binding_sets[i].Binding))
                 {
-                    Binding = binding_per_set[i],
-                    Stride = stride_per_set[i]
-                });
+                    shader.VertexBindings.Add(new VertexInputBindingDescription()
+                    {
+                        Binding = binding_sets[i].Binding,
+                        Stride = binding_sets[i].Stride
+                    });
+                }
             }
 
 
@@ -437,24 +445,34 @@ namespace MiniEngine.Drivers.Vulkan
                             //DescriptorSetLayoutCreation & setLayout = parse_result->sets[id.set];
                             //setLayout.set_set_index(id.set);
 
-                            DescriptorSetLayoutBinding binding = new DescriptorSetLayoutBinding();
+                            DescriptorSetLayoutBinding binding = shader.Bindings.FirstOrDefault(b => b.Binding == id.binding);
+                            if (binding == null)
+                            {
+                                binding = new DescriptorSetLayoutBinding();
+                                binding.Binding = id.binding;
+                                binding.Name = id.name;
+                                binding.Size = uniform_type.width;
 
-                            binding.Binding = id.binding;
+                                switch (uniform_type.op)
+                                {
+                                    case SpvOp.SpvOpTypeStruct:
+                                        binding.DescriptorType = DescriptorType.UniformBuffer;
+                                        binding.DescriptorCount = 1;
+                                        break;
+
+                                    case SpvOp.SpvOpTypeSampledImage:
+                                        binding.DescriptorType = DescriptorType.CombinedImageSampler;
+                                        binding.DescriptorCount = 1;
+                                        break;
+                                }
+
+                                shader.Bindings.Add(binding);
+                            }
+
+                            
                             binding.StageFlags = binding.StageFlags | stage;
 
-                            switch (uniform_type.op)
-                            {
-                                case SpvOp.SpvOpTypeStruct:
-                                    binding.DescriptorType = DescriptorType.UniformBuffer;
-                                    binding.DescriptorCount = 1;
-                                    break;
 
-                                case SpvOp.SpvOpTypeSampledImage:
-                                    binding.DescriptorType = DescriptorType.CombinedImageSampler;
-                                    binding.DescriptorCount = 1;
-                                    break;
-                            }
-                            shader.Bindings.Add(binding);
 
                             break;
 
@@ -471,17 +489,24 @@ namespace MiniEngine.Drivers.Vulkan
 
                                 Id member_id = ids[mc.id_index];
 
-                                PushConstantRange pushConstant = new PushConstantRange();
-                                pushConstant.Size = member_id.width;
-                                pushConstant.Offset = mc.offset;
+                                PushConstantRange pushConstant = shader.Constants.FirstOrDefault(c => c.Offset == mc.offset);
+                                if (pushConstant == null)
+                                {
+                                    pushConstant = new PushConstantRange();
+                                    pushConstant.Name = mc.name;
+                                    pushConstant.Size = member_id.width;
+                                    pushConstant.Offset = mc.offset;
+
+                                    shader.Constants.Add(pushConstant);
+                                }
+
                                 pushConstant.StageFlags = pushConstant.StageFlags | stage;
-                                //pushConstant.StageFlags = ShaderStageFlags.Vertex;
-                                shader.Constants.Add(pushConstant);
+                                
 
                             }
-                            
 
-                            
+
+
 
 
 
@@ -526,7 +551,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private static Format GetMemberFormat(Id id, Id[] ids)
         {
-            
+
             switch (id.op)
             {
 
@@ -596,6 +621,13 @@ namespace MiniEngine.Drivers.Vulkan
 
 
         #region Internal classes
+
+
+        private class BindingSet
+        {
+            public uint Binding;
+            public uint Stride;
+        }
 
 
         private class Member

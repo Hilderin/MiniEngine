@@ -2596,6 +2596,9 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class DescriptorSetLayoutBinding : MarshalledObject
 	{
+		public string Name;
+		public uint Size;
+
 		public UInt32 Binding {
 			get { return m->Binding; }
 			set { m->Binding = value; }
@@ -4134,16 +4137,87 @@ namespace MiniEngine.Drivers.Vulkan
 
 	}
 
-	unsafe public partial struct PushConstantRange
-	{
-		public ShaderStageFlags StageFlags;
-		public UInt32 Offset;
-		public UInt32 Size;
-	}
+	//public unsafe abstract class MarshalledStruct<TStruct> where TStruct : struct
+	//{
+ //       internal TStruct* m;
+ //   }
+
+	//public unsafe class PushConstantRangeArray
+ //   {
+	//	private PushConstantRange[] _array;
+ //       private Interop.PushConstantRange[] _structArray;
+
+ //       public PushConstantRangeArray(int length)
+	//	{
+ //           _structArray = new Interop.PushConstantRange[length];
+ //           _array = new PushConstantRange[length];
+
+	//		fixed (Interop.PushConstantRange* ptr = &_structArray[0])
+	//		{
+	//			for (int i = 0; i < length; i++)
+	//			{
+	//				_array[i].m = &ptr[i];
+	//			}
+	//		}
+
+	//	}
+
+	//	public PushConstantRange this[int index]
+	//	{
+	//		get { return _array[index]; }
+ //           set
+	//		{
+	//			_structArray[index] = *(value.m);
+	//			fixed (Interop.PushConstantRange* ptr = &_structArray[0])
+	//			{
+	//				_array[index].m = &ptr[index];
+	//			}
+
+
+ //           }
+ //       }
+ //   }
+
+	unsafe public partial class PushConstantRange
+    {
+		public string Name;
+
+        internal Interop.PushConstantRange data;
+        internal Interop.PushConstantRange* m;
+
+		internal IntPtr Handle { get { return (IntPtr)m; } }
+
+        public ShaderStageFlags StageFlags
+        {
+            get { return m->StageFlags; }
+            set { m->StageFlags = value; }
+        }
+
+        public UInt32 Offset
+        {
+            get { return m->Offset; }
+            set { m->Offset = value; }
+        }
+
+        public UInt32 Size
+        {
+            get { return m->Size; }
+            set { m->Size = value; }
+        }
+
+		public PushConstantRange()
+		{
+			fixed (Interop.PushConstantRange* ptrData = &data)
+			{
+				m = ptrData;
+			}
+
+        }
+    }
 
 	unsafe public partial class PipelineLayoutCreateInfo : MarshalledObject
 	{
-		public UInt32 Flags {
+        public UInt32 Flags {
 			get { return m->Flags; }
 			set { m->Flags = value; }
 		}
@@ -4193,20 +4267,26 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->PushConstantRangeCount = value; }
 		}
 
-		NativeReference refPushConstantRanges;
+        NativeReference refPushConstantRanges;
 		public PushConstantRange[] PushConstantRanges {
 			get {
 				if (m->PushConstantRangeCount == 0)
 					return null;
-				var values = new PushConstantRange [m->PushConstantRangeCount];
-				unsafe
-				{
-					PushConstantRange* ptr = (PushConstantRange*)m->PushConstantRanges;
-					for (int i = 0; i < values.Length; i++) 
-						values [i] = ptr [i];
-				}
-				return values;
-			}
+
+				PushConstantRange[] pushConstantRanges = new PushConstantRange[m->PushConstantRangeCount];
+                unsafe
+                {
+                    Interop.PushConstantRange* ptr = (Interop.PushConstantRange*)m->PushConstantRanges;
+                    for (int i = 0; i < pushConstantRanges.Length; i++)
+                    {
+                        pushConstantRanges[i] = new PushConstantRange();
+                        pushConstantRanges[i].m = &ptr[i];
+                    }
+                }
+
+                return pushConstantRanges;
+
+            }
 
 			set {
 				if (value == null) {
@@ -4215,13 +4295,14 @@ namespace MiniEngine.Drivers.Vulkan
 					return;
 				}
 				m->PushConstantRangeCount = (uint)value.Length;
-				refPushConstantRanges = new NativeReference ((int)(sizeof(PushConstantRange)*value.Length));
+				refPushConstantRanges = new NativeReference ((int)(sizeof(Interop.PushConstantRange)*value.Length));
 				m->PushConstantRanges = refPushConstantRanges.Handle;
-				unsafe
+				
+                unsafe
 				{
-					PushConstantRange* ptr = (PushConstantRange*)m->PushConstantRanges;
+                    Interop.PushConstantRange* ptr = (Interop.PushConstantRange*)m->PushConstantRanges;
 					for (int i = 0; i < value.Length; i++)
-						ptr [i] = value [i];
+						ptr[i] = *value[i].m;
 				}
 			}
 		}
@@ -4259,6 +4340,7 @@ namespace MiniEngine.Drivers.Vulkan
 		{
 			m->SType = StructureType.PipelineLayoutCreateInfo;
 		}
+
 
 	}
 

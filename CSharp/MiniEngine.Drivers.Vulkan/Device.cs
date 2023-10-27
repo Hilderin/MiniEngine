@@ -24,6 +24,9 @@ namespace MiniEngine.Drivers.Vulkan
         public List<Swapchain> Swapchains = new List<Swapchain>();
         public List<CommandPool> CommandPools = new List<CommandPool>();
         public List<RenderPass> RenderPasses = new List<RenderPass>();
+        public List<Sampler> Samplers = new List<Sampler>();
+
+        public MemoryManager MemoryManager;
 
 
         internal Device() { }
@@ -119,6 +122,16 @@ namespace MiniEngine.Drivers.Vulkan
                 DestroyCommandPoolInternal(commandPool);
             CommandPools.Clear();
 
+            foreach (Sampler sampler in Samplers)
+                DestroySamplerInternal(sampler);
+            Samplers.Clear();
+
+            if (MemoryManager != null)
+            {
+                MemoryManager.Dispose();
+                MemoryManager = null;
+            }
+
             if (!IsDisposed)
             {
                 Destroy();
@@ -187,34 +200,17 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-       
-        /// <summary>
-        /// Copy data to a buffer
-        /// </summary>
-        public unsafe void CopyToBuffer<T>(BufferWrapper buffer, T[] values)
-        {
-            Type type = typeof(T);
-            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
-
-            var memPtr = this.MapMemory(buffer.DeviceMemory, 0, size, 0);
-
-            //Copy to the memPtr location...
-            values.AsSpan().CopyTo(new Span<T>((void*)memPtr, values.Length));
-
-            this.UnmapMemory(buffer.DeviceMemory);
-        }
-
         /// <summary>
         /// Create a buffer
         /// </summary>
-        public unsafe BufferWrapper CreateBuffer<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        public unsafe BufferWrapper CreateBufferWrapper<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
         {
             Type type = typeof(T);
             var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
 
-            BufferWrapper buffer = CreateBuffer(size, usageFlags, memoryPropertyFlags);
+            BufferWrapper buffer = CreateBufferWrapper((uint)size, usageFlags, memoryPropertyFlags);
 
-            CopyToBuffer(buffer, values);
+            buffer.UpdateFrom(values);
 
             return buffer;
         }
@@ -222,7 +218,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a buffer
         /// </summary>
-        public unsafe BufferWrapper CreateBuffer(int size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        public unsafe BufferWrapper CreateBufferWrapper(uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
         {
             var createBufferInfo = new BufferCreateInfo
             {
@@ -1168,16 +1164,26 @@ namespace MiniEngine.Drivers.Vulkan
                 if (result != Result.Success)
                     throw new ResultException(result);
 
+                Samplers.Add(pSampler);
+
                 return pSampler;
             }
         }
 
         public void DestroySampler(Sampler sampler = null, AllocationCallbacks pAllocator = null)
         {
+            DestroySamplerInternal(sampler, pAllocator);
+
+            Samplers.Remove(sampler);
+        }
+
+        private void DestroySamplerInternal(Sampler sampler = null, AllocationCallbacks pAllocator = null)
+        {
             unsafe
             {
                 Interop.NativeMethods.vkDestroySampler(this.m, sampler != null ? sampler.m : default(UInt64), pAllocator != null ? pAllocator.m : null);
             }
+
         }
 
 

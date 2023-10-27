@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace MiniEngine.Drivers.Vulkan
 {
@@ -10,19 +13,35 @@ namespace MiniEngine.Drivers.Vulkan
         private Device _device;
         private VkShader _shader;
         private RenderPass _renderPass;
+        private VkMaterial _material;
+        private Sampler _sampler;
+
+
+
+        public DescriptorSet[] DescriptorSets;
+        public DescriptorPool DescriptorPool;
+        public BufferWrapper UniformBuffer;
 
         private CommandBuffer[] commandBuffers;
-        private DescriptorSet[] descriptorSets;
+        //public PipelineWrapperDescriptorSet[] descriptorSets;
         private DescriptorSetLayout descriptorSetLayout;
         public PipelineLayout pipelineLayout;
-        private Buffer uniformBuffer;
+        //private Buffer uniformBuffer;
         public Pipeline pipeline;
 
-        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader)
+        
+
+        
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader, VkMaterial material, Sampler sampler)
         {
             _device = device;
             _shader = shader;
             _renderPass = renderPass;
+            _material = material;
+            _sampler = sampler;
 
             Build();
         }
@@ -32,6 +51,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public void Dispose()
         {
+            if (DescriptorPool != null)
+            {
+                _device.DestroyDescriptorPool(DescriptorPool);
+                DescriptorPool = null;
+            }
+
             if (descriptorSetLayout != null)
             {
                 _device.DestroyDescriptorSetLayout(descriptorSetLayout);
@@ -56,12 +81,30 @@ namespace MiniEngine.Drivers.Vulkan
                 descriptorSetLayout = null;
             }
 
+            if (UniformBuffer != null)
+            {
+                UniformBuffer.Dispose();
+                UniformBuffer = null;
+            }
+
         }
 
         /// <summary>
         /// Build the pipeline...
         /// </summary>
         public void Build()
+        {
+            CreatePipeline();
+
+            CreateDescriptorSets();
+
+            UpdateDescriptorSets();
+        }
+
+        /// <summary>
+        /// Create the pipeline
+        /// </summary>
+        private void CreatePipeline()
         {
             //Descriptor set layout creation from shader...
             descriptorSetLayout = _device.CreateDescriptorSetLayout(_shader.Bindings.ToArray());
@@ -79,12 +122,12 @@ namespace MiniEngine.Drivers.Vulkan
                 new PipelineShaderStageCreateInfo {
                     Stage = ShaderStageFlags.Vertex,
                     Module = vertexShaderModule,
-                    Name = "main"
+                    Name = _shader.VertexEntryPoint
                 },
                 new PipelineShaderStageCreateInfo {
                     Stage = ShaderStageFlags.Fragment,
                     Module = fragmentShaderModule,
-                    Name = "main"
+                    Name = _shader.FragmentEntryPoint
                 }
             };
             //var viewport = new Viewport
@@ -166,6 +209,104 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
+        /// <summary>
+        /// Create the descriptors...
+        /// </summary>
+        private void CreateDescriptorSets()
+        {
+            DescriptorPoolSize[] poolSizes = _shader.Bindings.GroupBy(b => b.DescriptorType)
+                                                    .Select(g => new DescriptorPoolSize()
+                                                    {
+                                                        Type = g.Key,
+                                                        DescriptorCount = (uint)g.Count()
+                                                    }).ToArray();
+
+
+            if (poolSizes.Length > 0)
+            {
+
+                var descriptorPoolCreateInfo = new DescriptorPoolCreateInfo
+                {
+                    PoolSizes = poolSizes,
+                    MaxSets = 1
+                };
+
+                DescriptorPool = _device.CreateDescriptorPool(descriptorPoolCreateInfo);
+
+                var descriptorSetAllocateInfo = new DescriptorSetAllocateInfo
+                {
+                    SetLayouts = new DescriptorSetLayout[] { descriptorSetLayout },
+                    DescriptorPool = DescriptorPool
+                };
+
+                DescriptorSets = _device.AllocateDescriptorSets(descriptorSetAllocateInfo);
+            }
+
+
+        }
+
+        /// <summary>
+        /// Create uniform buffers....
+        /// </summary>
+        private void UpdateDescriptorSets()
+        {
+            
+
+            foreach (DescriptorSet descriptorSet in DescriptorSets)
+            {
+                List<WriteDescriptorSet> writeSets = new List<WriteDescriptorSet>();
+
+                foreach (var binding in _shader.Bindings)
+                {
+                    if (binding.DescriptorType == DescriptorType.UniformBuffer)
+                    {
+                        //UniformBuffer...
+                        UniformBuffer = _device.CreateBufferWrapper(binding.Size, BufferUsageFlags.UniformBuffer);
+
+                        var uniformBufferInfo = new DescriptorBufferInfo
+                        {
+                            Buffer = UniformBuffer,
+                            Offset = 0,
+                            Range = binding.Size
+                        };
+
+                        writeSets.Add(new WriteDescriptorSet
+                        {
+                            DstSet = descriptorSet,
+                            DescriptorType = DescriptorType.UniformBuffer,
+                            BufferInfo = new DescriptorBufferInfo[] { uniformBufferInfo },
+                            DstBinding = binding.Binding
+                        });
+                    }
+                    else if (binding.DescriptorType == DescriptorType.CombinedImageSampler)
+                    {
+                        //Texture...
+                        var imageInfo = new DescriptorImageInfo
+                        {
+                            ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
+                            ImageView = _material.Diffuse.ImageView,
+                            Sampler = _sampler,
+                        };
+
+                        writeSets.Add(new WriteDescriptorSet
+                        {
+                            DstSet = descriptorSet,
+                            DescriptorType = DescriptorType.CombinedImageSampler,
+                            ImageInfo = new DescriptorImageInfo[] { imageInfo },
+                            DstBinding = binding.Binding
+                        });
+                    }
+                    else
+                        throw new NotSupportedException($"Descriptor type not supported: {binding.DescriptorType}");
+
+                }
+
+
+                _device.UpdateDescriptorSets(writeSets.ToArray(), null);
+
+            }
+        }
+
 
         /// <summary>
         /// Implicit conversion to a Pipeline
@@ -173,4 +314,5 @@ namespace MiniEngine.Drivers.Vulkan
         public static implicit operator Pipeline(PipelineWrapper pipeline) { return pipeline.pipeline; }
 
     }
+
 }

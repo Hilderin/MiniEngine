@@ -13,9 +13,10 @@ namespace MiniEngine.Rendering.Vulkan
         internal VkInstance vk;
         internal Device Device;
         internal Swapchain Swapchain;
-        internal MemoryManager MemoryManager;
 
         internal Matrix4 MVPMatrix;
+
+        internal Sampler Sampler;
 
         #endregion
 
@@ -69,8 +70,6 @@ namespace MiniEngine.Rendering.Vulkan
             foreach (VkMeshRenderer vkMeshRenderer in _meshRenderers)
                 vkMeshRenderer.Dispose();
 
-            
-
             vk.Dispose();
             vk = null;
         }
@@ -89,10 +88,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             Device = vk.Device;
 
-            MemoryManager = new MemoryManager(Device);
-
             Swapchain = Device.CreateSwapchain(new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox);
 
+            Sampler = SamplerHelper.CreateMaxAnisotropy(Device);
 
             _initialized = true;
         }

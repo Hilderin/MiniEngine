@@ -138,12 +138,20 @@ namespace MiniEngine.Drivers.Vulkan
                     break;
             }
 
-            var queueInfo = new DeviceQueueCreateInfo { QueuePriorities = new float[] { 1.0f }, QueueFamilyIndex = queueFamilyUsedIndex };
+            var queueInfo = new DeviceQueueCreateInfo
+            { 
+                QueuePriorities = new float[] { 1.0f }, 
+                QueueFamilyIndex = queueFamilyUsedIndex,
+            };
 
             var deviceInfo = new DeviceCreateInfo
             {
                 EnabledExtensionNames = new string[] { "VK_KHR_swapchain" },
-                QueueCreateInfos = new DeviceQueueCreateInfo[] { queueInfo }
+                QueueCreateInfos = new DeviceQueueCreateInfo[] { queueInfo },
+                EnabledFeatures = new ()
+                {
+                    SamplerAnisotropy = true            //Enable Anisotrophy
+                }
             };
 
             return CreateDevice(deviceInfo, surface);
@@ -169,6 +177,8 @@ namespace MiniEngine.Drivers.Vulkan
                 pDevice.Surface = surface;
 
                 pDevice.UpdateSurfaceCapabilities();
+
+                pDevice.MemoryManager = new MemoryManager(pDevice);
 
                 Devices.Add(pDevice);
 

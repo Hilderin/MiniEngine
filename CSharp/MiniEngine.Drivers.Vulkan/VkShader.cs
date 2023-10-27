@@ -21,6 +21,16 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public byte[] FragmentSpirv;
 
+        /// <summary>
+        /// Vertex Entry point name
+        /// </summary>
+        public string VertexEntryPoint;
+
+        /// <summary>
+        /// Fragment Entry point name
+        /// </summary>
+        public string FragmentEntryPoint;
+
 
         /// <summary>
         /// Constants

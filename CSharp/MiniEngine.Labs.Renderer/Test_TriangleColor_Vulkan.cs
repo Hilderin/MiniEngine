@@ -5,7 +5,7 @@ using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Labs.Renderer
 {
-    internal class Test_Cube_Vulkan
+    internal class Test_TriangleColor_Vulkan
     {
        
         private Mesh _currentMesh;
@@ -23,17 +23,19 @@ namespace MiniEngine.Labs.Renderer
 
             Shader shader = new Shader(@"#version 450
 
-layout(binding = 0) uniform UniformBufferObject {
-    mat4 model;
-    mat4 view;
-    mat4 proj;
-} ubo;
-
 //push constants block
 layout( push_constant ) uniform constants
 {
 	mat4 render_matrix;
 } PushConstants;
+
+
+
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+} ubo;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
@@ -50,12 +52,12 @@ void main() {
 }
 ", @"#version 450
 
-layout(binding = 1) uniform sampler2D texSampler;
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTexCoord;
 
 layout(location = 0) out vec4 outColor;
+
 
 void main() {
     outColor = vec4(fragColor, 1.0);

@@ -577,6 +577,13 @@ namespace MiniEngine.Drivers.Vulkan.Interop
         internal IntPtr InitialData;
     }
 
+    internal partial struct PushConstantRange
+    {
+        public ShaderStageFlags StageFlags;
+        public UInt32 Offset;
+        public UInt32 Size;
+    }
+
     internal partial struct PipelineLayoutCreateInfo
     {
         internal StructureType SType;

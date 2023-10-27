@@ -2,6 +2,8 @@ using MiniEngine.Drivers.Vulkan;
 using MiniEngine.Rendering.Vulkan;
 using System.Diagnostics;
 using MiniEngine.Presentations.Glfw;
+using System;
+using System.Windows.Forms;
 
 namespace MiniEngine.Labs.Renderer
 {
@@ -28,7 +30,7 @@ namespace MiniEngine.Labs.Renderer
                 
                 using (Context context = new Context())
                 {
-                    var t = new Test_Cube_Vulkan();
+                    var t = new Test_TriangleTexture_Vulkan();
 
                     context.SetRenderer(new VkRenderer(t.GetType().Name, new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), null, DebugCallback))
                            .SetWindow(new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
