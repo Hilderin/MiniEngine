@@ -4137,81 +4137,33 @@ namespace MiniEngine.Drivers.Vulkan
 
 	}
 
-	//public unsafe abstract class MarshalledStruct<TStruct> where TStruct : struct
-	//{
- //       internal TStruct* m;
- //   }
-
-	//public unsafe class PushConstantRangeArray
- //   {
-	//	private PushConstantRange[] _array;
- //       private Interop.PushConstantRange[] _structArray;
-
- //       public PushConstantRangeArray(int length)
-	//	{
- //           _structArray = new Interop.PushConstantRange[length];
- //           _array = new PushConstantRange[length];
-
-	//		fixed (Interop.PushConstantRange* ptr = &_structArray[0])
-	//		{
-	//			for (int i = 0; i < length; i++)
-	//			{
-	//				_array[i].m = &ptr[i];
-	//			}
-	//		}
-
-	//	}
-
-	//	public PushConstantRange this[int index]
-	//	{
-	//		get { return _array[index]; }
- //           set
-	//		{
-	//			_structArray[index] = *(value.m);
-	//			fixed (Interop.PushConstantRange* ptr = &_structArray[0])
-	//			{
-	//				_array[index].m = &ptr[index];
-	//			}
-
-
- //           }
- //       }
- //   }
-
 	unsafe public partial class PushConstantRange
     {
 		public string Name;
 
-        internal Interop.PushConstantRange data;
-        internal Interop.PushConstantRange* m;
-
-		internal IntPtr Handle { get { return (IntPtr)m; } }
+        internal Interop.PushConstantRange m;
 
         public ShaderStageFlags StageFlags
         {
-            get { return m->StageFlags; }
-            set { m->StageFlags = value; }
+            get { return m.StageFlags; }
+            set { m.StageFlags = value; }
         }
 
         public UInt32 Offset
         {
-            get { return m->Offset; }
-            set { m->Offset = value; }
+            get { return m.Offset; }
+            set { m.Offset = value; }
         }
 
         public UInt32 Size
         {
-            get { return m->Size; }
-            set { m->Size = value; }
+            get { return m.Size; }
+            set { m.Size = value; }
         }
 
 		public PushConstantRange()
 		{
-			fixed (Interop.PushConstantRange* ptrData = &data)
-			{
-				m = ptrData;
-			}
-
+			
         }
     }
 
@@ -4280,7 +4232,7 @@ namespace MiniEngine.Drivers.Vulkan
                     for (int i = 0; i < pushConstantRanges.Length; i++)
                     {
                         pushConstantRanges[i] = new PushConstantRange();
-                        pushConstantRanges[i].m = &ptr[i];
+                        pushConstantRanges[i].m = ptr[i];
                     }
                 }
 
@@ -4302,7 +4254,7 @@ namespace MiniEngine.Drivers.Vulkan
 				{
                     Interop.PushConstantRange* ptr = (Interop.PushConstantRange*)m->PushConstantRanges;
 					for (int i = 0; i < value.Length; i++)
-						ptr[i] = *value[i].m;
+						ptr[i] = value[i].m;
 				}
 			}
 		}

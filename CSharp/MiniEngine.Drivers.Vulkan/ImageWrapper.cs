@@ -33,14 +33,14 @@ namespace MiniEngine.Drivers.Vulkan
         {
             _device = device;
 
-            using (var image = SixLabors.ImageSharp.Image.Load<Rgba32>(@"C:\Projects\SilkVulkanTutorial\Assets\texture.jpg"))
-            {
-                data = new byte[image.Width * image.Height * image.PixelType.BitsPerPixel / 8];
-                image.CopyPixelDataTo(data);
+            //using (var image = SixLabors.ImageSharp.Image.Load<Rgba32>(@"C:\Projects\SilkVulkanTutorial\Assets\texture.jpg"))
+            //{
+            //    data = new byte[image.Width * image.Height * image.PixelType.BitsPerPixel / 8];
+            //    image.CopyPixelDataTo(data);
 
-                width = image.Width;
-                height = image.Height;
-            }
+            //    width = image.Width;
+            //    height = image.Height;
+            //}
 
             Width = width;
             Height = height;

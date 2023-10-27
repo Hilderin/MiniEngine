@@ -167,8 +167,9 @@ namespace MiniEngine.Rendering.Vulkan
                 {
                     vkMaterial = new VkMaterial();
 
-                    //byte[] data = new byte[] { 255, 0, 0, 255 };
-                    vkMaterial.Diffuse = new ImageWrapper(_vi.Device, mat.Diffuse.Data, mat.Diffuse.Width, mat.Diffuse.Height, Format.R8G8B8A8Srgb);
+                    byte[] data = new byte[] { 255, 0, 0, 255 };
+                    vkMaterial.Diffuse = new ImageWrapper(_vi.Device, data, mat.Diffuse.Width, mat.Diffuse.Height, Format.R8G8B8A8Srgb);
+                    //vkMaterial.Diffuse = new ImageWrapper(_vi.Device, mat.Diffuse.Data, mat.Diffuse.Width, mat.Diffuse.Height, Format.R8G8B8A8Srgb);
 
                 }
 

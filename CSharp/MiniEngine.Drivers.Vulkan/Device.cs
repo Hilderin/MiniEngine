@@ -114,6 +114,13 @@ namespace MiniEngine.Drivers.Vulkan
             Swapchains.Clear();
 
 
+            if (MemoryManager != null)
+            {
+                MemoryManager.Dispose();
+                MemoryManager = null;
+            }
+
+
             foreach (RenderPass renderPass in RenderPasses)
                 DestroyRenderPassInternal(renderPass);
             RenderPasses.Clear();
@@ -125,12 +132,6 @@ namespace MiniEngine.Drivers.Vulkan
             foreach (Sampler sampler in Samplers)
                 DestroySamplerInternal(sampler);
             Samplers.Clear();
-
-            if (MemoryManager != null)
-            {
-                MemoryManager.Dispose();
-                MemoryManager = null;
-            }
 
             if (!IsDisposed)
             {
