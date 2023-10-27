@@ -1,5 +1,6 @@
 ﻿using Assimp;
 using System.Collections.Generic;
+using System;
 using System.IO;
 
 namespace MiniEngine.Assets
@@ -15,14 +16,14 @@ namespace MiniEngine.Assets
         //private List<Material> materials = new List<Material>();
 
         private string _workingDirectory = null;
-        private Mesh _mesh = null;
+        private MeshActor _mesh = null;
 
         private Matrix3 _transformMatrix = Matrix3.Identity;
 
         /// <summary>
         /// Import a mesh from file
         /// </summary>
-        public Mesh GetMeshFromFile(string path, MeshImportationParameters parameters = null)
+        public MeshActor GetMeshFromFile(string path, MeshImportationParameters parameters = null)
         {
             if (parameters == null)
                 parameters = MeshImportationParameters.Default;
@@ -54,7 +55,7 @@ namespace MiniEngine.Assets
 
                 Assimp.Scene scene = context.ImportFile(path, postProcessSteps);
 
-                _mesh = new Mesh();
+                _mesh = new MeshActor();
 
                 //Loading meshes.....
                 for (int i = 0; i < scene.MeshCount; i++)
@@ -73,12 +74,12 @@ namespace MiniEngine.Assets
             }
 
 
-            //Resetting ambient color on mats if asked...
-            if (parameters.ResetMaterialAmbientColor)
-            {
-                foreach (Material m in _mesh.Materials)
-                    m.AmbientColor = Color3.White;
-            }
+            ////Resetting ambient color on mats if asked...
+            //if (parameters.ResetMaterialAmbientColor)
+            //{
+            //    foreach (Material m in _mesh.Materials)
+            //        m.AmbientColor = Color3.White;
+            //}
 
             return _mesh;
 
@@ -89,27 +90,29 @@ namespace MiniEngine.Assets
         /// </summary>
         private void LoadMaterial(Assimp.Material assmat, int matIndex)
         {
-            Material material = new Material();
+            throw new NotImplementedException("LoadMaterial not implemented.");
 
-            //Diffuse texture...
-            material.Diffuse = GetTexture(Assimp.TextureType.Diffuse, assmat);
+            //Material material = new Material();
 
-            //Specular texture...
-            material.Specular = GetTexture(Assimp.TextureType.Shininess, assmat);
+            ////Diffuse texture...
+            //material.Diffuse = GetTexture(Assimp.TextureType.Diffuse, assmat);
 
-            //Ambient color...
-            if(assmat.HasColorAmbient)
-                material.AmbientColor = new Color3(assmat.ColorAmbient.R, assmat.ColorAmbient.G, assmat.ColorAmbient.B);
+            ////Specular texture...
+            //material.Specular = GetTexture(Assimp.TextureType.Shininess, assmat);
 
-            //Diffuse color...
-            if (assmat.HasColorDiffuse)
-                material.DiffuseColor = new Color3(assmat.ColorDiffuse.R, assmat.ColorDiffuse.G, assmat.ColorDiffuse.B);
+            ////Ambient color...
+            //if(assmat.HasColorAmbient)
+            //    material.AmbientColor = new Color3(assmat.ColorAmbient.R, assmat.ColorAmbient.G, assmat.ColorAmbient.B);
 
-            //Specular color...
-            if (assmat.HasColorSpecular)
-                material.SpecularColor = new Color3(assmat.ColorSpecular.R, assmat.ColorSpecular.G, assmat.ColorSpecular.B);
+            ////Diffuse color...
+            //if (assmat.HasColorDiffuse)
+            //    material.DiffuseColor = new Color3(assmat.ColorDiffuse.R, assmat.ColorDiffuse.G, assmat.ColorDiffuse.B);
 
-            _mesh.SetMaterial(material, matIndex);
+            ////Specular color...
+            //if (assmat.HasColorSpecular)
+            //    material.SpecularColor = new Color3(assmat.ColorSpecular.R, assmat.ColorSpecular.G, assmat.ColorSpecular.B);
+
+            //_mesh.SetMaterial(material, matIndex);
 
         }
 
@@ -164,7 +167,8 @@ namespace MiniEngine.Assets
             }
 
             Vector3[] emptyArray = new Vector3[positions.Length];
-            _mesh.AddMeshData(positions, texCoords, normals, emptyArray, indices, mesh.MaterialIndex);
+            throw new NotImplementedException("LoadMesh");
+            //_mesh.AddMeshData(positions, texCoords, normals, emptyArray, indices, mesh.MaterialIndex);
 
         }
 

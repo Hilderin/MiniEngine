@@ -2,7 +2,6 @@ using MiniEngine.Assets;
 using MiniEngine.Rendering.Vulkan;
 using MiniEngine.Drivers.Vulkan;
 using MiniEngine.Drivers.Vulkan.Windows;
-using MiniEngine.PrimitiveMeshes;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -74,10 +73,13 @@ void main() {
             //var mesh = assetManager.GetMeshFromFile(MODEL_PATH, new MeshImportationParameters() { InverseFaces = true });
             //var mesh = new CubeMesh();
             //var mesh = new PlaneMesh();
-            var mesh = new TriangleMesh();
-            foreach (var mat in mesh.Materials)
-                mat.Shader = shader;
+            var mesh = Primitives.CreateTriangleMeshActor();
+            mesh.Location = new Vector3(0f, 0f, 0f);
 
+            mesh.Materials.Add(Renderer.CreateMaterial(new()
+            {
+                Shader = shader
+            }));
             Scene.Add(mesh);
 
             Scene.Camera.Location.Z = -3f;

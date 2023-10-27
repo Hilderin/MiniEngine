@@ -1,4 +1,3 @@
-using MiniEngine.PrimitiveMeshes;
 using MiniEngine.Rendering.Vulkan;
 
 namespace MiniEngine.Tests
@@ -21,7 +20,7 @@ namespace MiniEngine.Tests
                 context.Scene.AmbientLight.Intensity = 1f;
                 context.Scene.Camera.Location.Z = -3f;
 
-                context.Scene.Add(new CubeMesh());
+                context.Scene.Add(Primitives.CreateCubeMeshActor());
 
                 context.TestScreenshot("BasicScene_CubeCenterFOV60");
 
@@ -44,7 +43,7 @@ namespace MiniEngine.Tests
                 context.Scene.Camera.Location.Z = -3f;
                 context.Scene.Camera.FOV = 90;
 
-                context.Scene.Add(new CubeMesh());
+                context.Scene.Add(Primitives.CreateCubeMeshActor());
 
                 context.TestScreenshot("BasicScene_CubeCenterFOV90");
 

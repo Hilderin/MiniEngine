@@ -1,117 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MiniEngine
 {
+
     /// <summary>
-    /// Mesh
+    /// Data for the representation of a Model (mesh) that can contains multiple submeshes
     /// </summary>
-    public unsafe class Mesh: WorldTransform
-    {   
+    public abstract class Mesh: IDisposable
+    {
+        //public List<Material> Materials;
+        //public List<SubMeshData> SubMeshes;
 
         /// <summary>
-        /// Materials
+        /// Destruction of the Mesh
         /// </summary>
-        private List<Material> _materials = new List<Material>(1);
+        protected abstract void Destroy();
 
         /// <summary>
-        /// Sub meshes
+        /// Dispose
         /// </summary>
-        private List<SubMeshData> _subMeshes = new List<SubMeshData>();
-
-        /// <summary>
-        /// State for the renderer
-        /// </summary>
-        public object RendererStateObj = null;
-
-
-        /// <summary>
-        /// Materials
-        /// </summary>
-        public List<Material> Materials
+        public void Dispose()
         {
-            get { return _materials; }
+            Destroy();
         }
-
-
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public Mesh()
-        {
-            
-        }
-
-
-        /// <summary>
-        /// Set the material
-        /// </summary>
-        public void SetMaterial(Material material, int index)
-        {
-            while (_materials.Count <= index)
-                _materials.Add(Material.NotFound);
-
-            _materials[index] = material;
-        }
-
-        /// <summary>
-        /// Set the mesh data...
-        /// </summary>
-        public void AddMeshData(Vector3[] positions,
-                                Vector2[] texCoords,
-                                Vector3[] normals,
-                                Vector3[] colors,
-                                int[] indices,
-                                int materialIndex)
-        {
-            _subMeshes.Add(new SubMeshData()
-            {
-                Positions = positions,
-                TexCoords = texCoords,
-                Normals = normals,
-                Colors = colors,
-                Indices = indices,
-                MaterialIndex = materialIndex
-            });
-
-        }
-
-        /// <summary>
-        /// Get the internal mesh data for rendering
-        /// </summary>
-        public MeshData GetMeshData()
-        {
-            return new MeshData()
-            {
-                Materials = _materials,
-                SubMeshes = _subMeshes
-            };
-        }
-
-        /// <summary>
-        /// Wrapper for the mesh data
-        /// </summary>
-        public class MeshData
-        {
-            public List<Material> Materials;
-            public List<SubMeshData> SubMeshes;
-        }
-
-        /// <summary>
-        /// Wrapper for the mesh data
-        /// </summary>
-        public class SubMeshData
-        {
-            public Vector3[] Positions;
-            public Vector2[] TexCoords;
-            public Vector3[] Normals;
-            public Vector3[] Colors;
-            public int[] Indices;
-            public int MaterialIndex;
-        }
-
-
-
     }
+
 }

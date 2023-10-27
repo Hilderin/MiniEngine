@@ -13,7 +13,7 @@ namespace MiniEngine.Drivers.Vulkan
         private Device _device;
         private VkShader _shader;
         private RenderPass _renderPass;
-        private VkMaterial _material;
+        private ImageView _texture;
         private Sampler _sampler;
 
 
@@ -35,12 +35,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader, VkMaterial material, Sampler sampler)
+        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader, ImageView texture, Sampler sampler)
         {
             _device = device;
             _shader = shader;
             _renderPass = renderPass;
-            _material = material;
+            _texture = texture;
             _sampler = sampler;
 
             Build();
@@ -284,7 +284,7 @@ namespace MiniEngine.Drivers.Vulkan
                         var imageInfo = new DescriptorImageInfo
                         {
                             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
-                            ImageView = _material.Diffuse.ImageView,
+                            ImageView = _texture,
                             Sampler = _sampler,
                         };
 

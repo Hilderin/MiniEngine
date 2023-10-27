@@ -56,7 +56,8 @@ namespace MiniEngine.Assets
                 byte[] data = new byte[bufferSize];
                 Marshal.Copy(image.GetScanLine(0), data, 0, bufferSize);
 
-                return new Texture2D(image.Width, image.Height, data, type, sourceData);
+                throw new NotImplementedException("GetTexture2DFromFile");
+                //return new Texture2D(image.Width, image.Height, data, type, sourceData);
             }
 
         }

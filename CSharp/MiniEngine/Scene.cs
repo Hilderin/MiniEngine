@@ -15,13 +15,13 @@ namespace MiniEngine
         /// <summary>
         /// Meshes to render
         /// </summary>
-        private List<Mesh> _meshes = new List<Mesh>();
+        private List<MeshActor> _meshes = new List<MeshActor>();
 
 
         /// <summary>
         /// List of meshes
         /// </summary>
-        public List<Mesh> Meshes { get { return _meshes; } }
+        public List<MeshActor> Meshes { get { return _meshes; } }
 
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace MiniEngine
         /// <summary>
         /// Add a mesh to render
         /// </summary>
-        public void Add(Mesh mesh)
+        public void Add(MeshActor mesh)
         {
             _meshes.Add(mesh);
         }
@@ -63,7 +63,7 @@ namespace MiniEngine
         /// <summary>
         /// Remove a mesh
         /// </summary>
-        public void Remove(Mesh mesh)
+        public void Remove(MeshActor mesh)
         {
             _meshes.Remove(mesh);
         }

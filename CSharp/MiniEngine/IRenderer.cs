@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniEngine.ResourceDefinitions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,5 +41,21 @@ namespace MiniEngine
         /// Indicate we the buffer sould be swapped each frame
         /// </summary>
         bool ShouldSwapBuffer { get; }
+
+        /// <summary>
+        /// Create a new mesh
+        /// </summary>
+        Mesh CreateMesh(MeshDefinition meshDefinition);
+
+        /// <summary>
+        /// Create a Texture2D
+        /// </summary>
+        Texture2D CreateTexture2D(Texture2DDefinition texDef);
+
+        /// <summary>
+        /// Create a Material
+        /// </summary>
+        Material CreateMaterial(MaterialDefinition matDef);
+
     }
 }

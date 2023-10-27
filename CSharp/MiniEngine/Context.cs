@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MiniEngine.ResourceDefinitions;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace MiniEngine
@@ -365,6 +366,32 @@ namespace MiniEngine
 
             return SixLabors.ImageSharp.Image.LoadPixelData<Rgba32>(buffer, width, height);
 
+        }
+
+
+
+        /// <summary>
+        /// Create a new mesh
+        /// </summary>
+        public Mesh CreateMesh(MeshDefinition meshDefinition)
+        {
+            return _renderer.CreateMesh(meshDefinition);
+        }
+
+        /// <summary>
+        /// Create a Texture2D
+        /// </summary>
+        public Texture2D CreateTexture2D(Texture2DDefinition texDef)
+        {
+            return _renderer.CreateTexture2D(texDef);
+        }
+
+        /// <summary>
+        /// Create a Material
+        /// </summary>
+        public Material CreateMaterial(MaterialDefinition matDef)
+        {
+            return _renderer.CreateMaterial(matDef);
         }
 
         /// <summary>

@@ -1,8 +1,6 @@
-﻿
-using System;
+﻿using System;
 using System.Diagnostics;
 using MiniEngine.Assets;
-using MiniEngine.PrimitiveMeshes;
 
 namespace MiniEngine.Labs.Renderer
 {

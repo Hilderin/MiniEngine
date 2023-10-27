@@ -12,7 +12,7 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Wrapper for images
     /// </summary>
-    public class ImageWrapper : IDisposable
+    public class VkImageWrapper : IDisposable
     {
         private Device _device;
 
@@ -29,7 +29,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public ImageWrapper(Device device, byte[] data, int width, int height, Format format)
+        public VkImageWrapper(Device device, byte[] data, int width, int height, Format format)
         {
             _device = device;
 
@@ -127,7 +127,7 @@ namespace MiniEngine.Drivers.Vulkan
                     SrcQueueFamilyIndex = uint.MaxValue,
                     DstQueueFamilyIndex = uint.MaxValue,
                     Image = Image,
-                    SubresourceRange = new ()
+                    SubresourceRange = new()
                     {
                         AspectMask = ImageAspectFlags.Color,
                         BaseMipLevel = 0,
@@ -252,10 +252,6 @@ namespace MiniEngine.Drivers.Vulkan
                 _device.DestroyImage(Image);
                 Image = null;
             }
-                
-        //    public Image Image;
-        //public ImageView ImageView;
-        //public DeviceMemory DeviceMemory;
-    }
+        }
     }
 }

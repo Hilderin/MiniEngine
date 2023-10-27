@@ -1,4 +1,5 @@
 ﻿using MiniEngine.Drivers.Vulkan;
+using MiniEngine.ResourceDefinitions;
 using System.Diagnostics;
 
 namespace MiniEngine.Rendering.Vulkan
@@ -27,6 +28,8 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public bool ShouldSwapBuffer { get; set; } = true;
 
+        
+
         #endregion
 
         #region Private members
@@ -38,6 +41,7 @@ namespace MiniEngine.Rendering.Vulkan
         private Func<VkInstance, SurfaceKhr> _surfaceCreationCallback;
         private DebugReportCallback _debugCallback;
         private bool _initialized = false;
+        private VkResourceFactory _resourceFactory;
 
         #endregion
 
@@ -53,26 +57,12 @@ namespace MiniEngine.Rendering.Vulkan
             _surfaceCreationCallback = surfaceCreationCallback;
             _debugCallback = debugCallback;
 
+
         }
 
         #endregion
 
         #region Public methods
-        /// <summary>
-        /// Destruction
-        /// </summary>
-        public void Dispose()
-        {
-            if (vk == null)
-                return;
-
-            //Disposing mesh renderer...
-            foreach (VkMeshRenderer vkMeshRenderer in _meshRenderers)
-                vkMeshRenderer.Dispose();
-
-            vk.Dispose();
-            vk = null;
-        }
 
 
 
@@ -90,29 +80,13 @@ namespace MiniEngine.Rendering.Vulkan
 
             Swapchain = Device.CreateSwapchain(new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox);
 
+
+            _resourceFactory = new VkResourceFactory(this);
+
             Sampler = SamplerHelper.CreateMaxAnisotropy(Device);
 
             _initialized = true;
         }
-
-        /// <summary>
-        /// Create the surface
-        /// </summary>
-        /// <param name="vi"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        private SurfaceKhr CreateSurface(VkInstance vi)
-        {
-            //Function to create a Surface...
-            if (_surfaceCreationCallback != null)
-                return _surfaceCreationCallback(vi);
-            else if (_window != null)
-                return CreateSurfaceFromWindow(vi, _window);
-            else
-                throw new Exception("Impossible to create the surface. No window and no surfaceCreationCallback exist.");
-
-        }
-
 
 
         /// <summary>
@@ -163,6 +137,49 @@ namespace MiniEngine.Rendering.Vulkan
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Create a new mesh
+        /// </summary>
+        public Mesh CreateMesh(MeshDefinition meshDefinition)
+        {
+            return _resourceFactory.CreateMesh(meshDefinition);
+        }
+
+        /// <summary>
+        /// Create a Texture2D
+        /// </summary>
+        public Texture2D CreateTexture2D(Texture2DDefinition texDef)
+        {
+            return _resourceFactory.CreateTexture2D(texDef);
+        }
+
+        /// <summary>
+        /// Create a Material
+        /// </summary>
+        public Material CreateMaterial(MaterialDefinition matDef)
+        {
+            return _resourceFactory.CreateMaterial(matDef);
+        }
+
+        /// <summary>
+        /// Destruction
+        /// </summary>
+        public void Dispose()
+        {
+            if (vk == null)
+                return;
+
+            if (_resourceFactory != null)
+                _resourceFactory.Dispose();
+
+            //Disposing mesh renderer...
+            foreach (VkMeshRenderer vkMeshRenderer in _meshRenderers)
+                vkMeshRenderer.Dispose();
+
+            vk.Dispose();
+            vk = null;
+        }
+
 
         #endregion
 
@@ -195,10 +212,10 @@ namespace MiniEngine.Rendering.Vulkan
             //this.MVPMatrix.M22 *= -1;
             //Debug.Print("MVPMatrix: " + this.MVPMatrix.ToString());
 
-            List<Mesh> meshes = scene.Meshes;
+            List<MeshActor> meshes = scene.Meshes;
             for (int iMesh = 0; iMesh < meshes.Count; iMesh++)
             {
-                Mesh mesh = meshes[iMesh];
+                MeshActor mesh = meshes[iMesh];
 
                 if (meshes[iMesh].RendererStateObj == null)
                 {
@@ -238,6 +255,26 @@ namespace MiniEngine.Rendering.Vulkan
             //Execute the command buffer and show the results on surface...
             Swapchain.Present(commandBuffer);
         }
+
+
+        /// <summary>
+        /// Create the surface
+        /// </summary>
+        /// <param name="vi"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        private SurfaceKhr CreateSurface(VkInstance vi)
+        {
+            //Function to create a Surface...
+            if (_surfaceCreationCallback != null)
+                return _surfaceCreationCallback(vi);
+            else if (_window != null)
+                return CreateSurfaceFromWindow(vi, _window);
+            else
+                throw new Exception("Impossible to create the surface. No window and no surfaceCreationCallback exist.");
+
+        }
+
 
 
         #endregion

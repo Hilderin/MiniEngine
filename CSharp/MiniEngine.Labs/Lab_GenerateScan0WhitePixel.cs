@@ -12,23 +12,23 @@ namespace MiniEngine.Labs
     {
         public void Test()
         {
-            using (MemoryStream ms = new MemoryStream(Resources.Resources.PixelWhite))
-            {
-                using (Surface image = Surface.LoadFromStream(ms))
-                {
-                    Texture2D texture = new Texture2D();
+            //using (MemoryStream ms = new MemoryStream(Resources.Resources.PixelWhite))
+            //{
+            //    using (Surface image = Surface.LoadFromStream(ms))
+            //    {
+            //        Texture2D texture = new Texture2D();
 
-                    byte[] data = new byte[image.Width * image.Height * 3];
+            //        byte[] data = new byte[image.Width * image.Height * 3];
 
-                    Marshal.Copy(image.GetScanLine(0), data, 0, data.Length);
+            //        Marshal.Copy(image.GetScanLine(0), data, 0, data.Length);
 
-                    string path = Path.GetFullPath(@"..\..\..\..\MiniEngine\Ressources\PixelWhite.scan0");
-                    File.WriteAllBytes(path, data);
-                    Console.WriteLine($"File generated: {path}");
-                }
+            //        string path = Path.GetFullPath(@"..\..\..\..\MiniEngine\Ressources\PixelWhite.scan0");
+            //        File.WriteAllBytes(path, data);
+            //        Console.WriteLine($"File generated: {path}");
+            //    }
 
                 
-            }
+            //}
         }
 
     }
