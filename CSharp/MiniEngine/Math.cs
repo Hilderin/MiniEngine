@@ -129,6 +129,18 @@ namespace MiniEngine
             return (int)MathF.Round(value, 0, MidpointRounding.AwayFromZero);
         }
 
+
+        /// <summary>
+        /// Permet d'arroundir à la valeur supérieur en int dans un multiple de X
+        /// </summary>
+        public static int RoundUp(int value, int multipleOf)
+        {
+            int size_difference = multipleOf - (value % 4);
+
+            return value + size_difference;
+        }
+
+
         // <summary>
         /// Restricts a value to be within a specified range.
         /// </summary>

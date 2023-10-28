@@ -6,11 +6,15 @@ using System.Runtime.InteropServices;
 
 namespace MiniEngine.Rendering.Vulkan
 {
-    public class ImGuiRenderer
+    /// <summary>
+    /// Dear ImGui renderer...
+    /// </summary>
+    public class ImGuiRenderer: IDisposable
     {
         private static uint _sizeOfDrawVert = (uint)Marshal.SizeOf<ImDrawVert>();
         private static uint _sizeOfIndice = sizeof(ushort);
 
+        private IntPtr _context;
         private VkRenderer _vk;
         private Device _device;
         private BufferWrapper _vertexBuffer;
@@ -32,8 +36,8 @@ namespace MiniEngine.Rendering.Vulkan
         {
             _stopWatch = Stopwatch.StartNew();
 
-            IntPtr context = ImGui.CreateContext();
-            ImGui.SetCurrentContext(context);
+            _context = ImGui.CreateContext();
+            ImGui.SetCurrentContext(_context);
 
             ImGuiIOPtr io = ImGui.GetIO();
             io.DisplaySize = new System.Numerics.Vector2(renderer.Device.CurrentExtent.Width, renderer.Device.CurrentExtent.Height);
@@ -63,7 +67,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             RecreateFontDeviceTexture();
 
-
+            ImGui.NewFrame();
             
 
         }
@@ -79,12 +83,6 @@ namespace MiniEngine.Rendering.Vulkan
             io.DisplayFramebufferScale = System.Numerics.Vector2.One;
             io.DeltaTime = (float)_stopWatch.Elapsed.TotalSeconds; // DeltaTime is in seconds.
             
-
-            ImGui.NewFrame();
-            ImGui.ShowDemoWindow();
-            //ImGui.Begin("Demo window");
-            //ImGui.Button("Hello!");
-            //ImGui.End();
 
             ImGui.Render();
 
@@ -115,7 +113,7 @@ namespace MiniEngine.Rendering.Vulkan
                 commandBuffer.CmdUpdateBuffer(
                     _indexBuffer,
                     indexOffsetInElements * _sizeOfIndice,
-                    (uint)RoundUp(cmd_list.IdxBuffer.Size * (int)_sizeOfIndice, 4),
+                    (uint)Math.RoundUp(cmd_list.IdxBuffer.Size * (int)_sizeOfIndice, 4),
                     cmd_list.IdxBuffer.Data
                     );
 
@@ -123,16 +121,7 @@ namespace MiniEngine.Rendering.Vulkan
                 indexOffsetInElements += (uint)cmd_list.IdxBuffer.Size;
             }
 
-            // Setup orthographic projection matrix into our constant buffer
-            //var io = ImGui.GetIO();
-
-            //Matrix4 mvp = Matrix4.CreateOrthographicOffCenter(
-            //    0f,
-            //    io.DisplaySize.X,
-            //    io.DisplaySize.Y,
-            //    0.0f,
-            //    -1.0f,
-            //    1.0f);
+            //Negative on Y to flip the screen upside down...
             Matrix4 scale = Matrix4.CreateScaleMatrix(2.0f / io.DisplaySize.X, -2.0f / io.DisplaySize.Y, 1f);
             Matrix4 translate = Matrix4.CreateTranslationMatrix(-1f, 1f, 0f);
             Matrix4 mvp = translate * scale;
@@ -146,55 +135,56 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Render(CommandBuffer commandBuffer)
         {
-            if (draw_data.CmdListsCount == 0)
-                return;
-
-            commandBuffer.CmdBindVertexBuffer(0, _vertexBuffer, 0);
-            commandBuffer.CmdBindIndexBuffer(_indexBuffer, 0, IndexType.Uint16);
-            commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
-
-            commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _mainSet.DescriptorSets, null);
-
-            //draw_data.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
-
-            // Render command lists
-            int vtx_offset = 0;
-            int idx_offset = 0;
-            for (int n = 0; n < draw_data.CmdListsCount; n++)
+            if (draw_data.CmdListsCount > 0)
             {
-                ImDrawListPtr cmd_list = draw_data.CmdLists[n];
-                for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
+
+                commandBuffer.CmdBindVertexBuffer(0, _vertexBuffer, 0);
+                commandBuffer.CmdBindIndexBuffer(_indexBuffer, 0, IndexType.Uint16);
+                commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
+
+                commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _mainSet.DescriptorSets, null);
+
+                //draw_data.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
+
+                // Render command lists
+                int vtx_offset = 0;
+                int idx_offset = 0;
+                for (int n = 0; n < draw_data.CmdListsCount; n++)
                 {
-                    ImDrawCmdPtr pcmd = cmd_list.CmdBuffer[cmd_i];
-                    if (pcmd.UserCallback != IntPtr.Zero)
+                    ImDrawListPtr cmd_list = draw_data.CmdLists[n];
+                    for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
                     {
-                        throw new NotImplementedException();
-                    }
-                    else
-                    {
-                        if (pcmd.TextureId != IntPtr.Zero)
+                        ImDrawCmdPtr pcmd = cmd_list.CmdBuffer[cmd_i];
+                        if (pcmd.UserCallback != IntPtr.Zero)
                         {
-                            if (pcmd.TextureId == _fontAtlasID)
-                            {
-                                commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 1, _fontTextureSet.DescriptorSets, null);
-                                //cl.SetGraphicsResourceSet(1, _fontTextureResourceSet);
-                            }
-                            else
-                            {
-                                throw new InvalidOperationException("Not supported custom texture id");
-                                //cl.SetGraphicsResourceSet(1, GetImageResourceSet(pcmd.TextureId));
-                            }
+                            throw new NotImplementedException();
                         }
+                        else
+                        {
+                            if (pcmd.TextureId != IntPtr.Zero)
+                            {
+                                if (pcmd.TextureId == _fontAtlasID)
+                                {
+                                    commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 1, _fontTextureSet.DescriptorSets, null);
+                                    //cl.SetGraphicsResourceSet(1, _fontTextureResourceSet);
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException("Not supported custom texture id");
+                                    //cl.SetGraphicsResourceSet(1, GetImageResourceSet(pcmd.TextureId));
+                                }
+                            }
 
-                        //commandBuffer.CmdSetScissor(0, new Rect2D((int)pcmd.ClipRect.X, (int)pcmd.ClipRect.Y, (int)(pcmd.ClipRect.Z - pcmd.ClipRect.X), (int)(pcmd.ClipRect.W - pcmd.ClipRect.Y)));
+                            //commandBuffer.CmdSetScissor(0, new Rect2D((int)pcmd.ClipRect.X, (int)pcmd.ClipRect.Y, (int)(pcmd.ClipRect.Z - pcmd.ClipRect.X), (int)(pcmd.ClipRect.W - pcmd.ClipRect.Y)));
 
 
-                        commandBuffer.CmdDrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
+                            commandBuffer.CmdDrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
+                        }
                     }
-                }
 
-                idx_offset += cmd_list.IdxBuffer.Size;
-                vtx_offset += cmd_list.VtxBuffer.Size;
+                    idx_offset += cmd_list.IdxBuffer.Size;
+                    vtx_offset += cmd_list.VtxBuffer.Size;
+                }
             }
 
 
@@ -210,14 +200,14 @@ namespace MiniEngine.Rendering.Vulkan
             if (totalVBSize > _vertexBuffer.Size)
             {
                 _vertexBuffer.Dispose();
-                _vertexBuffer = _device.CreateBufferWrapper((uint)(totalVBSize * 10f), BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst);
+                _vertexBuffer = _device.CreateBufferWrapper((uint)(totalVBSize * 1.5f), BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst);
             }
 
             uint totalIBSize = (uint)(draw_data.TotalIdxCount * _sizeOfIndice);
             if (totalIBSize > _indexBuffer.Size)
             {
                 _indexBuffer.Dispose();
-                _indexBuffer = _device.CreateBufferWrapper((uint)(totalIBSize * 10f), BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst);
+                _indexBuffer = _device.CreateBufferWrapper((uint)(totalIBSize * 1.5f), BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst);
             }
         }
 
@@ -242,31 +232,7 @@ namespace MiniEngine.Rendering.Vulkan
             //File.WriteAllBytes("C:\\Projects\\Temp\\test.bin", dataBytes);
             _fontTexture = new VkTexture2D(pixels, width, height, Format.R8G8B8A8Unorm, _vk, _vk.ResourceFactory);
             _fontTextureSet.Set("FontTexture", _fontTexture.ImageWrapper.ImageView);
-            //_vk.ResourceFactory.CreateTexture2D(TextureDescription.Texture2D(
-            //    (uint)width,
-            //    (uint)height,
-            //    1,
-            //    1,
-            //    PixelFormat.R8_G8_B8_A8_UNorm,
-            //    TextureUsage.Sampled));
-            //_fontTexture.Name = "ImGui.NET Font Texture";
-            //gd.UpdateTexture(
-            //    _fontTexture,
-            //    (IntPtr)pixels,
-            //    (uint)(bytesPerPixel * width * height),
-            //    0,
-            //    0,
-            //    0,
-            //    (uint)width,
-            //    (uint)height,
-            //    1,
-            //    0,
-            //    0);
-
-            //_fontTextureResourceSet?.Dispose();
-            //_fontTextureResourceSet = gd.ResourceFactory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTexture));
-            //_fontTextureResourceSet.Name = "ImGui.NET Font Texture Resource Set";
-
+            
             io.Fonts.ClearTexData();
         }
 
@@ -333,15 +299,22 @@ void main()
 
 
 
+
         /// <summary>
-        /// Permet d'arroundir à la valeur supérieur en int dans un multiple de X
+        /// Dispose
         /// </summary>
-        public static int RoundUp(int value, int multipleOf)
+        public void Dispose()
         {
-            int size_difference = multipleOf - (value % 4);
+            _vertexBuffer?.Dispose();
+            _indexBuffer?.Dispose();
+            _projMatrixBuffer?.Dispose();
+            _pipeline.Dispose();
+            _fontTexture.Dispose();
+            _mainSet.Dispose();
+            _fontTextureSet.Dispose();
+            _textureSet.Dispose();
 
-            return value + size_difference;
+            ImGui.DestroyContext(_context);
         }
-
     }
 }

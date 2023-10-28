@@ -173,18 +173,14 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Dispose()
         {
-            if (vk == null)
-                return;
-
-            if (_resourceFactory != null)
-                _resourceFactory.Dispose();
+            _imGui?.Dispose();
+            _resourceFactory?.Dispose();
 
             //Disposing mesh renderer...
             foreach (VkMeshRenderer vkMeshRenderer in _meshRenderers)
                 vkMeshRenderer.Dispose();
 
-            vk.Dispose();
-            vk = null;
+            vk?.Dispose();
         }
 
 
