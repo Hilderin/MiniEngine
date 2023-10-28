@@ -63,7 +63,8 @@ namespace MiniEngine.Rendering.Vulkan
                                                        .Set("ProjectionMatrixBuffer", _projMatrixBuffer);
             _fontTextureSet = _pipeline.CreateDescriptorSet(1);
             _textureSet = _pipeline.CreateDescriptorSet(1);
-
+            
+            UpdateProjectionMatrix();
 
             RecreateFontDeviceTexture();
 
@@ -121,12 +122,7 @@ namespace MiniEngine.Rendering.Vulkan
                 indexOffsetInElements += (uint)cmd_list.IdxBuffer.Size;
             }
 
-            //Negative on Y to flip the screen upside down...
-            Matrix4 scale = Matrix4.CreateScaleMatrix(2.0f / io.DisplaySize.X, -2.0f / io.DisplaySize.Y, 1f);
-            Matrix4 translate = Matrix4.CreateTranslationMatrix(-1f, 1f, 0f);
-            Matrix4 mvp = translate * scale;
-
-            commandBuffer.CmdUpdateBuffer(_projMatrixBuffer, 0, ref mvp);
+            
             
         }
 
@@ -189,6 +185,17 @@ namespace MiniEngine.Rendering.Vulkan
 
 
             ImGui.NewFrame();
+        }
+
+        private void UpdateProjectionMatrix()
+        {
+            //Scale of fit the coord (-1, -1) on the top left and (1, 1) on the bottom right.
+            //Negative 2 on Y to flip the screen upside down...
+            Matrix4 scale = Matrix4.CreateScaleMatrix(2.0f / _vk.Device.CurrentExtent.Width, -2.0f / _vk.Device.CurrentExtent.Height, 1f);
+            Matrix4 translate = Matrix4.CreateTranslationMatrix(-1f, 1f, 0f);
+            Matrix4 mvp = translate * scale;
+
+            _projMatrixBuffer.UpdateFrom(ref mvp);
         }
 
         /// <summary>

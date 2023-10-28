@@ -24,10 +24,10 @@ namespace MiniEngine.Labs.Renderer
         public void Update()
         {
 
-            //ImGui.ShowDemoWindow();
-            ImGui.Begin("Test");
-            ImGui.Button("Wow");
-            ImGui.End();
+            ImGui.ShowDemoWindow();
+            //ImGui.Begin("Test");
+            //ImGui.Button("Wow");
+            //ImGui.End();
 
             System.Threading.Thread.Sleep(3);
 

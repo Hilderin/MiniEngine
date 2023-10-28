@@ -37,7 +37,10 @@ namespace MiniEngine.Drivers.Vulkan
             Height = height;
             Format = format;
 
-            Init(data);
+
+            uint size = (uint)(Width * Height * FormatHelper.GetFormatSizeBytes(Format));
+
+            Init(data, size);
 
         }
 
@@ -52,42 +55,24 @@ namespace MiniEngine.Drivers.Vulkan
             Height = height;
             Format = format;
 
-            Init(data);
+            unsafe
+            {
+                fixed (byte* ptrData = &data[0])
+                {
+                    Init(ptrData, (uint)data.Length);
+                }
+            }
 
         }
 
         /// <summary>
         /// Create the image
         /// </summary>
-        private unsafe void Init(byte* data)
+        private unsafe void Init(byte* data, uint size)
         {
-            uint size = (uint)(Width * Height * FormatHelper.GetFormatSizeBytes(Format));
-
             using (BufferWrapper bufferStaging = _device.CreateBufferWrapper(size, BufferUsageFlags.TransferSrc))
             {
                 bufferStaging.UpdateFrom(data, size);
-
-                CreateImage(Format, ImageUsageFlags.TransferDst | ImageUsageFlags.Sampled, MemoryPropertyFlags.DeviceLocal);
-
-                TransitionImageLayout(ImageLayout.Undefined, ImageLayout.TransferDstOptimal);
-
-                CopyBufferToImage(bufferStaging.Buffer);
-
-                TransitionImageLayout(ImageLayout.TransferDstOptimal, ImageLayout.ShaderReadOnlyOptimal);
-
-            }
-
-            //We need to create the image view now...
-            CreateImageView();
-        }
-
-        /// <summary>
-        /// Create the image
-        /// </summary>
-        private void Init(byte[] data)
-        {
-            using (BufferWrapper bufferStaging = _device.CreateBufferWrapper(data, BufferUsageFlags.TransferSrc))
-            {
 
                 CreateImage(Format, ImageUsageFlags.TransferDst | ImageUsageFlags.Sampled, MemoryPropertyFlags.DeviceLocal);
 
