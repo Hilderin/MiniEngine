@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace MiniEngine.Drivers.Vulkan
@@ -429,6 +430,27 @@ namespace MiniEngine.Drivers.Vulkan
                 BufferImageCopy valpRegion = pRegion ?? default(BufferImageCopy);
                 BufferImageCopy* ptrpRegion = pRegion != null ? &valpRegion : (BufferImageCopy*)IntPtr.Zero;
                 Interop.NativeMethods.vkCmdCopyImageToBuffer(this.m, srcImage != null ? srcImage.m : default(UInt64), srcImageLayout, dstBuffer != null ? dstBuffer.m : default(UInt64), (UInt32)(pRegion != null ? 1 : 0), ptrpRegion);
+            }
+        }
+
+        /// <summary>
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
+        /// This function must be used with a blittable value type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data to upload.</typeparam>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">A reference to the single value to upload.</param>
+        public unsafe void CmdUpdateBuffer<T>(
+            Buffer dstBuffer,
+            DeviceSize dstOffset,
+            ref T source) where T : unmanaged
+        {
+            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
+            fixed (byte* ptr = &sourceByteRef)
+            {
+                CmdUpdateBuffer(dstBuffer, dstOffset, (uint)sizeof(T), (IntPtr)ptr);
             }
         }
 

@@ -35,22 +35,22 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constants
         /// </summary>
-        public List<PushConstantRange> Constants { get; private set; } = new List<PushConstantRange>();
+        public PushConstantRange[] Constants;
 
         /// <summary>
         /// Bindings
         /// </summary>
-        public List<DescriptorSetLayoutBinding> Bindings { get; private set; } = new List<DescriptorSetLayoutBinding>();
+        public DescriptorSetLayoutBinding[][] BindingSets;
 
         /// <summary>
         /// Bindings for the vertex buffer
         /// </summary>
-        public List<VertexInputBindingDescription> VertexBindings { get; private set; } = new List<VertexInputBindingDescription>();
+        public VertexInputBindingDescription[] VertexBindings;
 
         /// <summary>
         /// Attributes from vertex buffer
         /// </summary>
-        public List<VertexInputAttributeDescription> VertexInputAttributes { get; private set; } = new List<VertexInputAttributeDescription>();
+        public VertexInputAttributeDescription[] VertexInputAttributes;
 
         /// <summary>
         /// Constructor

@@ -499,6 +499,37 @@ namespace MiniEngine
 
 
         /// <summary>
+        /// Builds a customized, orthographic projection matrix.
+        /// </summary>
+        /// <param name="left">Minimum X-value of the view volume.</param>
+        /// <param name="right">Maximum X-value of the view volume.</param>
+        /// <param name="bottom">Minimum Y-value of the view volume.</param>
+        /// <param name="top">Maximum Y-value of the view volume.</param>
+        /// <param name="zNearPlane">Minimum Z-value of the view volume.</param>
+        /// <param name="zFarPlane">Maximum Z-value of the view volume.</param>
+        /// <returns>The orthographic projection matrix.</returns>
+        public static Matrix4 CreateOrthographicOffCenter(float left, float right, float bottom, float top, float zNearPlane, float zFarPlane)
+        {
+            Matrix4 result;
+
+            result.M11 = 2.0f / (right - left);
+            result.M12 = result.M13 = result.M14 = 0.0f;
+
+            result.M22 = 2.0f / (top - bottom);
+            result.M21 = result.M23 = result.M24 = 0.0f;
+
+            result.M33 = 1.0f / (zNearPlane - zFarPlane);
+            result.M31 = result.M32 = result.M34 = 0.0f;
+
+            result.M41 = (left + right) / (left - right);
+            result.M42 = (top + bottom) / (bottom - top);
+            result.M43 = zNearPlane / (zNearPlane - zFarPlane);
+            result.M44 = 1.0f;
+
+            return result;
+        }
+
+        /// <summary>
 		/// Swap the matrix rows and columns.
 		/// </summary>
 		/// <param name="matrix">The matrix for transposing operation.</param>

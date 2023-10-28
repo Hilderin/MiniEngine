@@ -3130,7 +3130,7 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial struct VertexInputBindingDescription
 	{
-		public UInt32 Binding;
+        public UInt32 Binding;
 		public UInt32 Stride;
 		public VertexInputRate InputRate;
 	}

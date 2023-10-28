@@ -20,11 +20,9 @@ namespace MiniEngine.Labs.Renderer
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
-            Application.Run(new VulkanForm());
-            return;
+            ////Testing with Windows Form.....
+            //ApplicationConfiguration.Initialize();
+            //Application.Run(new VulkanForm());
 
             try
             {

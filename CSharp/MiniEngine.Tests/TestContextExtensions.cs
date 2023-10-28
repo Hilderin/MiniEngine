@@ -1,4 +1,5 @@
-﻿using MiniEngine.Rendering.Vulkan;
+﻿using MiniEngine.Drivers.Vulkan;
+using MiniEngine.Rendering.Vulkan;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace MiniEngine.Tests
         public static Context SetupTest(this Context context)
         {
             //TODO: Init a window...
-            context.SetRenderer(new VkRenderer("Test", new Drivers.Vulkan.VkVersion(1, 0, 0)));
+            context.SetRenderer(new VkRenderer("Test", new VkVersion(1, 0, 0)));
 
             return context;
         }
@@ -58,7 +59,7 @@ namespace MiniEngine.Tests
                     if (!File.Exists(pathFileResult))
                         throw new FileNotFoundException($"Test file result not found: {pathFileResult}");
 
-                    using (var expectedImage = Image.Load<Rgba32>(pathFileResult))
+                    using (var expectedImage = SixLabors.ImageSharp.Image.Load<Rgba32>(pathFileResult))
                     {
                         ImageComparer.AssertImage(expectedImage, actualImage);
                     }

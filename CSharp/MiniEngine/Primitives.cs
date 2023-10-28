@@ -75,7 +75,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a pyramid mesh
         /// </summary>
-        public static Mesh CreatePyramidMesh()
+        public static MeshDefinition CreatePyramidMeshDefinition()
         {
             MeshDefinition meshDef = new MeshDefinition();
 
@@ -115,7 +115,15 @@ namespace MiniEngine
                 TexCoords = texCoords
             });
 
-            return Context.Current.CreateMesh(meshDef);
+            return meshDef;
+        }
+
+        /// <summary>
+        /// Create a pyramid mesh
+        /// </summary>
+        public static Mesh CreatePyramidMesh()
+        {
+            return Context.Current.CreateMesh(CreatePyramidMeshDefinition());
         }
 
         /// <summary>
@@ -129,7 +137,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a plane mesh
         /// </summary>
-        public static Mesh CreatePlaneMesh()
+        public static MeshDefinition CreatePlaneMeshDefinition()
         {
             MeshDefinition meshDef = new MeshDefinition();
 
@@ -174,7 +182,16 @@ namespace MiniEngine
                 TexCoords = texCoords
             });
 
-            return Context.Current.CreateMesh(meshDef);
+            return meshDef;
+
+        }
+
+        /// <summary>
+        /// Create a plane mesh
+        /// </summary>
+        public static Mesh CreatePlaneMesh()
+        {
+            return Context.Current.CreateMesh(CreatePlaneMeshDefinition());
         }
 
         /// <summary>
@@ -188,7 +205,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a cube mesh
         /// </summary>
-        public static Mesh CreateCubeMesh()
+        public static MeshDefinition CreateCubeMeshDefinition()
         {
             MeshDefinition meshDef = new MeshDefinition();
 
@@ -251,7 +268,15 @@ namespace MiniEngine
                 TexCoords = texCoords
             });
 
-            return Context.Current.CreateMesh(meshDef);
+            return meshDef;
+        }
+
+        /// <summary>
+        /// Create a cube mesh
+        /// </summary>
+        public static Mesh CreateCubeMesh()
+        {
+            return Context.Current.CreateMesh(CreateCubeMeshDefinition());
         }
 
         /// <summary>

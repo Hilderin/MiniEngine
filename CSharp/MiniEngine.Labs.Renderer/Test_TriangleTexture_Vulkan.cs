@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using MiniEngine.Assets;
 
 namespace MiniEngine.Labs.Renderer
@@ -60,8 +61,8 @@ layout(location = 0) out vec4 outColor;
 
 
 void main() {
-    outColor = vec4(fragColor, 1.0);
-    //outColor = texture(texSampler, fragTexCoord);
+    //outColor = vec4(fragColor, 1.0);
+    outColor = texture(texSampler, fragTexCoord);
 }
 ");
 
@@ -78,7 +79,10 @@ void main() {
 
             _currentMesh.Materials.Add(Context.CreateMaterial(new()
             {
-                DiffuseTexture = BaseTextures.White,
+                DiffuseTexture = Context.CreateTexture2D(new()
+                {
+                    Data = File.ReadAllBytes(@"C:\Projects\VulkanTutorialOverv\resources\viking_room.png")
+                }),
                 Shader = shader
             }));
 

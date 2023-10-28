@@ -28,7 +28,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public bool ShouldSwapBuffer { get; set; } = true;
 
-        
+        /// <summary>
+        /// Resource factory
+        /// </summary>
+        public VkResourceFactory ResourceFactory { get { return _resourceFactory; } }
 
         #endregion
 

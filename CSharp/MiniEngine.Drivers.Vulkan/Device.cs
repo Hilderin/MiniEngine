@@ -1112,11 +1112,11 @@ namespace MiniEngine.Drivers.Vulkan
             return CreatePipelineLayout(pipelineLayoutCreateInfo);
         }
 
-        public PipelineLayout CreatePipelineLayout(DescriptorSetLayout descriptorSetLayout, PushConstantRange[] constantRanges)
+        public PipelineLayout CreatePipelineLayout(DescriptorSetLayout[] descriptorSetLayouts, PushConstantRange[] constantRanges)
         {
             var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
             {
-                SetLayouts = new DescriptorSetLayout[] { descriptorSetLayout },
+                SetLayouts = descriptorSetLayouts,
                 PushConstantRanges = constantRanges
             };
             return CreatePipelineLayout(pipelineLayoutCreateInfo);
@@ -1340,6 +1340,14 @@ namespace MiniEngine.Drivers.Vulkan
                 Interop.NativeMethods.vkUpdateDescriptorSets(this.m, (uint)lenpDescriptorWrites, (Interop.WriteDescriptorSet*)arraypDescriptorWrites, (uint)lenpDescriptorCopies, (Interop.CopyDescriptorSet*)arraypDescriptorCopies);
                 Marshal.FreeHGlobal(arraypDescriptorWrites);
                 Marshal.FreeHGlobal(arraypDescriptorCopies);
+            }
+        }
+
+        public void UpdateDescriptorSets(WriteDescriptorSet pDescriptorWrites)
+        {
+            unsafe
+            {
+                Interop.NativeMethods.vkUpdateDescriptorSets(this.m, 1, pDescriptorWrites.m, 0, (Interop.CopyDescriptorSet*)(IntPtr.Zero));
             }
         }
 
