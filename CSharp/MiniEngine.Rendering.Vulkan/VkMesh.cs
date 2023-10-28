@@ -113,8 +113,5 @@ namespace MiniEngine.Rendering.Vulkan
         public BufferWrapper indexBuffer;
         public int nbIndices;
         public int MaterialIndex;
-        //public PipelineWrapper Pipeline;
-        //public VkShader Shader;
-        //public CommandBuffer[] CommandBuffers;
     }
 }

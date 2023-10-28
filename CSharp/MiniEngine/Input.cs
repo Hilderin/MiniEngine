@@ -7,17 +7,42 @@ using System.Threading.Tasks;
 
 namespace MiniEngine
 {
+    /// <summary>
+    /// Track inputs between each frames
+    /// </summary>
     public class Input
     {
         /// <summary>
-        /// Keys that are down
+        /// Keys that are down at a fixed position
         /// </summary>
-        private bool[] _keyDown = new bool[349];
+        private bool[] _keyDownsFixedIndex = new bool[349];
 
         /// <summary>
-        /// List of newly pressed keys
+        /// Keys that are down in the list
         /// </summary>
-        private List<Keys> _newlyPressedKeys = new List<Keys>();
+        private List<Keys> _keyDowns = new List<Keys>();
+
+        /// <summary>
+        /// List of newly down keys
+        /// </summary>
+        private List<Keys> _newlyKeyDowns = new List<Keys>();
+
+
+        /// <summary>
+        /// Mouse buttons that are down at a fixed position
+        /// </summary>
+        private bool[] _mouseDownsFixedIndex = new bool[8];
+
+        /// <summary>
+        /// MouseButton that are down in the list
+        /// </summary>
+        private List<MouseButton> _mouseDowns = new List<MouseButton>();
+
+        /// <summary>
+        /// List of newly down mouseButtons
+        /// </summary>
+        private List<MouseButton> _newlyMouseDowns = new List<MouseButton>();
+
 
         /// <summary>
         /// Indicate if the mouse just moved
@@ -34,6 +59,25 @@ namespace MiniEngine
         /// </summary>
         public Vector2 MouseMovement { get; private set; }
 
+
+        /// <summary>
+        /// Get the mouse scroll position
+        /// </summary>
+        public Vector2 MouseScroll { get; private set; }
+
+        /// <summary>
+        /// Get the mouse scroll position delta
+        /// </summary>
+        public Vector2 MouseScrollDelta { get; private set; }
+
+
+
+        /// <summary>
+        /// List of keys that are down
+        /// </summary>
+        public List<Keys> KeyDowns { get { return _keyDowns; } }
+
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -42,15 +86,29 @@ namespace MiniEngine
         }
 
 
+
         /// <summary>
         /// Set a state for a key
         /// </summary>
-        public void SetKeyState(Keys key, bool pressed)
+        public void SetKeyState(Keys key, bool down)
         {
-            if(pressed && !_keyDown[(int)key])
-                _newlyPressedKeys.Add(key);
+            if (down)
+            {
+                //Key down...
+                if (!_keyDownsFixedIndex[(int)key])
+                {
+                    //Newly down...
+                    _newlyKeyDowns.Add(key);
+                    _keyDowns.Add(key);
+                }
+            }
+            else
+            {
+                //Key up...
+                _keyDowns.Remove(key);
+            }
 
-            _keyDown[(int)key] = pressed;
+            _keyDownsFixedIndex[(int)key] = down;
         }
 
         /// <summary>
@@ -61,7 +119,7 @@ namespace MiniEngine
             if (MousePosition != position)
             {
                 //Calculate the diff and the deplacement vector...
-                Debug.Print("Old position: " + MousePosition + ", new: " + position.ToString());
+                //Debug.Print("Old position: " + MousePosition + ", new: " + position.ToString());
                 Vector2 movement = (position - MousePosition) / 200;
                 //movement.Normalize();
                 MouseMovement = movement;
@@ -72,22 +130,85 @@ namespace MiniEngine
             }
         }
 
-
         /// <summary>
-        /// Check if a key is pressed
+        /// Set the mouse scroll
         /// </summary>
-        public bool IsKeyPressed(Keys key)
+        public void SetMouseScroll(Vector2 scroll)
         {
-            return _keyDown[(int)key];
+            if (MouseScroll != scroll)
+            {
+                //Calculate the diff and the deplacement vector...
+                Debug.Print("Old scroll: " + MouseScroll + ", new: " + scroll.ToString());
+                Vector2 movement = (scroll - MouseScroll) / 200;
+                //movement.Normalize();
+                MouseScrollDelta = movement;
+                //Debug.Print(movement.ToString());
+
+                MouseScroll = scroll;
+                IsJustMouseMoved = true;
+            }
         }
 
         /// <summary>
-        /// Check if the key pressed is new since the last frame
+        /// Set a state for a mouse button
         /// </summary>
-        public bool IsJustKeyPressed(Keys key)
+        public void SetMouseButton(MouseButton mouseButton, bool down)
         {
-            if (IsKeyPressed(key))
-                return _newlyPressedKeys.Contains(key);
+            if (down)
+            {
+                //mouseButton down...
+                if (!_mouseDownsFixedIndex[(int)mouseButton])
+                {
+                    //Newly down...
+                    _newlyMouseDowns.Add(mouseButton);
+                    _mouseDowns.Add(mouseButton);
+                }
+            }
+            else
+            {
+                //mouseButton up...
+                _mouseDowns.Remove(mouseButton);
+            }
+
+            _mouseDownsFixedIndex[(int)mouseButton] = down;
+        }
+
+
+
+        /// <summary>
+        /// Check if a key is down
+        /// </summary>
+        public bool IsKeyDown(Keys key)
+        {
+            return _keyDownsFixedIndex[(int)key];
+        }
+
+        /// <summary>
+        /// Check if the key down is new since the last frame
+        /// </summary>
+        public bool IsJustKeyDown(Keys key)
+        {
+            if (IsKeyDown(key))
+                return _newlyKeyDowns.Contains(key);
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// Check if a mouse button is down
+        /// </summary>
+        public bool IsMouseDown(MouseButton mouseDown)
+        {
+            return _mouseDownsFixedIndex[(int)mouseDown];
+        }
+
+        /// <summary>
+        /// Check if the mouseDown down is new since the last frame
+        /// </summary>
+        public bool IsJustMouseDown(MouseButton mouseDown)
+        {
+            if (IsMouseDown(mouseDown))
+                return _newlyMouseDowns.Contains(mouseDown);
             else
                 return false;
         }
@@ -99,17 +220,17 @@ namespace MiniEngine
         {
             Vector3 movement = Vector3.Zero;
 
-            if (IsKeyPressed(forwardKey))
+            if (IsKeyDown(forwardKey))
                 movement += Vector3.Forward;
-            if (IsKeyPressed(backwardKey))
+            if (IsKeyDown(backwardKey))
                 movement += Vector3.Backward;
-            if (IsKeyPressed(leftKey))
+            if (IsKeyDown(leftKey))
                 movement += Vector3.Left;
-            if (IsKeyPressed(rightKey))
+            if (IsKeyDown(rightKey))
                 movement += Vector3.Right;
-            if (IsKeyPressed(upKey))
+            if (IsKeyDown(upKey))
                 movement += Vector3.Up;
-            if (IsKeyPressed(downKey))
+            if (IsKeyDown(downKey))
                 movement += Vector3.Down;
 
             return movement;
@@ -120,7 +241,8 @@ namespace MiniEngine
         /// </summary>
         internal void OnNewFrame()
         {
-            _newlyPressedKeys.Clear();
+            _newlyKeyDowns.Clear();
+            _newlyMouseDowns.Clear();
             IsJustMouseMoved = false;
             MouseMovement = Vector2.Zero;
         }

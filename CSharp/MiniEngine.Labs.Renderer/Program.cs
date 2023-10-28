@@ -41,7 +41,7 @@ namespace MiniEngine.Labs.Renderer
                            {
                                t.Update();
 
-                               if (context.Input.IsKeyPressed(Keys.Escape))
+                               if (context.Input.IsKeyDown(Keys.Escape))
                                {
                                    if (t is IDisposable)
                                        ((IDisposable)t).Dispose();

@@ -28,8 +28,6 @@ namespace MiniEngine.Rendering.Vulkan
         private PipelineDescriptorSet _fontTextureSet;
         private PipelineDescriptorSet _textureSet;
 
-        private ImDrawDataPtr draw_data;
-
         private Stopwatch _stopWatch;
 
         public ImGuiRenderer(VkRenderer renderer)
@@ -42,7 +40,7 @@ namespace MiniEngine.Rendering.Vulkan
             ImGuiIOPtr io = ImGui.GetIO();
             io.DisplaySize = new System.Numerics.Vector2(renderer.Device.CurrentExtent.Width, renderer.Device.CurrentExtent.Height);
             //io.DisplayFramebufferScale = System.Numerics.Vector2.One * 0.5f;
-            io.DeltaTime = (float)_stopWatch.Elapsed.TotalSeconds; // DeltaTime is in seconds.
+            //io.DeltaTime = (float)_stopWatch.Elapsed.TotalSeconds; // DeltaTime is in seconds.
 
             io.Fonts.AddFontDefault();
             io.Fonts.Flags |= ImFontAtlasFlags.NoBakedLines;
@@ -56,7 +54,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             CreateShader();
 
-            _pipeline = new PipelineWrapper(_device, _vk.Swapchain.RenderPass, _shader, CullModeFlags.None);
+            _pipeline = new PipelineWrapper(_device, _vk.Swapchain.RenderPass, _shader)
+                                .AddDynamicState(DynamicState.Scissor)
+                                .Build();
 
 
             _mainSet = _pipeline.CreateDescriptorSet(0).Set("FontSampler", _vk.Sampler)
@@ -74,65 +74,69 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
-        /// Renders the ImGui draw list data.
+        /// Update the input for the mouse and the keyboard to ImGui
         /// </summary>
-        public void PreRender(CommandBuffer commandBuffer)
+        public void UpdateImGuiInput(Input input)
         {
-            
             ImGuiIOPtr io = ImGui.GetIO();
-            io.DisplaySize = new System.Numerics.Vector2(_vk.Device.CurrentExtent.Width, _vk.Device.CurrentExtent.Height);
-            io.DisplayFramebufferScale = System.Numerics.Vector2.One;
-            io.DeltaTime = (float)_stopWatch.Elapsed.TotalSeconds; // DeltaTime is in seconds.
-            
+            io.AddMousePosEvent(input.MousePosition.X, input.MousePosition.Y);
+            io.AddMouseButtonEvent(0, input.IsMouseDown(MouseButton.Left));
+            io.AddMouseButtonEvent(1, input.IsMouseDown(MouseButton.Right));
+            io.AddMouseButtonEvent(2, input.IsMouseDown(MouseButton.Middle));
+            io.AddMouseButtonEvent(3, input.IsMouseDown(MouseButton.Button1));
+            io.AddMouseButtonEvent(4, input.IsMouseDown(MouseButton.Button2));
+            io.AddMouseWheelEvent(0f, input.MouseScrollDelta.Y);
 
-            ImGui.Render();
-
-            draw_data = ImGui.GetDrawData();
-
-            if (draw_data.CmdListsCount == 0)
-                return;
-
-            uint vertexOffsetInVertices = 0;
-            uint indexOffsetInElements = 0;
-
-
-            //Ensure the capacity of the buffers...
-            EnsureBufferCapacity(draw_data);
-
-
-
-            for (int i = 0; i < draw_data.CmdListsCount; i++)
+            for (int i = 0; i < input.KeyDowns.Count; i++)
             {
-                ImDrawListPtr cmd_list = draw_data.CmdLists[i];
-                
-                commandBuffer.CmdUpdateBuffer(_vertexBuffer,
-                    vertexOffsetInVertices * _sizeOfDrawVert,
-                    (uint)(cmd_list.VtxBuffer.Size * _sizeOfDrawVert),
-                    cmd_list.VtxBuffer.Data
-                    );
+                io.AddInputCharacter((uint)input.KeyDowns[i]);
 
-                commandBuffer.CmdUpdateBuffer(
-                    _indexBuffer,
-                    indexOffsetInElements * _sizeOfIndice,
-                    (uint)Math.RoundUp(cmd_list.IdxBuffer.Size * (int)_sizeOfIndice, 4),
-                    cmd_list.IdxBuffer.Data
-                    );
-
-                vertexOffsetInVertices += (uint)cmd_list.VtxBuffer.Size;
-                indexOffsetInElements += (uint)cmd_list.IdxBuffer.Size;
+                if (TryMapKey(input.KeyDowns[i], out ImGuiKey imguikey))
+                {
+                    io.AddKeyEvent(imguikey, true);
+                }
             }
 
-            
-            
         }
+
 
         /// <summary>
         /// Renders the ImGui draw list data.
         /// </summary>
         public void Render(CommandBuffer commandBuffer)
         {
+            //ImGuiIOPtr io = ImGui.GetIO();
+            ////io.DisplaySize = new System.Numerics.Vector2(_vk.Device.CurrentExtent.Width, _vk.Device.CurrentExtent.Height);
+            //io.DeltaTime = (float)_stopWatch.Elapsed.TotalSeconds; // DeltaTime is in seconds.
+
+
+            ImGui.Render();
+
+            var draw_data = ImGui.GetDrawData();
+
+
+
             if (draw_data.CmdListsCount > 0)
             {
+
+                uint vertexOffsetInVertices = 0;
+                uint indexOffsetInElements = 0;
+
+                //Ensure the capacity of the buffers...
+                EnsureBufferCapacity(draw_data);
+
+                //Update vertex and indices buffer...
+                for (int i = 0; i < draw_data.CmdListsCount; i++)
+                {
+                    ImDrawListPtr cmd_list = draw_data.CmdLists[i];
+
+                    _vertexBuffer.Update(cmd_list.VtxBuffer.Data, vertexOffsetInVertices * _sizeOfDrawVert, (uint)(cmd_list.VtxBuffer.Size * _sizeOfDrawVert));
+
+                    _indexBuffer.Update(cmd_list.IdxBuffer.Data, indexOffsetInElements * _sizeOfIndice, (uint)(cmd_list.IdxBuffer.Size * (int)_sizeOfIndice));
+
+                    vertexOffsetInVertices += (uint)cmd_list.VtxBuffer.Size;
+                    indexOffsetInElements += (uint)cmd_list.IdxBuffer.Size;
+                }
 
                 commandBuffer.CmdBindVertexBuffer(0, _vertexBuffer, 0);
                 commandBuffer.CmdBindIndexBuffer(_indexBuffer, 0, IndexType.Uint16);
@@ -171,8 +175,7 @@ namespace MiniEngine.Rendering.Vulkan
                                 }
                             }
 
-                            //commandBuffer.CmdSetScissor(0, new Rect2D((int)pcmd.ClipRect.X, (int)pcmd.ClipRect.Y, (int)(pcmd.ClipRect.Z - pcmd.ClipRect.X), (int)(pcmd.ClipRect.W - pcmd.ClipRect.Y)));
-
+                            commandBuffer.CmdSetScissor(0, new Rect2D((int)pcmd.ClipRect.X, (int)pcmd.ClipRect.Y, (int)(pcmd.ClipRect.Z - pcmd.ClipRect.X), (int)(pcmd.ClipRect.W - pcmd.ClipRect.Y)));
 
                             commandBuffer.CmdDrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
                         }
@@ -187,6 +190,9 @@ namespace MiniEngine.Rendering.Vulkan
             ImGui.NewFrame();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void UpdateProjectionMatrix()
         {
             //Scale of fit the coord (-1, -1) on the top left and (1, 1) on the bottom right.
@@ -195,7 +201,7 @@ namespace MiniEngine.Rendering.Vulkan
             Matrix4 translate = Matrix4.CreateTranslationMatrix(-1f, 1f, 0f);
             Matrix4 mvp = translate * scale;
 
-            _projMatrixBuffer.UpdateFrom(ref mvp);
+            _projMatrixBuffer.Update(ref mvp);
         }
 
         /// <summary>
@@ -305,7 +311,172 @@ void main()
         }
 
 
+        private bool TryMapKey(Keys key, out ImGuiKey result)
+        {
+            ImGuiKey keyToImGuiKeyShortcut(Keys keyToConvert, Keys startKey1, ImGuiKey startKey2)
+            {
+                int changeFromStart1 = (int)keyToConvert - (int)startKey1;
+                return startKey2 + changeFromStart1;
+            }
 
+            if (key >= Keys.F1 && key <= Keys.F12)
+            {
+                result = keyToImGuiKeyShortcut(key, Keys.F1, ImGuiKey.F1);
+                return true;
+            }
+            else if (key >= Keys.Numpad0 && key <= Keys.Numpad9)
+            {
+                result = keyToImGuiKeyShortcut(key, Keys.Numpad0, ImGuiKey.Keypad0);
+                return true;
+            }
+            else if (key >= Keys.A && key <= Keys.Z)
+            {
+                result = keyToImGuiKeyShortcut(key, Keys.A, ImGuiKey.A);
+                return true;
+            }
+            else if (key >= Keys.Number0 && key <= Keys.Number9)
+            {
+                result = keyToImGuiKeyShortcut(key, Keys.Number0, ImGuiKey._0);
+                return true;
+            }
+
+            switch (key)
+            {
+                case Keys.ShiftLeft:
+                case Keys.ShiftRight:
+                    result = ImGuiKey.ModShift;
+                    return true;
+                case Keys.ControlLeft:
+                case Keys.ControlRight:
+                    result = ImGuiKey.ModCtrl;
+                    return true;
+                case Keys.AltLeft:
+                case Keys.AltRight:
+                    result = ImGuiKey.ModAlt;
+                    return true;
+                case Keys.LeftSuper:
+                case Keys.RightSuper:
+                    result = ImGuiKey.ModSuper;
+                    return true;
+                case Keys.Menu:
+                    result = ImGuiKey.Menu;
+                    return true;
+                case Keys.Up:
+                    result = ImGuiKey.UpArrow;
+                    return true;
+                case Keys.Down:
+                    result = ImGuiKey.DownArrow;
+                    return true;
+                case Keys.Left:
+                    result = ImGuiKey.LeftArrow;
+                    return true;
+                case Keys.Right:
+                    result = ImGuiKey.RightArrow;
+                    return true;
+                case Keys.Enter:
+                    result = ImGuiKey.Enter;
+                    return true;
+                case Keys.Escape:
+                    result = ImGuiKey.Escape;
+                    return true;
+                case Keys.Space:
+                    result = ImGuiKey.Space;
+                    return true;
+                case Keys.Tab:
+                    result = ImGuiKey.Tab;
+                    return true;
+                case Keys.Backspace:
+                    result = ImGuiKey.Backspace;
+                    return true;
+                case Keys.Insert:
+                    result = ImGuiKey.Insert;
+                    return true;
+                case Keys.Delete:
+                    result = ImGuiKey.Delete;
+                    return true;
+                case Keys.PageUp:
+                    result = ImGuiKey.PageUp;
+                    return true;
+                case Keys.PageDown:
+                    result = ImGuiKey.PageDown;
+                    return true;
+                case Keys.Home:
+                    result = ImGuiKey.Home;
+                    return true;
+                case Keys.End:
+                    result = ImGuiKey.End;
+                    return true;
+                case Keys.CapsLock:
+                    result = ImGuiKey.CapsLock;
+                    return true;
+                case Keys.ScrollLock:
+                    result = ImGuiKey.ScrollLock;
+                    return true;
+                case Keys.PrintScreen:
+                    result = ImGuiKey.PrintScreen;
+                    return true;
+                case Keys.Pause:
+                    result = ImGuiKey.Pause;
+                    return true;
+                case Keys.NumLock:
+                    result = ImGuiKey.NumLock;
+                    return true;
+                case Keys.NumpadDivide:
+                    result = ImGuiKey.KeypadDivide;
+                    return true;
+                case Keys.NumpadMultiply:
+                    result = ImGuiKey.KeypadMultiply;
+                    return true;
+                case Keys.NumpadSubtract:
+                    result = ImGuiKey.KeypadSubtract;
+                    return true;
+                case Keys.NumpadAdd:
+                    result = ImGuiKey.KeypadAdd;
+                    return true;
+                case Keys.NumpadDecimal:
+                    result = ImGuiKey.KeypadDecimal;
+                    return true;
+                case Keys.NumpadEnter:
+                    result = ImGuiKey.KeypadEnter;
+                    return true;
+                case Keys.GraveAccent:
+                    result = ImGuiKey.GraveAccent;
+                    return true;
+                case Keys.Minus:
+                    result = ImGuiKey.Minus;
+                    return true;
+                case Keys.Equal:
+                    result = ImGuiKey.Equal;
+                    return true;
+                case Keys.BracketLeft:
+                    result = ImGuiKey.LeftBracket;
+                    return true;
+                case Keys.BracketRight:
+                    result = ImGuiKey.RightBracket;
+                    return true;
+                case Keys.Semicolon:
+                    result = ImGuiKey.Semicolon;
+                    return true;
+                case Keys.Apostrophe:
+                    result = ImGuiKey.Apostrophe;
+                    return true;
+                case Keys.Comma:
+                    result = ImGuiKey.Comma;
+                    return true;
+                case Keys.Period:
+                    result = ImGuiKey.Period;
+                    return true;
+                case Keys.Slash:
+                    result = ImGuiKey.Slash;
+                    return true;
+                case Keys.Backslash:
+                    result = ImGuiKey.Backslash;
+                    return true;
+                default:
+                    result = ImGuiKey.None;
+                    return false;
+            }
+        }
 
         /// <summary>
         /// Dispose

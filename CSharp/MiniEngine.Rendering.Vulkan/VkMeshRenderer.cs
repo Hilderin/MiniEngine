@@ -127,7 +127,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             //Pipeline creation...
             _renderDatas = new RenderData[_mesh.MeshDatas.Length];
-            _pipeline = new PipelineWrapper(_vk.Device, _vk.Swapchain.RenderPass, ((VkMaterial)_meshActor.Materials[0]).Shader);
+            _pipeline = new PipelineWrapper(_vk.Device, _vk.Swapchain.RenderPass, ((VkMaterial)_meshActor.Materials[0]).Shader)
+                                    .SetCullMode(CullModeFlags.Back)
+                                    .Build();
 
             for (int i = 0; i < _mesh.MeshDatas.Length; i++)
             {

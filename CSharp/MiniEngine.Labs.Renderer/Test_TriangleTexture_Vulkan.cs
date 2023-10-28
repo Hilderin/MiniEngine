@@ -127,29 +127,29 @@ void main() {
         {
             Camera.MoveInDirections(0.1f, Context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
 
-            if (Context.Input.IsKeyPressed(Keys.NumpadAdd))
+            if (Context.Input.IsKeyDown(Keys.NumpadAdd))
                 Scene.AmbientLight.Intensity += 0.01f;
-            if (Context.Input.IsKeyPressed(Keys.NumpadSubtract))
+            if (Context.Input.IsKeyDown(Keys.NumpadSubtract))
                 Scene.AmbientLight.Intensity -= 0.01f;
-            if (Context.Input.IsKeyPressed(Keys.Z))
+            if (Context.Input.IsKeyDown(Keys.Z))
                 Camera.RotateYaw(-0.1f);
-            if (Context.Input.IsKeyPressed(Keys.X))
+            if (Context.Input.IsKeyDown(Keys.X))
                 Camera.RotateYaw(0.1f);
-            if (Context.Input.IsKeyPressed(Keys.C))
+            if (Context.Input.IsKeyDown(Keys.C))
                 Camera.RotatePitch(-0.1f);
-            if (Context.Input.IsKeyPressed(Keys.V))
+            if (Context.Input.IsKeyDown(Keys.V))
                 Camera.RotatePitch(0.1f);
-            if (Context.Input.IsKeyPressed(Keys.R))
+            if (Context.Input.IsKeyDown(Keys.R))
                 Camera.RotateRoll(-0.1f);
-            if (Context.Input.IsKeyPressed(Keys.F))
+            if (Context.Input.IsKeyDown(Keys.F))
                 Camera.RotateRoll(0.1f);
 
-            if (Context.Input.IsKeyPressed(Keys.PageUp))
+            if (Context.Input.IsKeyDown(Keys.PageUp))
             {
                 if (Scene.DirectionalLight != null)
                     Scene.DirectionalLight.Intensity += 0.01f;
             }
-            if (Context.Input.IsKeyPressed(Keys.PageDown))
+            if (Context.Input.IsKeyDown(Keys.PageDown))
             {
                 if (Scene.DirectionalLight != null)
                     Scene.DirectionalLight.Intensity -= 0.01f;

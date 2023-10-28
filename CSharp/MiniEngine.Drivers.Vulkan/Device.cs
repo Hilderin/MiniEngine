@@ -25,21 +25,37 @@ namespace MiniEngine.Drivers.Vulkan
         public List<CommandPool> CommandPools = new List<CommandPool>();
         public List<RenderPass> RenderPasses = new List<RenderPass>();
         public List<Sampler> Samplers = new List<Sampler>();
+        public Dictionary<int, ShaderModule> CacheShaderModule = new Dictionary<int, ShaderModule>();
 
         public MemoryManager MemoryManager;
 
 
         internal Device() { }
 
-
+        /// <summary>
+        /// Create a shader module
+        /// </summary>
         public ShaderModule CreateShaderModule(byte[] shaderCode, uint flags = 0, AllocationCallbacks allocator = null)
         {
+
+            int key = BytesHelper.CombineHash(BytesHelper.GetHashCodeBytes(shaderCode), (int)flags);
+
+            //Already in the cache??
+            if (CacheShaderModule.TryGetValue(key, out ShaderModule shaderModule))
+                return shaderModule;
+
             ShaderModuleCreateInfo createInfo = new ShaderModuleCreateInfo
             {
                 CodeBytes = shaderCode,
                 Flags = flags
             };
-            return CreateShaderModule(createInfo, allocator);
+            
+            shaderModule = CreateShaderModule(createInfo, allocator);
+
+            CacheShaderModule[key] = shaderModule;
+
+            return shaderModule;
+
         }
 
         /// <summary>
@@ -133,6 +149,13 @@ namespace MiniEngine.Drivers.Vulkan
                 DestroySamplerInternal(sampler);
             Samplers.Clear();
 
+
+
+            //We don't need it anymore...
+            foreach(ShaderModule shaderModule in CacheShaderModule.Values)
+                DestroyShaderModule(shaderModule);
+
+
             if (!IsDisposed)
             {
                 Destroy();
@@ -211,7 +234,7 @@ namespace MiniEngine.Drivers.Vulkan
 
             BufferWrapper buffer = CreateBufferWrapper((uint)size, usageFlags, memoryPropertyFlags);
 
-            buffer.UpdateFrom(values);
+            buffer.Update(values);
 
             return buffer;
         }

@@ -30,6 +30,9 @@ namespace MiniEngine.Presentations.Glfw
         private KeyCallback _onKeyCallback;
         private MouseCallback _onMouseCallback;
         private SizeCallback _onSizeCallback;
+        private MouseButtonCallback _onMouseButtonCallback;
+        private MouseCallback _onMouseScrollCallback;
+        
 
 
         /// <summary>
@@ -630,10 +633,15 @@ namespace MiniEngine.Presentations.Glfw
         {
             _onKeyCallback = OnKey;
             _onMouseCallback = OnCursorPosition;
-            _onSizeCallback = OnSizeCallback;
+            _onSizeCallback = OnSize;
+            _onMouseButtonCallback = OnMouseButton;
+            _onMouseScrollCallback = OnMouseScroll;
 
             GLFW.SetKeyCallback(_glfwWindow, _onKeyCallback);
             GLFW.SetCursorPositionCallback(_glfwWindow, _onMouseCallback);
+            GLFW.SetMouseButtonCallback(_glfwWindow, _onMouseButtonCallback);
+            GLFW.SetScrollCallback(_glfwWindow, _onMouseScrollCallback);
+
             GLFW.SetWindowSizeCallback(_glfwWindow, _onSizeCallback);
         }
 
@@ -650,18 +658,37 @@ namespace MiniEngine.Presentations.Glfw
         /// </summary>
         private void OnCursorPosition(Window window, double x, double y)
         {
-            Debug.Print("mouse pos: " + x + ", " + y);
+            //Debug.Print("OnCursorPosition " + x + ", " + y);
             _context.Input.SetMousePosition(new Vector2((float)x, (float)y));
         }
+
+
+        /// <summary>
+        /// Mouse button calllback
+        /// </summary>
+        public void OnMouseButton(Window window, MiniEngine.Drivers.Glfw.MouseButton button, InputState state, ModifierKeys modifiers)
+        {
+            _context.Input.SetMouseButton((MiniEngine.MouseButton)button, (state != InputState.Release));
+        }
+
+        /// <summary>
+        /// Mouse scroll
+        /// </summary>
+        public void OnMouseScroll(Window window, double x, double y)
+        {
+            _context.Input.SetMouseScroll(new Vector2((float)x, (float)y));
+        }
+
 
         /// <summary>
         /// When window is resized
         /// </summary>
-        private void OnSizeCallback(Window window, int width, int height)
+        private void OnSize(Window window, int width, int height)
         {
             if (OnWindowResized != null)
                 OnWindowResized(new Vector2(width, height));
         }
+
 
         #endregion
 

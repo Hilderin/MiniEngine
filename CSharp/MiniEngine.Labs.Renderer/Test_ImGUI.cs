@@ -23,11 +23,14 @@ namespace MiniEngine.Labs.Renderer
 
         public void Update()
         {
+            ((VkRenderer)Context.Renderer).UpdateImGuiInput(Context.Input);
 
             ImGui.ShowDemoWindow();
             //ImGui.Begin("Test");
             //ImGui.Button("Wow");
             //ImGui.End();
+
+            
 
             System.Threading.Thread.Sleep(3);
 

@@ -74,6 +74,15 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Update the input for the mouse and the keyboard to ImGui
+        /// </summary>
+        public void UpdateImGuiInput(Input input)
+        {
+            _imGui.UpdateImGuiInput(input);
+        }
+
+
+        /// <summary>
         /// Init the renderer
         /// </summary>
         public void Init()
@@ -243,11 +252,6 @@ namespace MiniEngine.Rendering.Vulkan
 
             commandBuffer.Begin();
 
-            if (_imGui != null)
-                _imGui.PreRender(commandBuffer);
-
-            commandBuffer.BeginRenderPass();
-
             //If no camera.. then.. nothing on screen...
             if (scene.Camera != null)
             {
@@ -255,7 +259,7 @@ namespace MiniEngine.Rendering.Vulkan
                     meshRenderer.PopulateCommandBuffers(commandBuffer);
             }
 
-
+            //Rendering of ImGui...
             if (_imGui != null)
                 _imGui.Render(commandBuffer);
 

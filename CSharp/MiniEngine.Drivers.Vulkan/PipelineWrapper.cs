@@ -10,34 +10,100 @@ namespace MiniEngine.Drivers.Vulkan
     /// </summary>
     public class PipelineWrapper : IDisposable
     {
+        #region Privates members
+
         private Device _device;
         private VkShader _shader;
         private RenderPass _renderPass;
 
-        public BufferWrapper UniformBuffer;
-
         private DescriptorSetLayout[] descriptorSetLayouts;
         private PipelineLayout _pipelineLayout;
         private Pipeline _pipeline;
+        private PipelineShaderStageCreateInfo[] pipelineShaderStages;
 
+        private CullModeFlags _cullMode = CullModeFlags.None;
+        private DynamicState[] _dynamicStates = new DynamicState[0];
+
+        #endregion
+
+
+        #region Public properties
 
         public Pipeline Pipeline { get { return _pipeline; } }
         public PipelineLayout PipelineLayout { get { return _pipelineLayout; } }
         public VkShader Shader { get { return _shader; } }
         public DescriptorSetLayout[] DescriptorSetLayouts { get { return descriptorSetLayouts; } }
 
+        #endregion
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader, CullModeFlags cullMode = CullModeFlags.Back)
+        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader)
         {
             _device = device;
             _shader = shader;
             _renderPass = renderPass;
-           
 
-            CreatePipeline(cullMode);
+            //Create layaout only once, anyway, that will never change because we cannot change the shader
+            CreateLayouts();
+
+            //Same for the shaders
+            CreateShaders();
+        }
+
+        /// <summary>
+        /// Set the CullMode...
+        /// </summary>
+        public PipelineWrapper SetCullMode(CullModeFlags cullMode)
+        {
+            _cullMode = cullMode;
+            return this;
+        }
+
+        /// <summary>
+        /// Add a dynamic state
+        /// </summary>
+        public PipelineWrapper AddDynamicState(DynamicState dynamicState)
+        {
+
+            if (!_dynamicStates.Contains(dynamicState))
+            {
+                List<DynamicState> newList = new List<DynamicState>(_dynamicStates);
+                newList.Add(dynamicState);
+                _dynamicStates = newList.ToArray();
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Remove a dynamic state
+        /// </summary>
+        public PipelineWrapper RemoveDynamicState(DynamicState dynamicState)
+        {
+
+            if (_dynamicStates.Contains(dynamicState))
+            {
+                List<DynamicState> newList = new List<DynamicState>(_dynamicStates);
+                newList.Remove(dynamicState);
+                _dynamicStates = newList.ToArray();
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Build the pipeline
+        /// </summary>
+        public PipelineWrapper Build()
+        {
+            if (_pipeline != null)
+                DestroyPipeline();
+
+            CreatePipeline();
+
+            return this;
         }
 
         /// <summary>
@@ -45,12 +111,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public void Dispose()
         {
-
-            if (_pipeline != null)
-            {
-                _device.DestroyPipeline(_pipeline);
-                _pipeline = null;
-            }
+            DestroyPipeline();
 
             if (_pipelineLayout != null)
             {
@@ -63,12 +124,6 @@ namespace MiniEngine.Drivers.Vulkan
                 foreach (var descriptorSetLayout in descriptorSetLayouts)
                     _device.DestroyDescriptorSetLayout(descriptorSetLayout);
                 descriptorSetLayouts = null;
-            }
-
-            if (UniformBuffer != null)
-            {
-                UniformBuffer.Dispose();
-                UniformBuffer = null;
             }
 
         }
@@ -89,10 +144,11 @@ namespace MiniEngine.Drivers.Vulkan
             return new PipelineDescriptorSet(_device, this, setIndex);
         }
 
+
         /// <summary>
-        /// Create the pipeline
+        /// Create DescriptorSetLayout and PipelineLayout
         /// </summary>
-        private void CreatePipeline(CullModeFlags cullMode)
+        private void CreateLayouts()
         {
             //Descriptor set layout creation from shader...
             descriptorSetLayouts = new DescriptorSetLayout[_shader.BindingSets.Length];
@@ -105,12 +161,17 @@ namespace MiniEngine.Drivers.Vulkan
 
             //Pipeline layout creation...
             _pipelineLayout = _device.CreatePipelineLayout(descriptorSetLayouts, constantRanges);
+        }
 
-
+        /// <summary>
+        /// Create the shaders
+        /// </summary>
+        private void CreateShaders()
+        {
             var vertexShaderModule = _device.CreateShaderModule(_shader.VertexSpirv);
             var fragmentShaderModule = _device.CreateShaderModule(_shader.FragmentSpirv);
 
-            PipelineShaderStageCreateInfo[] pipelineShaderStages = {
+            pipelineShaderStages = new[] {
                 new PipelineShaderStageCreateInfo {
                     Stage = ShaderStageFlags.Vertex,
                     Module = vertexShaderModule,
@@ -122,13 +183,13 @@ namespace MiniEngine.Drivers.Vulkan
                     Name = _shader.FragmentEntryPoint
                 }
             };
-            //var viewport = new Viewport
-            //{
-            //    MinDepth = 0,
-            //    MaxDepth = 1.0f,
-            //    Width = _vi.CurrentExtent.Width,
-            //    Height = _vi.CurrentExtent.Height
-            //};
+        }
+
+        /// <summary>
+        /// Create the pipeline
+        /// </summary>
+        private void CreatePipeline()
+        {            
             var viewport = new Viewport
             {
                 MinDepth = 0,
@@ -169,7 +230,7 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 PolygonMode = PolygonMode.Fill,
                 //CullMode = CullModeFlags.Front,
-                CullMode = cullMode,
+                CullMode = _cullMode,
                 //CullMode = CullModeFlags.None,
                 FrontFace = FrontFace.Clockwise,
                 LineWidth = 1.0f
@@ -185,6 +246,12 @@ namespace MiniEngine.Drivers.Vulkan
                 VertexAttributeDescriptions = _shader.VertexInputAttributes.ToArray()
             };
 
+            
+            var dynamicStateCreateInfo = new PipelineDynamicStateCreateInfo
+            {
+                DynamicStates = _dynamicStates
+            };
+
             var pipelineCreateInfo = new GraphicsPipelineCreateInfo
             {
                 Layout = _pipelineLayout,
@@ -195,7 +262,8 @@ namespace MiniEngine.Drivers.Vulkan
                 RasterizationState = rasterizationStateCreateInfo,
                 InputAssemblyState = inputAssemblyStateCreateInfo,
                 VertexInputState = vertexInputStateCreateInfo,
-                RenderPass = _renderPass
+                RenderPass = _renderPass,
+                DynamicState = dynamicStateCreateInfo
             };
 
             //var pipelines = _device.CreateGraphicsPipelines(_device.CreatePipelineCache(new PipelineCacheCreateInfo()), new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
@@ -203,9 +271,19 @@ namespace MiniEngine.Drivers.Vulkan
 
             _pipeline = pipelines[0];
 
-            //We don't need it anymore...
-            _device.DestroyShaderModule(vertexShaderModule);
-            _device.DestroyShaderModule(fragmentShaderModule);
+        }
+
+
+        /// <summary>
+        /// Destroy the internal pipeline
+        /// </summary>
+        private void DestroyPipeline()
+        {
+            if (_pipeline != null)
+            {
+                _device.DestroyPipeline(_pipeline);
+                _pipeline = null;
+            }
         }
 
 

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace MiniEngine.Drivers.Vulkan
 {
     /// <summary>
-    /// Encapsulate a buffer
+    /// Encapsulate a Buffer and his BufferMemory
     /// </summary>
     public class BufferWrapper: IDisposable
     {
@@ -32,9 +32,33 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Copy data to a buffer from a pointer
         /// </summary>
+        public unsafe void UpdateFrom(IntPtr srcPtr, uint size)
+        {
+            UpdateFrom((void*)srcPtr, 0, size);
+        }
+
+        /// <summary>
+        /// Copy data to a buffer from a pointer
+        /// </summary>
+        public unsafe void Update(IntPtr srcPtr, uint destOffset, uint size)
+        {
+            UpdateFrom((void*)srcPtr, destOffset, size);
+        }
+
+        /// <summary>
+        /// Copy data to a buffer from a pointer
+        /// </summary>
         public unsafe void UpdateFrom(void* srcPtr, uint size)
-        {   
-            var memPtr = _device.MapMemory(DeviceMemory, 0, size, 0);
+        {
+            UpdateFrom(srcPtr, 0, size);
+        }
+
+        /// <summary>
+        /// Copy data to a buffer from a pointer at an offset
+        /// </summary>
+        public unsafe void UpdateFrom(void* srcPtr, uint destOffset, uint size)
+        {
+            var memPtr = _device.MapMemory(DeviceMemory, destOffset, size, 0);
 
             System.Buffer.MemoryCopy((void*)srcPtr, (void*)memPtr, size, size);
 
@@ -44,7 +68,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Copy data to a buffer from values
         /// </summary>
-        public unsafe void UpdateFrom<T>(T[] values)
+        public unsafe void Update<T>(T[] values)
         {
             Type type = typeof(T);
             var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
@@ -63,7 +87,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Copy data to a buffer from value
         /// </summary>
-        public unsafe void UpdateFrom<T>(ref T value)
+        public unsafe void Update<T>(ref T value)
         {
                
             IntPtr dataPtr = _device.MapMemory(DeviceMemory, 0, Unsafe.SizeOf<T>());
@@ -75,6 +99,9 @@ namespace MiniEngine.Drivers.Vulkan
 
         }
 
+        /// <summary>
+        /// Dispose the buffer
+        /// </summary>
         public void Dispose()
         {
             if (DeviceMemory != null)
