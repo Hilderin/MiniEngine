@@ -45,6 +45,7 @@ namespace MiniEngine.Rendering.Vulkan
         private DebugReportCallback _debugCallback;
         private bool _initialized = false;
         private VkResourceFactory _resourceFactory;
+        private ImGuiRenderer _imGui;
 
         #endregion
 
@@ -67,7 +68,10 @@ namespace MiniEngine.Rendering.Vulkan
 
         #region Public methods
 
-
+        public void InitGui()
+        {
+            _imGui = new ImGuiRenderer(this);
+        }
 
         /// <summary>
         /// Init the renderer
@@ -242,7 +246,11 @@ namespace MiniEngine.Rendering.Vulkan
             RenderCommandBuffer commandBuffer = Swapchain.GetNextRenderCommandBuffer();
 
             commandBuffer.Begin();
-            
+
+            if (_imGui != null)
+                _imGui.PreRender(commandBuffer);
+
+            commandBuffer.BeginRenderPass();
 
             //If no camera.. then.. nothing on screen...
             if (scene.Camera != null)
@@ -251,7 +259,11 @@ namespace MiniEngine.Rendering.Vulkan
                     meshRenderer.PopulateCommandBuffers(commandBuffer);
             }
 
-            
+
+            if (_imGui != null)
+                _imGui.Render(commandBuffer);
+
+
             commandBuffer.End();
 
 

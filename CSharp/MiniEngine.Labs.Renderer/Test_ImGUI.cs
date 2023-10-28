@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+using ImGuiNET;
 using MiniEngine.Assets;
+using MiniEngine.Rendering.Vulkan;
 
 namespace MiniEngine.Labs.Renderer
 {
@@ -11,14 +13,19 @@ namespace MiniEngine.Labs.Renderer
         private Scene Scene = Context.Current.Scene;
         private Camera Camera = Context.Current.Scene.Camera;
 
+        
+
         public void Init()
         {
+            ((VkRenderer)Context.Renderer).InitGui();
         }
 
 
         public void Update()
         {
-            
+
+           
+
             System.Threading.Thread.Sleep(3);
 
         }

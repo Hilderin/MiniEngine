@@ -14,9 +14,6 @@ namespace MiniEngine.Drivers.Vulkan
         private VkShader _shader;
         private RenderPass _renderPass;
 
-
-
-        
         public BufferWrapper UniformBuffer;
 
         private DescriptorSetLayout[] descriptorSetLayouts;
@@ -33,14 +30,14 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader)
+        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader, CullModeFlags cullMode = CullModeFlags.Back)
         {
             _device = device;
             _shader = shader;
             _renderPass = renderPass;
            
 
-            Build();
+            CreatePipeline(cullMode);
         }
 
         /// <summary>
@@ -77,15 +74,6 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
         /// <summary>
-        /// Build the pipeline...
-        /// </summary>
-        public void Build()
-        {
-            CreatePipeline();
-
-        }
-
-        /// <summary>
         /// Create a descriptor set
         /// </summary>
         public PipelineDescriptorSet CreateDescriptorSet()
@@ -94,9 +82,17 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
         /// <summary>
+        /// Create a descriptor set for one setIndex
+        /// </summary>
+        public PipelineDescriptorSet CreateDescriptorSet(int setIndex)
+        {
+            return new PipelineDescriptorSet(_device, this, setIndex);
+        }
+
+        /// <summary>
         /// Create the pipeline
         /// </summary>
-        private void CreatePipeline()
+        private void CreatePipeline(CullModeFlags cullMode)
         {
             //Descriptor set layout creation from shader...
             descriptorSetLayouts = new DescriptorSetLayout[_shader.BindingSets.Length];
@@ -154,7 +150,15 @@ namespace MiniEngine.Drivers.Vulkan
             };
             var colorBlendAttachmentState = new PipelineColorBlendAttachmentState
             {
-                ColorWriteMask = ColorComponentFlags.R | ColorComponentFlags.G | ColorComponentFlags.B | ColorComponentFlags.A
+                ColorWriteMask = ColorComponentFlags.R | ColorComponentFlags.G | ColorComponentFlags.B | ColorComponentFlags.A,
+                //TODO: Parameter that... see: C:\Projects\veldrid\src\Veldrid\BlendAttachmentDescription.cs
+                BlendEnable = true,
+                SrcColorBlendFactor = BlendFactor.SrcAlpha,
+                DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
+                ColorBlendOp = BlendOp.Add,
+                SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
+                DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
+                AlphaBlendOp = BlendOp.Add
             };
             var colorBlendStateCreatInfo = new PipelineColorBlendStateCreateInfo
             {
@@ -165,7 +169,7 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 PolygonMode = PolygonMode.Fill,
                 //CullMode = CullModeFlags.Front,
-                CullMode = CullModeFlags.Back,
+                CullMode = cullMode,
                 //CullMode = CullModeFlags.None,
                 FrontFace = FrontFace.Clockwise,
                 LineWidth = 1.0f

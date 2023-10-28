@@ -56,7 +56,21 @@ namespace MiniEngine.Drivers.Vulkan
 	{
 		public Offset2D Offset;
 		public Extent2D Extent;
-	}
+
+		public Rect2D(Offset2D offset, Extent2D extent)
+		{
+			Offset = offset;
+			Extent = extent;
+		}
+
+		public Rect2D(int x, int y, int width, int height)
+		{
+			Offset.X = x;
+			Offset.Y = y;
+			Extent.Width = (uint)width;
+			Extent.Height = (uint)height;
+		}
+    }
 
 	unsafe public partial struct ClearRect
 	{

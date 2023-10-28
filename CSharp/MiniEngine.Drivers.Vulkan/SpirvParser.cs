@@ -13,12 +13,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Parse dthe spirv codes
         /// </summary>
-        public static VkShader Parse(byte[] vertexBytes, byte[] fragmentBytes)
+        public static VkShader Parse(byte[] vertexBytes, byte[] fragmentBytes, Dictionary<string, Format> overwrideVariableFormats = null)
         {
             VkShader shader = new VkShader(vertexBytes, fragmentBytes);
 
-            ParseBytes(vertexBytes, shader);
-            ParseBytes(fragmentBytes, shader);
+            ParseBytes(vertexBytes, shader, overwrideVariableFormats);
+            ParseBytes(fragmentBytes, shader, overwrideVariableFormats);
 
 
             return shader;
@@ -27,7 +27,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Parse the byte codes for a shader
         /// </summary>
-        private unsafe static void ParseBytes(byte[] dataBytes, VkShader shader)
+        private unsafe static void ParseBytes(byte[] dataBytes, VkShader shader, Dictionary<string, Format> overwrideVariableFormats)
         {
             if (dataBytes.Length % 4 != 0)
                 throw new ArgumentException("Invalid spirv, length % 4 != 0");
@@ -384,7 +384,7 @@ namespace MiniEngine.Drivers.Vulkan
             List<PushConstantRange> constants = new List<PushConstantRange>();
             if (shader.Constants != null)
                 constants.AddRange(shader.Constants);
-            List <List<DescriptorSetLayoutBinding>> bindingSets = new List<List<DescriptorSetLayoutBinding>>();
+            List<List<DescriptorSetLayoutBinding>> bindingSets = new List<List<DescriptorSetLayoutBinding>>();
             if (shader.BindingSets != null)
             {
                 for (int iSet = 0; iSet < shader.BindingSets.Length; iSet++)
@@ -393,60 +393,15 @@ namespace MiniEngine.Drivers.Vulkan
             List<VertexInputBindingDescription> vertexBindings = new List<VertexInputBindingDescription>();
             if (shader.VertexBindings != null)
                 vertexBindings.AddRange(shader.VertexBindings);
-            List <VertexInputAttributeDescription> vertexInputAttributes = new List<VertexInputAttributeDescription>();
+            List<VertexInputAttributeDescription> vertexInputAttributes = new List<VertexInputAttributeDescription>();
             if (shader.VertexInputAttributes != null)
                 vertexInputAttributes.AddRange(shader.VertexInputAttributes);
 
+
             //--------------------------------------
             //Vertex buffer...
-            List <BindingSet> vertex_bindings = new List<BindingSet>();
-            foreach (uint entry_variable_index in entry_variables_index)
-            {
-                id = ids[entry_variable_index];
-                if (id.storage_class == SpvStorageClass.SpvStorageClassInput)
-                {
-                    while (vertex_bindings.Count <= id.binding)
-                    {
-                        vertex_bindings.Add(new BindingSet());
-                    }
+            UpdateVertexBindings(ids, entry_variables_index, vertexBindings, vertexInputAttributes, overwrideVariableFormats);
 
-                    Id typeid = ids[id.type_index];
-
-                    // If the type is a pointer, resolve it
-                    if (typeid.op == SpvOp.SpvOpTypePointer)
-                    {
-                        typeid = ids[typeid.type_index];
-                    }
-
-                    BindingSet bindingSet = vertex_bindings[(int)id.set];
-
-                    VertexInputAttributeDescription vertexInputAttribute = new VertexInputAttributeDescription();
-                    vertexInputAttribute.Location = id.location;
-                    vertexInputAttribute.Binding = id.binding;
-                    vertexInputAttribute.Offset = bindingSet.Stride;
-                    vertexInputAttribute.Format = GetMemberFormat(typeid, ids);
-                    vertexInputAttributes.Add(vertexInputAttribute);
-
-
-                    bindingSet.Stride += GetMemberWidth(typeid, ids);
-                    bindingSet.Binding = id.binding;
-
-
-
-                }
-            }
-
-            for (int i = 0; i < vertex_bindings.Count; i++)
-            {
-                if (!vertexBindings.Any(b => b.Binding == vertex_bindings[i].Binding))
-                {
-                    vertexBindings.Add(new VertexInputBindingDescription()
-                    {
-                        Binding = vertex_bindings[i].Binding,
-                        Stride = vertex_bindings[i].Stride
-                    });
-                }
-            }
 
 
             //----------------------------------------------
@@ -514,7 +469,7 @@ namespace MiniEngine.Drivers.Vulkan
                                 bindings.Add(binding);
                             }
 
-                            
+
                             binding.StageFlags = binding.StageFlags | stage;
 
 
@@ -546,7 +501,7 @@ namespace MiniEngine.Drivers.Vulkan
                                 }
 
                                 pushConstant.StageFlags = pushConstant.StageFlags | stage;
-                                
+
 
                             }
                             break;
@@ -568,6 +523,92 @@ namespace MiniEngine.Drivers.Vulkan
                 shader.BindingSets[iSet] = bindingSets[iSet].ToArray();
             }
 
+
+        }
+
+        /// <summary>
+        /// Calculate the vertex bindings
+        /// </summary>
+        private static unsafe void UpdateVertexBindings(
+            Id[] ids,
+            List<uint> entry_variables_index,
+            List<VertexInputBindingDescription> vertexBindings,
+            List<VertexInputAttributeDescription> vertexInputAttributes,
+            Dictionary<string, Format> overwrideVariableFormats)
+        {
+
+
+            List<BindingSet> vertex_bindings = new List<BindingSet>();
+            List<EntrypointMember> entry_members = new List<EntrypointMember>();
+            foreach (uint entry_variable_index in entry_variables_index)
+            {
+                Id id = ids[entry_variable_index];
+
+                //We take only the SpvStorageClassInput... which means vertexbuffer...
+                if (id.storage_class == SpvStorageClass.SpvStorageClassInput)
+                {
+                    Id typeid = ids[id.type_index];
+
+                    // If the type is a pointer, resolve it
+                    if (typeid.op == SpvOp.SpvOpTypePointer)
+                    {
+                        typeid = ids[typeid.type_index];
+                    }
+                    var new_entry = new EntrypointMember()
+                    {
+                        Set = id.set,
+                        Binding = id.binding,
+                        Location = id.location,
+                        Format = GetMemberFormat(typeid, ids),
+                        Size = GetMemberWidth(typeid, ids)
+                    };
+                    
+                    if(overwrideVariableFormats != null && overwrideVariableFormats.TryGetValue(id.name, out Format format))
+                    {
+                        new_entry.Format = format;
+                        new_entry.Size = (uint)(FormatHelper.GetFormatSizeBits(format) / 8);
+                    }
+
+
+                    entry_members.Add(new_entry);
+                }
+            }
+
+            //Important that the entries are in the right order to calculate the offsets...
+            foreach (var entry_member in entry_members.OrderBy(e => e.Binding).ThenBy(e => e.Location))
+            {
+
+                while (vertex_bindings.Count <= entry_member.Binding)
+                    vertex_bindings.Add(new BindingSet());
+
+                BindingSet bindingSet = vertex_bindings[(int)entry_member.Set];
+
+                VertexInputAttributeDescription vertexInputAttribute = new VertexInputAttributeDescription();
+                vertexInputAttribute.Location = entry_member.Location;
+                vertexInputAttribute.Binding = entry_member.Binding;
+                vertexInputAttribute.Offset = bindingSet.Stride;
+                vertexInputAttribute.Format = entry_member.Format;
+                vertexInputAttributes.Add(vertexInputAttribute);
+
+
+                bindingSet.Stride += entry_member.Size;
+                bindingSet.Binding = entry_member.Binding;
+
+
+            }
+
+
+            for (int i = 0; i < vertex_bindings.Count; i++)
+            {
+                if (!vertexBindings.Any(b => b.Binding == vertex_bindings[i].Binding))
+                {
+                    vertexBindings.Add(new VertexInputBindingDescription()
+                    {
+                        Binding = vertex_bindings[i].Binding,
+                        Stride = vertex_bindings[i].Stride
+                    });
+                }
+            }
 
         }
 
@@ -675,6 +716,14 @@ namespace MiniEngine.Drivers.Vulkan
 
         #region Internal classes
 
+        private class EntrypointMember
+        {
+            public uint Set;
+            public uint Binding;
+            public uint Location;
+            public uint Size;
+            public Format Format;
+        }
 
         private class BindingSet
         {

@@ -11,27 +11,43 @@ namespace MiniEngine.Drivers.Vulkan
     /// </summary>
     public class PipelineDescriptorSet : IDisposable
     {
-
+        private DescriptorSetLayoutBinding[][] _bindingSets;
+        private DescriptorSetLayout[] _descriptorSetLayouts;
         private Device _device;
         private PipelineWrapper _pipeline;
-        private VkShader _shader;
+        //private VkShader _shader;
 
         public DescriptorSet[] DescriptorSets;
         public DescriptorPool DescriptorPool;
 
         private Dictionary<string, DescriptorSetData> _descriptorSetsPerName = new Dictionary<string, DescriptorSetData>();
-        private DescriptorSetData[] _descriptorSetList;
+
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public PipelineDescriptorSet(Device device, PipelineWrapper pipeline)
+        public PipelineDescriptorSet(Device device, PipelineWrapper pipeline, int setIndex = -1)
         {
             _device = device;
             _pipeline = pipeline;
-            _shader = pipeline.Shader;
+            //_shader = pipeline.Shader;
 
+            if (setIndex == -1)
+            {
+                //We take all...
+                _bindingSets = pipeline.Shader.BindingSets;
+                _descriptorSetLayouts = pipeline.DescriptorSetLayouts;
+            }
+            else
+            {
+                //We take only one...
+                _bindingSets = new DescriptorSetLayoutBinding[1][];
+                _bindingSets[0] = pipeline.Shader.BindingSets[setIndex];
 
+                _descriptorSetLayouts = new DescriptorSetLayout[1];
+                _descriptorSetLayouts[0] = pipeline.DescriptorSetLayouts[setIndex];
+            }
+        
             CreateDescriptorPool();
 
             CreateDescriptorSets();
@@ -44,7 +60,7 @@ namespace MiniEngine.Drivers.Vulkan
         public PipelineDescriptorSet Set(string name, BufferWrapper uniformBuffer)
         {
             if (!_descriptorSetsPerName.TryGetValue(name, out var descriptorData))
-                throw new InvalidOperationException("Descriptor name not found '{name}'");
+                throw new InvalidOperationException($"Descriptor name not found '{name}'");
 
             if (descriptorData.DescriptorType != DescriptorType.UniformBuffer)
                 throw new InvalidOperationException($"Wrong DescryptorName, expected '{DescriptorType.UniformBuffer}', current type: {descriptorData.DescriptorType}");
@@ -181,9 +197,9 @@ namespace MiniEngine.Drivers.Vulkan
         {
             Dictionary<DescriptorType, int> poolSizesDict = new Dictionary<DescriptorType, int>();
 
-            for (int iSet = 0; iSet < _shader.BindingSets.Length; iSet++)
+            for (int iSet = 0; iSet < _bindingSets.Length; iSet++)
             {
-                foreach (var binding in _shader.BindingSets[iSet])
+                foreach (var binding in _bindingSets[iSet])
                 {
                     poolSizesDict.TryGetValue(binding.DescriptorType, out int nb);
                     poolSizesDict[binding.DescriptorType] = nb + 1;
@@ -213,23 +229,23 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void CreateDescriptorSets()
         {
-            if (_shader.BindingSets.Length > 0)
+            if (_bindingSets.Length > 0)
             {
                 var descriptorSetAllocateInfo = new DescriptorSetAllocateInfo
                 {
-                    SetLayouts = _pipeline.DescriptorSetLayouts,
+                    SetLayouts = _descriptorSetLayouts,
                     DescriptorPool = DescriptorPool
                 };
 
                 DescriptorSets = _device.AllocateDescriptorSets(descriptorSetAllocateInfo);
 
-                if (DescriptorSets.Length != _shader.BindingSets.Length)
-                    throw new InvalidOperationException("Number of DescriptorSets ({DescriptorSets.Length}) different then the shader ({_shader.BindingSets.Count})");
+                if (DescriptorSets.Length != _bindingSets.Length)
+                    throw new InvalidOperationException("Number of DescriptorSets ({DescriptorSets.Length}) different then the shader ({_bindingSets.Count})");
 
 
-                for (int iSet = 0; iSet < _shader.BindingSets.Length; iSet++)
+                for (int iSet = 0; iSet < _bindingSets.Length; iSet++)
                 {
-                    foreach (var binding in _shader.BindingSets[iSet])
+                    foreach (var binding in _bindingSets[iSet])
                     {
                         _descriptorSetsPerName.Add(binding.Name, new DescriptorSetData()
                         {

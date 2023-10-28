@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -12,12 +13,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a vulkan shader
         /// </summary>
-        public static VkShader CreateShader(string vertexCode, string fragmentCode)
+        public static VkShader CreateShader(string vertexCode, string fragmentCode, Dictionary<string, Format> overwrideVariableFormats = null)
         {
             byte[] vertexSpivr = Compile(vertexCode, ShaderStageFlags.Vertex);
             byte[] fragmentSpivr = Compile(fragmentCode, ShaderStageFlags.Fragment);
 
-            return SpirvParser.Parse(vertexSpivr, fragmentSpivr);
+            return SpirvParser.Parse(vertexSpivr, fragmentSpivr, overwrideVariableFormats);
         }
 
 

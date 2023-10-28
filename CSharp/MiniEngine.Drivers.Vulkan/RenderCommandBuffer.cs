@@ -34,7 +34,14 @@ namespace MiniEngine.Drivers.Vulkan
         {
             base.Begin();
 
+        }
 
+
+        /// <summary>
+        /// Beginning of the render pass
+        /// </summary>
+        public void BeginRenderPass()
+        {
             CmdBeginRenderPass(_renderPassBeginInfo, SubpassContents.Inline);
         }
 

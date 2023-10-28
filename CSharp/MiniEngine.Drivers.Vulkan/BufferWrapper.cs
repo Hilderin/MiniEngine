@@ -27,6 +27,18 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
         /// <summary>
+        /// Copy data to a buffer from a pointer
+        /// </summary>
+        public unsafe void UpdateFrom(void* srcPtr, uint size)
+        {   
+            var memPtr = _device.MapMemory(DeviceMemory, 0, size, 0);
+
+            System.Buffer.MemoryCopy((void*)srcPtr, (void*)memPtr, size, size);
+
+            _device.UnmapMemory(DeviceMemory);
+        }
+
+        /// <summary>
         /// Copy data to a buffer from values
         /// </summary>
         public unsafe void UpdateFrom<T>(T[] values)

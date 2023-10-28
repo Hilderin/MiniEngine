@@ -10,7 +10,7 @@ namespace MiniEngine.Rendering.Vulkan
     /// <summary>
     /// A Texture 2D for Vulkan
     /// </summary>
-    public class VkTexture2D: Texture2D
+    public class VkTexture2D : Texture2D
     {
         private VkResourceFactory _factory;
 
@@ -27,9 +27,26 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
+        public unsafe VkTexture2D(byte* pixelData, int width, int height, Format format, VkRenderer vk, VkResourceFactory factory)
+        {
+            ImageWrapper = new VkImageWrapper(vk.Device, pixelData, width, height, format);
+
+            this.Width = width;
+            this.Height = height;
+            this.Format = format;
+
+
+            _factory = factory;
+            if (factory != null)
+                factory.Add(this);
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public VkTexture2D(byte[] pixelData, int width, int height, Format format, VkRenderer vk, VkResourceFactory factory)
         {
-            
+
 
             ImageWrapper = new VkImageWrapper(vk.Device, pixelData, width, height, format);
 

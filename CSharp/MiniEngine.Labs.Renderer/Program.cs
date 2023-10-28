@@ -29,7 +29,7 @@ namespace MiniEngine.Labs.Renderer
                 
                 using (Context context = new Context())
                 {
-                    var t = new Test_TriangleTexture_Vulkan();
+                    var t = new Test_ImGUI();
 
                     context.SetRenderer(new VkRenderer(t.GetType().Name, new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), null, DebugCallback))
                            .SetWindow(new GlfwWindow(WIDTH, HEIGHT, TITLE, context))

@@ -29,18 +29,24 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
+        public unsafe VkImageWrapper(Device device, byte* data, int width, int height, Format format)
+        {
+            _device = device;
+            
+            Width = width;
+            Height = height;
+            Format = format;
+
+            Init(data);
+
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public VkImageWrapper(Device device, byte[] data, int width, int height, Format format)
         {
             _device = device;
-
-            //using (var image = SixLabors.ImageSharp.Image.Load<Rgba32>(@"C:\Projects\SilkVulkanTutorial\Assets\texture.jpg"))
-            //{
-            //    data = new byte[image.Width * image.Height * image.PixelType.BitsPerPixel / 8];
-            //    image.CopyPixelDataTo(data);
-
-            //    width = image.Width;
-            //    height = image.Height;
-            //}
 
             Width = width;
             Height = height;
@@ -48,6 +54,31 @@ namespace MiniEngine.Drivers.Vulkan
 
             Init(data);
 
+        }
+
+        /// <summary>
+        /// Create the image
+        /// </summary>
+        private unsafe void Init(byte* data)
+        {
+            uint size = (uint)(Width * Height * FormatHelper.GetFormatSizeBytes(Format));
+
+            using (BufferWrapper bufferStaging = _device.CreateBufferWrapper(size, BufferUsageFlags.TransferSrc))
+            {
+                bufferStaging.UpdateFrom(data, size);
+
+                CreateImage(Format, ImageUsageFlags.TransferDst | ImageUsageFlags.Sampled, MemoryPropertyFlags.DeviceLocal);
+
+                TransitionImageLayout(ImageLayout.Undefined, ImageLayout.TransferDstOptimal);
+
+                CopyBufferToImage(bufferStaging.Buffer);
+
+                TransitionImageLayout(ImageLayout.TransferDstOptimal, ImageLayout.ShaderReadOnlyOptimal);
+
+            }
+
+            //We need to create the image view now...
+            CreateImageView();
         }
 
         /// <summary>
@@ -71,6 +102,7 @@ namespace MiniEngine.Drivers.Vulkan
             //We need to create the image view now...
             CreateImageView();
         }
+
 
         /// <summary>
         /// Create image
@@ -253,5 +285,7 @@ namespace MiniEngine.Drivers.Vulkan
                 Image = null;
             }
         }
+
+        
     }
 }
