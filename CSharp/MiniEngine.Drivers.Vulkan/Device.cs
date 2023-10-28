@@ -244,20 +244,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public unsafe BufferWrapper CreateBufferWrapper(uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
         {
-            var createBufferInfo = new BufferCreateInfo
-            {
-                Size = size,
-                Usage = usageFlags,
-                SharingMode = SharingMode.Exclusive,
-                QueueFamilyIndices = new uint[] { 0 }
-            };
-            var buffer = this.CreateBuffer(createBufferInfo);
-
-            var deviceMemory = this.CreateDeviceMemory(buffer, memoryPropertyFlags);
-
-            this.BindBufferMemory(buffer, deviceMemory, 0);
-
-            return new BufferWrapper(this, buffer, deviceMemory, size);
+            return new BufferWrapper(this, size, usageFlags, memoryPropertyFlags);
         }
 
 

@@ -13,20 +13,25 @@ namespace MiniEngine.Drivers.Vulkan
     public class BufferWrapper: IDisposable
     {
         private Device _device;
-
-        public uint Size;        
-        public Buffer Buffer;
-        public DeviceMemory DeviceMemory;
+        
+        public uint Size { get; private set; }
+        public BufferUsageFlags UsageFlags { get; private set; }
+        public MemoryPropertyFlags MemoryPropertyFlags { get; private set; }
+        public Buffer Buffer { get; private set; }
+        public DeviceMemory DeviceMemory { get; private set; }
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public BufferWrapper(Device device, Buffer buffer, DeviceMemory deviceMemory, uint size)
+        public BufferWrapper(Device device, uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
         {
             _device = device;
-            Buffer = buffer;
-            DeviceMemory = deviceMemory;
+
+            UsageFlags = usageFlags;
             Size = size;
+            MemoryPropertyFlags = memoryPropertyFlags;
+
+            CreateInternalObjects();
         }
 
         /// <summary>
@@ -100,9 +105,58 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
         /// <summary>
+        /// Resize the vertex buffer...
+        /// </summary>
+        public void Resize(int size)
+        {
+            Resize((uint)size);
+        }
+
+        /// <summary>
+        /// Resize the vertex buffer...
+        /// </summary>
+        public void Resize(uint size)
+        {
+            DestroyInternalObjects();
+
+            Size = size;
+
+            CreateInternalObjects();
+        }
+
+        /// <summary>
         /// Dispose the buffer
         /// </summary>
         public void Dispose()
+        {
+            DestroyInternalObjects();
+
+        }
+
+        /// <summary>
+        /// Create the internal objects
+        /// </summary>
+        private void CreateInternalObjects()
+        {
+            var createBufferInfo = new BufferCreateInfo
+            {
+                Size = Size,
+                Usage = UsageFlags,
+                SharingMode = SharingMode.Exclusive,
+                QueueFamilyIndices = new uint[] { 0 }
+            };
+
+            Buffer = _device.CreateBuffer(createBufferInfo);
+
+            DeviceMemory = _device.CreateDeviceMemory(Buffer, MemoryPropertyFlags);
+
+            _device.BindBufferMemory(Buffer, DeviceMemory, 0);
+        }
+
+        /// <summary>
+        /// Destroy internal objects
+        /// </summary>
+        private void DestroyInternalObjects()
         {
             if (DeviceMemory != null)
             {
@@ -115,8 +169,6 @@ namespace MiniEngine.Drivers.Vulkan
                 _device.DestroyBuffer(Buffer);
                 Buffer = null;
             }
-
-
         }
 
         /// <summary>

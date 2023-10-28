@@ -166,15 +166,15 @@ namespace MiniEngine.Rendering.Vulkan
                                 if (pcmd.TextureId == _fontAtlasID)
                                 {
                                     commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 1, _fontTextureSet.DescriptorSets, null);
-                                    //cl.SetGraphicsResourceSet(1, _fontTextureResourceSet);
                                 }
                                 else
                                 {
-                                    throw new InvalidOperationException("Not supported custom texture id");
-                                    //cl.SetGraphicsResourceSet(1, GetImageResourceSet(pcmd.TextureId));
+                                    //TODO: Support custom texture
+                                    throw new InvalidOperationException("Custom texture id is not supported");
                                 }
                             }
 
+                            //Scissor to clip what exceeds the window...
                             commandBuffer.CmdSetScissor(0, new Rect2D((int)pcmd.ClipRect.X, (int)pcmd.ClipRect.Y, (int)(pcmd.ClipRect.Z - pcmd.ClipRect.X), (int)(pcmd.ClipRect.W - pcmd.ClipRect.Y)));
 
                             commandBuffer.CmdDrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
@@ -191,7 +191,7 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
-        /// 
+        /// Update the projection matrix
         /// </summary>
         private void UpdateProjectionMatrix()
         {
@@ -212,15 +212,13 @@ namespace MiniEngine.Rendering.Vulkan
             uint totalVBSize = (uint)(draw_data.TotalVtxCount * _sizeOfDrawVert);
             if (totalVBSize > _vertexBuffer.Size)
             {
-                _vertexBuffer.Dispose();
-                _vertexBuffer = _device.CreateBufferWrapper((uint)(totalVBSize * 1.5f), BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst);
+                _vertexBuffer.Resize((uint)(totalVBSize * 1.5f));
             }
 
             uint totalIBSize = (uint)(draw_data.TotalIdxCount * _sizeOfIndice);
             if (totalIBSize > _indexBuffer.Size)
             {
-                _indexBuffer.Dispose();
-                _indexBuffer = _device.CreateBufferWrapper((uint)(totalIBSize * 1.5f), BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst);
+                _indexBuffer.Resize((uint)(totalIBSize * 1.5f));
             }
         }
 
