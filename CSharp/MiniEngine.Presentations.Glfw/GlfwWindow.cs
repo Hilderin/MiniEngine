@@ -106,7 +106,7 @@ namespace MiniEngine.Presentations.Glfw
             {
                 if (value < 1)
                     throw new Exception("Window height muts be greater than 0.");
-                GLFW.GetWindowSize(_glfwWindow, out var width, out var dummy);
+                GLFW.GetWindowSize(_glfwWindow, out var width, out _);
                 GLFW.SetWindowSize(_glfwWindow, width, value);
             }
         }
@@ -162,7 +162,7 @@ namespace MiniEngine.Presentations.Glfw
             get
             {
                 GLFW.GetWindowPosition(_glfwWindow, out var x, out var y);
-                GLFW.GetWindowFrameSize(_glfwWindow, out var l, out var t, out var dummy1, out var dummy2);
+                GLFW.GetWindowFrameSize(_glfwWindow, out var l, out var t, out var dummy1, out _);
                 return new Vector2(x - l, y - t);
             }
             set

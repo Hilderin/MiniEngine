@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 
-#pragma warning disable 0419
 
 namespace MiniEngine.Drivers.Glfw
 {

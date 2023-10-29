@@ -6330,13 +6330,13 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refWaitSemaphores.Dispose ();
+			refWaitSemaphores?.Dispose();
 			refWaitSemaphores = null;
-			refWaitDstStageMask.Dispose ();
+			refWaitDstStageMask?.Dispose();
 			refWaitDstStageMask = null;
-			refCommandBuffers.Dispose ();
+			refCommandBuffers?.Dispose();
 			refCommandBuffers = null;
-			refSignalSemaphores.Dispose ();
+			refSignalSemaphores?.Dispose();
 			refSignalSemaphores = null;
 		}
 
@@ -7030,13 +7030,13 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refWaitSemaphores.Dispose ();
+			refWaitSemaphores?.Dispose();
 			refWaitSemaphores = null;
-			refSwapchains.Dispose ();
+			refSwapchains?.Dispose();
 			refSwapchains = null;
-			refImageIndices.Dispose ();
+			refImageIndices?.Dispose();
 			refImageIndices = null;
-			refResults.Dispose ();
+			refResults?.Dispose ();
 			refResults = null;
 		}
 

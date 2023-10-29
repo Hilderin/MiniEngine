@@ -27,6 +27,7 @@ namespace MiniEngine
         private int _sleepTimeIndex = 0;
         private int _updateFrameLag;
         private bool _isRunningSlowly;
+        private int _targetFramerate = 60;
 
 
         /// <summary>
@@ -38,7 +39,16 @@ namespace MiniEngine
         /// <summary>
         /// Indicate if server running
         /// </summary>
-        public bool IsRunning { get; set; } = true;
+        public int TargetFramerate
+        {
+            get { return _targetFramerate; }
+            set
+            {
+                _targetFramerate = value;
+                _targetElapsedTime = TimeSpan.FromTicks((long)(1f / _targetFramerate * 10000000L));
+            }
+        }
+
 
         /// <summary>
         /// Indicate if the loop is running slowly

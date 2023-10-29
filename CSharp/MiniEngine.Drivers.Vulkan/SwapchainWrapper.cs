@@ -113,35 +113,38 @@ namespace MiniEngine.Drivers.Vulkan
             // the queue will wait until the fence is up.
             // the fence will be up when the commandbuffer is all done.
             _fence.Reset();
-            var submitInfo = new SubmitInfo
+            using (var submitInfo = new SubmitInfo
             {
                 WaitSemaphores = new Semaphore[] { _semaphore },
                 WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
                 CommandBuffers = new CommandBuffer[] { commandBuffer }
-            };
-            _queue.Submit(submitInfo, _fence);
-            _queue.WaitIdle();
-            _fence.Wait();
+            })
+            {
+                _queue.Submit(submitInfo, _fence);
+                _queue.WaitIdle();
+                _fence.Wait();
+            }
 
 
             //And we show the image on the surface...
-            var presentInfo = new PresentInfoKhr
+            using (var presentInfo = new PresentInfoKhr
             {
                 Swapchains = new SwapchainKhr[] { _swapchainKhr },
                 ImageIndices = new uint[] { (uint)_indexNextImage },
-            };
-
-            var result = _queue.PresentKHRReturnsResult(presentInfo);
-            if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr || _windowSizeChanged)
+            })
             {
-                //The screen was resized...
-                //Update the suface capability and current extend in the device...
-                _device.UpdateSurfaceCapabilities();
+                var result = _queue.PresentKHRReturnsResult(presentInfo);
+                if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr || _windowSizeChanged)
+                {
+                    //The screen was resized...
+                    //Update the suface capability and current extend in the device...
+                    _device.UpdateSurfaceCapabilities();
 
-                //And now that we have the new screensize in memory... let's recreate the swapchain
-                Rebuild();
+                    //And now that we have the new screensize in memory... let's recreate the swapchain
+                    Rebuild();
 
-                _windowSizeChanged = false;
+                    _windowSizeChanged = false;
+                }
             }
 
         }

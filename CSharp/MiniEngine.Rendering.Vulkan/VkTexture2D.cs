@@ -37,8 +37,7 @@ namespace MiniEngine.Rendering.Vulkan
 
 
             _factory = factory;
-            if (factory != null)
-                factory.Add(this);
+            factory?.Add(this);
         }
 
         /// <summary>
@@ -56,8 +55,7 @@ namespace MiniEngine.Rendering.Vulkan
 
 
             _factory = factory;
-            if (factory != null)
-                factory.Add(this);
+            factory?.Add(this);
 
         }
 
@@ -66,11 +64,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         protected override void Destroy()
         {
-            if (ImageWrapper != null)
-                ImageWrapper.Dispose();
+            ImageWrapper?.Dispose();
 
-            if (_factory != null)
-                _factory.Remove(this);
+            _factory?.Remove(this);
         }
     }
 }

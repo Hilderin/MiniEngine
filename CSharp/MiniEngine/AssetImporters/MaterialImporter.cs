@@ -67,9 +67,8 @@ namespace MiniEngine.AssetImporters
                 }
                 finally
                 {
-                    if(mat == null)
-                        //Material not found...
-                        mat = BaseMaterials.Magenta;
+                    //Material not found...
+                    mat ??= BaseMaterials.Magenta;
                 }
 
                 _cache.Add(name, mat);

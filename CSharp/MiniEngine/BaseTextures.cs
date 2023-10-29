@@ -58,13 +58,10 @@ namespace MiniEngine
         {
             get
             {
-                if (_magenta == null)
-                {
-                    _magenta = Context.Current.Renderer.CreateTexture2D(new Texture2DDefinition()
+                _magenta ??= Context.Current.Renderer.CreateTexture2D(new Texture2DDefinition()
                     {
                         Data = MagentaPixelData
                     });
-                }
                 return _magenta;
             }
         }

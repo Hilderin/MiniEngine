@@ -60,8 +60,7 @@ namespace MiniEngine
         { 
             get
             {
-                if (_current == null)
-                    _current = new Context();
+                _current ??= new Context();
                 return _current;
             } 
         }
@@ -100,6 +99,7 @@ namespace MiniEngine
             Scene = new Scene();
 
             _gameLoop = new GameLoop();
+            _gameLoop.TargetFramerate = 120;
         }
 
         /// <summary>
@@ -140,8 +140,7 @@ namespace MiniEngine
         /// </summary>
         public Context SetWindow32Handle(IntPtr handle)
         {
-            if (_renderer != null)
-                _renderer.SetWindow32Handle(handle);
+            _renderer?.SetWindow32Handle(handle);
 
             return this;
         }
@@ -153,8 +152,7 @@ namespace MiniEngine
         {
             _window = window;
 
-            if (_renderer != null)
-                _renderer.SetWindow(window);
+            _renderer?.SetWindow(window);
 
             return this;
         }
@@ -285,8 +283,7 @@ namespace MiniEngine
         /// </summary>
         public void Quit()
         {
-            if (_window != null)
-                _window.Close();
+            _window?.Close();
         }
 
 

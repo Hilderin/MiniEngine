@@ -168,8 +168,7 @@ namespace MiniEngine.Drivers.Vulkan
 
                         member_index = data[word_index + 2];
 
-                        if (id.members == null)
-                            id.members = new List<Member>();
+                        id.members ??= new List<Member>();
 
                         while (id.members.Count <= member_index)
                             id.members.Add(new Member());
@@ -203,8 +202,7 @@ namespace MiniEngine.Drivers.Vulkan
 
                         member_index = data[word_index + 2];
 
-                        if (id.members == null)
-                            id.members = new List<Member>();
+                        id.members ??= new List<Member>();
                         while (id.members.Count <= member_index)
                             id.members.Add(new Member());
 
@@ -466,7 +464,7 @@ namespace MiniEngine.Drivers.Vulkan
                             }
 
 
-                            binding.StageFlags = binding.StageFlags | stage;
+                            binding.StageFlags |= stage;
 
 
 

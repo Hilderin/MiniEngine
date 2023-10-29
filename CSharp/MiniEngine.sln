@@ -21,7 +21,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Presentations.Gl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Drivers.Glfw", "MiniEngine.Drivers.Glfw\MiniEngine.Drivers.Glfw.csproj", "{AAA06F05-B17A-45E9-8F9C-A1B1A9023BF4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShipDefense", "MiniEngine.Samples\ShipDefense\ShipDefense.csproj", "{6CEFC5D8-DDB2-4AEE-93C6-298E96BA671B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShipDefense", "MiniEngine.Samples\ShipDefense\ShipDefense.csproj", "{6CEFC5D8-DDB2-4AEE-93C6-298E96BA671B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{85CB7582-C68D-4EFD-9732-45DFE4CF7355}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

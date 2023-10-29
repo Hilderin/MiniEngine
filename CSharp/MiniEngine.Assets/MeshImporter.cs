@@ -25,8 +25,7 @@ namespace MiniEngine.Assets
         /// </summary>
         public MeshObject GetMeshFromFile(string path, MeshImportationParameters parameters = null)
         {
-            if (parameters == null)
-                parameters = MeshImportationParameters.Default;
+            parameters ??= MeshImportationParameters.Default;
 
             _workingDirectory = Path.GetDirectoryName(path);
 
@@ -37,13 +36,13 @@ namespace MiniEngine.Assets
                 PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
                 //PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure;
                 if (!parameters.InverseFaces)
-                    postProcessSteps = postProcessSteps | PostProcessSteps.FlipWindingOrder;
+                    postProcessSteps |= PostProcessSteps.FlipWindingOrder;
 
 
                 if (parameters.Scale != 1f)
-                    _transformMatrix = _transformMatrix * Matrix3.FromScaling(new Vector3(parameters.Scale));
+                    _transformMatrix *= Matrix3.FromScaling(new Vector3(parameters.Scale));
                 if (parameters.FlipY)
-                    _transformMatrix = _transformMatrix * Matrix3.FromFlipY();
+                    _transformMatrix *= Matrix3.FromFlipY();
 
                 if (parameters.SmoothNormals)
                     postProcessSteps |= PostProcessSteps.GenerateSmoothNormals;
@@ -166,7 +165,7 @@ namespace MiniEngine.Assets
                 indices[indexIndice++] = mesh.Faces[i].Indices[2];
             }
 
-            Vector3[] emptyArray = new Vector3[positions.Length];
+            //Vector3[] emptyArray = new Vector3[positions.Length];
             throw new NotImplementedException("LoadMesh");
             //_mesh.AddMeshData(positions, texCoords, normals, emptyArray, indices, mesh.MaterialIndex);
 

@@ -29,8 +29,7 @@ namespace MiniEngine.Rendering.Vulkan
             Init(meshDef);
 
             _factory = factory;
-            if(factory != null)
-                factory.Add(this);
+            factory?.Add(this);
         }
 
         /// <summary>
@@ -40,14 +39,11 @@ namespace MiniEngine.Rendering.Vulkan
         {
             foreach (var subMeshData in MeshDatas)
             {
-                if(subMeshData.vertexBuffer != null)
-                    subMeshData.vertexBuffer.Dispose();
-                if (subMeshData.indexBuffer != null)
-                    subMeshData.indexBuffer.Dispose();
+                subMeshData.vertexBuffer?.Dispose();
+                subMeshData.indexBuffer?.Dispose();
             }
 
-            if (_factory != null)
-                _factory.Remove(this);
+            _factory?.Remove(this);
         }
 
 

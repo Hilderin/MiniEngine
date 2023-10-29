@@ -244,7 +244,7 @@ namespace MiniEngine
         {
             T temp = valueA;
             valueA = valueB;
-            valueA = temp;
+            valueB = temp;
         }
 
         /// <summary>

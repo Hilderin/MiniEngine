@@ -111,7 +111,7 @@ namespace MiniEngine
         /// <summary>
         /// Get the path for an asset that can have multiple extensions
         /// </summary>
-        public string GetAssetPath(string name, string[] extensions, bool throwIfNotExists = true)
+        public string GetAssetPath(string name, string[] extensions)
         {
             for (int i = 0; i < extensions.Length; i++)
             {
@@ -201,10 +201,8 @@ namespace MiniEngine
         {
             lock (_fsw)
             {
-                if (_taskUpdateContent == null)
-                {
+                if(_taskUpdateContent != null)
                     _taskUpdateContent = Task.Factory.StartNew(TaskWaitBeforeForNotification);
-                }
             }
 
         }

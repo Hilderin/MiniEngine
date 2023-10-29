@@ -367,8 +367,7 @@ namespace MiniEngine.Rendering.Vulkan
             }
             
             //Rendering of ImGui...
-            if (_imGui != null)
-                _imGui.Render(commandBuffer);
+            _imGui?.Render(commandBuffer);
 
 
             commandBuffer.End();

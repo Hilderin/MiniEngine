@@ -265,7 +265,7 @@ namespace MiniEngine.Rendering.Vulkan
         {
             ImGuiIOPtr io = ImGui.GetIO();
             // Build
-            io.Fonts.GetTexDataAsRGBA32(out byte* pixels, out int width, out int height, out int bytesPerPixel);
+            io.Fonts.GetTexDataAsRGBA32(out byte* pixels, out int width, out int height, out _);
 
             // Store our identifier
             io.Fonts.SetTexID(_fontAtlasID);
@@ -346,7 +346,7 @@ void main()
 
         private bool TryMapKey(Keys key, out bool isTextInput, out ImGuiKey result)
         {
-            ImGuiKey keyToImGuiKeyShortcut(Keys keyToConvert, Keys startKey1, ImGuiKey startKey2)
+            static ImGuiKey keyToImGuiKeyShortcut(Keys keyToConvert, Keys startKey1, ImGuiKey startKey2)
             {
                 int changeFromStart1 = (int)keyToConvert - (int)startKey1;
                 return startKey2 + changeFromStart1;

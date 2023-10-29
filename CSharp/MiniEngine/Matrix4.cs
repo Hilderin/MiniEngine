@@ -569,8 +569,7 @@ namespace MiniEngine
 		/// <returns>The new <see cref="Matrix4"/> which contains the transposing result.</returns>
 		public static Matrix4 Transpose(ref Matrix4 matrix)
         {
-            Matrix4 ret;
-            Transpose(ref matrix, out ret);
+            Transpose(ref matrix, out Matrix4 ret);
             return ret;
         }
 

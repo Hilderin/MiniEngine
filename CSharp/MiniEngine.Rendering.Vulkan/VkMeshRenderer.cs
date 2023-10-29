@@ -111,10 +111,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             for (int i = 0; i < _renderDatas.Length; i++)
             {
-                if (_renderDatas[i].DescriptorSet != null)
-                {
-                    _renderDatas[i].DescriptorSet.Dispose();
-                }
+                _renderDatas[i].DescriptorSet?.Dispose();
 
             }
 

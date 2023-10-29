@@ -64,9 +64,8 @@ namespace MiniEngine.AssetImporters
                 }
                 finally
                 {
-                    if (texture == null)
-                        //Texture not found...
-                        texture = BaseTextures.Magenta;
+                    //Texture not found...
+                    texture ??= BaseTextures.Magenta;
                 }
 
                 _cache.Add(name, texture);

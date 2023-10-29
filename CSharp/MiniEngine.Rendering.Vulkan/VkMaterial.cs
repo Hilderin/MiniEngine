@@ -32,8 +32,7 @@ namespace MiniEngine.Rendering.Vulkan
             Shader = (VkShader)matdef.Shader;
 
             _factory = factory;
-            if (factory != null)
-                factory.Add(this);
+            factory?.Add(this);
 
         }
 
@@ -42,8 +41,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         protected override void Destroy()
         {
-            if (_factory != null)
-                _factory.Remove(this);
+            _factory?.Remove(this);
         }
     }
 }

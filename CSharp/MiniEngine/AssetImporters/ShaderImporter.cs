@@ -101,9 +101,8 @@ namespace MiniEngine.AssetImporters
                 }
                 finally
                 {
-                    if (shader == null)
-                        //Shader not found...
-                        shader = BaseShaders.Unlit;
+                    //Shader not found...
+                    shader ??= BaseShaders.Unlit;
                 }
 
 
