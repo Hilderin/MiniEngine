@@ -13,7 +13,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         internal VkInstance vk;
         internal Device Device;
-        internal Swapchain Swapchain;
+        internal SwapchainWrapper Swapchain;
 
         internal Matrix4 MVPMatrix;
 
@@ -94,7 +94,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             Device = vk.Device;
 
-            Swapchain = Device.CreateSwapchain(new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox);
+            Swapchain = new SwapchainWrapper(vk.Device, new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox);
 
 
             _resourceFactory = new VkResourceFactory(this);
@@ -123,12 +123,23 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Creates a pipeline wrapper
+        /// </summary>
+        public PipelineWrapper CreatePipelineWrapper(VkShader shader)
+        {
+            return Swapchain.CreatePipelineWrapper(shader);
+        }
+
+        /// <summary>
         /// Pass the window to the render when it's created
         /// </summary>
         public void SetWindow(IWindow window)
         {
             _window = window;
+
+            _window.OnWindowResized += Window_OnWindowResized;
         }
+
 
         /// <summary>
         /// Render a scene
@@ -177,11 +188,16 @@ namespace MiniEngine.Rendering.Vulkan
             return _resourceFactory.CreateMaterial(matDef);
         }
 
+
+
         /// <summary>
         /// Destruction
         /// </summary>
         public void Dispose()
         {
+            if (_window != null)
+                _window.OnWindowResized -= Window_OnWindowResized;
+
             _imGui?.Dispose();
             _resourceFactory?.Dispose();
 
@@ -189,9 +205,15 @@ namespace MiniEngine.Rendering.Vulkan
             foreach (VkMeshRenderer vkMeshRenderer in _meshRenderers)
                 vkMeshRenderer.Dispose();
 
+            Swapchain?.Dispose();
+
+            
+
             vk?.Dispose();
         }
 
+
+        
 
         #endregion
 
@@ -288,6 +310,20 @@ namespace MiniEngine.Rendering.Vulkan
             else
                 throw new Exception("Impossible to create the surface. No window and no surfaceCreationCallback exist.");
 
+        }
+
+
+        /// <summary>
+        /// Event when window was resized
+        /// </summary>
+        private void Window_OnWindowResized(Vector2 obj)
+        {
+            //Update the suface capability and current extend in the device...
+            Device.UpdateSurfaceCapabilities();
+
+            Swapchain?.NotifyWindowResized();
+
+            _imGui?.NotifyWindowResized();
         }
 
 

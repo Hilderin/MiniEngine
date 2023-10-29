@@ -14,7 +14,7 @@ namespace MiniEngine.Drivers.Vulkan
 
         private Device _device;
         private VkShader _shader;
-        private RenderPass _renderPass;
+        private SwapchainWrapper _swapchain;
 
         private DescriptorSetLayout[] descriptorSetLayouts;
         private PipelineLayout _pipelineLayout;
@@ -39,11 +39,11 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public PipelineWrapper(Device device, RenderPass renderPass, VkShader shader)
+        internal PipelineWrapper(Device device, SwapchainWrapper swapchain, VkShader shader)
         {
             _device = device;
             _shader = shader;
-            _renderPass = renderPass;
+            _swapchain = swapchain;
 
             //Create layaout only once, anyway, that will never change because we cannot change the shader
             CreateLayouts();
@@ -99,9 +99,24 @@ namespace MiniEngine.Drivers.Vulkan
         public PipelineWrapper Build()
         {
             if (_pipeline != null)
-                DestroyPipeline();
+                throw new InvalidOperationException("Pipeline already built. Use Rebuild method.");
 
             CreatePipeline();
+
+            return this;
+        }
+
+        /// <summary>
+        /// Rebuild the pipeline
+        /// </summary>
+        public PipelineWrapper Rebuild()
+        {
+            if (_pipeline == null)
+                throw new InvalidOperationException("Pipeline not built. Use Nuild method.");
+
+            DestroyPipeline();
+
+            Build();
 
             return this;
         }
@@ -125,6 +140,9 @@ namespace MiniEngine.Drivers.Vulkan
                     _device.DestroyDescriptorSetLayout(descriptorSetLayout);
                 descriptorSetLayouts = null;
             }
+
+            _swapchain?.RemovePipelineWrapper(this);
+            _swapchain = null;
 
         }
 
@@ -194,11 +212,11 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 MinDepth = 0,
                 MaxDepth = 1.0f,
-                Width = _device.CurrentExtent.Width,
-                Height = -_device.CurrentExtent.Height,      //Inverting Y axis so the coord will be 
-                Y = _device.CurrentExtent.Height
+                Width = _swapchain.CurrentExtent.Width,
+                Height = -_swapchain.CurrentExtent.Height,      //Inverting Y axis so the coord will be 
+                Y = _swapchain.CurrentExtent.Height
             };
-            var scissor = new Rect2D { Extent = _device.CurrentExtent };
+            var scissor = new Rect2D { Extent = _swapchain.CurrentExtent };
             var viewportCreateInfo = new PipelineViewportStateCreateInfo
             {
                 Viewports = new Viewport[] { viewport },
@@ -262,7 +280,7 @@ namespace MiniEngine.Drivers.Vulkan
                 RasterizationState = rasterizationStateCreateInfo,
                 InputAssemblyState = inputAssemblyStateCreateInfo,
                 VertexInputState = vertexInputStateCreateInfo,
-                RenderPass = _renderPass,
+                RenderPass = _swapchain.RenderPass,
                 DynamicState = dynamicStateCreateInfo
             };
 

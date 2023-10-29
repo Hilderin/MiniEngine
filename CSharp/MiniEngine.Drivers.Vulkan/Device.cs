@@ -21,7 +21,7 @@ namespace MiniEngine.Drivers.Vulkan
         public SurfaceCapabilitiesKhr SurfaceCapabilities;
         public List<Fence> Fences = new List<Fence>();
         public List<Semaphore> Semaphores = new List<Semaphore>();
-        public List<Swapchain> Swapchains = new List<Swapchain>();
+        //public List<SwapchainWrapper> Swapchains = new List<SwapchainWrapper>();
         public List<CommandPool> CommandPools = new List<CommandPool>();
         public List<RenderPass> RenderPasses = new List<RenderPass>();
         public List<Sampler> Samplers = new List<Sampler>();
@@ -71,43 +71,9 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a swapchain
         /// </summary>
-        public Swapchain CreateSwapchain(Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode)
+        public SwapchainWrapper CreateSwapchainWrapper(Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode)
         {
-            SurfaceFormatKhr surfaceFormat = PhysicalDevice.GetSurfaceFormat(Surface, expectedFormats, expectedColorSpaces);
-
-            var presentModes = PhysicalDevice.GetSurfacePresentModesKHR(Surface);
-
-            if (!presentModes.Contains(presentMode))
-                throw new NotSupportedException($"Present mode not supported by the surface: {presentMode}");
-
-            var compositeAlpha = SurfaceCapabilities.SupportedCompositeAlpha.HasFlag(CompositeAlphaFlagsKhr.Inherit)
-                ? CompositeAlphaFlagsKhr.Inherit
-                : CompositeAlphaFlagsKhr.Opaque;
-
-            var swapchainInfo = new SwapchainCreateInfoKhr
-            {
-                Surface = Surface,
-                MinImageCount = SurfaceCapabilities.MinImageCount,
-                ImageFormat = surfaceFormat.Format,
-                ImageColorSpace = surfaceFormat.ColorSpace,
-                ImageExtent = SurfaceCapabilities.CurrentExtent,
-                ImageUsage = ImageUsageFlags.ColorAttachment,
-                PreTransform = SurfaceCapabilities.CurrentTransform,
-                ImageArrayLayers = 1,
-                ImageSharingMode = SharingMode.Exclusive,
-                QueueFamilyIndices = new uint[] { 0 },
-                PresentMode = presentMode,
-                CompositeAlpha = compositeAlpha,
-                Clipped = true
-            };
-
-            var swapchainKhr = CreateSwapchainKHR(swapchainInfo);
-
-            Swapchain swapChain = new Swapchain(this, swapchainKhr, surfaceFormat, presentMode);
-
-            Swapchains.Add(swapChain);
-
-            return swapChain;
+            return new SwapchainWrapper(this, expectedFormats, expectedColorSpaces, presentMode);
         }
 
         /// <summary>
@@ -125,9 +91,9 @@ namespace MiniEngine.Drivers.Vulkan
                 DestroyFenceInternal(fence);
             Fences.Clear();
 
-            foreach (Swapchain swapchain in Swapchains.ToArray())
-                swapchain.Dispose();
-            Swapchains.Clear();
+            //foreach (SwapchainWrapper swapchain in Swapchains.ToArray())
+            //    swapchain.Dispose();
+            //Swapchains.Clear();
 
 
             if (MemoryManager != null)
@@ -1396,7 +1362,7 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public RenderPass CreateRenderPass(RenderPassCreateInfo pCreateInfo, Swapchain swapChain = null, AllocationCallbacks pAllocator = null)
+        public RenderPass CreateRenderPass(RenderPassCreateInfo pCreateInfo, SwapchainWrapper swapChain = null, AllocationCallbacks pAllocator = null)
         {
             Result result;
             RenderPass pRenderPass;

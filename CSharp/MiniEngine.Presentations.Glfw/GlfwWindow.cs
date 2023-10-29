@@ -637,6 +637,9 @@ namespace MiniEngine.Presentations.Glfw
             _onMouseButtonCallback = OnMouseButton;
             _onMouseScrollCallback = OnMouseScroll;
 
+            //To receive the modifiers pour lock keys...
+            GLFW.SetInputMode(_glfwWindow, InputMode.LockKeyMods, (int)Constants.True);
+
             GLFW.SetKeyCallback(_glfwWindow, _onKeyCallback);
             GLFW.SetCursorPositionCallback(_glfwWindow, _onMouseCallback);
             GLFW.SetMouseButtonCallback(_glfwWindow, _onMouseButtonCallback);

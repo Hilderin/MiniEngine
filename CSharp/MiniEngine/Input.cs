@@ -27,6 +27,11 @@ namespace MiniEngine
         /// </summary>
         private List<Keys> _newlyKeyDowns = new List<Keys>();
 
+        /// <summary>
+        /// List of newly up keys
+        /// </summary>
+        private List<Keys> _newlyKeyUps = new List<Keys>();
+
 
         /// <summary>
         /// Mouse buttons that are down at a fixed position
@@ -43,6 +48,10 @@ namespace MiniEngine
         /// </summary>
         private List<MouseButton> _newlyMouseDowns = new List<MouseButton>();
 
+        /// <summary>
+        /// List of newly up mouseButtons
+        /// </summary>
+        private List<MouseButton> _newlyMouseUps = new List<MouseButton>();
 
         /// <summary>
         /// Indicate if the mouse just moved
@@ -77,6 +86,18 @@ namespace MiniEngine
         /// </summary>
         public List<Keys> KeyDowns { get { return _keyDowns; } }
 
+        /// <summary>
+        /// List of keys that are newly down
+        /// </summary>
+        public List<Keys> NewlyKeyDowns { get { return _newlyKeyDowns; } }
+
+        /// <summary>
+        /// List of keys that are newly up
+        /// </summary>
+        public List<Keys> NewlyKeyUps { get { return _newlyKeyUps; } }
+
+
+
 
         /// <summary>
         /// Constructor
@@ -92,6 +113,7 @@ namespace MiniEngine
         /// </summary>
         public void SetKeyState(Keys key, bool down)
         {
+            Debug.Print("SetKeyState - " + key + " " + (down ? "down" : "up"));
             if (down)
             {
                 //Key down...
@@ -100,15 +122,21 @@ namespace MiniEngine
                     //Newly down...
                     _newlyKeyDowns.Add(key);
                     _keyDowns.Add(key);
+                    _keyDownsFixedIndex[(int)key] = true;
                 }
             }
             else
             {
                 //Key up...
-                _keyDowns.Remove(key);
+                if (_keyDownsFixedIndex[(int)key])
+                {
+                    _keyDowns.Remove(key);
+                    _newlyKeyUps.Add(key);
+                    _keyDownsFixedIndex[(int)key] = false;
+                }
             }
 
-            _keyDownsFixedIndex[(int)key] = down;
+            
         }
 
         /// <summary>
@@ -162,15 +190,21 @@ namespace MiniEngine
                     //Newly down...
                     _newlyMouseDowns.Add(mouseButton);
                     _mouseDowns.Add(mouseButton);
+                    _mouseDownsFixedIndex[(int)mouseButton] = true;
                 }
             }
             else
             {
                 //mouseButton up...
-                _mouseDowns.Remove(mouseButton);
+                if (_mouseDownsFixedIndex[(int)mouseButton])
+                {
+                    _mouseDowns.Remove(mouseButton);
+                    _newlyMouseUps.Add(mouseButton);
+                    _mouseDownsFixedIndex[(int)mouseButton] = false;
+                }
             }
 
-            _mouseDownsFixedIndex[(int)mouseButton] = down;
+            
         }
 
 
@@ -242,7 +276,9 @@ namespace MiniEngine
         internal void OnNewFrame()
         {
             _newlyKeyDowns.Clear();
+            _newlyKeyUps.Clear();
             _newlyMouseDowns.Clear();
+            _newlyMouseUps.Clear();
             IsJustMouseMoved = false;
             MouseMovement = Vector2.Zero;
         }

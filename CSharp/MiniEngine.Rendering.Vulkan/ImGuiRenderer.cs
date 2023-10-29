@@ -9,7 +9,7 @@ namespace MiniEngine.Rendering.Vulkan
     /// <summary>
     /// Dear ImGui renderer...
     /// </summary>
-    public class ImGuiRenderer: IDisposable
+    public class ImGuiRenderer : IDisposable
     {
         private static uint _sizeOfDrawVert = (uint)Marshal.SizeOf<ImDrawVert>();
         private static uint _sizeOfIndice = sizeof(ushort);
@@ -27,8 +27,9 @@ namespace MiniEngine.Rendering.Vulkan
         private PipelineDescriptorSet _mainSet;
         private PipelineDescriptorSet _fontTextureSet;
         private PipelineDescriptorSet _textureSet;
-
+        private Extent2D _currentExtent;
         private Stopwatch _stopWatch;
+        private float _lastRenderTime = 0f;
 
         public ImGuiRenderer(VkRenderer renderer)
         {
@@ -37,10 +38,10 @@ namespace MiniEngine.Rendering.Vulkan
             _context = ImGui.CreateContext();
             ImGui.SetCurrentContext(_context);
 
+            
             ImGuiIOPtr io = ImGui.GetIO();
-            io.DisplaySize = new System.Numerics.Vector2(renderer.Device.CurrentExtent.Width, renderer.Device.CurrentExtent.Height);
             //io.DisplayFramebufferScale = System.Numerics.Vector2.One * 0.5f;
-            //io.DeltaTime = (float)_stopWatch.Elapsed.TotalSeconds; // DeltaTime is in seconds.
+            io.DeltaTime = 0; // DeltaTime is in seconds.
 
             io.Fonts.AddFontDefault();
             io.Fonts.Flags |= ImFontAtlasFlags.NoBakedLines;
@@ -54,7 +55,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             CreateShader();
 
-            _pipeline = new PipelineWrapper(_device, _vk.Swapchain.RenderPass, _shader)
+            _pipeline = _vk.CreatePipelineWrapper(_shader)
                                 .AddDynamicState(DynamicState.Scissor)
                                 .Build();
 
@@ -63,15 +64,24 @@ namespace MiniEngine.Rendering.Vulkan
                                                        .Set("ProjectionMatrixBuffer", _projMatrixBuffer);
             _fontTextureSet = _pipeline.CreateDescriptorSet(1);
             _textureSet = _pipeline.CreateDescriptorSet(1);
-            
-            UpdateProjectionMatrix();
+
+            UpdateDisplaySize();
 
             RecreateFontDeviceTexture();
 
             ImGui.NewFrame();
-            
+
 
         }
+
+        /// <summary>
+        /// Notification from the exterior that the window as resized
+        /// </summary>
+        public void NotifyWindowResized()
+        {
+            UpdateDisplaySize();
+        }
+
 
         /// <summary>
         /// Update the input for the mouse and the keyboard to ImGui
@@ -79,6 +89,8 @@ namespace MiniEngine.Rendering.Vulkan
         public void UpdateImGuiInput(Input input)
         {
             ImGuiIOPtr io = ImGui.GetIO();
+            //io.ClearInputKeys();
+
             io.AddMousePosEvent(input.MousePosition.X, input.MousePosition.Y);
             io.AddMouseButtonEvent(0, input.IsMouseDown(MouseButton.Left));
             io.AddMouseButtonEvent(1, input.IsMouseDown(MouseButton.Right));
@@ -87,16 +99,31 @@ namespace MiniEngine.Rendering.Vulkan
             io.AddMouseButtonEvent(4, input.IsMouseDown(MouseButton.Button2));
             io.AddMouseWheelEvent(0f, input.MouseScrollDelta.Y);
 
-            for (int i = 0; i < input.KeyDowns.Count; i++)
-            {
-                io.AddInputCharacter((uint)input.KeyDowns[i]);
+            for (int i = 0; i < input.NewlyKeyDowns.Count; i++)
+                ProcessKeyState(input.NewlyKeyDowns[i], true, io);
 
-                if (TryMapKey(input.KeyDowns[i], out ImGuiKey imguikey))
-                {
-                    io.AddKeyEvent(imguikey, true);
-                }
+            for (int i = 0; i < input.NewlyKeyUps.Count; i++)
+                ProcessKeyState(input.NewlyKeyUps[i], false, io);
+
+
+        }
+
+        /// <summary>
+        /// Process a key state...
+        /// </summary>
+        private void ProcessKeyState(Keys key, bool down, ImGuiIOPtr io)
+        {
+            
+            Debug.Print("newly " + (down ? "down": "up") + ": " + key);
+            
+
+            if (TryMapKey(key, out bool isTextInput, out ImGuiKey imguikey))
+            {
+                io.AddKeyEvent(imguikey, down);
             }
 
+            if(down && isTextInput)
+                io.AddInputCharacter((uint)key);
         }
 
 
@@ -105,10 +132,11 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Render(CommandBuffer commandBuffer)
         {
-            //ImGuiIOPtr io = ImGui.GetIO();
-            ////io.DisplaySize = new System.Numerics.Vector2(_vk.Device.CurrentExtent.Width, _vk.Device.CurrentExtent.Height);
-            //io.DeltaTime = (float)_stopWatch.Elapsed.TotalSeconds; // DeltaTime is in seconds.
-
+            ImGuiIOPtr io = ImGui.GetIO();
+            float newTime = (float)_stopWatch.Elapsed.TotalSeconds;
+            io.DeltaTime = newTime - _lastRenderTime; // DeltaTime is in seconds.
+            _lastRenderTime = newTime;
+            Debug.Print(io.DeltaTime.ToString());
 
             ImGui.Render();
 
@@ -193,11 +221,17 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Update the projection matrix
         /// </summary>
-        private void UpdateProjectionMatrix()
+        private void UpdateDisplaySize()
         {
+            _currentExtent = _vk.Device.CurrentExtent;
+
+            ImGuiIOPtr io = ImGui.GetIO();
+            io.DisplaySize = new System.Numerics.Vector2(_currentExtent.Width, _currentExtent.Height);
+            
+
             //Scale of fit the coord (-1, -1) on the top left and (1, 1) on the bottom right.
             //Negative 2 on Y to flip the screen upside down...
-            Matrix4 scale = Matrix4.CreateScaleMatrix(2.0f / _vk.Device.CurrentExtent.Width, -2.0f / _vk.Device.CurrentExtent.Height, 1f);
+            Matrix4 scale = Matrix4.CreateScaleMatrix(2.0f / _currentExtent.Width, -2.0f / _currentExtent.Height, 1f);
             Matrix4 translate = Matrix4.CreateTranslationMatrix(-1f, 1f, 0f);
             Matrix4 mvp = translate * scale;
 
@@ -243,7 +277,7 @@ namespace MiniEngine.Rendering.Vulkan
             //File.WriteAllBytes("C:\\Projects\\Temp\\test.bin", dataBytes);
             _fontTexture = new VkTexture2D(pixels, width, height, Format.R8G8B8A8Unorm, _vk, _vk.ResourceFactory);
             _fontTextureSet.Set("FontTexture", _fontTexture.ImageWrapper.ImageView);
-            
+
             io.Fonts.ClearTexData();
         }
 
@@ -309,7 +343,7 @@ void main()
         }
 
 
-        private bool TryMapKey(Keys key, out ImGuiKey result)
+        private bool TryMapKey(Keys key, out bool isTextInput, out ImGuiKey result)
         {
             ImGuiKey keyToImGuiKeyShortcut(Keys keyToConvert, Keys startKey1, ImGuiKey startKey2)
             {
@@ -320,21 +354,25 @@ void main()
             if (key >= Keys.F1 && key <= Keys.F12)
             {
                 result = keyToImGuiKeyShortcut(key, Keys.F1, ImGuiKey.F1);
+                isTextInput = false;
                 return true;
             }
             else if (key >= Keys.Numpad0 && key <= Keys.Numpad9)
             {
                 result = keyToImGuiKeyShortcut(key, Keys.Numpad0, ImGuiKey.Keypad0);
+                isTextInput = true;
                 return true;
             }
             else if (key >= Keys.A && key <= Keys.Z)
             {
                 result = keyToImGuiKeyShortcut(key, Keys.A, ImGuiKey.A);
+                isTextInput = true;
                 return true;
             }
             else if (key >= Keys.Number0 && key <= Keys.Number9)
             {
                 result = keyToImGuiKeyShortcut(key, Keys.Number0, ImGuiKey._0);
+                isTextInput = true;
                 return true;
             }
 
@@ -343,135 +381,178 @@ void main()
                 case Keys.ShiftLeft:
                 case Keys.ShiftRight:
                     result = ImGuiKey.ModShift;
+                    isTextInput = false;
                     return true;
                 case Keys.ControlLeft:
                 case Keys.ControlRight:
                     result = ImGuiKey.ModCtrl;
+                    isTextInput = false;
                     return true;
                 case Keys.AltLeft:
                 case Keys.AltRight:
                     result = ImGuiKey.ModAlt;
+                    isTextInput = false;
                     return true;
                 case Keys.LeftSuper:
                 case Keys.RightSuper:
                     result = ImGuiKey.ModSuper;
+                    isTextInput = false;
                     return true;
                 case Keys.Menu:
                     result = ImGuiKey.Menu;
+                    isTextInput = false;
                     return true;
                 case Keys.Up:
                     result = ImGuiKey.UpArrow;
+                    isTextInput = false;
                     return true;
                 case Keys.Down:
                     result = ImGuiKey.DownArrow;
+                    isTextInput = false;
                     return true;
                 case Keys.Left:
                     result = ImGuiKey.LeftArrow;
+                    isTextInput = false;
                     return true;
                 case Keys.Right:
                     result = ImGuiKey.RightArrow;
+                    isTextInput = false;
                     return true;
                 case Keys.Enter:
                     result = ImGuiKey.Enter;
+                    isTextInput = false;
                     return true;
                 case Keys.Escape:
                     result = ImGuiKey.Escape;
+                    isTextInput = false;
                     return true;
                 case Keys.Space:
                     result = ImGuiKey.Space;
+                    isTextInput = true;
                     return true;
                 case Keys.Tab:
                     result = ImGuiKey.Tab;
+                    isTextInput = false;
                     return true;
                 case Keys.Backspace:
                     result = ImGuiKey.Backspace;
+                    isTextInput = false;
                     return true;
                 case Keys.Insert:
                     result = ImGuiKey.Insert;
+                    isTextInput = false;
                     return true;
                 case Keys.Delete:
                     result = ImGuiKey.Delete;
+                    isTextInput = false;
                     return true;
                 case Keys.PageUp:
                     result = ImGuiKey.PageUp;
+                    isTextInput = false;
                     return true;
                 case Keys.PageDown:
                     result = ImGuiKey.PageDown;
+                    isTextInput = false;
                     return true;
                 case Keys.Home:
                     result = ImGuiKey.Home;
+                    isTextInput = false;
                     return true;
                 case Keys.End:
                     result = ImGuiKey.End;
+                    isTextInput = false;
                     return true;
                 case Keys.CapsLock:
                     result = ImGuiKey.CapsLock;
+                    isTextInput = false;
                     return true;
                 case Keys.ScrollLock:
                     result = ImGuiKey.ScrollLock;
+                    isTextInput = false;
                     return true;
                 case Keys.PrintScreen:
                     result = ImGuiKey.PrintScreen;
+                    isTextInput = false;
                     return true;
                 case Keys.Pause:
                     result = ImGuiKey.Pause;
+                    isTextInput = false;
                     return true;
                 case Keys.NumLock:
                     result = ImGuiKey.NumLock;
+                    isTextInput = false;
                     return true;
                 case Keys.NumpadDivide:
                     result = ImGuiKey.KeypadDivide;
+                    isTextInput = false;
                     return true;
                 case Keys.NumpadMultiply:
                     result = ImGuiKey.KeypadMultiply;
+                    isTextInput = true;
                     return true;
                 case Keys.NumpadSubtract:
                     result = ImGuiKey.KeypadSubtract;
+                    isTextInput = true;
                     return true;
                 case Keys.NumpadAdd:
                     result = ImGuiKey.KeypadAdd;
+                    isTextInput = true;
                     return true;
                 case Keys.NumpadDecimal:
                     result = ImGuiKey.KeypadDecimal;
+                    isTextInput = true;
                     return true;
                 case Keys.NumpadEnter:
                     result = ImGuiKey.KeypadEnter;
+                    isTextInput = false;
                     return true;
                 case Keys.GraveAccent:
                     result = ImGuiKey.GraveAccent;
+                    isTextInput = true;
                     return true;
                 case Keys.Minus:
                     result = ImGuiKey.Minus;
+                    isTextInput = true;
                     return true;
                 case Keys.Equal:
                     result = ImGuiKey.Equal;
+                    isTextInput = true;
                     return true;
                 case Keys.BracketLeft:
                     result = ImGuiKey.LeftBracket;
+                    isTextInput = true;
                     return true;
                 case Keys.BracketRight:
                     result = ImGuiKey.RightBracket;
+                    isTextInput = true;
                     return true;
                 case Keys.Semicolon:
                     result = ImGuiKey.Semicolon;
+                    isTextInput = true;
                     return true;
                 case Keys.Apostrophe:
                     result = ImGuiKey.Apostrophe;
+                    isTextInput = true;
                     return true;
                 case Keys.Comma:
                     result = ImGuiKey.Comma;
+                    isTextInput = true;
                     return true;
                 case Keys.Period:
                     result = ImGuiKey.Period;
+                    isTextInput = true;
                     return true;
                 case Keys.Slash:
                     result = ImGuiKey.Slash;
+                    isTextInput = true;
                     return true;
                 case Keys.Backslash:
                     result = ImGuiKey.Backslash;
+                    isTextInput = true;
                     return true;
                 default:
                     result = ImGuiKey.None;
+                    isTextInput = false;
                     return false;
             }
         }

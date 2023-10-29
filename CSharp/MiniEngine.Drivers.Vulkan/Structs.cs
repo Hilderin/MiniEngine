@@ -29,11 +29,64 @@ namespace MiniEngine.Drivers.Vulkan
 		public Int32 Z;
 	}
 
-	unsafe public partial struct Extent2D
-	{
+	unsafe public partial struct Extent2D : IEquatable<Extent2D>
+    {
 		public UInt32 Width;
 		public UInt32 Height;
-	}
+
+        /// <summary>
+        /// Compares whether current instance is equal to specified <see cref="Object"/>.
+        /// </summary>
+        /// <param name="obj">The <see cref="Object"/> to compare.</param>
+        /// <returns><c>true</c> if the instances are equal; <c>false</c> otherwise.</returns>
+        public override bool Equals(object obj)
+        {
+            return (obj is Extent2D) && Equals((Extent2D)obj);
+        }
+
+        /// <summary>
+        /// Compares whether current instance is equal to specified <see cref="Extent2D"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="Extent2D"/> to compare.</param>
+        /// <returns><c>true</c> if the instances are equal; <c>false</c> otherwise.</returns>
+        public bool Equals(Extent2D other)
+        {
+            return (Width == other.Width &&
+                    Height == other.Height);
+        }
+
+        /// <summary>
+        /// Gets the hash code of this <see cref="Extent2D"/>.
+        /// </summary>
+        /// <returns>Hash code of this <see cref="Extent2D"/>.</returns>
+        public override int GetHashCode()
+        {
+            return Width.GetHashCode() +Height.GetHashCode();
+        }
+
+        /// <summary>
+        /// Compares whether two <see cref="Extent2D"/> instances are equal.
+        /// </summary>
+        /// <param name="value1"><see cref="Extent2D"/> instance on the left of the equal sign.</param>
+        /// <param name="value2"><see cref="Extent2D"/> instance on the right of the equal sign.</param>
+        /// <returns><c>true</c> if the instances are equal; <c>false</c> otherwise.</returns>
+        public static bool operator ==(Extent2D value1, Extent2D value2)
+        {
+            return (value1.Width == value2.Width &&
+                    value1.Height == value2.Height);
+        }
+
+        /// <summary>
+        /// Compares whether two <see cref="Extent2D"/> instances are not equal.
+        /// </summary>
+        /// <param name="value1"><see cref="Extent2D"/> instance on the left of the not equal sign.</param>
+        /// <param name="value2"><see cref="Extent2D"/> instance on the right of the not equal sign.</param>
+        /// <returns><c>true</c> if the instances are not equal; <c>false</c> otherwise.</returns>
+        public static bool operator !=(Extent2D value1, Extent2D value2)
+        {
+            return !(value1 == value2);
+        }
+    }
 
 	unsafe public partial struct Extent3D
 	{

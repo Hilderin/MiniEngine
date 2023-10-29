@@ -8,22 +8,24 @@ namespace MiniEngine.Drivers.Vulkan
 {
     public class RenderCommandBuffer: CommandBuffer
     {
-        private RenderPass _renderPass;
-        //private int _imageIndex;
+        private SwapchainWrapper _swapchain;
+        private int _imageIndex;
 
         private RenderPassBeginInfo _renderPassBeginInfo;
 
-        public RenderCommandBuffer(RenderPass renderPass, int imageIndex)
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public RenderCommandBuffer(SwapchainWrapper swapchain, int imageIndex)
         {
-            _renderPass = renderPass;
-            //_imageIndex = imageIndex;
+            _swapchain = swapchain;
+            _imageIndex = imageIndex;
 
             _renderPassBeginInfo = new RenderPassBeginInfo
             {
-                Framebuffer = _renderPass.Swapchain.Framebuffers[imageIndex],
-                RenderPass = renderPass,
+                RenderPass = _swapchain.RenderPass,
                 ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { 0f, 0f, 0f, 1.0f }) } },
-                RenderArea = new Rect2D { Extent = renderPass.Device.CurrentExtent }
             };
         }
 
@@ -33,6 +35,9 @@ namespace MiniEngine.Drivers.Vulkan
         public override void Begin()
         {
             base.Begin();
+
+            _renderPassBeginInfo.Framebuffer = _swapchain.Framebuffers[_imageIndex];
+            _renderPassBeginInfo.RenderArea = new Rect2D { Extent = _swapchain.CurrentExtent };
 
             CmdBeginRenderPass(_renderPassBeginInfo, SubpassContents.Inline);
         }

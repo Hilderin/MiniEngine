@@ -12,6 +12,11 @@ namespace MiniEngine
     public interface IWindow: IDisposable
     {
         /// <summary>
+        /// Event when the window is resized
+        /// </summary>
+        event Action<Vector2> OnWindowResized;
+
+        /// <summary>
         /// Indicate if the window is closing (should stop the application)
         /// </summary>
         bool IsClosing { get; }

@@ -109,6 +109,15 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
+
+        public Result PresentKHRReturnsResult(PresentInfoKhr pPresentInfo)
+        {
+            unsafe
+            {
+                return Interop.NativeMethods.vkQueuePresentKHR(this.m, pPresentInfo != null ? pPresentInfo.m : (Interop.PresentInfoKhr*)default(IntPtr));
+            }
+        }
+
         public int SignalReleaseImageANDROID(UInt32 waitSemaphoreCount, Semaphore pWaitSemaphores, Image image)
         {
             Result result;
