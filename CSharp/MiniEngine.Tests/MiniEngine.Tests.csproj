@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MiniEngine.Drivers.Vulkan\MiniEngine.Drivers.Vulkan.csproj" />
     <ProjectReference Include="..\MiniEngine.Rendering.Vulkan\MiniEngine.Rendering.Vulkan.csproj" />
     <ProjectReference Include="..\MiniEngine\MiniEngine.csproj" />
   </ItemGroup>

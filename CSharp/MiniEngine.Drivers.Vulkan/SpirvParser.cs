@@ -13,21 +13,17 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Parse dthe spirv codes
         /// </summary>
-        public static VkShader Parse(byte[] vertexBytes, byte[] fragmentBytes, Dictionary<string, Format> overwrideVariableFormats = null)
+        public static void ParseUpdateShader(ShaderWrapper shader, Dictionary<string, Format> overwrideVariableFormats = null)
         {
-            VkShader shader = new VkShader(vertexBytes, fragmentBytes);
+            ParseBytes(shader.VertexSpirv, shader, overwrideVariableFormats);
+            ParseBytes(shader.FragmentSpirv, shader, overwrideVariableFormats);
 
-            ParseBytes(vertexBytes, shader, overwrideVariableFormats);
-            ParseBytes(fragmentBytes, shader, overwrideVariableFormats);
-
-
-            return shader;
         }
 
         /// <summary>
         /// Parse the byte codes for a shader
         /// </summary>
-        private unsafe static void ParseBytes(byte[] dataBytes, VkShader shader, Dictionary<string, Format> overwrideVariableFormats)
+        private unsafe static void ParseBytes(byte[] dataBytes, ShaderWrapper shader, Dictionary<string, Format> overwrideVariableFormats)
         {
             if (dataBytes.Length % 4 != 0)
                 throw new ArgumentException("Invalid spirv, length % 4 != 0");

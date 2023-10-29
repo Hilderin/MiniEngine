@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Presentations.Gl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniEngine.Drivers.Glfw", "MiniEngine.Drivers.Glfw\MiniEngine.Drivers.Glfw.csproj", "{AAA06F05-B17A-45E9-8F9C-A1B1A9023BF4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShipDefense", "MiniEngine.Samples\ShipDefense\ShipDefense.csproj", "{6CEFC5D8-DDB2-4AEE-93C6-298E96BA671B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{AAA06F05-B17A-45E9-8F9C-A1B1A9023BF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AAA06F05-B17A-45E9-8F9C-A1B1A9023BF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AAA06F05-B17A-45E9-8F9C-A1B1A9023BF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CEFC5D8-DDB2-4AEE-93C6-298E96BA671B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CEFC5D8-DDB2-4AEE-93C6-298E96BA671B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CEFC5D8-DDB2-4AEE-93C6-298E96BA671B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CEFC5D8-DDB2-4AEE-93C6-298E96BA671B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -16,14 +16,14 @@ namespace MiniEngine.Assets
         //private List<Material> materials = new List<Material>();
 
         private string _workingDirectory = null;
-        private MeshActor _mesh = null;
+        private MeshObject _mesh = null;
 
         private Matrix3 _transformMatrix = Matrix3.Identity;
 
         /// <summary>
         /// Import a mesh from file
         /// </summary>
-        public MeshActor GetMeshFromFile(string path, MeshImportationParameters parameters = null)
+        public MeshObject GetMeshFromFile(string path, MeshImportationParameters parameters = null)
         {
             if (parameters == null)
                 parameters = MeshImportationParameters.Default;
@@ -55,7 +55,7 @@ namespace MiniEngine.Assets
 
                 Assimp.Scene scene = context.ImportFile(path, postProcessSteps);
 
-                _mesh = new MeshActor();
+                _mesh = new MeshObject();
 
                 //Loading meshes.....
                 for (int i = 0; i < scene.MeshCount; i++)

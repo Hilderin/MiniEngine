@@ -63,10 +63,72 @@ namespace MiniEngine.Ressources {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] PixelMagenta {
+            get {
+                object obj = ResourceManager.GetObject("PixelMagenta", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] PixelWhite {
             get {
                 object obj = ResourceManager.GetObject("PixelWhite", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to #version 450
+        ///
+        ///layout(binding = 1) uniform sampler2D texSampler;
+        ///
+        ///layout(location = 0) in vec3 fragColor;
+        ///layout(location = 1) in vec2 fragTexCoord;
+        ///
+        ///layout(location = 0) out vec4 outColor;
+        ///
+        ///
+        ///void main() {
+        ///    //outColor = vec4(fragColor, 1.0);
+        ///    outColor = texture(texSampler, fragTexCoord);
+        ///}.
+        /// </summary>
+        internal static string UnlitFrag {
+            get {
+                return ResourceManager.GetString("UnlitFrag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to #version 450
+        ///
+        /////push constants block
+        ///layout( push_constant ) uniform constants
+        ///{
+        ///	mat4 render_matrix;
+        ///} PushConstants;
+        ///
+        ///
+        ///layout(location = 0) in vec3 inPosition;
+        ///layout(location = 1) in vec3 inColor;
+        ///layout(location = 2) in vec2 inTexCoord;
+        ///
+        ///layout(location = 0) out vec3 fragColor;
+        ///layout(location = 1) out vec2 fragTexCoord;
+        ///
+        ///void main() {
+        ///    gl_Position = PushConstants.render_matrix * vec4(inPosition, 1.0);
+        ///    
+        ///    fragColor = inColor;
+        ///    fragTexCoord = inTexCoord;
+        ///}.
+        /// </summary>
+        internal static string UnlitVert {
+            get {
+                return ResourceManager.GetString("UnlitVert", resourceCulture);
             }
         }
     }

@@ -1,6 +1,6 @@
 ﻿using MiniEngine.Drivers.Vulkan;
 using System.Net.Http.Headers;
-using static MiniEngine.MeshActor;
+using static MiniEngine.MeshComponent;
 
 namespace MiniEngine.Rendering.Vulkan
 {
@@ -12,7 +12,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Mesh that uses this renderer
         /// </summary>
-        private MeshActor _meshActor = null;
+        private MeshComponent _meshComponent = null;
 
         private VkRenderer _vk;
 
@@ -20,15 +20,14 @@ namespace MiniEngine.Rendering.Vulkan
 
         private RenderData[] _renderDatas;
 
-        private PipelineWrapper _pipeline;
 
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkMeshRenderer(MeshActor meshActor, VkRenderer vi)
+        public VkMeshRenderer(MeshComponent meshComponent, VkRenderer vi)
         {
-            _meshActor = meshActor;
+            _meshComponent = meshComponent;
             _vk = vi;
 
             Init();
@@ -41,7 +40,7 @@ namespace MiniEngine.Rendering.Vulkan
         public void PopulateCommandBuffers(CommandBuffer commandBuffer)
         {
 
-            Matrix4 mvp = _vk.MVPMatrix * _meshActor.GetMatrix();
+            Matrix4 mvp = _vk.MVPMatrix * _meshComponent.Parent.GetMatrix();
             //Matrix4 mvpTransposed = Matrix4.Transpose(ref mvp);
 
             //Debug.Print("--------------");
@@ -56,12 +55,19 @@ namespace MiniEngine.Rendering.Vulkan
             //    }
             //}
 
-
-            commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
+            PipelineWrapper lastPipeline = null;
+            
 
             for (int i = 0; i < _renderDatas.Length; i++)
             {
-                //Push constant...
+                if (lastPipeline != _renderDatas[i].Pipeline)
+                {
+                    //We have changed the pipeline...
+                    commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _renderDatas[i].Pipeline.Pipeline);
+                    lastPipeline = _renderDatas[i].Pipeline;
+                }
+
+                
                 PopulateCommandBuffer(commandBuffer, ref mvp, ref _mesh.MeshDatas[i], ref _renderDatas[i]);
 
             }
@@ -73,17 +79,18 @@ namespace MiniEngine.Rendering.Vulkan
         private void PopulateCommandBuffer(CommandBuffer commandBuffer, ref Matrix4 mvp, ref VulkanMeshData meshData, ref RenderData renderData)
         {
             VkShader shader = renderData.Shader;
+            PipelineWrapper pipeline = renderData.Pipeline;
 
             //Constants...
-            for (int iConst = 0; iConst < shader.Constants.Length; iConst++)
+            for (int iConst = 0; iConst < shader.ShaderData.Constants.Length; iConst++)
             {
-                commandBuffer.CmdPushConstants(_pipeline.PipelineLayout, shader.Constants[iConst].StageFlags, 0, ref mvp);
+                commandBuffer.CmdPushConstants(pipeline.PipelineLayout, shader.ShaderData.Constants[iConst].StageFlags, 0, ref mvp);
             }
 
             //DescriptorSets...
             if (renderData.DescriptorSet != null)
             {
-                commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, renderData.DescriptorSet.DescriptorSets, null);
+                commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, pipeline.PipelineLayout, 0, renderData.DescriptorSet.DescriptorSets, null);
             }
 
             commandBuffer.CmdBindVertexBuffer(0, meshData.vertexBuffer, 0);
@@ -97,8 +104,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Dispose()
         {
-            _pipeline.Dispose();
-            _pipeline = null;
+            //We will not dispose pipelines because they can be used by another meshrenderer...
+            //_pipeline.Dispose();
+            //_pipeline = null;
 
 
             for (int i = 0; i < _renderDatas.Length; i++)
@@ -112,8 +120,8 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
             _renderDatas = null;
-            _meshActor.RendererStateObj = null;
-            _meshActor = null;
+            _meshComponent.RendererStateObj = null;
+            _meshComponent = null;
         }
 
 
@@ -122,23 +130,38 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void Init()
         {
-            _mesh = (VkMesh)_meshActor.Mesh;
+            _mesh = (VkMesh)_meshComponent.Mesh;
 
 
             //Pipeline creation...
             _renderDatas = new RenderData[_mesh.MeshDatas.Length];
-            _pipeline = _vk.CreatePipelineWrapper(((VkMaterial)_meshActor.Materials[0]).Shader)
-                                    .SetCullMode(CullModeFlags.Back)
-                                    .Build();
+            
 
             for (int i = 0; i < _mesh.MeshDatas.Length; i++)
             {
-                VkMaterial mat = (VkMaterial)_meshActor.Materials[_mesh.MeshDatas[i].MaterialIndex];
-                VkShader shader = mat.Shader;
+                if (_mesh.MeshDatas[i].MaterialIndex >= 0)
+                {
+                    VkMaterial mat;
 
-                _renderDatas[i].Shader = shader;
+                    if (_meshComponent.Materials.Count > _mesh.MeshDatas[i].MaterialIndex)
+                        mat = (VkMaterial)_meshComponent.Materials[_mesh.MeshDatas[i].MaterialIndex];
+                    else
+                        //Material not found...
+                        mat = (VkMaterial)BaseMaterials.Magenta;
 
-                _renderDatas[i].DescriptorSet = _pipeline.CreateDescriptorSet().Set("texSampler", mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.Sampler);
+                    if (mat != null)
+                    {
+                        VkShader shader = mat.Shader;
+
+                        var pipeline = _vk.GetPipeline(shader);
+
+                        _renderDatas[i].Pipeline = pipeline;
+
+                        _renderDatas[i].Shader = shader;
+
+                        _renderDatas[i].DescriptorSet = pipeline.CreateDescriptorSet().Set("texSampler", mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.Sampler);
+                    }
+                }
 
             }
 
@@ -147,6 +170,7 @@ namespace MiniEngine.Rendering.Vulkan
 
     public struct RenderData
     {
+        public PipelineWrapper Pipeline;
         public PipelineDescriptorSet DescriptorSet;
         public VkShader Shader;
     }

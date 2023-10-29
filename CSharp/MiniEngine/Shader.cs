@@ -6,25 +6,22 @@ using System.Threading.Tasks;
 
 namespace MiniEngine
 {
-    public class Shader
+    /// <summary>
+    /// Base class for shaders
+    /// </summary>
+    public abstract class Shader: IDisposable
     {
         /// <summary>
-        /// Code for vertex shader
+        /// Destruction of the Material
         /// </summary>
-        public string VertexCode;
+        protected abstract void Destroy();
 
         /// <summary>
-        /// Code for fragment shader
+        /// Dispose
         /// </summary>
-        public string FragmentCode;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public Shader(string vertexCode, string fragmentCode)
+        public void Dispose()
         {
-            VertexCode = vertexCode;
-            FragmentCode = fragmentCode;
+            Destroy();
         }
     }
 }

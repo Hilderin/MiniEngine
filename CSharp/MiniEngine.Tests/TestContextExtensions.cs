@@ -24,7 +24,7 @@ namespace MiniEngine.Tests
         public static Context SetupTest(this Context context)
         {
             //TODO: Init a window...
-            context.SetRenderer(new VkRenderer("Test", new VkVersion(1, 0, 0)));
+            context.SetRenderer(new VkRenderer("Test", "1.0.0"));
 
             return context;
         }

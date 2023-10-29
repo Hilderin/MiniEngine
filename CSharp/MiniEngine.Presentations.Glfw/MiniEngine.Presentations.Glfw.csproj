@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MiniEngine.Drivers.Glfw\MiniEngine.Drivers.Glfw.csproj" />
+    <ProjectReference Include="..\MiniEngine.Drivers.Glfw\MiniEngine.Drivers.Glfw.csproj" PrivateAssets="compile" />
     <ProjectReference Include="..\MiniEngine\MiniEngine.csproj" />
   </ItemGroup>
 

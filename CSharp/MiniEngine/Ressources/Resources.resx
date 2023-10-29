@@ -121,4 +121,13 @@
   <data name="PixelWhite" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>PixelWhite.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="PixelMagenta" type="System.Resources.ResXFileRef, System.Windows.Forms">
+	<value>PixelMagenta.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="UnlitFrag" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Shaders\Unlit.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="UnlitVert" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Shaders\Unlit.vert;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

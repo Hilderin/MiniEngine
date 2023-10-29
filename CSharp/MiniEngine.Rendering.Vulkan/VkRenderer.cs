@@ -1,4 +1,5 @@
 ﻿using MiniEngine.Drivers.Vulkan;
+using MiniEngine.Drivers.Vulkan.Windows;
 using MiniEngine.ResourceDefinitions;
 using System.Diagnostics;
 
@@ -33,6 +34,8 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public VkResourceFactory ResourceFactory { get { return _resourceFactory; } }
 
+        bool IRenderer.ShouldSwapBuffer => throw new NotImplementedException();
+
         #endregion
 
         #region Private members
@@ -42,10 +45,12 @@ namespace MiniEngine.Rendering.Vulkan
         private string _applicationName;
         private VkVersion _applicationVersion;
         private Func<VkInstance, SurfaceKhr> _surfaceCreationCallback;
-        private DebugReportCallback _debugCallback;
+        private VkDebugReportCallback _debugCallback;
         private bool _initialized = false;
         private VkResourceFactory _resourceFactory;
         private ImGuiRenderer _imGui;
+        private IntPtr _windowsHandle = IntPtr.Zero;
+        private Dictionary<VkShader, PipelineWrapper> _cachePipeline = new Dictionary<VkShader, PipelineWrapper>();
 
         #endregion
 
@@ -54,12 +59,11 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkRenderer(string applicationName, VkVersion applicationVersion, Func<VkInstance, SurfaceKhr> surfaceCreationCallback = null, DebugReportCallback debugCallback = null)
+        public VkRenderer(string applicationName, string applicationVersion)
         {
             _applicationName = applicationName;
-            _applicationVersion = applicationVersion;
-            _surfaceCreationCallback = surfaceCreationCallback;
-            _debugCallback = debugCallback;
+            _applicationVersion = new VkVersion(applicationVersion);
+            
 
 
         }
@@ -68,9 +72,22 @@ namespace MiniEngine.Rendering.Vulkan
 
         #region Public methods
 
-        public void InitGui()
+        /// <summary>
+        /// Enable debugging
+        /// </summary>
+        public VkRenderer EnableDebug(VkDebugReportCallback debugCallback = null)
+        {
+            _debugCallback = debugCallback;
+            return this;
+        }
+
+        /// <summary>
+        /// Init ImGui
+        /// </summary>
+        public VkRenderer InitGui()
         {
             _imGui = new ImGuiRenderer(this);
+            return this;
         }
 
         /// <summary>
@@ -90,7 +107,12 @@ namespace MiniEngine.Rendering.Vulkan
             if (_initialized)
                 throw new Exception("Already initialized.");
 
-            vk = new VkInstance(_applicationName, _applicationVersion, CreateSurface, _debugCallback);
+            //If we have enabled the debug mode...
+            DebugReportCallback callback = null;
+            if (_debugCallback != null)
+                callback = DebugReportCallback;
+
+            vk = new VkInstance(_applicationName, _applicationVersion, CreateSurfaceCallback, callback);
 
             Device = vk.Device;
 
@@ -127,19 +149,47 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public PipelineWrapper CreatePipelineWrapper(VkShader shader)
         {
-            return Swapchain.CreatePipelineWrapper(shader);
+            return Swapchain.CreatePipelineWrapper(shader.ShaderData);
+        }
+
+
+        /// <summary>
+        /// Set Window from the interface IRenderer
+        /// </summary>
+        void IRenderer.SetWindow(IWindow window)
+        {
+            SetWindow(window);
+        }
+
+        /// <summary>
+        /// Set Windows handle from the interface IRenderer
+        /// </summary>
+        void IRenderer.SetWindow32Handle(IntPtr handle)
+        {
+            SetWindow32Handle(handle);
         }
 
         /// <summary>
         /// Pass the window to the render when it's created
         /// </summary>
-        public void SetWindow(IWindow window)
+        public VkRenderer SetWindow(IWindow window)
         {
             _window = window;
 
             _window.OnWindowResized += Window_OnWindowResized;
+
+            return this;
         }
 
+        /// <summary>
+        /// Set the window handle for win32 (Windows)
+        /// </summary>
+        public VkRenderer SetWindow32Handle(IntPtr handle)
+        {
+            _windowsHandle = handle;
+
+            return this;
+        }
 
         /// <summary>
         /// Render a scene
@@ -188,6 +238,32 @@ namespace MiniEngine.Rendering.Vulkan
             return _resourceFactory.CreateMaterial(matDef);
         }
 
+        /// <summary>
+        /// Create a shader
+        /// </summary>
+        public Shader CreateShader(ShaderDefinition shaderDef)
+        {
+            return _resourceFactory.CreateShader(shaderDef);
+        }
+
+
+        /// <summary>
+        /// Get a pipeline for mesh rendering
+        /// </summary>
+        public PipelineWrapper GetPipeline(VkShader shader)
+        {
+            if (!_cachePipeline.TryGetValue(shader, out var pipeline))
+            {
+                pipeline = CreatePipelineWrapper(shader)
+                                .SetCullMode(CullModeFlags.Back)
+                                .Build();
+
+                _cachePipeline.Add(shader, pipeline);
+
+            }
+
+            return pipeline;
+        }
 
 
         /// <summary>
@@ -204,6 +280,10 @@ namespace MiniEngine.Rendering.Vulkan
             //Disposing mesh renderer...
             foreach (VkMeshRenderer vkMeshRenderer in _meshRenderers)
                 vkMeshRenderer.Dispose();
+
+            //Disposing pipelines...
+            foreach (PipelineWrapper pipeline in _cachePipeline.Values)
+                pipeline.Dispose();
 
             Swapchain?.Dispose();
 
@@ -225,44 +305,63 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void RecalculateNextFrame(Scene scene)
         {
-
             //The camera needs to be the same size has the client...
             if (Device.CurrentExtent.Width != scene.Camera.ClientSize.X || Device.CurrentExtent.Height != scene.Camera.ClientSize.Y)
                 scene.Camera.ClientSize = new Vector2(Device.CurrentExtent.Width, Device.CurrentExtent.Height);
 
-            //Update MVP Matrix...
-            Matrix4 viewMat2 = scene.Camera.GetMatrix();
-            //Matrix4 viewMat = Matrix4.CreateLookAt(scene.Camera.Location, scene.Camera.Forward, scene.Camera.Up);
-            //Matrix4 viewMat = Matrix4.CreateLookAt(scene.Camera.Location, new Vector3(0, 0, -1f), new Vector3(0, 1f, 0));
-            Matrix4 projMat = scene.Camera.GetProjectionMatrixVulkan();
+            RecalculateProjectionMatrix(scene);
 
-
-            //Matrix4 model = Matrix4.Identity * Matrix4.CreateFromAxisAngle(new Vector3(0, 0, 1), Math.DegToRad(90.0f));
-            //Matrix4 view = Matrix4.CreateLookAt(new Vector3(2, 2, 2), new Vector3(0, 0, 0), new Vector3(0, 0, 1));
-            //Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView(Math.DegToRad(45.0f), (float)CurrentExtent.Width / CurrentExtent.Height, 0.1f, 10.0f);
-
-            //Inverse because coords are inverted on Y in vulkan
-            this.MVPMatrix = projMat * viewMat2;
-            //this.MVPMatrix.M22 *= -1;
-            //Debug.Print("MVPMatrix: " + this.MVPMatrix.ToString());
-
-            List<MeshActor> meshes = scene.Meshes;
-            for (int iMesh = 0; iMesh < meshes.Count; iMesh++)
+            //-------------------
+            //New meshes..........
+            if (HistoryManager.Current.AddedMeshes.Count > 0)
             {
-                MeshActor mesh = meshes[iMesh];
-
-                if (meshes[iMesh].RendererStateObj == null)
+                foreach (var meshComponent in HistoryManager.Current.AddedMeshes)
                 {
                     //Initialization of the mesh renderer...
-                    VkMeshRenderer meshRenderer = new VkMeshRenderer(mesh, this);
-                    mesh.RendererStateObj = meshRenderer;
+                    VkMeshRenderer meshRenderer = new VkMeshRenderer(meshComponent, this);
+                    meshComponent.RendererStateObj = meshRenderer;
                     _meshRenderers.Add(meshRenderer);
 
-                    //Initialisation of the materials...
-                    //PrepareMaterials(meshRenderer.Materials);
-                }
 
+                }
+                HistoryManager.Current.AddedMeshes.Clear();
             }
+
+
+            //-------------------
+            //Deleted meshes..........
+            if (HistoryManager.Current.RemovedMeshes.Count > 0)
+            {
+                foreach (var meshComponent in HistoryManager.Current.RemovedMeshes)
+                {
+                    //Initialization of the mesh renderer...
+                    VkMeshRenderer meshRenderer = meshComponent.RendererStateObj as VkMeshRenderer;
+
+                    if (meshRenderer != null)
+                    {
+                        meshRenderer.Dispose();
+                        _meshRenderers.Remove(meshRenderer);
+                    }
+
+                }
+                HistoryManager.Current.RemovedMeshes.Clear();
+            }
+
+        }
+
+        /// <summary>
+        /// Recalculate the projection matrix
+        /// </summary>
+        private void RecalculateProjectionMatrix(Scene scene)
+        {
+           
+
+            //Update MVP Matrix...
+            Matrix4 viewMat2 = scene.Camera.GetMatrix();
+            Matrix4 projMat = scene.Camera.GetProjectionMatrixVulkan();
+            
+            this.MVPMatrix = projMat * viewMat2;
+
         }
 
         /// <summary>
@@ -297,18 +396,26 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create the surface
         /// </summary>
-        /// <param name="vi"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        private SurfaceKhr CreateSurface(VkInstance vi)
+        private SurfaceKhr CreateSurfaceCallback(VkInstance vi)
         {
             //Function to create a Surface...
-            if (_surfaceCreationCallback != null)
-                return _surfaceCreationCallback(vi);
-            else if (_window != null)
+            if (_window != null)
+            {
+                //Already have a window...
                 return CreateSurfaceFromWindow(vi, _window);
+            }
+            else if (_windowsHandle != IntPtr.Zero)
+            {
+                //Windows...
+                return vi.CreateWin32SurfaceKHR(
+                    new Win32SurfaceCreateInfoKhr
+                    {
+                        Hwnd = _windowsHandle,
+                        Hinstance = Process.GetCurrentProcess().Handle
+                    });
+            }
             else
-                throw new Exception("Impossible to create the surface. No window and no surfaceCreationCallback exist.");
+                throw new Exception("Impossible to create the surface. No window and no window handle exists.");
 
         }
 
@@ -326,7 +433,14 @@ namespace MiniEngine.Rendering.Vulkan
             _imGui?.NotifyWindowResized();
         }
 
-
+        /// <summary>
+        /// Internal debug callback
+        /// </summary>
+        private bool DebugReportCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, int messageCode, string message)
+        {
+            _debugCallback((DebugReportLevel)flags, messageCode, message);
+            return true;
+        }
 
         #endregion
 

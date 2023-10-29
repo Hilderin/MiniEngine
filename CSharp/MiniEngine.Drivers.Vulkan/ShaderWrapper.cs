@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 namespace MiniEngine.Drivers.Vulkan
 {
     /// <summary>
-    /// A shader for Vulkan
+    /// Information on a shader for Vulkan
     /// </summary>
-    public class VkShader
+    public class ShaderWrapper
     {
+        private Device _device;
+
         /// <summary>
         /// Compiled code for vertex shader
         /// </summary>
@@ -52,13 +54,51 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public VertexInputAttributeDescription[] VertexInputAttributes;
 
+        public ShaderModule VertexShaderModule;
+
+        public ShaderModule FragmentShaderModule;
+
         /// <summary>
         /// Constructor
         /// </summary>
-        internal VkShader(byte[] vertexSpirv, byte[] fragmentSpirv)
+        public ShaderWrapper(Device device, byte[] vertexSpirv, byte[] fragmentSpirv, Dictionary<string, Format> overwrideVariableFormats = null)
         {
+            _device = device;
+
             this.VertexSpirv = vertexSpirv;
             this.FragmentSpirv = fragmentSpirv;
+
+            SpirvParser.ParseUpdateShader(this, overwrideVariableFormats);
+
+            if (_device != null)
+                CreateModules();
+
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public ShaderWrapper(Device device, string vertexCode, string fragmentCode, Dictionary<string, Format> overwrideVariableFormats = null)
+        {
+            _device = device;
+
+            this.VertexSpirv = VkShaderCompiler.Compile(vertexCode, ShaderStageFlags.Vertex);
+            this.FragmentSpirv = VkShaderCompiler.Compile(fragmentCode, ShaderStageFlags.Fragment);
+
+            SpirvParser.ParseUpdateShader(this, overwrideVariableFormats);
+
+            if (_device != null)
+                CreateModules();
+        }
+
+
+        /// <summary>
+        /// Create the modules for the shader
+        /// </summary>
+        public void CreateModules()
+        {
+            VertexShaderModule = _device.CreateShaderModule(VertexSpirv);
+            FragmentShaderModule = _device.CreateShaderModule(FragmentSpirv);
         }
     }
 }

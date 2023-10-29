@@ -81,7 +81,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Creates a pipeline wrapper
         /// </summary>
-        public PipelineWrapper CreatePipelineWrapper(VkShader shader)
+        public PipelineWrapper CreatePipelineWrapper(ShaderWrapper shader)
         {
             PipelineWrapper pipelineWrapper = new PipelineWrapper(_device, this, shader);
 

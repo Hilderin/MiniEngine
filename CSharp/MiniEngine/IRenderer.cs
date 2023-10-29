@@ -28,6 +28,11 @@ namespace MiniEngine
         void SetWindow(IWindow window);
 
         /// <summary>
+        /// Set the window handle for win32 (Windows)
+        /// </summary>
+        void SetWindow32Handle(IntPtr handle);
+
+        /// <summary>
         /// Render the scene
         /// </summary>
         void Render(Scene scene);
@@ -56,6 +61,11 @@ namespace MiniEngine
         /// Create a Material
         /// </summary>
         Material CreateMaterial(MaterialDefinition matDef);
+
+        /// <summary>
+        /// Create a shader
+        /// </summary>
+        Shader CreateShader(ShaderDefinition shaderDef);
 
     }
 }

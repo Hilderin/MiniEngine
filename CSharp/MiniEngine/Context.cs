@@ -23,20 +23,11 @@ namespace MiniEngine
 
         #region Private members
 
-        /// <summary>
-        /// Indicate if initialized
-        /// </summary>
         private bool _isInitialized = false;
-
-        /// <summary>
-        /// Indicate if disposed
-        /// </summary>
         private bool _isDisposed = false;
-
-        ///// <summary>
-        ///// ClientSize
-        ///// </summary>
-        //private Vector2 _clientSize = new Vector2(1200, 800);
+        private IWindow _window;
+        private IntPtr _windowsHandle = IntPtr.Zero;
+        private IRenderer _renderer;
 
         /// <summary>
         /// Current context
@@ -44,16 +35,7 @@ namespace MiniEngine
         [ThreadStatic]
         private static Context _current;
 
-        /// <summary>
-        /// Window
-        /// </summary>
-        private IWindow _window;
-
-
-        /// <summary>
-        /// Renderer
-        /// </summary>
-        private IRenderer _renderer;
+        
 
         #endregion
 
@@ -112,6 +94,19 @@ namespace MiniEngine
 
             if (_window != null)
                 _renderer.SetWindow(_window);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Set the window handle for win32 (Windows)
+        /// </summary>
+        public Context SetWindow32Handle(IntPtr handle)
+        {
+            _windowsHandle = handle;
+
+            if (_renderer != null)
+                _renderer.SetWindow32Handle(handle);
 
             return this;
         }
@@ -370,29 +365,29 @@ namespace MiniEngine
 
 
 
-        /// <summary>
-        /// Create a new mesh
-        /// </summary>
-        public Mesh CreateMesh(MeshDefinition meshDefinition)
-        {
-            return _renderer.CreateMesh(meshDefinition);
-        }
+        ///// <summary>
+        ///// Create a new mesh
+        ///// </summary>
+        //public Mesh CreateMesh(MeshDefinition meshDefinition)
+        //{
+        //    return _renderer.CreateMesh(meshDefinition);
+        //}
 
-        /// <summary>
-        /// Create a Texture2D
-        /// </summary>
-        public Texture2D CreateTexture2D(Texture2DDefinition texDef)
-        {
-            return _renderer.CreateTexture2D(texDef);
-        }
+        ///// <summary>
+        ///// Create a Texture2D
+        ///// </summary>
+        //public Texture2D CreateTexture2D(Texture2DDefinition texDef)
+        //{
+        //    return _renderer.CreateTexture2D(texDef);
+        //}
 
-        /// <summary>
-        /// Create a Material
-        /// </summary>
-        public Material CreateMaterial(MaterialDefinition matDef)
-        {
-            return _renderer.CreateMaterial(matDef);
-        }
+        ///// <summary>
+        ///// Create a Material
+        ///// </summary>
+        //public Material CreateMaterial(MaterialDefinition matDef)
+        //{
+        //    return _renderer.CreateMaterial(matDef);
+        //}
 
         /// <summary>
         /// Disposing

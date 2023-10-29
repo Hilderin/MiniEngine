@@ -8,7 +8,7 @@ namespace MiniEngine.Labs.Renderer
     internal class Test_TriangleTexture_Vulkan
     {
        
-        private MeshActor _currentMesh;
+        private MeshObject _currentMesh;
 
         private Context Context = Context.Current;
         private Scene Scene = Context.Current.Scene;
@@ -21,7 +21,9 @@ namespace MiniEngine.Labs.Renderer
 
 
 
-            Shader shader = new Shader(@"#version 450
+            Shader shader = Context.Renderer.CreateShader(new()
+            {
+                VertexCode = @"#version 450
 
 //push constants block
 layout( push_constant ) uniform constants
@@ -50,7 +52,8 @@ void main() {
     fragColor = inColor;
     fragTexCoord = inTexCoord;
 }
-", @"#version 450
+",
+                FragmentCode = @"#version 450
 
 layout(binding = 1) uniform sampler2D texSampler;
 
@@ -64,7 +67,8 @@ void main() {
     //outColor = vec4(fragColor, 1.0);
     outColor = texture(texSampler, fragTexCoord);
 }
-");
+"
+            });
 
 
 
@@ -74,12 +78,12 @@ void main() {
 
             Scene.Camera.Location = new Vector3(0.0f, 0.0f, -1f);
 
-            _currentMesh = Primitives.CreateTriangleMeshActor();
+            _currentMesh = Primitives.CreateTriangleMeshObject();
             _currentMesh.Location = new Vector3(0f, 0f, 0f);
 
-            _currentMesh.Materials.Add(Context.CreateMaterial(new()
+            _currentMesh.Materials.Add(Context.Renderer.CreateMaterial(new()
             {
-                DiffuseTexture = Context.CreateTexture2D(new()
+                DiffuseTexture = Context.Renderer.CreateTexture2D(new()
                 {
                     Data = File.ReadAllBytes(@"C:\Projects\VulkanTutorialOverv\resources\viking_room.png")
                 }),
@@ -125,49 +129,7 @@ void main() {
 
         public void Update()
         {
-            Camera.MoveInDirections(0.1f, Context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
-
-            if (Context.Input.IsKeyDown(Keys.NumpadAdd))
-                Scene.AmbientLight.Intensity += 0.01f;
-            if (Context.Input.IsKeyDown(Keys.NumpadSubtract))
-                Scene.AmbientLight.Intensity -= 0.01f;
-            if (Context.Input.IsKeyDown(Keys.Z))
-                Camera.RotateYaw(-0.1f);
-            if (Context.Input.IsKeyDown(Keys.X))
-                Camera.RotateYaw(0.1f);
-            if (Context.Input.IsKeyDown(Keys.C))
-                Camera.RotatePitch(-0.1f);
-            if (Context.Input.IsKeyDown(Keys.V))
-                Camera.RotatePitch(0.1f);
-            if (Context.Input.IsKeyDown(Keys.R))
-                Camera.RotateRoll(-0.1f);
-            if (Context.Input.IsKeyDown(Keys.F))
-                Camera.RotateRoll(0.1f);
-
-            if (Context.Input.IsKeyDown(Keys.PageUp))
-            {
-                if (Scene.DirectionalLight != null)
-                    Scene.DirectionalLight.Intensity += 0.01f;
-            }
-            if (Context.Input.IsKeyDown(Keys.PageDown))
-            {
-                if (Scene.DirectionalLight != null)
-                    Scene.DirectionalLight.Intensity -= 0.01f;
-            }
-            Scene.AmbientLight.Intensity = Math.Clamp(Scene.AmbientLight.Intensity, 0f, 1f);
-            if (Scene.DirectionalLight != null)
-                Scene.DirectionalLight.Intensity = Math.Clamp(Scene.DirectionalLight.Intensity, 0f, 1f);
-
-            //if (Context.Input.IsJustMouseMoved)
-            //{
-            //    Vector2 mouseMovement = Context.Input.MouseMovement;
-            //    Camera.RotatePitch(mouseMovement.Y * -0.1f);
-            //    //Camera.RotateYaw(mouseMovement.X * 0.1f);
-            //    Debug.Print(mouseMovement.ToString());
-            //}
-
-
-            //_currentMesh.RotateY(0.01f);
+            TestHelper.ProcessInputsTest(Context);
 
             System.Threading.Thread.Sleep(3);
 

@@ -8,20 +8,8 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Helper for the shader
     /// </summary>
-    public static class VkShaderHelper
+    public static class VkShaderCompiler
     {
-        /// <summary>
-        /// Create a vulkan shader
-        /// </summary>
-        public static VkShader CreateShader(string vertexCode, string fragmentCode, Dictionary<string, Format> overwrideVariableFormats = null)
-        {
-            byte[] vertexSpivr = Compile(vertexCode, ShaderStageFlags.Vertex);
-            byte[] fragmentSpivr = Compile(fragmentCode, ShaderStageFlags.Fragment);
-
-            return SpirvParser.Parse(vertexSpivr, fragmentSpivr, overwrideVariableFormats);
-        }
-
-
         /// <summary>
         /// Compile a shader
         /// </summary>

@@ -14,7 +14,8 @@ namespace MiniEngine.Tests.Drivers.Vulkan
         public void SpirvParserImGuiTest()
         {
 
-            var shader = VkShaderHelper.CreateShader(@"#version 450
+            var shader = new ShaderWrapper(null, 
+@"#version 450
 
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable

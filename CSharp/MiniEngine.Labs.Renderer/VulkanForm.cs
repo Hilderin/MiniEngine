@@ -25,7 +25,15 @@ namespace MiniEngine.Labs.Renderer
 
         private void VulkanForm_Load(object sender, EventArgs e)
         {
-            Shader shader = new Shader(@"#version 450
+            Renderer = new VkRenderer("Test", "1.0.0")
+                                .SetWindow32Handle(this.Handle)
+                                .EnableDebug(DebugCallback);
+
+            Renderer.Init();
+
+            Shader shader = Renderer.CreateShader(new()
+            {
+                VertexCode = @"#version 450
 
             layout(binding = 0) uniform UniformBufferObject {
                 mat4 model;
@@ -50,7 +58,8 @@ namespace MiniEngine.Labs.Renderer
                 //fragColor = vec3(PushConstants.render_matrix * vec4(inPosition, 1.0));
                 fragColor = inColor;
             }
-            ", @"#version 450
+            ",
+                FragmentCode = @"#version 450
 
             layout(location = 0) in vec3 fragColor;
 
@@ -59,13 +68,8 @@ namespace MiniEngine.Labs.Renderer
             void main() {
                 outColor = vec4(fragColor, 1.0);
             }
-            ");
-
-
-
-            Renderer = new VkRenderer("Test", new MiniEngine.Drivers.Vulkan.VkVersion(1, 0, 0), CreateSurface, DebugCallback);
-
-            Renderer.Init();
+            "
+            });
 
             //AssetManager assetManager = new AssetManager();
             ////var texture = assetManager.GetTexture2DFromFile(TEXTURE_PATH);
@@ -75,7 +79,7 @@ namespace MiniEngine.Labs.Renderer
             //var mesh = assetManager.GetMeshFromFile(MODEL_PATH, new MeshImportationParameters() { InverseFaces = true });
             //var mesh = new CubeMesh();
             //var mesh = new PlaneMesh();
-            var mesh = new MeshActor()
+            var mesh = new MeshObject()
             {
                 Mesh = Renderer.CreateMesh(Primitives.CreateTriangleMeshDefinition())
             };
@@ -83,8 +87,8 @@ namespace MiniEngine.Labs.Renderer
 
             mesh.Materials.Add(Renderer.CreateMaterial(new()
             {
-                DiffuseTexture = Renderer.CreateTexture2D(new ()
-                { 
+                DiffuseTexture = Renderer.CreateTexture2D(new()
+                {
                     Data = BaseTextures.WhitePixelData
                 }),
                 Shader = shader
@@ -96,24 +100,13 @@ namespace MiniEngine.Labs.Renderer
 
         }
 
-        private SurfaceKhr CreateSurface(VkInstance vk)
+        private void DebugCallback(DebugReportLevel level, int messageCode, string message)
         {
-            return vk.CreateWin32SurfaceKHR(
-                new Win32SurfaceCreateInfoKhr
-                {
-                    Hwnd = Handle,
-                    Hinstance = Process.GetCurrentProcess().Handle
-                });
-        }
-
-
-        private bool DebugCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, int messageCode, string message)
-        {
-            if (flags == DebugReportFlagsExt.Error)
+            if (level == DebugReportLevel.Error)
                 throw new Exception($"Vulkan error: {message}");
 
-            Debug.WriteLine($"{flags}: {message}");
-            return true;
+            Debug.WriteLine($"{level}: {message}");
+
         }
 
         private void VulkanForm_FormClosed(object sender, FormClosedEventArgs e)

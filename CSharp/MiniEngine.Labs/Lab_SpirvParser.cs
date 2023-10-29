@@ -13,7 +13,7 @@ namespace MiniEngine.Labs
         public void Test()
         {
 
-            Shader shader = new Shader(@"#version 450
+            ShaderWrapper shader = new ShaderWrapper(null, @"#version 450
 
 layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
@@ -43,7 +43,8 @@ void main() {
     fragColor = inColor;
     fragTexCoord = inTexCoord;
 }
-", @"#version 450
+"
+,@"#version 450
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTexCoord;
@@ -55,12 +56,7 @@ void main() {
 }
 ");
 
-
-            byte[] vertexBytes = VkShaderHelper.Compile(shader.VertexCode, ShaderStageFlags.Vertex);
-            byte[] fragmentBytes = VkShaderHelper.Compile(shader.FragmentCode, ShaderStageFlags.Fragment);
-
-            VkShader vkShader = SpirvParser.Parse(vertexBytes, fragmentBytes);
-
+            Console.WriteLine(shader.FragmentEntryPoint);
 
 
 

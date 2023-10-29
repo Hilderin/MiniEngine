@@ -29,8 +29,7 @@ namespace MiniEngine.Rendering.Vulkan
             VkDiffuseTexture = (VkTexture2D)matdef.DiffuseTexture;
             this.Diffuse = VkDiffuseTexture;
 
-            Shader = ShaderConverter.ConvertToVulkanShader(matdef.Shader);
-
+            Shader = (VkShader)matdef.Shader;
 
             _factory = factory;
             if (factory != null)

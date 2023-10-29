@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO.Enumeration;
 using System.Runtime.InteropServices;
 
 namespace MiniEngine.Drivers.Vulkan
@@ -14657,6 +14658,14 @@ namespace MiniEngine.Drivers.Vulkan
 		public uint Major;
         public uint Minor;
         public uint Patch;
+
+		public VkVersion(string versionStr)
+		{
+			var ver = new System.Version(versionStr);
+			Major = (uint)ver.Major;
+			Minor = (uint)ver.Minor;
+            Patch = (uint)ver.MajorRevision;
+        }
 
 		public VkVersion(uint major, uint minor, uint patch)
 		{

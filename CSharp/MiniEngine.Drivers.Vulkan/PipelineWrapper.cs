@@ -13,7 +13,7 @@ namespace MiniEngine.Drivers.Vulkan
         #region Privates members
 
         private Device _device;
-        private VkShader _shader;
+        private ShaderWrapper _shader;
         private SwapchainWrapper _swapchain;
 
         private DescriptorSetLayout[] descriptorSetLayouts;
@@ -31,7 +31,7 @@ namespace MiniEngine.Drivers.Vulkan
 
         public Pipeline Pipeline { get { return _pipeline; } }
         public PipelineLayout PipelineLayout { get { return _pipelineLayout; } }
-        public VkShader Shader { get { return _shader; } }
+        public ShaderWrapper Shader { get { return _shader; } }
         public DescriptorSetLayout[] DescriptorSetLayouts { get { return descriptorSetLayouts; } }
 
         #endregion
@@ -39,7 +39,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        internal PipelineWrapper(Device device, SwapchainWrapper swapchain, VkShader shader)
+        internal PipelineWrapper(Device device, SwapchainWrapper swapchain, ShaderWrapper shader)
         {
             _device = device;
             _shader = shader;
@@ -186,18 +186,15 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void CreateShaders()
         {
-            var vertexShaderModule = _device.CreateShaderModule(_shader.VertexSpirv);
-            var fragmentShaderModule = _device.CreateShaderModule(_shader.FragmentSpirv);
-
             pipelineShaderStages = new[] {
                 new PipelineShaderStageCreateInfo {
                     Stage = ShaderStageFlags.Vertex,
-                    Module = vertexShaderModule,
+                    Module = _shader.VertexShaderModule,
                     Name = _shader.VertexEntryPoint
                 },
                 new PipelineShaderStageCreateInfo {
                     Stage = ShaderStageFlags.Fragment,
-                    Module = fragmentShaderModule,
+                    Module = _shader.FragmentShaderModule,
                     Name = _shader.FragmentEntryPoint
                 }
             };

@@ -60,15 +60,18 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreateTriangleMesh()
         {
-            return Context.Current.CreateMesh(CreateTriangleMeshDefinition());
+            return Context.Current.Renderer.CreateMesh(CreateTriangleMeshDefinition());
         }
 
         /// <summary>
         /// Create a Triangle mesh actor
         /// </summary>
-        public static MeshActor CreateTriangleMeshActor()
+        public static MeshObject CreateTriangleMeshObject()
         {
-            return new MeshActor(CreateTriangleMesh());
+            return new MeshObject()
+            {
+                Mesh = CreateTriangleMesh()
+            };
         }
 
 
@@ -123,15 +126,18 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreatePyramidMesh()
         {
-            return Context.Current.CreateMesh(CreatePyramidMeshDefinition());
+            return Context.Current.Renderer.CreateMesh(CreatePyramidMeshDefinition());
         }
 
         /// <summary>
         /// Create a Pyramid mesh actor
         /// </summary>
-        public static MeshActor CreatePyramidMeshActor()
+        public static MeshObject CreatePyramidMeshObject()
         {
-            return new MeshActor(CreatePyramidMesh());
+            return new MeshObject()
+            {
+                Mesh = CreatePyramidMesh()
+            };
         }
 
         /// <summary>
@@ -191,15 +197,18 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreatePlaneMesh()
         {
-            return Context.Current.CreateMesh(CreatePlaneMeshDefinition());
+            return Context.Current.Renderer.CreateMesh(CreatePlaneMeshDefinition());
         }
 
         /// <summary>
         /// Create a Plane mesh actor
         /// </summary>
-        public static MeshActor CreatePlaneMeshActor()
+        public static MeshObject CreatePlaneMeshObject()
         {
-            return new MeshActor(CreatePlaneMesh());
+            return new MeshObject()
+            {
+                Mesh = CreatePlaneMesh()
+            };
         }
 
         /// <summary>
@@ -276,15 +285,18 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreateCubeMesh()
         {
-            return Context.Current.CreateMesh(CreateCubeMeshDefinition());
+            return Context.Current.Renderer.CreateMesh(CreateCubeMeshDefinition());
         }
 
         /// <summary>
         /// Create a cube mesh actor
         /// </summary>
-        public static MeshActor CreateCubeMeshActor()
+        public static MeshObject CreateCubeMeshObject()
         {
-            return new MeshActor(CreateCubeMesh());
+            return new MeshObject()
+            {
+                Mesh = CreateCubeMesh()
+            };
         }
     }
 }

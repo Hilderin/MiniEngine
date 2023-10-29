@@ -13,15 +13,15 @@ namespace MiniEngine
     {
 
         /// <summary>
-        /// Meshes to render
+        /// List of children game objects
         /// </summary>
-        private List<MeshActor> _meshes = new List<MeshActor>();
+        private List<GameObject> _children = new List<GameObject>();
 
 
         /// <summary>
-        /// List of meshes
+        /// List of children game objects
         /// </summary>
-        public List<MeshActor> Meshes { get { return _meshes; } }
+        public List<GameObject> Children { get { return _children; } }
 
 
         /// <summary>
@@ -31,76 +31,35 @@ namespace MiniEngine
 
 
         /// <summary>
-        /// Directional light
+        /// Add a game object
         /// </summary>
-        public DirectionalLight DirectionalLight = null;
-
-        /// <summary>
-        /// Default ambient light
-        /// </summary>
-        public AmbientLight AmbientLight = AmbientLight.Default;
-
-        /// <summary>
-        /// Point lights
-        /// </summary>
-        public List<PointLight> PointLights = new List<PointLight>();
-
-        /// <summary>
-        /// Spot lights
-        /// </summary>
-        public List<SpotLight> SpotLights = new List<SpotLight>();
-
-
-
-        /// <summary>
-        /// Add a mesh to render
-        /// </summary>
-        public void Add(MeshActor mesh)
+        public void Add(GameObject obj)
         {
-            _meshes.Add(mesh);
+            _children.Add(obj);
         }
 
         /// <summary>
-        /// Remove a mesh
+        /// Remove a game object
         /// </summary>
-        public void Remove(MeshActor mesh)
+        public void Remove(GameObject obj)
         {
-            _meshes.Remove(mesh);
+            _children.Remove(obj);
         }
 
         /// <summary>
-        /// Add a point light to render
+        /// Clear everything on the scene (it's a reset)
         /// </summary>
-        public void Add(PointLight pointLight)
+        public void Clear()
         {
-            this.PointLights.Add(pointLight);
+            for (int i = _children.Count - 1; i >= 0; i--)
+            {
+                _children[i].Destroy();
+            }
+
+
+            Camera = new Camera();
+
         }
-
-        /// <summary>
-        /// Remove a point light to render
-        /// </summary>
-        public void Remove(PointLight pointLight)
-        {
-            this.PointLights.Remove(pointLight);
-        }
-
-        /// <summary>
-        /// Add a spot light to render
-        /// </summary>
-        public void Add(SpotLight SpotLight)
-        {
-            this.SpotLights.Add(SpotLight);
-        }
-
-        /// <summary>
-        /// Remove a spot light to render
-        /// </summary>
-        public void Remove(SpotLight SpotLight)
-        {
-            this.SpotLights.Remove(SpotLight);
-        }
-
-
 
     }
 }

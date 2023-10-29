@@ -10,7 +10,7 @@ namespace MiniEngine.Assets
         /// <summary>
         /// Import a mesh from file
         /// </summary>
-        public MeshActor GetMeshFromFile(string path, MeshImportationParameters parameters = null)
+        public MeshObject GetMeshFromFile(string path, MeshImportationParameters parameters = null)
         {
             return new MeshImporter().GetMeshFromFile(path, parameters);
 

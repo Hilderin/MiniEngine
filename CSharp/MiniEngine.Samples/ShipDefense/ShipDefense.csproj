@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <OutputType>WinExe</OutputType>
+	  <TargetFramework>net7.0-windows</TargetFramework>
+	  <Nullable>disable</Nullable>
+	  <UseWindowsForms>true</UseWindowsForms>
+	  <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MiniEngine.Presentations.Glfw\MiniEngine.Presentations.Glfw.csproj" />
+    <ProjectReference Include="..\..\MiniEngine.Rendering.Vulkan\MiniEngine.Rendering.Vulkan.csproj" />
+    <ProjectReference Include="..\..\MiniEngine\MiniEngine.csproj" />
+  </ItemGroup>
+
+</Project>

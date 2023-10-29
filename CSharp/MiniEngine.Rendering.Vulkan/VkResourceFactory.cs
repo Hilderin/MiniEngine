@@ -60,6 +60,34 @@ namespace MiniEngine.Rendering.Vulkan
 
         }
 
+
+        /// <summary>
+        /// Create a shader
+        /// </summary>
+        public VkShader CreateShader(ShaderDefinition shaderDef)
+        {
+            Dictionary<string, Format> overwrideVariableFormats = null;
+
+            if (shaderDef.OverwrideVariableFormats != null && shaderDef.OverwrideVariableFormats.Count > 0)
+            {
+                overwrideVariableFormats = new Dictionary<string, Format>();
+
+                foreach (var kv in shaderDef.OverwrideVariableFormats)
+                {
+                    if (!Enum.TryParse<Format>(kv.Value, true, out Format format))
+                        throw new FormatException($"Invalid format for variable {kv.Key}: {kv.Value}");
+
+                    overwrideVariableFormats.Add(kv.Key, format);
+                }
+
+            }
+
+
+            return new VkShader(new ShaderWrapper(_vk.Device, shaderDef.VertexCode, shaderDef.FragmentCode, overwrideVariableFormats));
+
+        }
+
+
         /// <summary>
         /// Remove an object from the resources list
         /// </summary>

@@ -20,7 +20,7 @@ namespace MiniEngine.Rendering.Vulkan
         private BufferWrapper _vertexBuffer;
         private BufferWrapper _indexBuffer;
         private BufferWrapper _projMatrixBuffer;
-        private VkShader _shader;
+        private ShaderWrapper _shader;
         private PipelineWrapper _pipeline;
         private IntPtr _fontAtlasID = (IntPtr)1;
         private VkTexture2D _fontTexture;
@@ -55,9 +55,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             CreateShader();
 
-            _pipeline = _vk.CreatePipelineWrapper(_shader)
-                                .AddDynamicState(DynamicState.Scissor)
-                                .Build();
+            _pipeline = _vk.Swapchain.CreatePipelineWrapper(_shader)
+                                        .AddDynamicState(DynamicState.Scissor)
+                                        .Build();
 
 
             _mainSet = _pipeline.CreateDescriptorSet(0).Set("FontSampler", _vk.Sampler)
@@ -286,7 +286,8 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CreateShader()
         {
-            _shader = VkShaderHelper.CreateShader(@"#version 450
+            _shader = new ShaderWrapper(_vk.Device,
+@"#version 450
 
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
@@ -338,8 +339,8 @@ void main()
 , new Dictionary<string, Format>()
 {
     { "in_color", Format.R8G8B8A8Unorm }
-}
-);
+});
+
         }
 
 
