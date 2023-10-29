@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using MiniEngine.ResourceDefinitions;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -26,16 +27,15 @@ namespace MiniEngine
         private bool _isInitialized = false;
         private bool _isDisposed = false;
         private IWindow _window;
-        private IntPtr _windowsHandle = IntPtr.Zero;
         private IRenderer _renderer;
+        private DebugCallback _debugCallback;
 
         /// <summary>
         /// Current context
         /// </summary>
-        [ThreadStatic]
         private static Context _current;
 
-        
+
 
         #endregion
 
@@ -45,18 +45,12 @@ namespace MiniEngine
         /// <summary>
         /// Scene to render
         /// </summary>
-        public Scene Scene = new Scene();
+        public Scene Scene;
 
-
-        ///// <summary>
-        ///// ClientSize
-        ///// </summary>
-        //public Vector2 ClientSize
-        //{ 
-        //    get { return _clientSize; }
-        //    set { Resize(value.X, value.Y); }
-        //}
-
+        /// <summary>
+        /// AssetManager
+        /// </summary>
+        public AssetManager Asset;
 
         /// <summary>
         /// Current context
@@ -71,7 +65,13 @@ namespace MiniEngine
         /// <summary>
         /// Input manager
         /// </summary>
-        public readonly Input Input;
+        public readonly InputManager Input;
+
+        /// <summary>
+        /// Indicate if we are in debug mode
+        /// </summary>
+        public bool DebugEnabled;
+
 
         #endregion
 
@@ -82,7 +82,29 @@ namespace MiniEngine
         {
             _current = this;
 
-            Input = new Input();
+
+            Input = new InputManager();
+
+            Asset = new AssetManager(this);
+
+            Scene = new Scene();
+        }
+
+        /// <summary>
+        /// Enable debug
+        /// </summary>
+        public Context EnableDebug(DebugCallback callback = null)
+        {
+            _debugCallback = callback;
+
+            if (_renderer != null)
+                _renderer.EnableDebug(RendererDebugCallback);
+
+            DebugEnabled = true;
+
+            Asset.StartWatchUpdateContent();
+
+            return this;
         }
 
         /// <summary>
@@ -95,6 +117,9 @@ namespace MiniEngine
             if (_window != null)
                 _renderer.SetWindow(_window);
 
+            if (DebugEnabled)
+                _renderer.EnableDebug(RendererDebugCallback);
+
             return this;
         }
 
@@ -103,8 +128,6 @@ namespace MiniEngine
         /// </summary>
         public Context SetWindow32Handle(IntPtr handle)
         {
-            _windowsHandle = handle;
-
             if (_renderer != null)
                 _renderer.SetWindow32Handle(handle);
 
@@ -123,47 +146,6 @@ namespace MiniEngine
 
             return this;
         }
-
-        ///// <summary>
-        ///// Open the window
-        ///// </summary>
-        //public Context OpenWindow(float width, float height, string title)
-        //{
-        //    if (_window == null)
-        //    {
-        //        _window = new Window((int)width, (int)height, title, this);
-
-        //        _clientSize = new Vector2(width, height);
-
-        //        Renderer.SetWindow(_window);
-
-        //        this.CenterOnScreen();
-
-        //    }
-        //    else
-        //    {
-        //        //Ensure that the window is visible...
-        //        Resize(width, height);
-
-        //        this.Show();
-        //    }
-
-        //    return this;
-        //}
-
-        ///// <summary>
-        ///// Create the context for testing only
-        ///// </summary>
-        //public Context CreateTest(int width, int height)
-        //{
-        //    _window = new Window(width, height, "Test", this);
-
-        //    _clientSize = new Vector2(width, height);
-
-        //    this.Hide();
-
-        //    return this;
-        //}
 
         /// <summary>
         /// Center the window on screen
@@ -214,60 +196,6 @@ namespace MiniEngine
 
             return this;
         }
-
-
-        ///// <summary>
-        ///// Show the screen
-        ///// </summary>
-        //public Context Show()
-        //{
-        //    EnsureWindowExists();
-
-        //    _window.Visible = true;
-
-        //    return this;
-        //}
-
-        ///// <summary>
-        ///// Hide the screen
-        ///// </summary>
-        //public Context Hide()
-        //{
-        //    EnsureWindowExists();
-
-        //    _window.Visible = false;
-
-        //    return this;
-        //}
-
-        ///// <summary>
-        ///// Resize the screen
-        ///// </summary>
-        //public Context Resize(float width, float height)
-        //{
-        //    EnsureWindowExists();
-
-        //    Vector2 newSize = new Vector2((float)width, (float)height);
-        //    _window.ClientSize = _clientSize;
-        //    _clientSize = newSize;
-
-        //    return this;
-
-        //}
-
-        ///// <summary>
-        ///// Set the title of the screen
-        ///// </summary>
-        //public Context SetTitle(string title)
-        //{
-        //    EnsureWindowExists();
-
-        //    _window.Title = title;
-
-        //    return this;
-
-        //}
-
         /// <summary>
         /// Init the game/application
         /// </summary>
@@ -296,7 +224,7 @@ namespace MiniEngine
             while (!_window.IsClosing)
             {
 
-                
+
 
                 //Custom run code...
                 if (runHandler != null)
@@ -304,7 +232,7 @@ namespace MiniEngine
 
                 if (_window.IsClosing)
                     break;
-                                
+
                 //Rendering...
                 Renderer.Render(Scene);
 
@@ -364,31 +292,6 @@ namespace MiniEngine
         }
 
 
-
-        ///// <summary>
-        ///// Create a new mesh
-        ///// </summary>
-        //public Mesh CreateMesh(MeshDefinition meshDefinition)
-        //{
-        //    return _renderer.CreateMesh(meshDefinition);
-        //}
-
-        ///// <summary>
-        ///// Create a Texture2D
-        ///// </summary>
-        //public Texture2D CreateTexture2D(Texture2DDefinition texDef)
-        //{
-        //    return _renderer.CreateTexture2D(texDef);
-        //}
-
-        ///// <summary>
-        ///// Create a Material
-        ///// </summary>
-        //public Material CreateMaterial(MaterialDefinition matDef)
-        //{
-        //    return _renderer.CreateMaterial(matDef);
-        //}
-
         /// <summary>
         /// Disposing
         /// </summary>
@@ -431,16 +334,6 @@ namespace MiniEngine
 
         }
 
-
-        /// <summary>
-        /// Init the Glfw
-        /// </summary>
-        private void InitGlfw()
-        {
-            
-
-        }
-
         /// <summary>
         /// Be sure that the window is created
         /// </summary>
@@ -450,6 +343,23 @@ namespace MiniEngine
                 throw new InvalidOperationException("The Window has not been setupped, you must call SetWindow before this method.");
         }
 
+
+        /// <summary>
+        /// Callback in debug mode
+        /// </summary>
+        private void RendererDebugCallback(DebugLevel level, int messageCode, string message)
+        {
+            if (_debugCallback != null)
+                _debugCallback(level, messageCode, message);
+
+            if (level == DebugLevel.Error)
+                throw new Exception($"Renderer error: {message}");
+
+            Debug.WriteLine($"{level}: {message}");
+
+
+
+        }
 
     }
 }

@@ -11,6 +11,8 @@ namespace ShipDefense
         public Context Context;
         public Scene Scene;
 
+        private bool _mustReload = false;
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -18,7 +20,9 @@ namespace ShipDefense
         {
             Context = context;
             Scene = context.Scene;
+            Context.Asset.OnAssetChanged += Asset_OnAssetChanged;
         }
+
 
         /// <summary>
         /// Initialisation
@@ -29,7 +33,12 @@ namespace ShipDefense
 
             Scene.Add(new MeshObject()
             {
-                Mesh = Primitives.CreateCubeMesh()
+                Mesh = Primitives.CreateCubeMesh(),
+                Materials = new()
+                {
+                    Context.Asset.Get<Material>("materials/test")
+                }
+
             });
         }
 
@@ -43,7 +52,14 @@ namespace ShipDefense
             if (Context.Input.IsKeyDown(Keys.Escape))
                 Context.Quit();
             if (Context.Input.IsKeyDown(Keys.F5))
+                _mustReload = true;
+
+
+            if (_mustReload)
+            {
                 Reload();
+                _mustReload = false;
+            }
         }
 
         /// <summary>
@@ -53,6 +69,16 @@ namespace ShipDefense
         {
             Scene.Clear();
             Init();
+        }
+
+
+        /// <summary>
+        /// Just reloading everything on asset change
+        /// </summary>
+        private void Asset_OnAssetChanged()
+        {
+            //Not on the same thread so we will wait the next frame
+            _mustReload = true;
         }
     }
 }

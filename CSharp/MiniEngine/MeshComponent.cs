@@ -51,6 +51,7 @@ namespace MiniEngine
         public List<Material> Materials
         {
             get { return _materials; }
+            set { _materials = value; }
         }
 
 

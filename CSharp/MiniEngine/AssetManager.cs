@@ -1,4 +1,5 @@
 ﻿using MiniEngine.AssetDefinitions;
+using MiniEngine.AssetImporters;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,20 +17,32 @@ namespace MiniEngine
     public class AssetManager
     {
         /// <summary>
+        /// Event when assets have changed
+        /// </summary>
+        public event Action OnAssetChanged;
+
+
+        private FileSystemWatcher _fsw;
+        private Task _taskUpdateContent = null;
+        private DateTime _lastUpdatedContent = DateTime.MinValue;
+
+
+        /// <summary>
+        /// Asset importer
+        /// </summary>
+        private Dictionary<Type, IAssetImporter> _assetImporters = new Dictionary<Type, IAssetImporter>();
+
+        /// <summary>
         /// Yaml deserialization
         /// </summary>
         private IDeserializer _deserializer = new DeserializerBuilder()
                                                         .WithAttemptingUnquotedStringTypeDeserialization()
                                                         .Build();
-        /// <summary>
-        /// Cache shaders
-        /// </summary>
-        private Dictionary<string, Shader> _cacheShader = new Dictionary<string, Shader>();
 
         /// <summary>
         /// Context
         /// </summary>
-        private Context _context;
+        public Context Context { get; private set; }
 
         /// <summary>
         /// Root path for the assets
@@ -41,68 +54,35 @@ namespace MiniEngine
         /// </summary>
         public AssetManager(Context context)
         {
+            Context = context;
+
             RootPath = GetDefaultRootPath();
+
+            //Assert importers...
+            _assetImporters.Add(typeof(Texture2D), new Texture2DImporter(this));
+            _assetImporters.Add(typeof(Material), new MaterialImporter(this));
+            _assetImporters.Add(typeof(Shader), new ShaderImporter(this));
+
+
+
         }
 
+
         /// <summary>
-        /// Get a shader
+        /// Get an asset
         /// </summary>
-        public Shader GetShader(string name)
+        public T Get<T>(string name)
         {
+            if (!_assetImporters.TryGetValue(typeof(T), out IAssetImporter importer))
+                throw new InvalidOperationException($"Asset type not supported: {typeof(T).Name}");
 
-            if (!_cacheShader.TryGetValue(name, out Shader shader))
-            {
-                string vertPath;
-                string fragPath;
-                Dictionary<string, string> overwrideVariableFormats = null;
-
-
-                string assetPath = GetAssetPath(name, ".asset", false);
-
-                if (!String.IsNullOrEmpty(assetPath))
-                {
-                    //We have an asset file...
-                    var assetInfo = DeserializeFile<ShaderAssetDefinition>(assetPath);
-
-                    if (String.IsNullOrEmpty(assetInfo.VertexCodePath))
-                        throw new FormatException($"VertexCodePath undefined in asset definition file: '{assetPath}'");
-                    if (String.IsNullOrEmpty(assetInfo.FragmentCodePath))
-                        throw new FormatException($"FragmentCodePath undefined in asset definition file: '{assetPath}'");
-
-                    vertPath = Path.GetFullPath(assetInfo.VertexCodePath, Path.GetDirectoryName(assetPath));
-                    fragPath = Path.GetFullPath(assetInfo.FragmentCodePath, Path.GetDirectoryName(assetPath));
-
-                    if (!File.Exists(vertPath))
-                        throw new FormatException($"VertexCodePath not found: '{vertPath}'");
-                    if (!File.Exists(fragPath))
-                        throw new FormatException($"FragmentCodePath not found: '{fragPath}'");
-
-                    overwrideVariableFormats = assetInfo.OverwrideVariableFormats;
-                }
-                else
-                {
-                    //.asset not found.... check only for .vert et .frag...
-                    vertPath = GetAssetPath(name, ".vert");
-                    fragPath = GetAssetPath(name, ".frag");
-                }
-
-                shader = _context.Renderer.CreateShader(new()
-                {
-                    VertexCode = File.ReadAllText(vertPath),
-                    FragmentCode = File.ReadAllText(fragPath),
-                    OverwrideVariableFormats = overwrideVariableFormats
-                });
-
-                _cacheShader.Add(name, shader);
-            }
-
-            return shader;
+            return (T)importer.Import(name);
         }
 
         /// <summary>
         /// Deserialize a file
         /// </summary>
-        private T DeserializeFile<T>(string path)
+        public T DeserializeFile<T>(string path)
         {
 
             using (TextReader reader = File.OpenText(path))
@@ -111,6 +91,39 @@ namespace MiniEngine
             }
 
         }
+
+
+        /// <summary>
+        /// Get the path for an asset
+        /// </summary>
+        public string GetAssetPath(string name, string extension)
+        {
+            string path = Path.Combine(RootPath, name + extension);
+
+            if (!File.Exists(path))
+            {
+                return String.Empty;
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// Get the path for an asset that can have multiple extensions
+        /// </summary>
+        public string GetAssetPath(string name, string[] extensions, bool throwIfNotExists = true)
+        {
+            for (int i = 0; i < extensions.Length; i++)
+            {
+                string path = GetAssetPath(name, extensions[i]);
+                if (!String.IsNullOrEmpty(path))
+                    return path;
+            }
+
+            return String.Empty;
+        }
+
+
         /// <summary>
         /// Calculate the default root path
         /// </summary>
@@ -120,35 +133,116 @@ namespace MiniEngine
             string rootPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
 
             if (rootPath.EndsWith("\\net7.0-windows"))
-                rootPath = rootPath.Substring(rootPath.Length - "\\net7.0-windows".Length);
+                rootPath = rootPath.Substring(0, rootPath.Length - "\\net7.0-windows".Length);
 
             if (rootPath.EndsWith("\\Debug"))
-                rootPath = rootPath.Substring(rootPath.Length - "\\Debug".Length);
+                rootPath = rootPath.Substring(0, rootPath.Length - "\\Debug".Length);
             if (rootPath.EndsWith("\\Release"))
-                rootPath = rootPath.Substring(rootPath.Length - "\\Release".Length);
+                rootPath = rootPath.Substring(0, rootPath.Length - "\\Release".Length);
 
             if (rootPath.EndsWith("\\bin"))
-                rootPath = rootPath.Substring(rootPath.Length - "\\bin".Length);
+                rootPath = rootPath.Substring(0, rootPath.Length - "\\bin".Length);
+
+            //Assets are in a subfolder...
+            rootPath = Path.Combine(rootPath, "Assets");
+
+
 
             return rootPath;
 
         }
 
-        /// <summary>
-        /// Get the path for an asset
-        /// </summary>
-        private string GetAssetPath(string name, string extension, bool throwIfNotExists = true)
-        {
-            string path = Path.Combine(RootPath, name + extension);
 
-            if (!File.Exists(path))
+        /// <summary>
+        /// Permet de vérifier si du contenu change
+        /// </summary>
+        public void StartWatchUpdateContent()
+        {
+            if (_fsw == null)
             {
-                if (throwIfNotExists)
-                    throw new FileNotFoundException($"Asset not found: {path}");
-                return String.Empty;
+                if (Directory.Exists(RootPath))
+                {
+                    _fsw = new FileSystemWatcher(RootPath);
+                    _fsw.IncludeSubdirectories = true;
+
+                    _fsw.Changed += Fsw_Changed;
+                    _fsw.Created += Fsw_Changed;
+                    _fsw.Deleted += Fsw_Changed;
+                    _fsw.Renamed += Fsw_Renamed;
+
+                    _fsw.EnableRaisingEvents = true;
+
+                }
             }
 
-            return path;
+        }
+
+        /// <summary>
+        /// Event quand des changements sont lancés
+        /// </summary>
+        private void Fsw_Renamed(object sender, RenamedEventArgs e)
+        {
+            ProcessChange(e.FullPath);
+        }
+
+
+        /// <summary>
+        /// Event quand des changements sont lancés
+        /// </summary>
+        private void Fsw_Changed(object sender, FileSystemEventArgs e)
+        {
+            ProcessChange(e.FullPath);
+        }
+
+        /// <summary>
+        /// Process le changement
+        /// </summary>
+        private void ProcessChange(string fullPath)
+        {
+            lock (_fsw)
+            {
+                if (_taskUpdateContent == null)
+                {
+                    _taskUpdateContent = Task.Factory.StartNew(TaskWaitBeforeForNotification);
+                }
+            }
+
+        }
+
+
+        /// <summary>
+        /// Task that waits a bit before reloading content...
+        /// </summary>
+        private void TaskWaitBeforeForNotification()
+        {
+            try
+            {
+                System.Threading.Thread.Sleep(100);
+
+                //On va surement avoir plus d'un event, on va attendre le dernier event
+                while (DateTime.Now.Subtract(_lastUpdatedContent).TotalMilliseconds < 100)
+                    System.Threading.Thread.Sleep(10);
+
+
+                //On indique qu'on a du contenu à reloader
+                ResetCacheAllImporters();
+
+                OnAssetChanged?.Invoke();
+
+            }
+            finally
+            {
+                _taskUpdateContent = null;
+            }
+        }
+
+        /// <summary>
+        /// Reset the cache for all importers
+        /// </summary>
+        private void ResetCacheAllImporters()
+        {
+            foreach (var importer in _assetImporters.Values)
+                importer.ResetCache();
         }
 
     }

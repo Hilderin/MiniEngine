@@ -100,9 +100,9 @@ namespace MiniEngine.Labs.Renderer
 
         }
 
-        private void DebugCallback(DebugReportLevel level, int messageCode, string message)
+        private void DebugCallback(DebugLevel level, int messageCode, string message)
         {
-            if (level == DebugReportLevel.Error)
+            if (level == DebugLevel.Error)
                 throw new Exception($"Vulkan error: {message}");
 
             Debug.WriteLine($"{level}: {message}");

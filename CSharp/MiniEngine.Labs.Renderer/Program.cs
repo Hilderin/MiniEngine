@@ -32,8 +32,8 @@ namespace MiniEngine.Labs.Renderer
                     var t = new Test_ImGUI();
 
                     context.SetRenderer(new VkRenderer(t.GetType().Name, "1.0.0")
-                                                .EnableDebug(DebugCallback)
                                        )
+                           .EnableDebug()
                            .SetWindow(new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
                            .Init(() =>
                            {
@@ -61,15 +61,6 @@ namespace MiniEngine.Labs.Renderer
                 MessageBox.Show("Error: " + ex.ToString());
             }
 
-            
-        }
-
-        private static void DebugCallback(DebugReportLevel level, int messageCode, string message)
-        {
-            if (level == DebugReportLevel.Error)
-                throw new Exception($"Vulkan error: {message}");
-
-            Debug.WriteLine($"{level}: {message}");
             
         }
     }

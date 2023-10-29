@@ -26,8 +26,8 @@ namespace ShipDefense
                 {
                     var game = new Game(context);
 
-                    context.SetRenderer(new VkRenderer(TITLE, "1.0.0")
-                                                .EnableDebug(DebugCallback)
+                    context.EnableDebug()
+                           .SetRenderer(new VkRenderer(TITLE, "1.0.0")
                                        )
                            .SetWindow(new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
                            .Init(() =>
@@ -51,12 +51,5 @@ namespace ShipDefense
 
         }
 
-        private static void DebugCallback(DebugReportLevel level, int messageCode, string message)
-        {
-            if (level == DebugReportLevel.Error)
-                throw new Exception($"Vulkan error: {message}");
-
-            Debug.WriteLine($"{level}: {message}");
-        }
     }
 }

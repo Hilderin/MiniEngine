@@ -86,7 +86,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Update the input for the mouse and the keyboard to ImGui
         /// </summary>
-        public void UpdateImGuiInput(Input input)
+        public void UpdateImGuiInput(InputManager input)
         {
             ImGuiIOPtr io = ImGui.GetIO();
             //io.ClearInputKeys();

@@ -67,5 +67,10 @@ namespace MiniEngine
         /// </summary>
         Shader CreateShader(ShaderDefinition shaderDef);
 
+        /// <summary>
+        /// Enable debugging
+        /// </summary>
+        void EnableDebug(DebugCallback debugCallback);
+
     }
 }

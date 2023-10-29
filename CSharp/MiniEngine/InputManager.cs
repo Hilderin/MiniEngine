@@ -10,7 +10,7 @@ namespace MiniEngine
     /// <summary>
     /// Track inputs between each frames
     /// </summary>
-    public class Input
+    public class InputManager
     {
         /// <summary>
         /// Keys that are down at a fixed position
@@ -102,7 +102,7 @@ namespace MiniEngine
         /// <summary>
         /// Constructor
         /// </summary>
-        public Input()
+        public InputManager()
         {
         }
 

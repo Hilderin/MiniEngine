@@ -45,7 +45,7 @@ namespace MiniEngine.Rendering.Vulkan
         private string _applicationName;
         private VkVersion _applicationVersion;
         private Func<VkInstance, SurfaceKhr> _surfaceCreationCallback;
-        private VkDebugReportCallback _debugCallback;
+        private DebugCallback _debugCallback;
         private bool _initialized = false;
         private VkResourceFactory _resourceFactory;
         private ImGuiRenderer _imGui;
@@ -75,7 +75,15 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Enable debugging
         /// </summary>
-        public VkRenderer EnableDebug(VkDebugReportCallback debugCallback = null)
+        void IRenderer.EnableDebug(DebugCallback debugCallback)
+        {
+            _debugCallback = debugCallback;
+        }
+
+        /// <summary>
+        /// Enable debugging
+        /// </summary>
+        public VkRenderer EnableDebug(DebugCallback debugCallback)
         {
             _debugCallback = debugCallback;
             return this;
@@ -93,7 +101,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Update the input for the mouse and the keyboard to ImGui
         /// </summary>
-        public void UpdateImGuiInput(Input input)
+        public void UpdateImGuiInput(InputManager input)
         {
             _imGui.UpdateImGuiInput(input);
         }
@@ -438,7 +446,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private bool DebugReportCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, int messageCode, string message)
         {
-            _debugCallback((DebugReportLevel)flags, messageCode, message);
+            _debugCallback((DebugLevel)flags, messageCode, message);
             return true;
         }
 
