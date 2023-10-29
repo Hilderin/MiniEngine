@@ -44,7 +44,6 @@ namespace MiniEngine.Rendering.Vulkan
         private IWindow _window;
         private string _applicationName;
         private VkVersion _applicationVersion;
-        private Func<VkInstance, SurfaceKhr> _surfaceCreationCallback;
         private DebugCallback _debugCallback;
         private bool _initialized = false;
         private VkResourceFactory _resourceFactory;
@@ -63,9 +62,6 @@ namespace MiniEngine.Rendering.Vulkan
         {
             _applicationName = applicationName;
             _applicationVersion = new VkVersion(applicationVersion);
-            
-
-
         }
 
         #endregion
@@ -200,17 +196,47 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Add a mesh on the screen
+        /// </summary>
+        public IRenderHandle AddMesh(Mesh mesh, List<Material> materials, WorldTransform transform)
+        {
+            VkMeshRenderer meshRenderer = new VkMeshRenderer(mesh, materials, transform, this);
+            _meshRenderers.Add(meshRenderer);
+            return meshRenderer;
+        }
+
+        /// <summary>
+        /// Remove a mesh from the screen
+        /// </summary>
+        public void RemoveMesh(IRenderHandle handle)
+        {
+            VkMeshRenderer meshRenderer = handle as VkMeshRenderer;
+
+            if (meshRenderer != null)
+            {
+                meshRenderer.Dispose();
+                _meshRenderers.Remove(meshRenderer);
+            }
+
+        }
+
+        /// <summary>
         /// Render a scene
         /// </summary>
-        public void Render(Scene scene)
+        public void Render(ICamera camera)
         {
             if (!_initialized)
                 Init();
 
-            RecalculateNextFrame(scene);
+            //If no camera... nothing to render...
+            if (camera != null)
+            {
+                RecalculateProjectionMatrix(camera);
+            }
+
 
             //Render the frame...
-            RenderFrame(scene);
+            RenderFrame(camera);
         }
 
 
@@ -308,65 +334,17 @@ namespace MiniEngine.Rendering.Vulkan
 
         #region Private methods
 
-        /// <summary>
-        /// Recalculate information for the next frame
-        /// </summary>
-        private void RecalculateNextFrame(Scene scene)
-        {
-            //The camera needs to be the same size has the client...
-            if (Device.CurrentExtent.Width != scene.Camera.ClientSize.X || Device.CurrentExtent.Height != scene.Camera.ClientSize.Y)
-                scene.Camera.ClientSize = new Vector2(Device.CurrentExtent.Width, Device.CurrentExtent.Height);
-
-            RecalculateProjectionMatrix(scene);
-
-            //-------------------
-            //New meshes..........
-            if (HistoryManager.Current.AddedMeshes.Count > 0)
-            {
-                foreach (var meshComponent in HistoryManager.Current.AddedMeshes)
-                {
-                    //Initialization of the mesh renderer...
-                    VkMeshRenderer meshRenderer = new VkMeshRenderer(meshComponent, this);
-                    meshComponent.RendererStateObj = meshRenderer;
-                    _meshRenderers.Add(meshRenderer);
-
-
-                }
-                HistoryManager.Current.AddedMeshes.Clear();
-            }
-
-
-            //-------------------
-            //Deleted meshes..........
-            if (HistoryManager.Current.RemovedMeshes.Count > 0)
-            {
-                foreach (var meshComponent in HistoryManager.Current.RemovedMeshes)
-                {
-                    //Initialization of the mesh renderer...
-                    VkMeshRenderer meshRenderer = meshComponent.RendererStateObj as VkMeshRenderer;
-
-                    if (meshRenderer != null)
-                    {
-                        meshRenderer.Dispose();
-                        _meshRenderers.Remove(meshRenderer);
-                    }
-
-                }
-                HistoryManager.Current.RemovedMeshes.Clear();
-            }
-
-        }
 
         /// <summary>
         /// Recalculate the projection matrix
         /// </summary>
-        private void RecalculateProjectionMatrix(Scene scene)
+        private void RecalculateProjectionMatrix(ICamera camera)
         {
            
 
             //Update MVP Matrix...
-            Matrix4 viewMat2 = scene.Camera.GetMatrix();
-            Matrix4 projMat = scene.Camera.GetProjectionMatrixVulkan();
+            Matrix4 viewMat2 = camera.GetViewMatrix();
+            Matrix4 projMat = camera.GetProjectionMatrixVulkan((int)Device.CurrentExtent.Width, (int)Device.CurrentExtent.Height);
             
             this.MVPMatrix = projMat * viewMat2;
 
@@ -375,19 +353,19 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Render the next frame
         /// </summary>
-        private void RenderFrame(Scene scene)
+        private void RenderFrame(ICamera camera)
         {
             RenderCommandBuffer commandBuffer = Swapchain.GetNextRenderCommandBuffer();
 
             commandBuffer.Begin();
 
-            //If no camera.. then.. nothing on screen...
-            if (scene.Camera != null)
+            //If no camera, nothing to render... in 3D
+            if (camera != null)
             {
                 foreach (var meshRenderer in _meshRenderers)
                     meshRenderer.PopulateCommandBuffers(commandBuffer);
             }
-
+            
             //Rendering of ImGui...
             if (_imGui != null)
                 _imGui.Render(commandBuffer);

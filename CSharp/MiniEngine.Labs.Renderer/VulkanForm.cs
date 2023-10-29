@@ -116,7 +116,7 @@ namespace MiniEngine.Labs.Renderer
 
         private void tmrRefresh_Tick(object sender, EventArgs e)
         {
-            Renderer.Render(Scene);
+            Renderer.Render(Scene.Camera);
         }
     }
 }

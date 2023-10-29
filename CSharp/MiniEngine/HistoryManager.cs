@@ -17,11 +17,6 @@ namespace MiniEngine
         public List<MeshComponent> RemovedMeshes = new List<MeshComponent>();
 
         /// <summary>
-        /// Current HistoryManager
-        /// </summary>
-        public static HistoryManager Current = new HistoryManager();
-
-        /// <summary>
         /// Constructor
         /// </summary>
         public HistoryManager()

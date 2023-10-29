@@ -6,15 +6,6 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace MiniEngine
 {
-    /// <summary>
-    /// Callback for the Init method
-    /// </summary>
-    public delegate void InitHandler();
-
-    /// <summary>
-    /// Callback for the Run method
-    /// </summary>
-    public delegate void RunHandler();
 
     /// <summary>
     /// Context for a game instance
@@ -29,12 +20,17 @@ namespace MiniEngine
         private IWindow _window;
         private IRenderer _renderer;
         private DebugCallback _debugCallback;
+        private GameLoop _gameLoop;
 
         /// <summary>
         /// Current context
         /// </summary>
         private static Context _current;
 
+        /// <summary>
+        /// Methods to call at each frame
+        /// </summary>
+        private List<Action> _updates = new List<Action>();
 
 
         #endregion
@@ -53,9 +49,22 @@ namespace MiniEngine
         public AssetManager Asset;
 
         /// <summary>
+        /// History manager
+        /// </summary>
+        public HistoryManager History;
+
+        /// <summary>
         /// Current context
         /// </summary>
-        public static Context Current { get { return _current; } }
+        public static Context Current
+        { 
+            get
+            {
+                if (_current == null)
+                    _current = new Context();
+                return _current;
+            } 
+        }
 
         /// <summary>
         /// Renderer
@@ -82,12 +91,15 @@ namespace MiniEngine
         {
             _current = this;
 
+            History = new HistoryManager();
 
             Input = new InputManager();
 
             Asset = new AssetManager(this);
 
             Scene = new Scene();
+
+            _gameLoop = new GameLoop();
         }
 
         /// <summary>
@@ -199,7 +211,7 @@ namespace MiniEngine
         /// <summary>
         /// Init the game/application
         /// </summary>
-        public Context Init(InitHandler initHandler = null)
+        public Context Init(Action initHandler = null)
         {
             InitInternal();
 
@@ -213,36 +225,14 @@ namespace MiniEngine
         /// <summary>
         /// Run the game/application
         /// </summary>
-        public void Run(RunHandler runHandler = null)
+        public void Run(Action runHandler = null)
         {
             EnsureWindowExists();
 
             //Now we can initialize the renderer...
             InitInternal();
 
-            //And we are looping...
-            while (!_window.IsClosing)
-            {
-
-
-
-                //Custom run code...
-                if (runHandler != null)
-                    runHandler();
-
-                if (_window.IsClosing)
-                    break;
-
-                //Rendering...
-                Renderer.Render(Scene);
-
-
-                //Indicate a new frame...
-                Input.OnNewFrame();
-
-                //Get new mouse and keyboard pulls
-                _window.DoEvents();
-            }
+            _gameLoop.RunLoop(() => RunOneFrame(runHandler));
 
         }
 
@@ -251,23 +241,43 @@ namespace MiniEngine
         /// Run only one frame and does not swap buffers
         /// Important if we want to grab the framebuffer for screenshots
         /// </summary>
-        public void RenderOneFramebuffer(RunHandler runHandler = null)
+        public void RenderOneFramebuffer(Action runHandler = null)
         {
             EnsureWindowExists();
 
             //Now we can initialize the renderer...
             InitInternal();
 
+            RunOneFrame(runHandler);
+
+        }
+
+        /// <summary>
+        /// Excute on frame
+        /// </summary>
+        private bool RunOneFrame(Action runHandler)
+        {
+           
             //Custom run code...
             if (runHandler != null)
                 runHandler();
 
             if (_window.IsClosing)
-                return;
+                return false;
+
+            RecalculateNextFrame();
 
             //Rendering...
-            _renderer.Render(Scene);
+            Renderer.Render(Scene.Camera);
 
+
+            //Indicate a new frame...
+            Input.OnNewFrame();
+
+            //Get new mouse and keyboard pulls
+            _window.DoEvents();
+
+            return true;
         }
 
         /// <summary>
@@ -288,6 +298,15 @@ namespace MiniEngine
             byte[] buffer = _renderer.GetFramebufferRGBA(x, y, width, height);
 
             return SixLabors.ImageSharp.Image.LoadPixelData<Rgba32>(buffer, width, height);
+
+        }
+
+        /// <summary>
+        /// Register an update action
+        /// </summary>
+        public void RegisterUpdate(Action updateAction)
+        {
+            _updates.Add(updateAction);
 
         }
 
@@ -358,6 +377,45 @@ namespace MiniEngine
             Debug.WriteLine($"{level}: {message}");
 
 
+
+        }
+
+        /// <summary>
+        /// Recalculate information for the next frame
+        /// </summary>
+        private void RecalculateNextFrame()
+        {
+            //-------------------
+            //Executes updates...
+            for (int i = 0; i < _updates.Count; i++)
+            {
+                _updates[i]();
+            }
+
+            //-------------------
+            //New meshes..........
+            if (History.AddedMeshes.Count > 0)
+            {
+                foreach (var meshComponent in History.AddedMeshes)
+                {
+                    //Initialization of the mesh renderer...
+                    meshComponent.RendererHandle = Renderer.AddMesh(meshComponent.Mesh, meshComponent.Materials, meshComponent.Parent);
+                }
+                History.AddedMeshes.Clear();
+            }
+
+
+            //-------------------
+            //Deleted meshes..........
+            if (History.RemovedMeshes.Count > 0)
+            {
+                foreach (var meshComponent in History.RemovedMeshes)
+                {
+                    //Initialization of the mesh renderer...
+                    Renderer.RemoveMesh(meshComponent.RendererHandle);
+                }
+                History.RemovedMeshes.Clear();
+            }
 
         }
 

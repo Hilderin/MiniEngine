@@ -35,7 +35,7 @@ namespace MiniEngine
         /// <summary>
         /// Render the scene
         /// </summary>
-        void Render(Scene scene);
+        void Render(ICamera camera);
 
         /// <summary>
         /// Get the frame buffer 
@@ -71,6 +71,16 @@ namespace MiniEngine
         /// Enable debugging
         /// </summary>
         void EnableDebug(DebugCallback debugCallback);
+
+        /// <summary>
+        /// Add a mesh on the screen
+        /// </summary>
+        IRenderHandle AddMesh(Mesh mesh, List<Material> materials, WorldTransform transform);
+
+        /// <summary>
+        /// Remove a mesh from the screen
+        /// </summary>
+        void RemoveMesh(IRenderHandle handle);
 
     }
 }

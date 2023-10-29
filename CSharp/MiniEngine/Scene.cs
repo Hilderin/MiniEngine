@@ -27,7 +27,15 @@ namespace MiniEngine
         /// <summary>
         /// Current camera
         /// </summary>
-        public Camera Camera = new Camera();
+        public CameraObject Camera;
+
+        /// <summary>
+        /// Basic scene
+        /// </summary>
+        public Scene()
+        {
+            InitEmptyScene();
+        }
 
 
         /// <summary>
@@ -57,8 +65,17 @@ namespace MiniEngine
             }
 
 
-            Camera = new Camera();
+            InitEmptyScene();
 
+        }
+
+        /// <summary>
+        /// Create a new camera
+        /// </summary>
+        private void InitEmptyScene()
+        {
+            Camera = new CameraObject();
+            
         }
 
     }

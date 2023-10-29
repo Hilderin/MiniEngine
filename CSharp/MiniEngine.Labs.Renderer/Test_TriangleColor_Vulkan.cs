@@ -122,7 +122,7 @@ void main() {
 
         public void Update()
         {
-            TestHelper.ProcessInputsTest(Context);
+            LabHelper.ProcessInputsTest(Context);
 
             System.Threading.Thread.Sleep(3);
 

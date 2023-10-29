@@ -30,19 +30,19 @@ namespace MiniEngine
             set
             {
                 if(_mesh != null)
-                    HistoryManager.Current.RemovedMeshes.Add(this);
+                    Context.History.RemovedMeshes.Add(this);
 
                 _mesh = value;
 
                 if (value != null)
-                    HistoryManager.Current.AddedMeshes.Add(this);
+                    Context.History.AddedMeshes.Add(this);
             } 
         }
 
         /// <summary>
         /// State for the renderer
         /// </summary>
-        public object RendererStateObj = null;
+        public IRenderHandle RendererHandle = null;
 
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace MiniEngine
         protected override void OnDestroy()
         {
             if (_mesh != null)
-                HistoryManager.Current.RemovedMeshes.Add(this);
+                Context.History.RemovedMeshes.Add(this);
         }
 
     }

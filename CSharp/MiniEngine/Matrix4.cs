@@ -333,6 +333,39 @@ namespace MiniEngine
             return newMatrix;
         }
 
+        /// <summary>
+        /// Get the Camera matrix
+        /// </summary>
+        public static Matrix4 GetViewMatrix(Vector3 cameraPosition, Vector3 cameraBackwardVector, Vector3 cameraUpVector)
+        {
+
+            //UVN...
+            //U = Points to the right of the camera
+            //V = UP
+            //N = Target, where the camera is looking
+            //Vector3 U = new Vector3(1.0f, 0.0f, 0.0f);
+            //Vector3 V = new Vector3(0.0f, 1.0f, 0.0f);
+            //Vector3 N = new Vector3(0.0f, 0.0f, 1.0f);
+
+            // Vector3 U = this.Right;
+            Vector3 V = cameraUpVector;
+            Vector3 N = cameraBackwardVector;
+
+            Vector3 U = N.Cross(V);
+            U.Invert();
+
+            //Debug.Print("N: " + N + ", V: " + V + ", U: " + U + ", u2: " + U);
+
+            Matrix4 translationMatrix = Matrix4.CreateTranslationMatrix(-cameraPosition.X, -cameraPosition.Y, -cameraPosition.Z);
+
+            Matrix4 cameraMatrix = new Matrix4(U.X, U.Y, U.Z, 0.0f,
+                                                V.X, V.Y, V.Z, 0.0f,
+                                                N.X, N.Y, N.Z, 0.0f,
+                                                0.0f, 0.0f, 0.0f, 1.0f);
+
+            return cameraMatrix * translationMatrix;
+        }
+
         ///<summary>
         /// Summary:
         ///     Creates a perspective projection matrix based on a field of view, aspect ratio,

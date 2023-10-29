@@ -12,7 +12,7 @@ namespace MiniEngine.Labs.Renderer
 
         private Context Context = Context.Current;
         private Scene Scene = Context.Current.Scene;
-        private Camera Camera = Context.Current.Scene.Camera;
+        private CameraObject Camera = Context.Current.Scene.Camera;
 
         public void Init()
         {
@@ -129,7 +129,7 @@ void main() {
 
         public void Update()
         {
-            TestHelper.ProcessInputsTest(Context);
+            LabHelper.ProcessInputsTest(Context);
 
             System.Threading.Thread.Sleep(3);
 

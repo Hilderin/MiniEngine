@@ -1,3 +1,4 @@
 ﻿---
-DiffuseTexture: Textures/triangle_white
+DiffuseTexture: Textures/Test
 Shader: Unlit
+

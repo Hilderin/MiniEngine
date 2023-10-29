@@ -2,7 +2,7 @@
 
 namespace MiniEngine.Labs.Renderer
 {
-    public static class TestHelper
+    public static class LabHelper
     {
 
         /// <summary>

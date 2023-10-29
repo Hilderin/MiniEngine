@@ -1,5 +1,7 @@
 ﻿using MiniEngine;
+using MiniEngine.Components;
 using System;
+using Math = MiniEngine.Math;
 
 namespace ShipDefense
 {
@@ -10,6 +12,7 @@ namespace ShipDefense
     {
         public Context Context;
         public Scene Scene;
+        public CameraComponent CameraComponent;
 
         private bool _mustReload = false;
 
@@ -29,7 +32,14 @@ namespace ShipDefense
         /// </summary>
         public void Init()
         {
-            Scene.Camera.MoveBackward(3f);
+            //CameraComponent = new CameraComponent();
+            //CameraComponent.Camera = 
+            Scene.Camera.Location = new Vector3(0f, 0, -3f);
+            //Scene.Camera.RotatePitch(Math.DegToRad(15));
+            Scene.Camera.AddComponent<BasicMovementComponent>();
+
+            //if (Context.Scene != null)
+            //    Context.Scene.Camera = Camera;
 
             Scene.Add(new MeshObject()
             {

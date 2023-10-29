@@ -122,7 +122,7 @@ void main() {
 
         public void Update()
         {
-            TestHelper.ProcessInputsTest(Context);
+            LabHelper.ProcessInputsTest(Context);
 
 
             //_currentMesh.RotateY(0.01f);

@@ -23,6 +23,11 @@ namespace MiniEngine
         private List<GameComponent> _components = new List<GameComponent>();
 
         /// <summary>
+        /// Current Context
+        /// </summary>
+        public Context Context => Context.Current;
+
+        /// <summary>
         /// Add a new component to the game object
         /// </summary>
         public T AddComponent<T>() where T : GameComponent, new()
@@ -84,7 +89,7 @@ namespace MiniEngine
         /// <summary>
         /// On destruction
         /// </summary>
-        protected void OnDestroy()
+        protected virtual void OnDestroy()
         {
 
         }

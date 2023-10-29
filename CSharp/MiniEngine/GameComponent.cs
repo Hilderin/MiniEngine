@@ -14,6 +14,11 @@ namespace MiniEngine
         private GameObject _parent;
 
         /// <summary>
+        /// Current Context
+        /// </summary>
+        public Context Context => Context.Current;
+
+        /// <summary>
         /// Parent GameObject
         /// </summary>
         public GameObject Parent

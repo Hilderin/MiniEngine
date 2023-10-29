@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,9 +7,9 @@ using System.Threading.Tasks;
 namespace MiniEngine
 {
     /// <summary>
-    /// Representation of a camera
+    /// A camera object
     /// </summary>
-    public class Camera: WorldTransform, ICamera
+    public class CameraObject : GameObject, ICamera
     {
         /// <summary>
         /// Field of view
@@ -27,12 +26,19 @@ namespace MiniEngine
         /// </summary>
         public float FarZ = 100.0f;
 
+        
+
+        public CameraObject()
+        {
+
+        }
+
         /// <summary>
         /// Get the Camera matrix
         /// </summary>
         public Matrix4 GetViewMatrix()
         {
-            return Matrix4.GetViewMatrix(this.Up, this.Backward, this.Location);
+            return Matrix4.GetViewMatrix(this.Location, this.Backward, this.Up);
         }
 
         /// <summary>
@@ -52,7 +58,5 @@ namespace MiniEngine
             //Vector2 clientSize = Context.Current.ClientSize;
             return Matrix4.CreatePerspectiveVulkan(FOV, clientSizeX, clientSizeY, NearZ, FarZ);
         }
-
-
     }
 }

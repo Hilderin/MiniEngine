@@ -7,16 +7,12 @@ namespace MiniEngine.Rendering.Vulkan
     /// <summary>
     /// Renderer for the meshes
     /// </summary>
-    public unsafe class VkMeshRenderer : IDisposable
+    public unsafe class VkMeshRenderer : IDisposable, IRenderHandle
     {
-        /// <summary>
-        /// Mesh that uses this renderer
-        /// </summary>
-        private MeshComponent _meshComponent = null;
-
         private VkRenderer _vk;
-
         private VkMesh _mesh;
+        private List<Material> _materials;
+        private WorldTransform _transform;
 
         private RenderData[] _renderDatas;
 
@@ -25,9 +21,13 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkMeshRenderer(MeshComponent meshComponent, VkRenderer vi)
+        public VkMeshRenderer(Mesh mesh, List<Material> materials, WorldTransform transform, VkRenderer vi)
         {
-            _meshComponent = meshComponent;
+            _mesh = (VkMesh)mesh;
+            _materials = materials;
+            _transform = transform;
+
+
             _vk = vi;
 
             Init();
@@ -40,7 +40,7 @@ namespace MiniEngine.Rendering.Vulkan
         public void PopulateCommandBuffers(CommandBuffer commandBuffer)
         {
 
-            Matrix4 mvp = _vk.MVPMatrix * _meshComponent.Parent.GetMatrix();
+            Matrix4 mvp = _vk.MVPMatrix * _transform.GetMatrix();
             //Matrix4 mvpTransposed = Matrix4.Transpose(ref mvp);
 
             //Debug.Print("--------------");
@@ -114,14 +114,10 @@ namespace MiniEngine.Rendering.Vulkan
                 if (_renderDatas[i].DescriptorSet != null)
                 {
                     _renderDatas[i].DescriptorSet.Dispose();
-                    _renderDatas[i].DescriptorSet = null;
                 }
 
             }
 
-            _renderDatas = null;
-            _meshComponent.RendererStateObj = null;
-            _meshComponent = null;
         }
 
 
@@ -130,9 +126,6 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void Init()
         {
-            _mesh = (VkMesh)_meshComponent.Mesh;
-
-
             //Pipeline creation...
             _renderDatas = new RenderData[_mesh.MeshDatas.Length];
             
@@ -143,8 +136,8 @@ namespace MiniEngine.Rendering.Vulkan
                 {
                     VkMaterial mat;
 
-                    if (_meshComponent.Materials.Count > _mesh.MeshDatas[i].MaterialIndex)
-                        mat = (VkMaterial)_meshComponent.Materials[_mesh.MeshDatas[i].MaterialIndex];
+                    if (_materials.Count > _mesh.MeshDatas[i].MaterialIndex)
+                        mat = (VkMaterial)_materials[_mesh.MeshDatas[i].MaterialIndex];
                     else
                         //Material not found...
                         mat = (VkMaterial)BaseMaterials.Magenta;
