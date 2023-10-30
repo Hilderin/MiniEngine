@@ -48,23 +48,25 @@ namespace MiniEngine.Drivers.Vulkan
                 //Writing the code on disk...
                 File.WriteAllText(tempFileCode, code);
 
-                Process p = new Process();
-                p.StartInfo.RedirectStandardOutput = true;
-                p.StartInfo.RedirectStandardError = true;
-                p.StartInfo.UseShellExecute = false;
-                p.StartInfo.CreateNoWindow = true;
-                p.StartInfo.FileName = pathglslcexe;
-                p.StartInfo.Arguments = $"\"{tempFileCode}\" -o \"{tempFileSpv}\"";
-                
-                p.Start();
-
-                string stdoutx = p.StandardOutput.ReadToEnd();
-                string stderrx = p.StandardError.ReadToEnd();
-                p.WaitForExit();
-
-                if (p.ExitCode != 0)
+                using (Process p = new Process())
                 {
-                    throw new Exception("Shader compilation error: " + stderrx);
+                    p.StartInfo.RedirectStandardOutput = true;
+                    p.StartInfo.RedirectStandardError = true;
+                    p.StartInfo.UseShellExecute = false;
+                    p.StartInfo.CreateNoWindow = true;
+                    p.StartInfo.FileName = pathglslcexe;
+                    p.StartInfo.Arguments = $"\"{tempFileCode}\" -o \"{tempFileSpv}\"";
+
+                    p.Start();
+
+                    string stdoutx = p.StandardOutput.ReadToEnd();
+                    string stderrx = p.StandardError.ReadToEnd();
+                    p.WaitForExit();
+
+                    if (p.ExitCode != 0)
+                    {
+                        throw new Exception("Shader compilation error: " + stderrx);
+                    }
                 }
 
                 if (!File.Exists(tempFileSpv))

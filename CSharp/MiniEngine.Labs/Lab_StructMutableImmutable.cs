@@ -9,7 +9,6 @@ namespace MiniEngine.Labs
     internal class Lab_StructMutableImmuatable
     {
         private MutableStruct _m = new MutableStruct(1, 1);
-        private ImmutableStruct _im = new ImmutableStruct(1, 1);
 
         private MutableStruct M { get { return _m; } }
 
@@ -71,7 +70,7 @@ namespace MiniEngine.Labs
             public ImmutableStruct(float x, float y)
             {
                 X = x;
-                Y = x;
+                Y = y;
             }
 
         }

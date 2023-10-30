@@ -28,11 +28,13 @@ namespace MiniEngine.Drivers.Vulkan
 
         public void Begin(CommandBufferUsageFlags commandBufferUsageFlags)
         {
-            CommandBufferBeginInfo beginInfo = new()
+            using (CommandBufferBeginInfo beginInfo = new()
             {
                 Flags = commandBufferUsageFlags,
-            };
-            Begin(beginInfo);
+            })
+            {
+                Begin(beginInfo);
+            }
         }
 
         public void Begin(CommandBufferBeginInfo pBeginInfo)

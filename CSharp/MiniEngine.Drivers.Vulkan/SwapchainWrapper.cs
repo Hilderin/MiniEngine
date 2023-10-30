@@ -236,7 +236,7 @@ namespace MiniEngine.Drivers.Vulkan
                 ? CompositeAlphaFlagsKhr.Inherit
                 : CompositeAlphaFlagsKhr.Opaque;
 
-            var swapchainInfo = new SwapchainCreateInfoKhr
+            using (var swapchainInfo = new SwapchainCreateInfoKhr
             {
                 Surface = _device.Surface,
                 MinImageCount = _device.SurfaceCapabilities.MinImageCount,
@@ -251,9 +251,10 @@ namespace MiniEngine.Drivers.Vulkan
                 PresentMode = _presentMode,
                 CompositeAlpha = compositeAlpha,
                 Clipped = true
-            };
-
-            _swapchainKhr = _device.CreateSwapchainKHR(swapchainInfo);
+            })
+            {
+                _swapchainKhr = _device.CreateSwapchainKHR(swapchainInfo);
+            }
 
             _swapchainImages = _device.GetSwapchainImagesKHR(_swapchainKhr);
             _swapchainImagesView = _device.CreateImageViews(_swapchainImages, _surfaceFormat);
@@ -302,13 +303,14 @@ namespace MiniEngine.Drivers.Vulkan
                 PipelineBindPoint = PipelineBindPoint.Graphics,
                 ColorAttachments = new AttachmentReference[] { attRef }
             };
-            var renderPassCreateInfo = new RenderPassCreateInfo
+            using (var renderPassCreateInfo = new RenderPassCreateInfo
             {
                 Attachments = new AttachmentDescription[] { attDesc },
                 Subpasses = new SubpassDescription[] { subpassDesc }
-            };
-
-            _renderPass = _device.CreateRenderPass(renderPassCreateInfo, this);
+            })
+            {
+                _renderPass = _device.CreateRenderPass(renderPassCreateInfo, this);
+            }
         }
 
 

@@ -47,8 +47,7 @@ namespace MiniEngine.Drivers.Vulkan
                 layersToEnable = new[] { "VK_LAYER_KHRONOS_validation" };
             };
 
-
-            CreateInstance(new InstanceCreateInfo
+            using (var createInfo = new InstanceCreateInfo
             {
                 EnabledExtensionNames = new string[] { "VK_KHR_surface", "VK_KHR_win32_surface", "VK_EXT_debug_report" },
                 EnabledLayerNames = layersToEnable,
@@ -60,7 +59,10 @@ namespace MiniEngine.Drivers.Vulkan
                     EngineVersion = MiniEngine.Drivers.Vulkan.VkVersion.ToUInt(1, 0, 0),
                     ApiVersion = MiniEngine.Drivers.Vulkan.VkVersion.ToUInt(1, 2, 0)
                 }
-            });
+            })
+            {
+                CreateInstance(createInfo);
+            }
 
             if (debugCallback != null)
                 EnableDebug(debugCallback);
@@ -178,15 +180,16 @@ namespace MiniEngine.Drivers.Vulkan
             debugCallbackFuncInternal = DebugCallbackInternal;
             debugCallbackDelegate = callback;
 
-            var debugCreateInfo = new DebugReportCallbackCreateInfoExt()
+            using (var debugCreateInfo = new DebugReportCallbackCreateInfoExt()
             {
                 Flags = flags,
                 PfnCallback = Marshal.GetFunctionPointerForDelegate(debugCallbackFuncInternal)
-            };
-
-            if (debugCallback != null)
-                DestroyDebugReportCallbackEXT(debugCallback);
-            debugCallback = CreateDebugReportCallbackEXT(debugCreateInfo);
+            })
+            {
+                if (debugCallback != null)
+                    DestroyDebugReportCallbackEXT(debugCallback);
+                debugCallback = CreateDebugReportCallbackEXT(debugCreateInfo);
+            }
         }
 
 
@@ -225,7 +228,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(IntPtr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpPhysicalDevices = new NativeReference((int)(size * pPhysicalDeviceCount));
+#pragma warning restore CA2000 // Dispose objects before losing scope
                 var ptrpPhysicalDevices = refpPhysicalDevices.Handle;
                 result = Interop.NativeMethods.vkEnumeratePhysicalDevices(this.Handle, &pPhysicalDeviceCount, (IntPtr*)ptrpPhysicalDevices);
                 if (result != Result.Success)

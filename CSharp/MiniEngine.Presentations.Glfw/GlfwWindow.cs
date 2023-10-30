@@ -79,14 +79,14 @@ namespace MiniEngine.Presentations.Glfw
         {
             get
             {
-                GLFW.GetWindowSize(_glfwWindow, out var width, out var dummy);
+                GLFW.GetWindowSize(_glfwWindow, out var width, out _);
                 return width;
             }
             set
             {
                 if (value < 1)
                     throw new Exception("Window width muts be greater than 0.");
-                GLFW.GetWindowSize(_glfwWindow, out var dummy, out var height);
+                GLFW.GetWindowSize(_glfwWindow, out _, out var height);
                 GLFW.SetWindowSize(_glfwWindow, value, height);
             }
         }
@@ -99,7 +99,7 @@ namespace MiniEngine.Presentations.Glfw
         {
             get
             {
-                GLFW.GetWindowSize(_glfwWindow, out var dummy, out var height);
+                GLFW.GetWindowSize(_glfwWindow, out _, out var height);
                 return height;
             }
             set
@@ -162,12 +162,12 @@ namespace MiniEngine.Presentations.Glfw
             get
             {
                 GLFW.GetWindowPosition(_glfwWindow, out var x, out var y);
-                GLFW.GetWindowFrameSize(_glfwWindow, out var l, out var t, out var dummy1, out _);
+                GLFW.GetWindowFrameSize(_glfwWindow, out var l, out var t, out _, out _);
                 return new Vector2(x - l, y - t);
             }
             set
             {
-                GLFW.GetWindowFrameSize(_glfwWindow, out var l, out var t, out var dummy1, out var dummy2);
+                GLFW.GetWindowFrameSize(_glfwWindow, out var l, out var t, out _, out _);
                 GLFW.SetWindowPosition(_glfwWindow, (int)value.X + l, (int)value.Y + t);
             }
         }

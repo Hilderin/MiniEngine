@@ -221,7 +221,7 @@ namespace MiniEngine
         /// </summary>
         public static byte Float1ToByte(float value)
         {
-            value = value * 255;
+            value *= 255;
             if (value > 255)
                 return 255;
             if (value < 0)
@@ -242,9 +242,7 @@ namespace MiniEngine
         /// </summary>
         public static void SwapValues<T>(ref T valueA, ref T valueB)
         {
-            T temp = valueA;
-            valueA = valueB;
-            valueB = temp;
+            (valueB, valueA) = (valueA, valueB);
         }
 
         /// <summary>

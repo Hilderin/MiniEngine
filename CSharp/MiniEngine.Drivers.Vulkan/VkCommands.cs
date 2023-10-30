@@ -14,64 +14,76 @@ using System.Collections.Generic;
 
 namespace MiniEngine.Drivers.Vulkan
 {
-	public static partial class VkCommands
-	{
-		public static LayerProperties[] EnumerateInstanceLayerProperties ()
-		{
-			Result result;
-			unsafe {
-				UInt32 pPropertyCount;
-				result = Interop.NativeMethods.vkEnumerateInstanceLayerProperties (&pPropertyCount, null);
-				if (result != Result.Success)
-					throw new ResultException (result);
-				if (pPropertyCount <= 0)
-					return null;
+    public static partial class VkCommands
+    {
+        public static LayerProperties[] EnumerateInstanceLayerProperties()
+        {
+            Result result;
+            unsafe
+            {
+                UInt32 pPropertyCount;
+                result = Interop.NativeMethods.vkEnumerateInstanceLayerProperties(&pPropertyCount, null);
+                if (result != Result.Success)
+                    throw new ResultException(result);
+                if (pPropertyCount <= 0)
+                    return null;
 
-				int size = Marshal.SizeOf (typeof (Interop.LayerProperties));
-				var refpProperties = new NativeReference ((int)(size * pPropertyCount));
-				var ptrpProperties = refpProperties.Handle;
-				result = Interop.NativeMethods.vkEnumerateInstanceLayerProperties (&pPropertyCount, (Interop.LayerProperties*)ptrpProperties);
-				if (result != Result.Success)
-					throw new ResultException (result);
+                int size = Marshal.SizeOf(typeof(Interop.LayerProperties));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                var refpProperties = new NativeReference((int)(size * pPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
 
-				if (pPropertyCount <= 0)
-					return null;
-				var arr = new LayerProperties [pPropertyCount];
-				for (int i = 0; i < pPropertyCount; i++) {
-					arr [i] = new LayerProperties (new NativePointer (refpProperties, (IntPtr)(&((Interop.LayerProperties*)ptrpProperties) [i])));
-				}
+                var ptrpProperties = refpProperties.Handle;
+                result = Interop.NativeMethods.vkEnumerateInstanceLayerProperties(&pPropertyCount, (Interop.LayerProperties*)ptrpProperties);
+                if (result != Result.Success)
+                    throw new ResultException(result);
 
-				return arr;
-			}
-		}
+                if (pPropertyCount <= 0)
+                    return null;
+                var arr = new LayerProperties[pPropertyCount];
+                for (int i = 0; i < pPropertyCount; i++)
+                {
+                    arr[i] = new LayerProperties(new NativePointer(refpProperties, (IntPtr)(&((Interop.LayerProperties*)ptrpProperties)[i])));
+                }
 
-		public static ExtensionProperties[] EnumerateInstanceExtensionProperties (string pLayerName = null)
-		{
-			Result result;
-			unsafe {
-				UInt32 pPropertyCount;
-				result = Interop.NativeMethods.vkEnumerateInstanceExtensionProperties (pLayerName, &pPropertyCount, null);
-				if (result != Result.Success)
-					throw new ResultException (result);
-				if (pPropertyCount <= 0)
-					return null;
+                return arr;
 
-				int size = Marshal.SizeOf (typeof (Interop.ExtensionProperties));
-				var refpProperties = new NativeReference ((int)(size * pPropertyCount));
-				var ptrpProperties = refpProperties.Handle;
-				result = Interop.NativeMethods.vkEnumerateInstanceExtensionProperties (pLayerName, &pPropertyCount, (Interop.ExtensionProperties*)ptrpProperties);
-				if (result != Result.Success)
-					throw new ResultException (result);
+            }
+        }
 
-				if (pPropertyCount <= 0)
-					return null;
-				var arr = new ExtensionProperties [pPropertyCount];
-				for (int i = 0; i < pPropertyCount; i++) {
-					arr [i] = new ExtensionProperties (new NativePointer (refpProperties, (IntPtr)(&((Interop.ExtensionProperties*)ptrpProperties) [i])));
-				}
+        public static ExtensionProperties[] EnumerateInstanceExtensionProperties(string pLayerName = null)
+        {
+            Result result;
+            unsafe
+            {
+                UInt32 pPropertyCount;
+                result = Interop.NativeMethods.vkEnumerateInstanceExtensionProperties(pLayerName, &pPropertyCount, null);
+                if (result != Result.Success)
+                    throw new ResultException(result);
+                if (pPropertyCount <= 0)
+                    return null;
 
-				return arr;
-			}
-		}
-	}
+                int size = Marshal.SizeOf(typeof(Interop.ExtensionProperties));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                var refpProperties = new NativeReference((int)(size * pPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
+                var ptrpProperties = refpProperties.Handle;
+                result = Interop.NativeMethods.vkEnumerateInstanceExtensionProperties(pLayerName, &pPropertyCount, (Interop.ExtensionProperties*)ptrpProperties);
+                if (result != Result.Success)
+                    throw new ResultException(result);
+
+                if (pPropertyCount <= 0)
+                    return null;
+                var arr = new ExtensionProperties[pPropertyCount];
+                for (int i = 0; i < pPropertyCount; i++)
+                {
+                    arr[i] = new ExtensionProperties(new NativePointer(refpProperties, (IntPtr)(&((Interop.ExtensionProperties*)ptrpProperties)[i])));
+                }
+
+                return arr;
+
+            }
+        }
+    }
 }

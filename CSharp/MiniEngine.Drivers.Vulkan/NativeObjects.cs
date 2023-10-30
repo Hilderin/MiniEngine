@@ -51,6 +51,7 @@ namespace MiniEngine.Drivers.Vulkan
                 Marshal.FreeHGlobal(Handle);
             }
             Handle = IntPtr.Zero;
+            GC.SuppressFinalize(this);
         }
 
         ~NativeReference()

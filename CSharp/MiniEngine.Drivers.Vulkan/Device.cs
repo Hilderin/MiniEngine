@@ -44,13 +44,14 @@ namespace MiniEngine.Drivers.Vulkan
             if (CacheShaderModule.TryGetValue(key, out ShaderModule shaderModule))
                 return shaderModule;
 
-            ShaderModuleCreateInfo createInfo = new ShaderModuleCreateInfo
+            using (ShaderModuleCreateInfo createInfo = new ShaderModuleCreateInfo
             {
                 CodeBytes = shaderCode,
                 Flags = flags
-            };
-            
-            shaderModule = CreateShaderModule(createInfo, allocator);
+            })
+            {
+                shaderModule = CreateShaderModule(createInfo, allocator);
+            }
 
             CacheShaderModule[key] = shaderModule;
 
@@ -81,7 +82,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public void Dispose()
         {
-            
+
 
             foreach (Semaphore semaphore in Semaphores)
                 DestroySemaphoreInternal(semaphore);
@@ -118,7 +119,7 @@ namespace MiniEngine.Drivers.Vulkan
 
 
             //We don't need it anymore...
-            foreach(ShaderModule shaderModule in CacheShaderModule.Values)
+            foreach (ShaderModule shaderModule in CacheShaderModule.Values)
                 DestroyShaderModule(shaderModule);
 
 
@@ -140,7 +141,7 @@ namespace MiniEngine.Drivers.Vulkan
 
             for (int i = 0; i < images.Length; i++)
             {
-                var viewCreateInfo = new ImageViewCreateInfo
+                using (var viewCreateInfo = new ImageViewCreateInfo
                 {
                     Image = images[i],
                     ViewType = ImageViewType.View2D,
@@ -159,8 +160,10 @@ namespace MiniEngine.Drivers.Vulkan
                         LevelCount = 1,
                         LayerCount = 1
                     }
-                };
-                displayViews[i] = this.CreateImageView(viewCreateInfo);
+                })
+                {
+                    displayViews[i] = this.CreateImageView(viewCreateInfo);
+                }
             }
 
             return displayViews;
@@ -175,15 +178,17 @@ namespace MiniEngine.Drivers.Vulkan
 
             for (int i = 0; i < displayViews.Length; i++)
             {
-                var frameBufferCreateInfo = new FramebufferCreateInfo
+                using (var frameBufferCreateInfo = new FramebufferCreateInfo
                 {
                     Layers = 1,
                     RenderPass = renderPass,
                     Attachments = new ImageView[] { displayViews[i] },
                     Width = extent.Width,
                     Height = extent.Height
-                };
-                framebuffers[i] = this.CreateFramebuffer(frameBufferCreateInfo);
+                })
+                {
+                    framebuffers[i] = this.CreateFramebuffer(frameBufferCreateInfo);
+                }
             }
 
             return framebuffers;
@@ -221,25 +226,29 @@ namespace MiniEngine.Drivers.Vulkan
         {
             var memoryReq = this.GetBufferMemoryRequirements(buffer);
 
-            var allocInfo = new MemoryAllocateInfo { AllocationSize = memoryReq.Size };
-            var memoryProperties = this.PhysicalDevice.GetMemoryProperties();
-            bool heapIndexSet = false;
-            var memoryTypes = memoryProperties.MemoryTypes;
-
-            for (uint i = 0; i < memoryProperties.MemoryTypeCount; i++)
+            using (var allocInfo = new MemoryAllocateInfo { AllocationSize = memoryReq.Size })
             {
-                if (((memoryReq.MemoryTypeBits >> (int)i) & 1) == 1 &&
-                    (memoryTypes[i].PropertyFlags & MemoryPropertyFlags.HostVisible) == MemoryPropertyFlags.HostVisible)
+                using (var memoryProperties = this.PhysicalDevice.GetMemoryProperties())
                 {
-                    allocInfo.MemoryTypeIndex = i;
-                    heapIndexSet = true;
+                    bool heapIndexSet = false;
+                    var memoryTypes = memoryProperties.MemoryTypes;
+
+                    for (uint i = 0; i < memoryProperties.MemoryTypeCount; i++)
+                    {
+                        if (((memoryReq.MemoryTypeBits >> (int)i) & 1) == 1 &&
+                            (memoryTypes[i].PropertyFlags & MemoryPropertyFlags.HostVisible) == MemoryPropertyFlags.HostVisible)
+                        {
+                            allocInfo.MemoryTypeIndex = i;
+                            heapIndexSet = true;
+                        }
+                    }
+
+                    if (!heapIndexSet)
+                        allocInfo.MemoryTypeIndex = GetMemoryTypeIndex(memoryReq.MemoryTypeBits, memoryPropertyFlags);
+
+                    return this.AllocateMemory(allocInfo);
                 }
             }
-
-            if (!heapIndexSet)
-                allocInfo.MemoryTypeIndex = GetMemoryTypeIndex(memoryReq.MemoryTypeBits, memoryPropertyFlags);
-
-            return this.AllocateMemory(allocInfo);
         }
 
         /// <summary>
@@ -248,20 +257,22 @@ namespace MiniEngine.Drivers.Vulkan
         public uint GetMemoryTypeIndex(UInt32 memoryTypeBits, MemoryPropertyFlags memoryPropertyFlags)
         {
 
-            var memoryProperties = this.PhysicalDevice.GetMemoryProperties();
-            var memoryTypes = memoryProperties.MemoryTypes;
-
-            for (uint i = 0; i < memoryProperties.MemoryTypeCount; i++)
+            using (var memoryProperties = this.PhysicalDevice.GetMemoryProperties())
             {
-                if (((memoryTypeBits >> (int)i) & 1) == 1 &&
-                    (memoryTypes[i].PropertyFlags & memoryPropertyFlags) == memoryPropertyFlags)
-                {
-                    return i;
-                }
-            }
+                var memoryTypes = memoryProperties.MemoryTypes;
 
-            //On the heap...
-            return memoryProperties.MemoryTypes[0].HeapIndex;
+                for (uint i = 0; i < memoryProperties.MemoryTypeCount; i++)
+                {
+                    if (((memoryTypeBits >> (int)i) & 1) == 1 &&
+                        (memoryTypes[i].PropertyFlags & memoryPropertyFlags) == memoryPropertyFlags)
+                    {
+                        return i;
+                    }
+                }
+
+                //On the heap...
+                return memoryProperties.MemoryTypes[0].HeapIndex;
+            }
         }
 
 
@@ -491,7 +502,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(SparseImageMemoryRequirements));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSparseMemoryRequirements = new NativeReference((int)(size * pSparseMemoryRequirementCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpSparseMemoryRequirements = refpSparseMemoryRequirements.Handle;
                 Interop.NativeMethods.vkGetImageSparseMemoryRequirements(this.m, image != null ? image.m : default(UInt64), &pSparseMemoryRequirementCount, (SparseImageMemoryRequirements*)ptrpSparseMemoryRequirements);
 
@@ -504,13 +517,16 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
         public Fence CreateFence()
         {
-            var fenceInfo = new FenceCreateInfo();
-            return CreateFence(fenceInfo);
+            using (var fenceInfo = new FenceCreateInfo())
+            {
+                return CreateFence(fenceInfo);
+            }
         }
 
         public Fence CreateFence(FenceCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
@@ -540,7 +556,7 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 fences[i] = CreateFence();
             }
-            return fences;            
+            return fences;
         }
 
         public void DestroyFence(Fence fence = null, AllocationCallbacks pAllocator = null)
@@ -634,8 +650,10 @@ namespace MiniEngine.Drivers.Vulkan
 
         public Semaphore CreateSemaphore()
         {
-            var semaphoreInfo = new SemaphoreCreateInfo();
-            return CreateSemaphore(semaphoreInfo);
+            using (var semaphoreInfo = new SemaphoreCreateInfo())
+            {
+                return CreateSemaphore(semaphoreInfo);
+            }
         }
 
         public Semaphore CreateSemaphore(SemaphoreCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
@@ -1012,7 +1030,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpPipelines = new NativeReference((int)(size * pCreateInfos.Length));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpPipelines = refpPipelines.Handle;
                 var arraypCreateInfos = pCreateInfos == null ? IntPtr.Zero : Marshal.AllocHGlobal(pCreateInfos.Length * sizeof(Interop.GraphicsPipelineCreateInfo));
                 var lenpCreateInfos = pCreateInfos == null ? 0 : pCreateInfos.Length;
@@ -1034,6 +1054,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -1046,7 +1067,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpPipelines = new NativeReference((int)(size * pCreateInfos.Length));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpPipelines = refpPipelines.Handle;
                 var arraypCreateInfos = pCreateInfos == null ? IntPtr.Zero : Marshal.AllocHGlobal(pCreateInfos.Length * sizeof(Interop.ComputePipelineCreateInfo));
                 var lenpCreateInfos = pCreateInfos == null ? 0 : pCreateInfos.Length;
@@ -1068,6 +1091,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -1081,21 +1105,25 @@ namespace MiniEngine.Drivers.Vulkan
 
         public PipelineLayout CreatePipelineLayout(DescriptorSetLayout descriptorSetLayout)
         {
-            var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
+            using (var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
             {
                 SetLayouts = new DescriptorSetLayout[] { descriptorSetLayout }
-            };
-            return CreatePipelineLayout(pipelineLayoutCreateInfo);
+            })
+            {
+                return CreatePipelineLayout(pipelineLayoutCreateInfo);
+            }
         }
 
         public PipelineLayout CreatePipelineLayout(DescriptorSetLayout[] descriptorSetLayouts, PushConstantRange[] constantRanges)
         {
-            var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
+            using (var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
             {
                 SetLayouts = descriptorSetLayouts,
                 PushConstantRanges = constantRanges
-            };
-            return CreatePipelineLayout(pipelineLayoutCreateInfo);
+            })
+            {
+                return CreatePipelineLayout(pipelineLayoutCreateInfo);
+            }
         }
 
 
@@ -1166,14 +1194,15 @@ namespace MiniEngine.Drivers.Vulkan
 
         public DescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutBinding[] bindings, AllocationCallbacks pAllocator = null)
         {
-            var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
+            using (var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
             {
                 Bindings = bindings
-            };
-
-            return CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo, pAllocator);
+            })
+            {
+                return CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo, pAllocator);
+            }
         }
-        
+
 
         public DescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
@@ -1249,7 +1278,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpDescriptorSets = new NativeReference((int)(size * pAllocateInfo.DescriptorSetCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpDescriptorSets = refpDescriptorSets.Handle;
                 result = Interop.NativeMethods.vkAllocateDescriptorSets(this.m, pAllocateInfo != null ? pAllocateInfo.m : (Interop.DescriptorSetAllocateInfo*)default(IntPtr), (UInt64*)ptrpDescriptorSets);
                 if (result != Result.Success)
@@ -1265,6 +1296,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -1410,8 +1442,10 @@ namespace MiniEngine.Drivers.Vulkan
 
         public CommandPool CreateCommandPool(CommandPoolCreateFlags flags)
         {
-            var createPoolInfo = new CommandPoolCreateInfo { Flags = CommandPoolCreateFlags.ResetCommandBuffer };
-            return CreateCommandPool(createPoolInfo);
+            using (var createPoolInfo = new CommandPoolCreateInfo { Flags = CommandPoolCreateFlags.ResetCommandBuffer })
+            {
+                return CreateCommandPool(createPoolInfo);
+            }
         }
 
         public CommandPool CreateCommandPool(CommandPoolCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
@@ -1466,15 +1500,16 @@ namespace MiniEngine.Drivers.Vulkan
         /// <returns></returns>
         public CommandBuffer AllocateCommandBuffer(CommandPool commandPool)
         {
-            var commandBufferAllocateInfo = new CommandBufferAllocateInfo
+            using (var commandBufferAllocateInfo = new CommandBufferAllocateInfo
             {
                 Level = CommandBufferLevel.Primary,
                 CommandPool = commandPool,
                 CommandBufferCount = 1
-            };
-
-            var commandBuffers = this.AllocateCommandBuffers(commandBufferAllocateInfo);
-            return commandBuffers[0];
+            })
+            {
+                var commandBuffers = this.AllocateCommandBuffers(commandBufferAllocateInfo);
+                return commandBuffers[0];
+            }
         }
 
 
@@ -1483,7 +1518,7 @@ namespace MiniEngine.Drivers.Vulkan
             return AllocateCommandBuffers<CommandBuffer>(pAllocateInfo, () => new CommandBuffer());
         }
 
-        public T[] AllocateCommandBuffers<T>(CommandBufferAllocateInfo pAllocateInfo, Func<T> createNewBufferFunc) where T: CommandBuffer
+        public T[] AllocateCommandBuffers<T>(CommandBufferAllocateInfo pAllocateInfo, Func<T> createNewBufferFunc) where T : CommandBuffer
         {
             Result result;
             unsafe
@@ -1492,7 +1527,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(IntPtr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpCommandBuffers = new NativeReference((int)(size * pAllocateInfo.CommandBufferCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpCommandBuffers = refpCommandBuffers.Handle;
                 result = Interop.NativeMethods.vkAllocateCommandBuffers(this.m, pAllocateInfo != null ? pAllocateInfo.m : (Interop.CommandBufferAllocateInfo*)default(IntPtr), (IntPtr*)ptrpCommandBuffers);
                 if (result != Result.Success)
@@ -1508,6 +1546,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -1545,7 +1584,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSwapchains = new NativeReference((int)(size * pCreateInfos.Length));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpSwapchains = refpSwapchains.Handle;
                 var arraypCreateInfos = pCreateInfos == null ? IntPtr.Zero : Marshal.AllocHGlobal(pCreateInfos.Length * sizeof(Interop.SwapchainCreateInfoKhr));
                 var lenpCreateInfos = pCreateInfos == null ? 0 : pCreateInfos.Length;
@@ -1567,6 +1608,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -1610,7 +1652,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSwapchainImages = new NativeReference((int)(size * pSwapchainImageCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpSwapchainImages = refpSwapchainImages.Handle;
                 result = Interop.NativeMethods.vkGetSwapchainImagesKHR(this.m, swapchain != null ? swapchain.m : default(UInt64), &pSwapchainImageCount, (UInt64*)ptrpSwapchainImages);
                 if (result != Result.Success)
@@ -1626,6 +1670,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -2226,7 +2271,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(PastPresentationTimingGoogle));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpPresentationTimings = new NativeReference((int)(size * pPresentationTimingCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpPresentationTimings = refpPresentationTimings.Handle;
                 result = Interop.NativeMethods.vkGetPastPresentationTimingGOOGLE(this.m, swapchain != null ? swapchain.m : default(UInt64), &pPresentationTimingCount, (PastPresentationTimingGoogle*)ptrpPresentationTimings);
                 if (result != Result.Success)
@@ -2241,6 +2289,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -2278,7 +2327,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.SparseImageMemoryRequirements2Khr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSparseMemoryRequirements = new NativeReference((int)(size * pSparseMemoryRequirementCount));
+#pragma warning restore CA2000 // Dispose objects before losing scope
                 var ptrpSparseMemoryRequirements = refpSparseMemoryRequirements.Handle;
                 Interop.NativeMethods.vkGetImageSparseMemoryRequirements2KHR(this.m, pInfo != null ? pInfo.m : (Interop.ImageSparseMemoryRequirementsInfo2Khr*)default(IntPtr), &pSparseMemoryRequirementCount, (Interop.SparseImageMemoryRequirements2Khr*)ptrpSparseMemoryRequirements);
 

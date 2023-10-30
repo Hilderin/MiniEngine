@@ -72,15 +72,16 @@ namespace MiniEngine.Drivers.Vulkan
                 Range = uniformBuffer.Size
             };
 
-            WriteDescriptorSet writeSet = new WriteDescriptorSet
+            using (WriteDescriptorSet writeSet = new WriteDescriptorSet
             {
                 DstSet = descriptorData.DescriptorSet,
                 DescriptorType = DescriptorType.UniformBuffer,
                 BufferInfo = new DescriptorBufferInfo[] { uniformBufferInfo },
                 DstBinding = descriptorData.Binding
-            };
-
-            _device.UpdateDescriptorSets(writeSet);
+            })
+            {
+                _device.UpdateDescriptorSets(writeSet);
+            }
 
             return this;
         }
@@ -104,15 +105,16 @@ namespace MiniEngine.Drivers.Vulkan
                 Sampler = sampler,
             };
 
-            WriteDescriptorSet writeSet = new WriteDescriptorSet
+            using (WriteDescriptorSet writeSet = new WriteDescriptorSet
             {
                 DstSet = descriptorData.DescriptorSet,
                 DescriptorType = DescriptorType.CombinedImageSampler,
                 ImageInfo = new DescriptorImageInfo[] { imageInfo },
                 DstBinding = descriptorData.Binding
-            };
-
-            _device.UpdateDescriptorSets(writeSet);
+            })
+            {
+                _device.UpdateDescriptorSets(writeSet);
+            }
 
             return this;
         }
@@ -135,15 +137,16 @@ namespace MiniEngine.Drivers.Vulkan
                 ImageView = imageView
             };
 
-            WriteDescriptorSet writeSet = new WriteDescriptorSet
+            using (WriteDescriptorSet writeSet = new WriteDescriptorSet
             {
                 DstSet = descriptorData.DescriptorSet,
                 DescriptorType = DescriptorType.SampledImage,
                 ImageInfo = new DescriptorImageInfo[] { imageInfo },
                 DstBinding = descriptorData.Binding
-            };
-
-            _device.UpdateDescriptorSets(writeSet);
+            })
+            {
+                _device.UpdateDescriptorSets(writeSet);
+            }
 
             return this;
         }
@@ -166,15 +169,16 @@ namespace MiniEngine.Drivers.Vulkan
                 Sampler = sampler,
             };
 
-            WriteDescriptorSet writeSet = new WriteDescriptorSet
+            using (WriteDescriptorSet writeSet = new WriteDescriptorSet
             {
                 DstSet = descriptorData.DescriptorSet,
                 DescriptorType = DescriptorType.Sampler,
                 ImageInfo = new DescriptorImageInfo[] { imageInfo },
                 DstBinding = descriptorData.Binding
-            };
-
-            _device.UpdateDescriptorSets(writeSet);
+            })
+            {
+                _device.UpdateDescriptorSets(writeSet);
+            }
 
             return this;
         }
@@ -215,13 +219,14 @@ namespace MiniEngine.Drivers.Vulkan
                     DescriptorCount = (uint)kv.Value
                 });
             }
-            var descriptorPoolCreateInfo = new DescriptorPoolCreateInfo
+            using (var descriptorPoolCreateInfo = new DescriptorPoolCreateInfo
             {
                 PoolSizes = poolSizes.ToArray(),
                 MaxSets = 1
-            };
-
-            DescriptorPool = _device.CreateDescriptorPool(descriptorPoolCreateInfo);
+            })
+            {
+                DescriptorPool = _device.CreateDescriptorPool(descriptorPoolCreateInfo);
+            }
         }
 
         /// <summary>
@@ -231,13 +236,14 @@ namespace MiniEngine.Drivers.Vulkan
         {
             if (_bindingSets.Length > 0)
             {
-                var descriptorSetAllocateInfo = new DescriptorSetAllocateInfo
+                using (var descriptorSetAllocateInfo = new DescriptorSetAllocateInfo
                 {
                     SetLayouts = _descriptorSetLayouts,
                     DescriptorPool = DescriptorPool
-                };
-
-                DescriptorSets = _device.AllocateDescriptorSets(descriptorSetAllocateInfo);
+                })
+                {
+                    DescriptorSets = _device.AllocateDescriptorSets(descriptorSetAllocateInfo);
+                }
 
                 if (DescriptorSets.Length != _bindingSets.Length)
                     throw new InvalidOperationException("Number of DescriptorSets ({DescriptorSets.Length}) different then the shader ({_bindingSets.Count})");

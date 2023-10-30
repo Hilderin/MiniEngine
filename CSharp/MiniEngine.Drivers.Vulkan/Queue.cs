@@ -22,12 +22,14 @@ namespace MiniEngine.Drivers.Vulkan
 
         public void Submit(CommandBuffer commandBuffer, Fence fence = null)
         {
-            SubmitInfo submitInfo = new()
+            using (SubmitInfo submitInfo = new()
             {
                 CommandBufferCount = 1,
                 CommandBuffers = new CommandBuffer[] { commandBuffer }
-            };
-            Submit(submitInfo, fence);
+            })
+            {
+                Submit(submitInfo, fence);
+            }
         }
 
 

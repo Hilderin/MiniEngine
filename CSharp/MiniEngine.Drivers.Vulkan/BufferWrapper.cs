@@ -138,15 +138,16 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void CreateInternalObjects()
         {
-            var createBufferInfo = new BufferCreateInfo
+            using (var createBufferInfo = new BufferCreateInfo
             {
                 Size = Size,
                 Usage = UsageFlags,
                 SharingMode = SharingMode.Exclusive,
                 QueueFamilyIndices = new uint[] { 0 }
-            };
-
-            Buffer = _device.CreateBuffer(createBufferInfo);
+            })
+            {
+                Buffer = _device.CreateBuffer(createBufferInfo);
+            }
 
             DeviceMemory = _device.CreateDeviceMemory(Buffer, MemoryPropertyFlags);
 

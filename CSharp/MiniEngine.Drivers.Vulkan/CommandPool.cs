@@ -17,7 +17,7 @@ namespace MiniEngine.Drivers.Vulkan
         {
             _device = device;
 
-            if(device != null)
+            if (device != null)
                 device.CommandPools.Add(this);
 
         }
@@ -37,29 +37,31 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public CommandBuffer[] AllocateCommandBuffers(CommandBufferLevel level, int count)
         {
-            var commandBufferAllocateInfo = new CommandBufferAllocateInfo
+            using (var commandBufferAllocateInfo = new CommandBufferAllocateInfo
             {
                 Level = level,
                 CommandPool = this,
                 CommandBufferCount = (uint)count
-            };
-
-            return _device.AllocateCommandBuffers(commandBufferAllocateInfo);
+            })
+            {
+                return _device.AllocateCommandBuffers(commandBufferAllocateInfo);
+            }
         }
 
         /// <summary>
         /// Allocate command buffers
         /// </summary>
-        public T[] AllocateCommandBuffers<T>(CommandBufferLevel level, int count, Func<T> createNewBufferFunc) where T: CommandBuffer
+        public T[] AllocateCommandBuffers<T>(CommandBufferLevel level, int count, Func<T> createNewBufferFunc) where T : CommandBuffer
         {
-            var commandBufferAllocateInfo = new CommandBufferAllocateInfo
+            using (var commandBufferAllocateInfo = new CommandBufferAllocateInfo
             {
                 Level = level,
                 CommandPool = this,
                 CommandBufferCount = (uint)count
-            };
-
-            return _device.AllocateCommandBuffers<T>(commandBufferAllocateInfo, createNewBufferFunc);
+            })
+            {
+                return _device.AllocateCommandBuffers<T>(commandBufferAllocateInfo, createNewBufferFunc);
+            }
         }
 
         public void Dispose()

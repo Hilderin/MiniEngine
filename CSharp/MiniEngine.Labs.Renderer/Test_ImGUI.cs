@@ -10,8 +10,6 @@ namespace MiniEngine.Labs.Renderer
     {
        
         private Context Context = Context.Current;
-        private Scene Scene = Context.Current.Scene;
-        private CameraObject Camera = Context.Current.Scene.Camera;
 
         
 

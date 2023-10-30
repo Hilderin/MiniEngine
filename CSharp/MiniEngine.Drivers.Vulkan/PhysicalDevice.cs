@@ -50,7 +50,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(QueueFamilyProperties));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpQueueFamilyProperties = new NativeReference((int)(size * pQueueFamilyPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpQueueFamilyProperties = refpQueueFamilyProperties.Handle;
                 Interop.NativeMethods.vkGetPhysicalDeviceQueueFamilyProperties(this.m, &pQueueFamilyPropertyCount, (QueueFamilyProperties*)ptrpQueueFamilyProperties);
 
@@ -63,6 +65,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -139,22 +142,23 @@ namespace MiniEngine.Drivers.Vulkan
             }
 
             var queueInfo = new DeviceQueueCreateInfo
-            { 
-                QueuePriorities = new float[] { 1.0f }, 
+            {
+                QueuePriorities = new float[] { 1.0f },
                 QueueFamilyIndex = queueFamilyUsedIndex,
             };
 
-            var deviceInfo = new DeviceCreateInfo
+            using (var deviceInfo = new DeviceCreateInfo
             {
                 EnabledExtensionNames = new string[] { "VK_KHR_swapchain" },
                 QueueCreateInfos = new DeviceQueueCreateInfo[] { queueInfo },
-                EnabledFeatures = new ()
+                EnabledFeatures = new()
                 {
                     SamplerAnisotropy = true            //Enable Anisotrophy
                 }
-            };
-
-            return CreateDevice(deviceInfo, surface);
+            })
+            {
+                return CreateDevice(deviceInfo, surface);
+            }
 
         }
 
@@ -199,6 +203,7 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.LayerProperties));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpProperties = new NativeReference((int)(size * pPropertyCount));
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkEnumerateDeviceLayerProperties(this.m, &pPropertyCount, (Interop.LayerProperties*)ptrpProperties);
@@ -214,6 +219,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -230,7 +236,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.ExtensionProperties));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpProperties = new NativeReference((int)(size * pPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkEnumerateDeviceExtensionProperties(this.m, pLayerName, &pPropertyCount, (Interop.ExtensionProperties*)ptrpProperties);
                 if (result != Result.Success)
@@ -245,6 +254,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -258,7 +268,9 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(SparseImageFormatProperties));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpProperties = new NativeReference((int)(size * pPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpProperties = refpProperties.Handle;
                 Interop.NativeMethods.vkGetPhysicalDeviceSparseImageFormatProperties(this.m, format, type, samples, usage, tiling, &pPropertyCount, (SparseImageFormatProperties*)ptrpProperties);
 
@@ -271,6 +283,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -287,7 +300,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.DisplayPropertiesKhr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpProperties = new NativeReference((int)(size * pPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDeviceDisplayPropertiesKHR(this.m, &pPropertyCount, (Interop.DisplayPropertiesKhr*)ptrpProperties);
                 if (result != Result.Success)
@@ -302,6 +318,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -318,7 +335,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.DisplayPlanePropertiesKhr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpProperties = new NativeReference((int)(size * pPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDeviceDisplayPlanePropertiesKHR(this.m, &pPropertyCount, (Interop.DisplayPlanePropertiesKhr*)ptrpProperties);
                 if (result != Result.Success)
@@ -333,6 +353,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -349,7 +370,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(UInt64));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpDisplays = new NativeReference((int)(size * pDisplayCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpDisplays = refpDisplays.Handle;
                 result = Interop.NativeMethods.vkGetDisplayPlaneSupportedDisplaysKHR(this.m, planeIndex, &pDisplayCount, (UInt64*)ptrpDisplays);
                 if (result != Result.Success)
@@ -365,6 +389,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -381,7 +406,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.DisplayModePropertiesKhr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpProperties = new NativeReference((int)(size * pPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkGetDisplayModePropertiesKHR(this.m, display != null ? display.m : default(UInt64), &pPropertyCount, (Interop.DisplayModePropertiesKhr*)ptrpProperties);
                 if (result != Result.Success)
@@ -396,6 +424,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -476,7 +505,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(SurfaceFormatKhr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSurfaceFormats = new NativeReference((int)(size * pSurfaceFormatCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpSurfaceFormats = refpSurfaceFormats.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormatsKHR(this.m, surface != null ? surface.Handle : default(UInt64), &pSurfaceFormatCount, (SurfaceFormatKhr*)ptrpSurfaceFormats);
                 if (result != Result.Success)
@@ -491,6 +523,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -507,7 +540,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = 4;
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpPresentModes = new NativeReference((int)(size * pPresentModeCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpPresentModes = refpPresentModes.Handle;
                 result = Interop.NativeMethods.vkGetPhysicalDeviceSurfacePresentModesKHR(this.m, surface != null ? surface.Handle : default(UInt64), &pPresentModeCount, (PresentModeKhr*)ptrpPresentModes);
                 if (result != Result.Success)
@@ -523,6 +559,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -612,7 +649,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.QueueFamilyProperties2Khr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpQueueFamilyProperties = new NativeReference((int)(size * pQueueFamilyPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpQueueFamilyProperties = refpQueueFamilyProperties.Handle;
                 Interop.NativeMethods.vkGetPhysicalDeviceQueueFamilyProperties2KHR(this.m, &pQueueFamilyPropertyCount, (Interop.QueueFamilyProperties2Khr*)ptrpQueueFamilyProperties);
 
@@ -625,6 +665,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -650,7 +691,10 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.SparseImageFormatProperties2Khr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpProperties = new NativeReference((int)(size * pPropertyCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
                 var ptrpProperties = refpProperties.Handle;
                 Interop.NativeMethods.vkGetPhysicalDeviceSparseImageFormatProperties2KHR(this.m, pFormatInfo != null ? pFormatInfo.m : (Interop.PhysicalDeviceSparseImageFormatInfo2Khr*)default(IntPtr), &pPropertyCount, (Interop.SparseImageFormatProperties2Khr*)ptrpProperties);
 
@@ -663,6 +707,7 @@ namespace MiniEngine.Drivers.Vulkan
                 }
 
                 return arr;
+
             }
         }
 
@@ -775,21 +820,24 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Rect2D));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpRects = new NativeReference((int)(size * pRectCount));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpRects = refpRects.Handle;
-                result = Interop.NativeMethods.vkGetPhysicalDevicePresentRectanglesKHX(this.m, surface != null ? surface.Handle : default(UInt64), &pRectCount, (Rect2D*)ptrpRects);
-                if (result != Result.Success)
-                    throw new ResultException(result);
+                    result = Interop.NativeMethods.vkGetPhysicalDevicePresentRectanglesKHX(this.m, surface != null ? surface.Handle : default(UInt64), &pRectCount, (Rect2D*)ptrpRects);
+                    if (result != Result.Success)
+                        throw new ResultException(result);
 
-                if (pRectCount <= 0)
-                    return null;
-                var arr = new Rect2D[pRectCount];
-                for (int i = 0; i < pRectCount; i++)
-                {
-                    arr[i] = (((Rect2D*)ptrpRects)[i]);
-                }
+                    if (pRectCount <= 0)
+                        return null;
+                    var arr = new Rect2D[pRectCount];
+                    for (int i = 0; i < pRectCount; i++)
+                    {
+                        arr[i] = (((Rect2D*)ptrpRects)[i]);
+                    }
 
-                return arr;
+                    return arr;
+                
             }
         }
 
@@ -833,21 +881,25 @@ namespace MiniEngine.Drivers.Vulkan
                     return null;
 
                 int size = Marshal.SizeOf(typeof(Interop.SurfaceFormat2Khr));
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSurfaceFormats = new NativeReference((int)(size * pSurfaceFormatCount));
-                var ptrpSurfaceFormats = refpSurfaceFormats.Handle;
-                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormats2KHR(this.m, pSurfaceInfo != null ? pSurfaceInfo.m : (Interop.PhysicalDeviceSurfaceInfo2Khr*)default(IntPtr), &pSurfaceFormatCount, (Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats);
-                if (result != Result.Success)
-                    throw new ResultException(result);
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                
+                    var ptrpSurfaceFormats = refpSurfaceFormats.Handle;
+                    result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormats2KHR(this.m, pSurfaceInfo != null ? pSurfaceInfo.m : (Interop.PhysicalDeviceSurfaceInfo2Khr*)default(IntPtr), &pSurfaceFormatCount, (Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats);
+                    if (result != Result.Success)
+                        throw new ResultException(result);
 
-                if (pSurfaceFormatCount <= 0)
-                    return null;
-                var arr = new SurfaceFormat2Khr[pSurfaceFormatCount];
-                for (int i = 0; i < pSurfaceFormatCount; i++)
-                {
-                    arr[i] = new SurfaceFormat2Khr(new NativePointer(refpSurfaceFormats, (IntPtr)(&((Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats)[i])));
-                }
+                    if (pSurfaceFormatCount <= 0)
+                        return null;
+                    var arr = new SurfaceFormat2Khr[pSurfaceFormatCount];
+                    for (int i = 0; i < pSurfaceFormatCount; i++)
+                    {
+                        arr[i] = new SurfaceFormat2Khr(new NativePointer(refpSurfaceFormats, (IntPtr)(&((Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats)[i])));
+                    }
 
-                return arr;
+                    return arr;
+                
             }
         }
 

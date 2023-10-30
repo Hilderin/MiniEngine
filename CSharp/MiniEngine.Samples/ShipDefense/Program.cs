@@ -23,13 +23,14 @@ namespace ShipDefense
             {
 
                 using (Context context = new Context())
+                using (var renderer = new VkRenderer(TITLE, "1.0.0"))
+                using (var window = new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
                 {
                     var game = new Game(context);
 
                     context.EnableDebug()
-                           .SetRenderer(new VkRenderer(TITLE, "1.0.0")
-                                       )
-                           .SetWindow(new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
+                           .SetRenderer(renderer)
+                           .SetWindow(window)
                            .Init(() =>
                            {
                                game.Init();

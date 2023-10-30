@@ -109,8 +109,7 @@ namespace MiniEngine
         {
             _debugCallback = callback;
 
-            if (_renderer != null)
-                _renderer.EnableDebug(RendererDebugCallback);
+            _renderer?.EnableDebug(RendererDebugCallback);
 
             DebugEnabled = true;
 

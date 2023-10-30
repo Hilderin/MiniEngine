@@ -474,7 +474,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refQueuePriorities.Dispose ();
+			refQueuePriorities?.Dispose();
 			refQueuePriorities = null;
 		}
 
@@ -636,11 +636,11 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refQueueCreateInfos.Dispose ();
+			refQueueCreateInfos?.Dispose();
 			refQueueCreateInfos = null;
-			refEnabledLayerNames.Dispose ();
+			refEnabledLayerNames?.Dispose();
 			refEnabledLayerNames = null;
-			refEnabledExtensionNames.Dispose ();
+			refEnabledExtensionNames?.Dispose();
 			refEnabledExtensionNames = null;
 		}
 
@@ -763,9 +763,9 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refEnabledLayerNames.Dispose ();
+			refEnabledLayerNames?.Dispose();
 			refEnabledLayerNames = null;
-			refEnabledExtensionNames.Dispose ();
+			refEnabledExtensionNames?.Dispose();
 			refEnabledExtensionNames = null;
 		}
 
@@ -1236,11 +1236,11 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refImageInfo.Dispose ();
+			refImageInfo?.Dispose();
 			refImageInfo = null;
-			refBufferInfo.Dispose ();
+			refBufferInfo?.Dispose();
 			refBufferInfo = null;
-			refTexelBufferView.Dispose ();
+			refTexelBufferView?.Dispose();
 			refTexelBufferView = null;
 		}
 
@@ -1399,7 +1399,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refQueueFamilyIndices.Dispose ();
+			refQueueFamilyIndices?.Dispose();
 			refQueueFamilyIndices = null;
 		}
 
@@ -1777,7 +1777,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refQueueFamilyIndices.Dispose ();
+			refQueueFamilyIndices?.Dispose();
 			refQueueFamilyIndices = null;
 		}
 
@@ -2045,7 +2045,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refBinds.Dispose ();
+			refBinds?.Dispose();
 			refBinds = null;
 		}
 
@@ -2126,7 +2126,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refBinds.Dispose ();
+			refBinds?.Dispose();
 			refBinds = null;
 		}
 
@@ -2207,7 +2207,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refBinds.Dispose ();
+			refBinds?.Dispose();
 			refBinds = null;
 		}
 
@@ -2442,15 +2442,15 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refWaitSemaphores.Dispose ();
+			refWaitSemaphores?.Dispose();
 			refWaitSemaphores = null;
-			refBufferBinds.Dispose ();
+			refBufferBinds?.Dispose();
 			refBufferBinds = null;
-			refImageOpaqueBinds.Dispose ();
+			refImageOpaqueBinds?.Dispose();
 			refImageOpaqueBinds = null;
-			refImageBinds.Dispose ();
+			refImageBinds?.Dispose();
 			refImageBinds = null;
-			refSignalSemaphores.Dispose ();
+			refSignalSemaphores?.Dispose();
 			refSignalSemaphores = null;
 		}
 
@@ -2580,7 +2580,7 @@ namespace MiniEngine.Drivers.Vulkan
 			get {
 				if (m->CodeSize == UIntPtr.Zero)
 					return null;
-				var values = new UInt32 [((uint)m->CodeSize >> 2)];
+                var values = new UInt32[((uint)m->CodeSize >> 2)];
 				unsafe
 				{
 					UInt32* ptr = (UInt32*)m->Code;
@@ -2650,7 +2650,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refCode.Dispose ();
+			refCode?.Dispose();
 			refCode = null;
 		}
 
@@ -2743,7 +2743,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refImmutableSamplers.Dispose ();
+			refImmutableSamplers?.Dispose();
 			refImmutableSamplers = null;
 		}
 	}
@@ -2818,7 +2818,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refBindings.Dispose ();
+			refBindings?.Dispose();
 			refBindings = null;
 		}
 
@@ -2908,7 +2908,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refPoolSizes.Dispose ();
+			refPoolSizes?.Dispose();
 			refPoolSizes = null;
 		}
 
@@ -2990,7 +2990,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refSetLayouts.Dispose ();
+			refSetLayouts?.Dispose();
 			refSetLayouts = null;
 		}
 
@@ -3079,7 +3079,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refMapEntries.Dispose ();
+			refMapEntries?.Dispose();
 			refMapEntries = null;
 		}
 	}
@@ -3317,9 +3317,9 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refVertexBindingDescriptions.Dispose ();
+			refVertexBindingDescriptions?.Dispose();
 			refVertexBindingDescriptions = null;
-			refVertexAttributeDescriptions.Dispose ();
+			refVertexAttributeDescriptions?.Dispose();
 			refVertexAttributeDescriptions = null;
 		}
 
@@ -3517,9 +3517,9 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refViewports.Dispose ();
+			refViewports?.Dispose();
 			refViewports = null;
-			refScissors.Dispose ();
+			refScissors?.Dispose();
 			refScissors = null;
 		}
 
@@ -3701,7 +3701,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refSampleMask.Dispose ();
+			refSampleMask?.Dispose();
 			refSampleMask = null;
 		}
 
@@ -3820,7 +3820,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refAttachments.Dispose ();
+			refAttachments?.Dispose();
 			refAttachments = null;
 		}
 
@@ -3899,7 +3899,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refDynamicStates.Dispose ();
+			refDynamicStates?.Dispose();
 			refDynamicStates = null;
 		}
 
@@ -4151,7 +4151,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refStages.Dispose ();
+			refStages?.Dispose();
 			refStages = null;
 		}
 
@@ -4350,9 +4350,9 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refSetLayouts.Dispose ();
+			refSetLayouts?.Dispose();
 			refSetLayouts = null;
-			refPushConstantRanges.Dispose ();
+			refPushConstantRanges?.Dispose();
 			refPushConstantRanges = null;
 		}
 
@@ -4735,7 +4735,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refClearValues.Dispose ();
+			refClearValues?.Dispose();
 			refClearValues = null;
 		}
 
@@ -5000,13 +5000,13 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refInputAttachments.Dispose ();
+			refInputAttachments?.Dispose();
 			refInputAttachments = null;
-			refColorAttachments.Dispose ();
+			refColorAttachments?.Dispose();
 			refColorAttachments = null;
-			refResolveAttachments.Dispose ();
+			refResolveAttachments?.Dispose();
 			refResolveAttachments = null;
-			refPreserveAttachments.Dispose ();
+			refPreserveAttachments?.Dispose();
 			refPreserveAttachments = null;
 		}
 	}
@@ -5168,11 +5168,11 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refAttachments.Dispose ();
+			refAttachments?.Dispose();
 			refAttachments = null;
-			refSubpasses.Dispose ();
+			refSubpasses?.Dispose();
 			refSubpasses = null;
-			refDependencies.Dispose ();
+			refDependencies?.Dispose();
 			refDependencies = null;
 		}
 
@@ -6117,7 +6117,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refAttachments.Dispose ();
+			refAttachments?.Dispose();
 			refAttachments = null;
 		}
 
@@ -6848,7 +6848,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refQueueFamilyIndices.Dispose ();
+			refQueueFamilyIndices?.Dispose();
 			refQueueFamilyIndices = null;
 		}
 
@@ -7036,7 +7036,7 @@ namespace MiniEngine.Drivers.Vulkan
 			refSwapchains = null;
 			refImageIndices?.Dispose();
 			refImageIndices = null;
-			refResults?.Dispose ();
+			refResults?.Dispose();
 			refResults = null;
 		}
 
@@ -7153,7 +7153,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refDisabledValidationChecks.Dispose ();
+			refDisabledValidationChecks?.Dispose();
 			refDisabledValidationChecks = null;
 		}
 
@@ -7734,7 +7734,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refTokens.Dispose ();
+			refTokens?.Dispose();
 			refTokens = null;
 		}
 
@@ -7855,7 +7855,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refIndirectCommandsTokens.Dispose ();
+			refIndirectCommandsTokens?.Dispose();
 			refIndirectCommandsTokens = null;
 		}
 
@@ -8065,11 +8065,11 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refObjectEntryTypes.Dispose ();
+			refObjectEntryTypes?.Dispose();
 			refObjectEntryTypes = null;
-			refObjectEntryCounts.Dispose ();
+			refObjectEntryCounts?.Dispose();
 			refObjectEntryCounts = null;
-			refObjectEntryUsageFlags.Dispose ();
+			refObjectEntryUsageFlags?.Dispose();
 			refObjectEntryUsageFlags = null;
 		}
 
@@ -8756,7 +8756,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refRegions.Dispose ();
+			refRegions?.Dispose();
 			refRegions = null;
 		}
 
@@ -8828,7 +8828,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refRectangles.Dispose ();
+			refRectangles?.Dispose();
 			refRectangles = null;
 		}
 	}
@@ -9604,15 +9604,15 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refAcquireSyncs.Dispose ();
+			refAcquireSyncs?.Dispose();
 			refAcquireSyncs = null;
-			refAcquireKeys.Dispose ();
+			refAcquireKeys?.Dispose();
 			refAcquireKeys = null;
-			refAcquireTimeouts.Dispose ();
+			refAcquireTimeouts?.Dispose();
 			refAcquireTimeouts = null;
-			refReleaseSyncs.Dispose ();
+			refReleaseSyncs?.Dispose();
 			refReleaseSyncs = null;
-			refReleaseKeys.Dispose ();
+			refReleaseKeys?.Dispose();
 			refReleaseKeys = null;
 		}
 
@@ -9833,9 +9833,9 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refWaitSemaphoreValues.Dispose ();
+			refWaitSemaphoreValues?.Dispose();
 			refWaitSemaphoreValues = null;
-			refSignalSemaphoreValues.Dispose ();
+			refSignalSemaphoreValues?.Dispose();
 			refSignalSemaphoreValues = null;
 		}
 
@@ -10429,11 +10429,11 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refViewMasks.Dispose ();
+			refViewMasks?.Dispose();
 			refViewMasks = null;
-			refViewOffsets.Dispose ();
+			refViewOffsets?.Dispose();
 			refViewOffsets = null;
-			refCorrelationMasks.Dispose ();
+			refCorrelationMasks?.Dispose();
 			refCorrelationMasks = null;
 		}
 
@@ -10805,7 +10805,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refDeviceIndices.Dispose ();
+			refDeviceIndices?.Dispose();
 			refDeviceIndices = null;
 		}
 
@@ -10962,9 +10962,9 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refDeviceIndices.Dispose ();
+			refDeviceIndices?.Dispose();
 			refDeviceIndices = null;
-			refSfrrects.Dispose ();
+			refSfrrects?.Dispose();
 			refSfrrects = null;
 		}
 
@@ -11043,7 +11043,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refDeviceRenderAreas.Dispose ();
+			refDeviceRenderAreas?.Dispose();
 			refDeviceRenderAreas = null;
 		}
 
@@ -11226,11 +11226,11 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refWaitSemaphoreDeviceIndices.Dispose ();
+			refWaitSemaphoreDeviceIndices?.Dispose();
 			refWaitSemaphoreDeviceIndices = null;
-			refCommandBufferDeviceMasks.Dispose ();
+			refCommandBufferDeviceMasks?.Dispose();
 			refCommandBufferDeviceMasks = null;
-			refSignalSemaphoreDeviceIndices.Dispose ();
+			refSignalSemaphoreDeviceIndices?.Dispose();
 			refSignalSemaphoreDeviceIndices = null;
 		}
 
@@ -11527,7 +11527,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refDeviceMasks.Dispose ();
+			refDeviceMasks?.Dispose();
 			refDeviceMasks = null;
 		}
 
@@ -11603,7 +11603,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refPhysicalDevices.Dispose ();
+			refPhysicalDevices?.Dispose();
 			refPhysicalDevices = null;
 		}
 
@@ -11752,7 +11752,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refDescriptorUpdateEntries.Dispose ();
+			refDescriptorUpdateEntries?.Dispose();
 			refDescriptorUpdateEntries = null;
 		}
 
@@ -11914,7 +11914,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refTimes.Dispose ();
+			refTimes?.Dispose();
 			refTimes = null;
 		}
 
@@ -12081,7 +12081,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refViewportWscalings.Dispose ();
+			refViewportWscalings?.Dispose();
 			refViewportWscalings = null;
 		}
 
@@ -12168,7 +12168,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refViewportSwizzles.Dispose ();
+			refViewportSwizzles?.Dispose();
 			refViewportSwizzles = null;
 		}
 
@@ -12285,7 +12285,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refDiscardRectangles.Dispose ();
+			refDiscardRectangles?.Dispose();
 			refDiscardRectangles = null;
 		}
 
@@ -12399,7 +12399,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refAspectReferences.Dispose ();
+			refAspectReferences?.Dispose();
 			refAspectReferences = null;
 		}
 
@@ -13363,7 +13363,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refSampleLocations.Dispose ();
+			refSampleLocations?.Dispose();
 			refSampleLocations = null;
 		}
 
@@ -13557,9 +13557,9 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refAttachmentInitialSampleLocations.Dispose ();
+			refAttachmentInitialSampleLocations?.Dispose();
 			refAttachmentInitialSampleLocations = null;
-			refPostSubpassSampleLocations.Dispose ();
+			refPostSubpassSampleLocations?.Dispose();
 			refPostSubpassSampleLocations = null;
 		}
 
@@ -13954,7 +13954,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refCoverageModulationTable.Dispose ();
+			refCoverageModulationTable?.Dispose();
 			refCoverageModulationTable = null;
 		}
 
@@ -14028,7 +14028,7 @@ namespace MiniEngine.Drivers.Vulkan
 			base.Dispose (disposing);
 			if (!disposing)
 				return;
-			refViewFormats.Dispose ();
+			refViewFormats?.Dispose();
 			refViewFormats = null;
 		}
 
@@ -14462,7 +14462,7 @@ namespace MiniEngine.Drivers.Vulkan
 
         public static implicit operator bool(Bool32 bValue)
         {
-            return bValue.value == 0 ? false : true;
+            return bValue.value != 0;
         }
     }
 

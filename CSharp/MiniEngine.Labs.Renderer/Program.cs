@@ -26,34 +26,36 @@ namespace MiniEngine.Labs.Renderer
 
             try
             {
-                
+
                 using (Context context = new Context())
                 {
                     var t = new Test_ImGUI();
 
-                    context.SetRenderer(new VkRenderer(t.GetType().Name, "1.0.0")
-                                       )
-                           .EnableDebug()
-                           .SetWindow(new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
-                           .Init(() =>
-                           {
-                               t.Init();
-                           })
-                           .Run(() =>
-                           {
-                               t.Update();
+                    using (var render = new VkRenderer(t.GetType().Name, "1.0.0"))
+                    using (var window = new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
+                    {
 
-                               if (context.Input.IsKeyDown(Keys.Escape))
+                        context.SetRenderer(render)
+                               .EnableDebug()
+                               .SetWindow(window)
+                               .Init(() =>
                                {
-                                   if (t is IDisposable)
-                                       ((IDisposable)t).Dispose();
+                                   t.Init();
+                               })
+                               .Run(() =>
+                               {
+                                   t.Update();
 
-                                   context.Quit();
-                               }
-                           });
+                                   if (context.Input.IsKeyDown(Keys.Escape))
+                                   {
+                                       if (t is IDisposable)
+                                           ((IDisposable)t).Dispose();
 
+                                       context.Quit();
+                                   }
+                               });
 
-
+                    }
                 }
             }
             catch (Exception ex)

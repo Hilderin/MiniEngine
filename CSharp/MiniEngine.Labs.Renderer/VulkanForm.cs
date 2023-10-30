@@ -25,9 +25,11 @@ namespace MiniEngine.Labs.Renderer
 
         private void VulkanForm_Load(object sender, EventArgs e)
         {
+#pragma warning disable CA2000 // Dispose objects before losing scope
             Renderer = new VkRenderer("Test", "1.0.0")
                                 .SetWindow32Handle(this.Handle)
                                 .EnableDebug(DebugCallback);
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
             Renderer.Init();
 

@@ -94,7 +94,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void CreateImage(Format format, ImageUsageFlags usage, MemoryPropertyFlags properties)
         {
-            ImageCreateInfo imageInfo = new()
+            using (ImageCreateInfo imageInfo = new()
             {
                 ImageType = ImageType.Image2D,
                 Extent = new()
@@ -111,20 +111,22 @@ namespace MiniEngine.Drivers.Vulkan
                 Usage = usage,
                 Samples = SampleCountFlags.Count1,
                 SharingMode = SharingMode.Exclusive,
-            };
-
-            Image = _device.CreateImage(imageInfo);
+            })
+            {
+                Image = _device.CreateImage(imageInfo);
+            }
 
 
             var memRequirements = _device.GetImageMemoryRequirements(Image);
 
-            MemoryAllocateInfo allocInfo = new()
+            using (MemoryAllocateInfo allocInfo = new()
             {
                 AllocationSize = memRequirements.Size,
                 MemoryTypeIndex = _device.GetMemoryTypeIndex(memRequirements.MemoryTypeBits, properties),
-            };
-
-            DeviceMemory = _device.AllocateMemory(allocInfo);
+            })
+            {
+                DeviceMemory = _device.AllocateMemory(allocInfo);
+            }
 
             _device.BindImageMemory(Image, DeviceMemory, 0);
         }
@@ -186,7 +188,7 @@ namespace MiniEngine.Drivers.Vulkan
 
         private void CreateImageView()
         {
-            ImageViewCreateInfo createInfo = new()
+            using (ImageViewCreateInfo createInfo = new()
             {
                 Image = Image,
                 ViewType = ImageViewType.View2D,
@@ -207,9 +209,10 @@ namespace MiniEngine.Drivers.Vulkan
                     LayerCount = 1,
                 }
 
-            };
-
-            ImageView = _device.CreateImageView(createInfo);
+            })
+            {
+                ImageView = _device.CreateImageView(createInfo);
+            }
         }
 
         /// <summary>

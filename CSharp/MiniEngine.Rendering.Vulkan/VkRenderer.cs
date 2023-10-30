@@ -392,12 +392,14 @@ namespace MiniEngine.Rendering.Vulkan
             else if (_windowsHandle != IntPtr.Zero)
             {
                 //Windows...
-                return vi.CreateWin32SurfaceKHR(
-                    new Win32SurfaceCreateInfoKhr
-                    {
-                        Hwnd = _windowsHandle,
-                        Hinstance = Process.GetCurrentProcess().Handle
-                    });
+                using (var createInfo = new Win32SurfaceCreateInfoKhr
+                {
+                    Hwnd = _windowsHandle,
+                    Hinstance = Process.GetCurrentProcess().Handle
+                })
+                {
+                    return vi.CreateWin32SurfaceKHR(createInfo);
+                }
             }
             else
                 throw new Exception("Impossible to create the surface. No window and no window handle exists.");

@@ -15,25 +15,27 @@ namespace MiniEngine.Drivers.Vulkan
         /// <param name="device"></param>
         public static Sampler CreateMaxAnisotropy(Device device)
         {
-            var deviceProp = device.PhysicalDevice.GetProperties();
-
-            SamplerCreateInfo samplerInfo = new()
+            using (var deviceProp = device.PhysicalDevice.GetProperties())
             {
-                MagFilter = Filter.Linear,
-                MinFilter = Filter.Linear,
-                AddressModeU = SamplerAddressMode.Repeat,
-                AddressModeV = SamplerAddressMode.Repeat,
-                AddressModeW = SamplerAddressMode.Repeat,
-                AnisotropyEnable = true,
-                MaxAnisotropy = deviceProp.Limits.MaxSamplerAnisotropy,
-                BorderColor = BorderColor.IntOpaqueBlack,
-                UnnormalizedCoordinates = false,
-                CompareEnable = false,
-                CompareOp = CompareOp.Always,
-                MipmapMode = SamplerMipmapMode.Linear,
-            };
-
-            return device.CreateSampler(samplerInfo);
+                using (SamplerCreateInfo samplerInfo = new()
+                {
+                    MagFilter = Filter.Linear,
+                    MinFilter = Filter.Linear,
+                    AddressModeU = SamplerAddressMode.Repeat,
+                    AddressModeV = SamplerAddressMode.Repeat,
+                    AddressModeW = SamplerAddressMode.Repeat,
+                    AnisotropyEnable = true,
+                    MaxAnisotropy = deviceProp.Limits.MaxSamplerAnisotropy,
+                    BorderColor = BorderColor.IntOpaqueBlack,
+                    UnnormalizedCoordinates = false,
+                    CompareEnable = false,
+                    CompareOp = CompareOp.Always,
+                    MipmapMode = SamplerMipmapMode.Linear,
+                })
+                {
+                    return device.CreateSampler(samplerInfo);
+                }
+            }
         }
     }
 }

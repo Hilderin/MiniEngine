@@ -24,7 +24,9 @@ namespace MiniEngine.Tests
         public static Context SetupTest(this Context context)
         {
             //TODO: Init a window...
+#pragma warning disable CA2000 // Dispose objects before losing scope
             context.SetRenderer(new VkRenderer("Test", "1.0.0"));
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
             return context;
         }
