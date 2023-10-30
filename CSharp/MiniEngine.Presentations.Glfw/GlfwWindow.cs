@@ -24,6 +24,9 @@ namespace MiniEngine.Presentations.Glfw
         /// </summary>
         private string _title;
 
+
+        private bool _isDisposing = false;
+
         /// <summary>
         /// Internal variable to callbacks to be sure the garbage collector will not clear it
         /// </summary>
@@ -612,6 +615,11 @@ namespace MiniEngine.Presentations.Glfw
         /// </summary>
         public void Dispose()
         {
+            if (_isDisposing)
+                return;
+
+            _isDisposing = true;
+
             try
             {
                 GLFW.DestroyWindow(_glfwWindow);

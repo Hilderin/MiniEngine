@@ -30,7 +30,10 @@ namespace MiniEngine.Drivers.Vulkan
         private bool _windowSizeChanged = false;
         private Extent2D _currentExtent;
 
-        
+        private SubmitInfo[] _submitInfos;
+        private PresentInfoKhr[] _presentInfos;
+
+
 
         public Device Device => _device;
         public RenderPass RenderPass => _renderPass;
@@ -50,6 +53,7 @@ namespace MiniEngine.Drivers.Vulkan
             _surfaceFormat = _device.PhysicalDevice.GetSurfaceFormat(_device.Surface, expectedFormats, expectedColorSpaces);
 
             _presentMode = presentMode;
+
 
             Init();
         }
@@ -105,7 +109,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Present the rendered image...
         /// </summary>
-        public void Present(CommandBuffer commandBuffer)
+        public void Present()
         {
             //Execute the command buffer...
             // submit the commandbuffer to the queue
@@ -113,38 +117,30 @@ namespace MiniEngine.Drivers.Vulkan
             // the queue will wait until the fence is up.
             // the fence will be up when the commandbuffer is all done.
             _fence.Reset();
-            using (var submitInfo = new SubmitInfo
-            {
-                WaitSemaphores = new Semaphore[] { _semaphore },
-                WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
-                CommandBuffers = new CommandBuffer[] { commandBuffer }
-            })
-            {
-                _queue.Submit(submitInfo, _fence);
-                _queue.WaitIdle();
-                _fence.Wait();
-            }
+            //using (var submitInfo = new SubmitInfo
+            //{
+            //    WaitSemaphores = new Semaphore[] { _semaphore },
+            //    WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
+            //    CommandBuffers = new CommandBuffer[] { commandBuffer }
+            //})
+            //{
+            _queue.Submit(_submitInfos[_indexNextImage], _fence);
+            _queue.WaitIdle();
+            _fence.Wait();
 
 
             //And we show the image on the surface...
-            using (var presentInfo = new PresentInfoKhr
+            var result = _queue.PresentKHRReturnsResult(_presentInfos[_indexNextImage]);
+            if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr || _windowSizeChanged)
             {
-                Swapchains = new SwapchainKhr[] { _swapchainKhr },
-                ImageIndices = new uint[] { (uint)_indexNextImage },
-            })
-            {
-                var result = _queue.PresentKHRReturnsResult(presentInfo);
-                if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr || _windowSizeChanged)
-                {
-                    //The screen was resized...
-                    //Update the suface capability and current extend in the device...
-                    _device.UpdateSurfaceCapabilities();
+                //The screen was resized...
+                //Update the suface capability and current extend in the device...
+                _device.UpdateSurfaceCapabilities();
 
-                    //And now that we have the new screensize in memory... let's recreate the swapchain
-                    Rebuild();
+                //And now that we have the new screensize in memory... let's recreate the swapchain
+                Rebuild();
 
-                    _windowSizeChanged = false;
-                }
+                _windowSizeChanged = false;
             }
 
         }
@@ -222,6 +218,26 @@ namespace MiniEngine.Drivers.Vulkan
 
             //Now that we kwon the number of images...
             _renderCommandBuffers = CreateRenderCommandBuffers();
+
+            //Creation of the submitinfos and presentinfos so we don't recreate them at each frame...
+            _submitInfos = new SubmitInfo[_renderCommandBuffers.Length];
+            _presentInfos = new PresentInfoKhr[_renderCommandBuffers.Length];
+            for (int i = 0; i < _submitInfos.Length; i++)
+            {
+                _submitInfos[i] = new SubmitInfo
+                {
+                    WaitSemaphores = new Semaphore[] { _semaphore },
+                    WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
+                    CommandBuffers = new CommandBuffer[] { _renderCommandBuffers[i] }
+                };
+
+                _presentInfos[i] = new PresentInfoKhr
+                {
+                    Swapchains = new SwapchainKhr[] { _swapchainKhr },
+                    ImageIndices = new uint[] { (uint)i },
+                };
+            }
+            
         }
 
 
@@ -336,6 +352,11 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void DestroySwapChainObjects()
         {
+            foreach (var submitInfo in _submitInfos)
+                submitInfo.Dispose();
+            foreach (var presentInfo in _presentInfos)
+                presentInfo.Dispose();
+
             if (_framebuffers != null)
             {
                 foreach (Framebuffer framebuffer in _framebuffers)

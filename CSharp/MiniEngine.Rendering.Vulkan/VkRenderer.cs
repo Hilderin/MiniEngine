@@ -50,6 +50,7 @@ namespace MiniEngine.Rendering.Vulkan
         private ImGuiRenderer _imGui;
         private IntPtr _windowsHandle = IntPtr.Zero;
         private Dictionary<VkShader, PipelineWrapper> _cachePipeline = new Dictionary<VkShader, PipelineWrapper>();
+        private bool _isDisposing;
 
         #endregion
 
@@ -305,6 +306,12 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Dispose()
         {
+            if (_isDisposing)
+                return;
+
+            _isDisposing = true;
+
+
             if (_window != null)
                 _window.OnWindowResized -= Window_OnWindowResized;
 
@@ -374,7 +381,7 @@ namespace MiniEngine.Rendering.Vulkan
 
 
             //Execute the command buffer and show the results on surface...
-            Swapchain.Present(commandBuffer);
+            Swapchain.Present();
         }
 
 

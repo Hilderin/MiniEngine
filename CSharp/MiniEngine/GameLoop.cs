@@ -16,7 +16,7 @@ namespace MiniEngine
         private Stopwatch _gameTimer = null;
         private TimeSpan _accumulatedElapsedTime;
         private long _previousTicks = 0;
-        private TimeSpan _targetElapsedTime = TimeSpan.FromTicks(166667); // 60fps
+        private TimeSpan _targetElapsedTime;    // = TimeSpan.FromTicks(166667); // 60fps
         private TimeSpan _maxElapsedTime = TimeSpan.FromMilliseconds(500);
 
         // must be a power of 2 so we can do a bitmask optimization when checking worst case
@@ -27,7 +27,7 @@ namespace MiniEngine
         private int _sleepTimeIndex = 0;
         private int _updateFrameLag;
         private bool _isRunningSlowly;
-        private int _targetFramerate = 60;
+        private int _targetFramerate = -1;
 
 
         /// <summary>
@@ -45,8 +45,16 @@ namespace MiniEngine
             set
             {
                 _targetFramerate = value;
-                _targetElapsedTime = TimeSpan.FromTicks((long)(1f / _targetFramerate * 10000000L));
+                RecalculateTargetElapsedTime();
             }
+        }
+
+        private void RecalculateTargetElapsedTime()
+        {
+            if (_targetFramerate >= 0)
+                _targetElapsedTime = TimeSpan.FromTicks((long)(1f / _targetFramerate * 10000000L));
+            else
+                _targetElapsedTime = TimeSpan.Zero;
         }
 
 
@@ -72,6 +80,8 @@ namespace MiniEngine
             {
                 _previousSleepTimes[i] = TimeSpan.FromMilliseconds(1);
             }
+
+            RecalculateTargetElapsedTime();
         }
 
         /// <summary>
@@ -85,79 +95,90 @@ namespace MiniEngine
 
                 AdvanceElapsedTime();
 
-                while (_accumulatedElapsedTime + _worstCaseSleepPrecision < _targetElapsedTime)
+                if (_targetElapsedTime == TimeSpan.Zero)
                 {
-                    System.Threading.Thread.Sleep(1);
-                    TimeSpan timeAdvancedSinceSleeping = AdvanceElapsedTime();
-                    UpdateEstimatedSleepPrecision(timeAdvancedSinceSleeping);
-                }
-
-                /* Now that we have slept into the sleep precision threshold, we need to wait
-                 * for just a little bit longer until the target elapsed time has been reached.
-                 * SpinWait(1) works by pausing the thread for very short intervals, so it is
-                 * an efficient and time-accurate way to wait out the rest of the time.
-                 */
-                while (_accumulatedElapsedTime < _targetElapsedTime)
-                {
-                    System.Threading.Thread.SpinWait(1);
-                    AdvanceElapsedTime();
-                }
-
-
-                // Do not allow any update to take longer than our maximum.
-                if (_accumulatedElapsedTime > _maxElapsedTime)
-                {
-                    _accumulatedElapsedTime = _maxElapsedTime;
-                }
-
-
-                //_elapsedGameTime = _targetElapsedTime;
-                int stepCount = 0;
-
-                // Perform as many full fixed length time steps as we can.
-                while (_accumulatedElapsedTime >= _targetElapsedTime)
-                {
-                    _accumulatedElapsedTime -= _targetElapsedTime;
-                    stepCount += 1;
-
+                    //Has fast has we can...
                     if (!tickAction())
                         return;
+
                 }
-
-                // Every update after the first accumulates lag
-                _updateFrameLag += Math.Max(0, stepCount - 1);
-
-                /* If we think we are running slowly, wait
-				 * until the lag clears before resetting it
-				 */
-                if (_isRunningSlowly)
+                else
                 {
-                    if (_updateFrameLag == 0)
+                    //With a framerate...
+                    while (_accumulatedElapsedTime + _worstCaseSleepPrecision < _targetElapsedTime)
                     {
-                        _isRunningSlowly = false;
+                        System.Threading.Thread.Sleep(1);
+                        TimeSpan timeAdvancedSinceSleeping = AdvanceElapsedTime();
+                        UpdateEstimatedSleepPrecision(timeAdvancedSinceSleeping);
                     }
-                }
-                else if (_updateFrameLag >= 5)
-                {
-                    /* If we lag more than 5 frames,
-					 * start thinking we are running slowly.
-					 */
-                    _isRunningSlowly = true;
-                }
 
-                /* Every time we just do one update and one draw,
-				 * then we are not running slowly, so decrease the lag.
-				 */
-                if (stepCount == 1 && _updateFrameLag > 0)
-                {
-                    _updateFrameLag -= 1;
-                }
+                    /* Now that we have slept into the sleep precision threshold, we need to wait
+                     * for just a little bit longer until the target elapsed time has been reached.
+                     * SpinWait(1) works by pausing the thread for very short intervals, so it is
+                     * an efficient and time-accurate way to wait out the rest of the time.
+                     */
+                    while (_accumulatedElapsedTime < _targetElapsedTime)
+                    {
+                        System.Threading.Thread.SpinWait(1);
+                        AdvanceElapsedTime();
+                    }
 
 
-                ///* Draw needs to know the total elapsed time
-                // * that occured for the fixed length updates.
-                // */
-                //_elapsedGameTime = TimeSpan.FromTicks(_targetElapsedTime.Ticks * stepCount);
+                    // Do not allow any update to take longer than our maximum.
+                    if (_accumulatedElapsedTime > _maxElapsedTime)
+                    {
+                        _accumulatedElapsedTime = _maxElapsedTime;
+                    }
+
+
+                    //_elapsedGameTime = _targetElapsedTime;
+                    int stepCount = 0;
+
+                    // Perform as many full fixed length time steps as we can.
+                    while (_accumulatedElapsedTime >= _targetElapsedTime)
+                    {
+                        _accumulatedElapsedTime -= _targetElapsedTime;
+                        stepCount += 1;
+
+                        if (!tickAction())
+                            return;
+                    }
+
+                    // Every update after the first accumulates lag
+                    _updateFrameLag += Math.Max(0, stepCount - 1);
+
+                    /* If we think we are running slowly, wait
+				     * until the lag clears before resetting it
+				     */
+                    if (_isRunningSlowly)
+                    {
+                        if (_updateFrameLag == 0)
+                        {
+                            _isRunningSlowly = false;
+                        }
+                    }
+                    else if (_updateFrameLag >= 5)
+                    {
+                        /* If we lag more than 5 frames,
+					     * start thinking we are running slowly.
+					     */
+                        _isRunningSlowly = true;
+                    }
+
+                    /* Every time we just do one update and one draw,
+				     * then we are not running slowly, so decrease the lag.
+				     */
+                    if (stepCount == 1 && _updateFrameLag > 0)
+                    {
+                        _updateFrameLag -= 1;
+                    }
+
+
+                    ///* Draw needs to know the total elapsed time
+                    // * that occured for the fixed length updates.
+                    // */
+                    //_elapsedGameTime = TimeSpan.FromTicks(_targetElapsedTime.Ticks * stepCount);
+                }
 
             }
 

@@ -99,7 +99,6 @@ namespace MiniEngine
             Scene = new Scene();
 
             _gameLoop = new GameLoop();
-            _gameLoop.TargetFramerate = 120;
         }
 
         /// <summary>
