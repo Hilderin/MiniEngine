@@ -117,13 +117,6 @@ namespace MiniEngine.Drivers.Vulkan
             // the queue will wait until the fence is up.
             // the fence will be up when the commandbuffer is all done.
             _fence.Reset();
-            //using (var submitInfo = new SubmitInfo
-            //{
-            //    WaitSemaphores = new Semaphore[] { _semaphore },
-            //    WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
-            //    CommandBuffers = new CommandBuffer[] { commandBuffer }
-            //})
-            //{
             _queue.Submit(_submitInfos[_indexNextImage], _fence);
             _queue.WaitIdle();
             _fence.Wait();
