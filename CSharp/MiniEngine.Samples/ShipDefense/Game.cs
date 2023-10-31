@@ -15,6 +15,7 @@ namespace ShipDefense
         public CameraComponent CameraComponent;
 
         private bool _mustReload = false;
+        private Mesh _mesh;
 
         /// <summary>
         /// Constructor
@@ -22,7 +23,7 @@ namespace ShipDefense
         public Game(Context context)
         {
             Context = context;
-            Scene = context.Scene;
+            Scene = new Scene();
             Context.Asset.OnAssetChanged += Asset_OnAssetChanged;
         }
 
@@ -34,22 +35,20 @@ namespace ShipDefense
         {
             //CameraComponent = new CameraComponent();
             //CameraComponent.Camera = 
-            Scene.Camera.Location = new Vector3(0f, 0, -3f);
+            //Camera.Current.Location = new Vector3(0f, 0, -3f);
             //Scene.Camera.RotatePitch(Math.DegToRad(15));
-            Scene.Camera.AddComponent<BasicMovementComponent>();
+            //Scene.Camera.AddComponent<BasicMovementComponent>();
+
+            var camera = Scene.Add(new CameraObject());
+            camera.MoveBackward(3f);
+            camera.AddComponent<BasicMovementComponent>();
 
             //if (Context.Scene != null)
             //    Context.Scene.Camera = Camera;
-
             Scene.Add(new MeshObject()
-            {
-                Mesh = Primitives.CreateCubeMesh(),
-                Materials = new()
-                {
-                    Context.Asset.Get<Material>("materials/test")
-                }
-
-            });
+                        .SetMesh(Primitives.CreateCubeMesh())
+                        .AddMaterial(Context.Asset.Get<Material>("materials/test"))
+                      );
         }
 
 

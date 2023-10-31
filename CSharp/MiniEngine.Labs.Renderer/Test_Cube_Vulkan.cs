@@ -10,8 +10,7 @@ namespace MiniEngine.Labs.Renderer
         private MeshObject _currentMesh;
 
         private Context Context = Context.Current;
-        private Scene Scene = Context.Current.Scene;
-        private CameraObject Camera = Context.Current.Scene.Camera;
+        private Scene Scene = new Scene();
 
         public void Init()
         {
@@ -71,9 +70,9 @@ void main() {
 
 
 
-            Scene.Camera.Location = new Vector3(0.0f, 0.0f, -1f);
+            MiniEngine.Renderer.Current.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -1f);
 
-            _currentMesh = Primitives.CreateCubeMeshObject();
+            _currentMesh = PrimitiveObjects.CreateCubeMeshObject();
             _currentMesh.Location = new Vector3(0f, 0f, 0f);
 
             _currentMesh.Materials.Add(Context.Renderer.CreateMaterial(new()

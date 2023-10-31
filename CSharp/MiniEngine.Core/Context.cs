@@ -20,7 +20,7 @@ namespace MiniEngine
         private IWindow _window;
         private IRenderer _renderer;
         private DebugCallback _debugCallback;
-        private GameLoop _gameLoop;
+        private FrameLoop _frameLoop;
 
         /// <summary>
         /// Current context
@@ -32,26 +32,26 @@ namespace MiniEngine
         /// </summary>
         private List<Action> _updates = new List<Action>();
 
+        /// <summary>
+        /// Methods to call at the beginning of the next frame once before the updates
+        /// </summary>
+        private List<Action> _onces = new List<Action>();
 
         #endregion
 
         #region Public properties
 
 
-        /// <summary>
-        /// Scene to render
-        /// </summary>
-        public Scene Scene;
+        ///// <summary>
+        ///// Scene to render
+        ///// </summary>
+        //public Scene Scene;
 
         /// <summary>
         /// AssetManager
         /// </summary>
         public AssetManager Asset;
 
-        /// <summary>
-        /// History manager
-        /// </summary>
-        public HistoryManager History;
 
         /// <summary>
         /// Current context
@@ -90,15 +90,11 @@ namespace MiniEngine
         {
             _current = this;
 
-            History = new HistoryManager();
-
             Input = new InputManager();
 
             Asset = new AssetManager(this);
 
-            Scene = new Scene();
-
-            _gameLoop = new GameLoop();
+            _frameLoop = new FrameLoop();
         }
 
         /// <summary>
@@ -228,7 +224,7 @@ namespace MiniEngine
             //Now we can initialize the renderer...
             InitInternal();
 
-            _gameLoop.RunLoop(() => RunOneFrame(runHandler));
+            _frameLoop.RunLoop(() => RunOneFrame(runHandler));
 
         }
 
@@ -264,7 +260,7 @@ namespace MiniEngine
             RecalculateNextFrame();
 
             //Rendering...
-            Renderer.Render(Scene.Camera);
+            Renderer.Render();
 
 
             //Indicate a new frame...
@@ -302,6 +298,15 @@ namespace MiniEngine
         public void RegisterUpdate(Action updateAction)
         {
             _updates.Add(updateAction);
+
+        }
+
+        /// <summary>
+        /// Register an action the execute at the beginning of the next frame once before the updates
+        /// </summary>
+        public void RegisterOnce(Action onceAction)
+        {
+            _onces.Add(onceAction);
 
         }
 
@@ -380,36 +385,24 @@ namespace MiniEngine
         /// </summary>
         private void RecalculateNextFrame()
         {
+
+            //-------------------
+            //Executes onces...
+            if (_onces.Count > 0)
+            {
+                for (int i = 0; i < _onces.Count; i++)
+                {
+                    _onces[i]();
+                }
+                _onces.Clear();
+            }
+
+
             //-------------------
             //Executes updates...
             for (int i = 0; i < _updates.Count; i++)
             {
                 _updates[i]();
-            }
-
-            //-------------------
-            //New meshes..........
-            if (History.AddedMeshes.Count > 0)
-            {
-                foreach (var meshComponent in History.AddedMeshes)
-                {
-                    //Initialization of the mesh renderer...
-                    meshComponent.RendererHandle = Renderer.AddMesh(meshComponent.Mesh, meshComponent.Materials, meshComponent.Parent);
-                }
-                History.AddedMeshes.Clear();
-            }
-
-
-            //-------------------
-            //Deleted meshes..........
-            if (History.RemovedMeshes.Count > 0)
-            {
-                foreach (var meshComponent in History.RemovedMeshes)
-                {
-                    //Initialization of the mesh renderer...
-                    Renderer.RemoveMesh(meshComponent.RendererHandle);
-                }
-                History.RemovedMeshes.Clear();
             }
 
         }

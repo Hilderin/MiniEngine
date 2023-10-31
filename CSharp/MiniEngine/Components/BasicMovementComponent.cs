@@ -16,7 +16,10 @@ namespace MiniEngine.Components
 
         public void Update()
         {
-            Parent.MoveInDirections(0.1f, Context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
+            Vector3 movement = Context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E);
+
+            if(movement != Vector3.Zero)
+                Parent.MoveInDirections(0.1f, movement);
 
             //if (Context.Input.IsKeyDown(Keys.NumpadAdd))
             //    Context.Scene.AmbientLight.Intensity += 0.01f;

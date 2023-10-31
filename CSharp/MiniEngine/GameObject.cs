@@ -10,12 +10,35 @@ namespace MiniEngine
     /// <summary>
     /// A GameObject that can be placed in a scene
     /// </summary>
-    public abstract class GameObject : WorldTransform
+    public abstract class GameObject
     {
         /// <summary>
-        /// Parent Game Object
+        /// OnLocationChanged
         /// </summary>
-        private GameObject _parent;
+        public event OnLocationChangedHandler OnLocationChanged
+        {
+            add { Transform.OnLocationChanged += value; }
+            remove { Transform.OnLocationChanged -= value; }
+        }
+
+        /// <summary>
+        /// OnRotationChanged
+        /// </summary>
+        public event OnRotationChangedHandler OnRotationChanged
+        {
+            add { Transform.OnRotationChanged += value; }
+            remove { Transform.OnRotationChanged -= value; }
+        }
+
+
+        /// <summary>
+        /// OnScaleChanged
+        /// </summary>
+        public event OnScaleChangedHandler OnScaleChanged
+        {
+            add { Transform.OnScaleChanged += value; }
+            remove { Transform.OnScaleChanged -= value; }
+        }
 
         /// <summary>
         /// Components
@@ -23,9 +46,30 @@ namespace MiniEngine
         private List<GameComponent> _components = new List<GameComponent>();
 
         /// <summary>
+        /// Transform
+        /// </summary>
+        public WorldTransform Transform { get; private set; } = new WorldTransform();
+
+        /// <summary>
         /// Current Context
         /// </summary>
         public Context Context => Context.Current;
+
+        /// <summary>
+        /// Location
+        /// </summary>
+        public Vector3 Location { get { return Transform.Location; } set { Transform.Location = value; } }
+
+        /// <summary>
+        /// Scale
+        /// </summary>
+        public Vector3 Scale { get { return Transform.Scale; } set { Transform.Scale = value; } }
+
+        /// <summary>
+        /// Scale
+        /// </summary>
+        public Rotator3 Rotation { get { return Transform.Rotation; } set { Transform.Rotation = value; } }
+
 
         /// <summary>
         /// Add a new component to the game object
@@ -71,6 +115,76 @@ namespace MiniEngine
 
             _components.Remove(component);
 
+        }
+
+        /// <summary>
+        /// Rotate on X axis
+        /// </summary>
+        public void RotatePitch(float angleRad)
+        {
+            Transform.RotatePitch(angleRad);
+        }
+
+        /// <summary>
+        /// Rotate on Y axis
+        /// </summary>
+        public void RotateYaw(float angleRad)
+        {
+            Transform.RotateYaw(angleRad);
+        }
+
+        /// <summary>
+        /// Rotate on Z axis
+        /// </summary>
+        public void RotateRoll(float angleRad)
+        {
+            Transform.RotateRoll(angleRad);
+        }
+
+        /// <summary>
+        /// Move forward considering the rotation of the world transform
+        /// </summary>
+        public void MoveForward(float distance)
+        {
+            Transform.MoveForward(distance);
+        }
+
+        /// <summary>
+        /// Move forward considering the rotation of the world transform
+        /// Z < 0 = Forward
+        /// Z < 0 = Backward
+        /// X > 0 = Right
+        /// X < 0 = Left
+        /// Y > 0 = Up
+        /// Y < 0 = Down
+        /// </summary>
+        public void MoveInDirections(float distance, Vector3 directions)
+        {
+            Transform.MoveInDirections(distance, directions);
+        }
+
+        /// <summary>
+        /// Move backward considering the rotation of the world transform
+        /// </summary>
+        public void MoveBackward(float distance)
+        {
+            Transform.MoveBackward(distance);
+        }
+
+        /// <summary>
+        /// Move left considering the rotation of the world transform
+        /// </summary>
+        public void MoveLeft(float distance)
+        {
+            Transform.MoveLeft(distance);
+        }
+
+        /// <summary>
+        /// Move left considering the rotation of the world transform
+        /// </summary>
+        public void MoveRight(float distance)
+        {
+            Transform.MoveRight(distance);
         }
 
         /// <summary>

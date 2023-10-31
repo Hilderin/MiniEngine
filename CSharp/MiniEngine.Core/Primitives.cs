@@ -60,20 +60,8 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreateTriangleMesh()
         {
-            return Context.Current.Renderer.CreateMesh(CreateTriangleMeshDefinition());
+            return Renderer.Current.CreateMesh(CreateTriangleMeshDefinition());
         }
-
-        /// <summary>
-        /// Create a Triangle mesh actor
-        /// </summary>
-        public static MeshObject CreateTriangleMeshObject()
-        {
-            return new MeshObject()
-            {
-                Mesh = CreateTriangleMesh()
-            };
-        }
-
 
         /// <summary>
         /// Create a pyramid mesh
@@ -126,19 +114,9 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreatePyramidMesh()
         {
-            return Context.Current.Renderer.CreateMesh(CreatePyramidMeshDefinition());
+            return Renderer.Current.CreateMesh(CreatePyramidMeshDefinition());
         }
 
-        /// <summary>
-        /// Create a Pyramid mesh actor
-        /// </summary>
-        public static MeshObject CreatePyramidMeshObject()
-        {
-            return new MeshObject()
-            {
-                Mesh = CreatePyramidMesh()
-            };
-        }
 
         /// <summary>
         /// Create a plane mesh
@@ -197,18 +175,7 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreatePlaneMesh()
         {
-            return Context.Current.Renderer.CreateMesh(CreatePlaneMeshDefinition());
-        }
-
-        /// <summary>
-        /// Create a Plane mesh actor
-        /// </summary>
-        public static MeshObject CreatePlaneMeshObject()
-        {
-            return new MeshObject()
-            {
-                Mesh = CreatePlaneMesh()
-            };
+            return Renderer.Current.CreateMesh(CreatePlaneMeshDefinition());
         }
 
         /// <summary>
@@ -285,18 +252,7 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreateCubeMesh()
         {
-            return Context.Current.Renderer.CreateMesh(CreateCubeMeshDefinition());
-        }
-
-        /// <summary>
-        /// Create a cube mesh actor
-        /// </summary>
-        public static MeshObject CreateCubeMeshObject()
-        {
-            return new MeshObject()
-            {
-                Mesh = CreateCubeMesh()
-            };
+            return Renderer.Current.CreateMesh(CreateCubeMeshDefinition());
         }
     }
 }

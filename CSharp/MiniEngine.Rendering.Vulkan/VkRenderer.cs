@@ -25,16 +25,14 @@ namespace MiniEngine.Rendering.Vulkan
         #region Public members
 
         /// <summary>
-        /// Indicate if we sould swap the buffer
-        /// </summary>
-        public bool ShouldSwapBuffer { get; set; } = true;
-
-        /// <summary>
         /// Resource factory
         /// </summary>
         public VkResourceFactory ResourceFactory { get { return _resourceFactory; } }
 
-        bool IRenderer.ShouldSwapBuffer => throw new NotImplementedException();
+        /// <summary>
+        /// Get or set the current camera
+        /// </summary>
+        public Camera Camera { get; set; } = new Camera();
 
         #endregion
 
@@ -51,7 +49,7 @@ namespace MiniEngine.Rendering.Vulkan
         private IntPtr _windowsHandle = IntPtr.Zero;
         private Dictionary<VkShader, PipelineWrapper> _cachePipeline = new Dictionary<VkShader, PipelineWrapper>();
         private bool _isDisposing;
-
+        
         #endregion
 
         #region Constructor
@@ -111,6 +109,8 @@ namespace MiniEngine.Rendering.Vulkan
         {
             if (_initialized)
                 throw new Exception("Already initialized.");
+
+            Renderer.Current = this;
 
             //If we have enabled the debug mode...
             DebugReportCallback callback = null;
@@ -224,20 +224,20 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Render a scene
         /// </summary>
-        public void Render(ICamera camera)
+        public void Render()
         {
             if (!_initialized)
                 Init();
 
             //If no camera... nothing to render...
-            if (camera != null)
+            if (Camera != null)
             {
-                RecalculateProjectionMatrix(camera);
+                RecalculateProjectionMatrix(Camera);
             }
 
 
             //Render the frame...
-            RenderFrame(camera);
+            RenderFrame();
         }
 
 
@@ -331,6 +331,9 @@ namespace MiniEngine.Rendering.Vulkan
             
 
             vk?.Dispose();
+
+            if (Renderer.Current == this)
+                Renderer.Current = null;
         }
 
 
@@ -360,14 +363,14 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Render the next frame
         /// </summary>
-        private void RenderFrame(ICamera camera)
+        private void RenderFrame()
         {
             RenderCommandBuffer commandBuffer = Swapchain.GetNextRenderCommandBuffer();
 
             commandBuffer.Begin();
 
             //If no camera, nothing to render... in 3D
-            if (camera != null)
+            if (Camera != null)
             {
                 foreach (var meshRenderer in _meshRenderers)
                     meshRenderer.PopulateCommandBuffers(commandBuffer);

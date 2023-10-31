@@ -12,19 +12,98 @@ namespace MiniEngine
     public class WorldTransform
     {
         /// <summary>
+        /// Event when the transform moved
+        /// </summary>
+        public event OnLocationChangedHandler OnLocationChanged;
+
+        /// <summary>
+        /// Event when the rotation changed
+        /// </summary>
+        public event OnRotationChangedHandler OnRotationChanged;
+
+        /// <summary>
+        /// Event when the scale changed
+        /// </summary>
+        public event OnScaleChangedHandler OnScaleChanged;
+
+
+        private Vector3 _location;
+
+        private Rotator3 _rotation;
+
+        private Vector3 _scale = Vector3.One;
+
+        /// <summary>
         /// Location in the world
         /// </summary>
-        public Vector3 Location;
+        public Vector3 Location
+        {
+            get { return _location; }
+            set
+            {
+                if (_location != value)
+                {
+                    if (OnLocationChanged != null)
+                    {
+                        Vector3 oldLocation = _location;
+                        _location = value;
+                        OnLocationChanged(oldLocation, _location);
+                    }
+                    else
+                    {
+                        _location = value;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Scale in the world
         /// </summary>
-        public Vector3 Scale = Vector3.One;
+        public Vector3 Scale
+        {
+            get { return _scale; }
+            set
+            {
+                if (_scale != value)
+                {
+                    if (OnScaleChanged != null)
+                    {
+                        Vector3 oldScale = _scale;
+                        _scale = value;
+                        OnScaleChanged(oldScale, _scale);
+                    }
+                    else
+                    {
+                        _scale = value;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Rotation in the world
         /// </summary>
-        public Rotator3 Rotation;
+        public Rotator3 Rotation
+        {
+            get { return _rotation; }
+            set
+            {
+                if (_rotation != value)
+                {
+                    if (OnRotationChanged != null)
+                    {
+                        Rotator3 oldRotation = _rotation;
+                        _rotation = value;
+                        OnRotationChanged(oldRotation, _rotation);
+                    }
+                    else
+                    {
+                        _rotation = value;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Get th forward vector
@@ -84,7 +163,7 @@ namespace MiniEngine
             if (angleRad == 0)
                 return;
 
-            Rotation.Pitch += angleRad;
+            _rotation.Pitch += angleRad;
         }
 
         /// <summary>
@@ -95,7 +174,7 @@ namespace MiniEngine
             if (angleRad == 0)
                 return;
 
-            Rotation.Yaw += angleRad;
+            _rotation.Yaw += angleRad;
         }
 
         /// <summary>
@@ -106,7 +185,7 @@ namespace MiniEngine
             if (angleRad == 0)
                 return;
 
-            Rotation.Roll += angleRad;
+            _rotation.Roll += angleRad;
         }
 
         /// <summary>
@@ -249,6 +328,15 @@ namespace MiniEngine
 
             return CameraLocalPos;
 
+        }
+
+
+        /// <summary>
+        /// Overwride the string display
+        /// </summary>
+        public override string ToString()
+        {
+            return $"Loc: {_location}; Rot: {_rotation}; Scale: {_scale}";
         }
 
 

@@ -10,24 +10,27 @@ namespace MiniEngine.Labs.Renderer
         /// </summary>
         public static void ProcessInputsTest(Context context)
         {
-            context.Scene.Camera.MoveInDirections(0.1f, context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
+            //Scene scene = SceneManager.Current.CurrentScene;
+            Camera camera = MiniEngine.Renderer.Current.Camera;
+
+            camera.Transform.MoveInDirections(0.1f, context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
 
             //if (context.Input.IsKeyDown(Keys.NumpadAdd))
-            //    context.Scene.AmbientLight.Intensity += 0.01f;
+            //    scene.AmbientLight.Intensity += 0.01f;
             //if (context.Input.IsKeyDown(Keys.NumpadSubtract))
-            //    context.Scene.AmbientLight.Intensity -= 0.01f;
+            //    scene.AmbientLight.Intensity -= 0.01f;
             if (context.Input.IsKeyDown(Keys.Z))
-                context.Scene.Camera.RotateYaw(-0.1f);
+                camera.Transform.RotateYaw(-0.1f);
             if (context.Input.IsKeyDown(Keys.X))
-                context.Scene.Camera.RotateYaw(0.1f);
+                camera.Transform.RotateYaw(0.1f);
             if (context.Input.IsKeyDown(Keys.C))
-                context.Scene.Camera.RotatePitch(-0.1f);
+                camera.Transform.RotatePitch(-0.1f);
             if (context.Input.IsKeyDown(Keys.V))
-                context.Scene.Camera.RotatePitch(0.1f);
+                camera.Transform.RotatePitch(0.1f);
             if (context.Input.IsKeyDown(Keys.R))
-                context.Scene.Camera.RotateRoll(-0.1f);
+                camera.Transform.RotateRoll(-0.1f);
             if (context.Input.IsKeyDown(Keys.F))
-                context.Scene.Camera.RotateRoll(0.1f);
+                camera.Transform.RotateRoll(0.1f);
 
             //if (context.Input.IsKeyDown(Keys.PageUp))
             //{

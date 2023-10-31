@@ -10,8 +10,13 @@ namespace MiniEngine
     /// <summary>
     /// Representation of a camera
     /// </summary>
-    public class Camera: WorldTransform, ICamera
+    public class Camera: ICamera
     {
+        /// <summary>
+        /// Transform of the camera
+        /// </summary>
+        public WorldTransform Transform = new WorldTransform();
+
         /// <summary>
         /// Field of view
         /// </summary>
@@ -27,12 +32,17 @@ namespace MiniEngine
         /// </summary>
         public float FarZ = 100.0f;
 
+        ///// <summary>
+        ///// Return the current camera of the current Renderer
+        ///// </summary>
+        //public static Camera Current => RendererManager.CurrentRenderer?.Camera;
+
         /// <summary>
         /// Get the Camera matrix
         /// </summary>
         public Matrix4 GetViewMatrix()
         {
-            return Matrix4.GetViewMatrix(this.Up, this.Backward, this.Location);
+            return Matrix4.GetViewMatrix(Transform.Location, Transform.Backward, Transform.Up);
         }
 
         /// <summary>

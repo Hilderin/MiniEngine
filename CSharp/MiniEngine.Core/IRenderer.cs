@@ -18,6 +18,11 @@ namespace MiniEngine
         //void PreInitGlfw();
 
         /// <summary>
+        /// Get or set the current camera
+        /// </summary>
+        Camera Camera { get; set; }
+
+        /// <summary>
         /// Initialize the rendering engine
         /// </summary>
         void Init();
@@ -35,17 +40,12 @@ namespace MiniEngine
         /// <summary>
         /// Render the scene
         /// </summary>
-        void Render(ICamera camera);
+        void Render();
 
         /// <summary>
         /// Get the frame buffer 
         /// </summary>
         byte[] GetFramebufferRGBA(int x, int y, int width, int height);
-
-        /// <summary>
-        /// Indicate we the buffer sould be swapped each frame
-        /// </summary>
-        bool ShouldSwapBuffer { get; }
 
         /// <summary>
         /// Create a new mesh

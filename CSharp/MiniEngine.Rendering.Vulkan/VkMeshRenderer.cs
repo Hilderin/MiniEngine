@@ -1,6 +1,5 @@
 ﻿using MiniEngine.Drivers.Vulkan;
 using System.Net.Http.Headers;
-using static MiniEngine.MeshComponent;
 
 namespace MiniEngine.Rendering.Vulkan
 {
@@ -16,6 +15,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         private RenderData[] _renderDatas;
 
+        private bool _initialized = false;
 
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             _vk = vi;
 
-            Init();
+            
         }
 
 
@@ -39,6 +39,8 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void PopulateCommandBuffers(CommandBuffer commandBuffer)
         {
+            if(!_initialized)
+                Init();
 
             Matrix4 mvp = _vk.MVPMatrix * _transform.GetMatrix();
             //Matrix4 mvpTransposed = Matrix4.Transpose(ref mvp);
@@ -155,14 +157,21 @@ namespace MiniEngine.Rendering.Vulkan
 
             }
 
+
+            _initialized = true;
+
         }
+
+
+        private struct RenderData
+        {
+            public PipelineWrapper Pipeline;
+            public PipelineDescriptorSet DescriptorSet;
+            public VkShader Shader;
+        }
+
     }
 
-    public struct RenderData
-    {
-        public PipelineWrapper Pipeline;
-        public PipelineDescriptorSet DescriptorSet;
-        public VkShader Shader;
-    }
+
 
 }

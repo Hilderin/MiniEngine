@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System;
+using System.Collections.Generic;
 
 namespace MiniEngine.Labs.Renderer
 {
@@ -15,8 +16,7 @@ namespace MiniEngine.Labs.Renderer
         //const string TEXTURE_PATH = @"C:\Projects\MiniEngine\CSharp\MiniEngine.Tutorials\Assets\viking_room.png";
 
 
-        private VkRenderer Renderer;
-        private Scene Scene = new Scene();
+        private VkRenderer renderer;
 
         public VulkanForm()
         {
@@ -26,52 +26,12 @@ namespace MiniEngine.Labs.Renderer
         private void VulkanForm_Load(object sender, EventArgs e)
         {
 #pragma warning disable CA2000 // Dispose objects before losing scope
-            Renderer = new VkRenderer("Test", "1.0.0")
+            renderer = new VkRenderer("Test", "1.0.0")
                                 .SetWindow32Handle(this.Handle)
                                 .EnableDebug(DebugCallback);
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
-            Renderer.Init();
-
-            Shader shader = Renderer.CreateShader(new()
-            {
-                VertexCode = @"#version 450
-
-            layout(binding = 0) uniform UniformBufferObject {
-                mat4 model;
-                mat4 view;
-                mat4 proj;
-            } ubo;
-
-            //push constants block
-            layout( push_constant ) uniform constants
-            {
-            	mat4 render_matrix;
-            } PushConstants;
-
-            layout(location = 0) in vec3 inPosition;
-            layout(location = 1) in vec3 inColor;
-            layout(location = 2) in vec2 inTexCoord;
-
-            layout(location = 0) out vec3 fragColor;
-
-            void main() {
-                gl_Position = PushConstants.render_matrix * vec4(inPosition, 1.0);
-                //fragColor = vec3(PushConstants.render_matrix * vec4(inPosition, 1.0));
-                fragColor = inColor;
-            }
-            ",
-                FragmentCode = @"#version 450
-
-            layout(location = 0) in vec3 fragColor;
-
-            layout(location = 0) out vec4 outColor;
-
-            void main() {
-                outColor = vec4(fragColor, 1.0);
-            }
-            "
-            });
+            renderer.Init();
 
             //AssetManager assetManager = new AssetManager();
             ////var texture = assetManager.GetTexture2DFromFile(TEXTURE_PATH);
@@ -81,24 +41,22 @@ namespace MiniEngine.Labs.Renderer
             //var mesh = assetManager.GetMeshFromFile(MODEL_PATH, new MeshImportationParameters() { InverseFaces = true });
             //var mesh = new CubeMesh();
             //var mesh = new PlaneMesh();
-            var mesh = new MeshObject()
+            var mesh = renderer.CreateMesh(Primitives.CreateTriangleMeshDefinition());
+            var transform = new WorldTransform()
             {
-                Mesh = Renderer.CreateMesh(Primitives.CreateTriangleMeshDefinition())
+                Location = new Vector3(0f, 0f, 3f)
             };
-            mesh.Location = new Vector3(0f, 0f, 0f);
 
-            mesh.Materials.Add(Renderer.CreateMaterial(new()
-            {
-                DiffuseTexture = Renderer.CreateTexture2D(new()
+            var materials = new List<Material>()
+            { 
+                renderer.CreateMaterial(new()
                 {
-                    Data = BaseTextures.WhitePixelData
-                }),
-                Shader = shader
-            }));
-            Scene.Add(mesh);
+                    DiffuseTexture = BaseTextures.White,
+                    Shader = BaseShaders.Unlit
+                })
+            };
 
-            Scene.Camera.Location.Z = -1f;
-
+            renderer.AddMesh(mesh, materials, transform);
 
         }
 
@@ -113,12 +71,12 @@ namespace MiniEngine.Labs.Renderer
 
         private void VulkanForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Renderer?.Dispose();
+            renderer?.Dispose();
         }
 
         private void tmrRefresh_Tick(object sender, EventArgs e)
         {
-            Renderer.Render(Scene.Camera);
+            renderer.Render();
         }
     }
 }

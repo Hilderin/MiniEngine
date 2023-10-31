@@ -25,25 +25,20 @@ namespace MiniEngine
 
 
         /// <summary>
-        /// Current camera
-        /// </summary>
-        public CameraObject Camera;
-
-        /// <summary>
         /// Basic scene
         /// </summary>
         public Scene()
         {
-            InitEmptyScene();
         }
 
 
         /// <summary>
         /// Add a game object
         /// </summary>
-        public void Add(GameObject obj)
+        public T Add<T>(T obj) where T: GameObject
         {
             _children.Add(obj);
+            return obj;
         }
 
         /// <summary>
@@ -64,19 +59,8 @@ namespace MiniEngine
                 _children[i].Destroy();
             }
 
-
-            InitEmptyScene();
-
         }
 
-        /// <summary>
-        /// Create a new camera
-        /// </summary>
-        private void InitEmptyScene()
-        {
-            Camera = new CameraObject();
-            
-        }
 
     }
 }

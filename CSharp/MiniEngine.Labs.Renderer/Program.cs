@@ -22,14 +22,17 @@ namespace MiniEngine.Labs.Renderer
         {
             ////Testing with Windows Form.....
             //ApplicationConfiguration.Initialize();
-            //Application.Run(new VulkanForm());
+            //using (var form = new VulkanForm())
+            //{
+            //    Application.Run(form);
+            //}
 
             try
             {
 
                 using (Context context = new Context())
                 {
-                    var t = new Test_ImGUI();
+                    var t = new Test_TriangleTexture_Vulkan();
 
                     using (var render = new VkRenderer(t.GetType().Name, "1.0.0"))
                     using (var window = new GlfwWindow(WIDTH, HEIGHT, TITLE, context))

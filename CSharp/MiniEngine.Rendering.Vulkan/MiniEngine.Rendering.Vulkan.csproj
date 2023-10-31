@@ -12,9 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MiniEngine.Assets\MiniEngine.Assets.csproj" />
+    <ProjectReference Include="..\MiniEngine.Core\MiniEngine.Core.csproj" />
     <ProjectReference Include="..\MiniEngine.Drivers.Vulkan\MiniEngine.Drivers.Vulkan.csproj" PrivateAssets="compile" />
-    <ProjectReference Include="..\MiniEngine\MiniEngine.csproj" />
   </ItemGroup>
 
 </Project>

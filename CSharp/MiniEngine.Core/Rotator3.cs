@@ -60,6 +60,8 @@ namespace MiniEngine
 
         /// <summarZ>
         /// Rotation on Z in degrees
+        /// Negative angles = counterclockwise Roll
+        /// Positive angles = clockwise Roll
         /// </summarZ>
         public float RollDeg
         {
@@ -173,6 +175,43 @@ namespace MiniEngine
         }
 
         /// <summary>
+        /// Rotate on X axis
+        /// Negative angles = downward Pitch rotations. (Down)
+        /// Positive angles = upward Pitch rotations. (Up)
+        /// </summary>
+        public void RotatePitch(float angleRad)
+        {
+            if (angleRad == 0)
+                return;
+
+            Pitch += angleRad;
+        }
+
+        /// <summary>
+        /// Rotate on Y axis
+        /// Negative angles = leftward Yaw (Left)
+        /// Positive angles = rightward Yaw (Right)
+        /// </summary>
+        public void RotateYaw(float angleRad)
+        {
+            if (angleRad == 0)
+                return;
+
+            Yaw += angleRad;
+        }
+
+        /// <summary>
+        /// Rotate on Z axis
+        /// </summary>
+        public void RotateRoll(float angleRad)
+        {
+            if (angleRad == 0)
+                return;
+
+            Roll += angleRad;
+        }
+
+        /// <summary>
         /// Override the ToString
         /// </summary>
         public override string ToString()
@@ -211,7 +250,6 @@ namespace MiniEngine
         {
             return Pitch.GetHashCode() + Yaw.GetHashCode() + Roll.GetHashCode();
         }
-
 
         #endregion
 

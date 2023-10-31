@@ -10,7 +10,7 @@ namespace MiniEngine
     /// <summary>
     /// Manager for the time and the framerate
     /// </summary>
-    public class GameLoop
+    public class FrameLoop
     {
         //private TimeSpan _elapsedGameTime;
         private Stopwatch _gameTimer = null;
@@ -27,7 +27,7 @@ namespace MiniEngine
         private int _sleepTimeIndex = 0;
         private int _updateFrameLag;
         private bool _isRunningSlowly;
-        private int _targetFramerate = -1;
+        private int _targetFramerate = 60;
 
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace MiniEngine
         /// <summary>
         /// Constructor
         /// </summary>
-        public GameLoop()
+        public FrameLoop()
         {
             _gameTimer = Stopwatch.StartNew();
 

@@ -1,4 +1,6 @@
 ﻿using MiniEngine.ResourceDefinitions;
+using System;
+using System.Diagnostics;
 
 namespace MiniEngine
 {
@@ -24,16 +26,7 @@ namespace MiniEngine
         {
             get
             {
-                if (_white == null)
-                {
-                    MaterialDefinition matDef = new MaterialDefinition()
-                    {
-                        DiffuseTexture = BaseTextures.White,
-                        Shader = BaseShaders.Unlit
-                    };
-
-                    _white = Context.Current.Renderer.CreateMaterial(matDef);
-                }
+                _white ??= CreateUnlitMaterial(BaseTextures.White);
 
                 return _white;
             }
@@ -46,19 +39,29 @@ namespace MiniEngine
         {
             get
             {
-                if (_magenta == null)
-                {
-                    MaterialDefinition matDef = new MaterialDefinition()
-                    {
-                        DiffuseTexture = BaseTextures.Magenta,
-                        Shader = BaseShaders.Unlit
-                    };
-
-                    _magenta = Context.Current.Renderer.CreateMaterial(matDef);
-                }
+                _magenta ??= CreateUnlitMaterial(BaseTextures.Magenta);
 
                 return _magenta;
             }
         }
+
+
+        /// <summary>
+        /// Create a material with base unlit shader
+        /// </summary>
+        private static Material CreateUnlitMaterial(Texture2D texture)
+        {
+            if (Renderer.Current == null)
+                throw new InvalidOperationException("No current renderer.");
+
+            MaterialDefinition matDef = new MaterialDefinition()
+            {
+                DiffuseTexture = texture,
+                Shader = BaseShaders.Unlit
+            };
+
+            return Context.Current.Renderer.CreateMaterial(matDef);
+        }
+
     }
 }

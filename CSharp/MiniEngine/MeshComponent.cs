@@ -29,13 +29,13 @@ namespace MiniEngine
             get { return _mesh; } 
             set
             {
-                if(_mesh != null)
-                    Context.History.RemovedMeshes.Add(this);
+                if(RendererHandle != null)
+                    Renderer.Current.RemoveMesh(RendererHandle);
 
                 _mesh = value;
 
                 if (value != null)
-                    Context.History.AddedMeshes.Add(this);
+                    RendererHandle = Renderer.Current.AddMesh(Mesh, _materials, this.Parent.Transform);
             } 
         }
 
@@ -51,7 +51,6 @@ namespace MiniEngine
         public List<Material> Materials
         {
             get { return _materials; }
-            set { _materials = value; }
         }
 
 
@@ -70,8 +69,8 @@ namespace MiniEngine
         /// </summary>
         protected override void OnDestroy()
         {
-            if (_mesh != null)
-                Context.History.RemovedMeshes.Add(this);
+            if (RendererHandle != null)
+                Renderer.Current.RemoveMesh(RendererHandle);
         }
 
     }
