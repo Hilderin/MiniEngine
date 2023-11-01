@@ -17,7 +17,9 @@ namespace MiniEngine.Labs.Renderer
 
             Context.LockCursor();
 
-            Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -6f);
+            //View from up and look down at 45deg
+            Context.Renderer.Camera.Transform.MoveTo(new Vector3(0.0f, 6f, -6f))
+                                             .RotatePitch(Math.DegToRad(-45));
 
             _currentMesh = new MeshObject()
                                 //.SetMesh("C:\\Projects\\MiniEngineOpenGL\\MiniEngine.Tutorials\\Assets\\viking_room.obj")

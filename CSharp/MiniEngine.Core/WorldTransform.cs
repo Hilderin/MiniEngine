@@ -148,6 +148,11 @@ namespace MiniEngine
             }
         }
 
+        /// <summary>
+        /// Get the up vector
+        /// </summary>
+        public Vector3 Down => Up * -1f;
+
 
         /// <summary>
         /// Get the back vector
@@ -158,50 +163,46 @@ namespace MiniEngine
         /// <summary>
         /// Rotate on X axis
         /// </summary>
-        public void RotatePitch(float angleRad)
+        public WorldTransform RotatePitch(float angleRad)
         {
-            if (angleRad == 0)
-                return;
-
             _rotation.Pitch += angleRad;
+            return this;
         }
 
         /// <summary>
         /// Rotate on Y axis
         /// </summary>
-        public void RotateYaw(float angleRad)
+        public WorldTransform RotateYaw(float angleRad)
         {
-            if (angleRad == 0)
-                return;
-
             _rotation.Yaw += angleRad;
+            return this;
         }
 
         /// <summary>
         /// Rotate on Z axis
         /// </summary>
-        public void RotateRoll(float angleRad)
+        public WorldTransform RotateRoll(float angleRad)
         {
-            if (angleRad == 0)
-                return;
-
             _rotation.Roll += angleRad;
+            return this;
         }
 
         /// <summary>
         /// Move to a specific location
         /// </summary>
-        public void MoveTo(Vector3 location)
+        public WorldTransform MoveTo(Vector3 location)
         {
             _location = location;
+            return this;
         }
 
         /// <summary>
         /// Move forward considering the rotation of the world transform
         /// </summary>
-        public void MoveForward(float distance)
+        public WorldTransform MoveForward(float distance)
         {
-            this.Location += this.Forward * -distance;
+            _location += this.Forward * -distance;
+            return this;
         }
 
         /// <summary>
@@ -213,45 +214,66 @@ namespace MiniEngine
         /// Y > 0 = Up
         /// Y < 0 = Down
         /// </summary>
-        public void MoveInDirections(float distance, Vector3 directions)
+        public WorldTransform MoveInDirections(float distance, Vector3 directions)
         {
             if (!Math.IsZero(directions.Z))
-                this.Location += this.Forward * directions.Z * distance;
+                _location += this.Forward * directions.Z * distance;
             if (!Math.IsZero(directions.X))
-                this.Location += this.Left * directions.X * -distance;
+                _location += this.Left * directions.X * -distance;
             if (!Math.IsZero(directions.Y))
-                this.Location += this.Up * directions.Y * distance;
-
+                _location += this.Up * directions.Y * distance;
+            return this;
         }
 
         /// <summary>
         /// Move backward considering the rotation of the world transform
         /// </summary>
-        public void MoveBackward(float distance)
+        public WorldTransform MoveBackward(float distance)
         {
-            this.Location += this.Forward * distance;
+            _location += this.Forward * distance;
+            return this;
         }
 
         /// <summary>
         /// Move left considering the rotation of the world transform
         /// </summary>
-        public void MoveLeft(float distance)
+        public WorldTransform MoveLeft(float distance)
         {
-            this.Location += this.Left * -distance;
+            _location += this.Left * -distance;
+            return this;
         }
 
         /// <summary>
         /// Move left considering the rotation of the world transform
         /// </summary>
-        public void MoveRight(float distance)
+        public WorldTransform MoveRight(float distance)
         {
-            this.Location += this.Left * distance;
+            _location += this.Left * distance;
+            return this;
+        }
+
+        /// <summary>
+        /// Move up considering the rotation of the world transform
+        /// </summary>
+        public WorldTransform MoveUp(float distance)
+        {
+            _location += this.Up * distance;
+            return this;
+        }
+
+        /// <summary>
+        /// Move down considering the rotation of the world transform
+        /// </summary>
+        public WorldTransform MoveDown(float distance)
+        {
+            _location += this.Down * -distance;
+            return this;
         }
 
         ///// <summary>
         ///// Move in 4 directions
         ///// </summary>
-        //public void Move(float distance, bool forward, bool backword, bool left, bool right)
+        //public WorldTransform Move(float distance, bool forward, bool backword, bool left, bool right)
         //{
         //    if (forward)
         //        MoveForward(distance);
@@ -261,6 +283,7 @@ namespace MiniEngine
         //        MoveLeft(distance);
         //    if (right)
         //        MoveRight(distance);
+        //    return this;
         //}
 
 
