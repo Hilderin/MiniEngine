@@ -1,4 +1,3 @@
-using MiniEngine.Assets;
 using MiniEngine.Rendering.Vulkan;
 using MiniEngine.Drivers.Vulkan;
 using MiniEngine.Drivers.Vulkan.Windows;

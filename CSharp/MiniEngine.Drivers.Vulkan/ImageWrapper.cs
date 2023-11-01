@@ -12,7 +12,7 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Wrapper for images
     /// </summary>
-    public class VkImageWrapper : IDisposable
+    public class ImageWrapper : IDisposable
     {
         private Device _device;
 
@@ -29,7 +29,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public unsafe VkImageWrapper(Device device, byte* data, int width, int height, Format format)
+        public unsafe ImageWrapper(Device device, byte* data, int width, int height, Format format)
         {
             _device = device;
             
@@ -47,7 +47,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkImageWrapper(Device device, byte[] data, int width, int height, Format format)
+        public ImageWrapper(Device device, byte[] data, int width, int height, Format format)
         {
             _device = device;
 
@@ -62,6 +62,26 @@ namespace MiniEngine.Drivers.Vulkan
                     Init(ptrData, (uint)data.Length);
                 }
             }
+
+        }
+
+        /// <summary>
+        /// Constructor for an empty image
+        /// </summary>
+        public unsafe ImageWrapper(Device device, int width, int height, Format format, ImageUsageFlags usageFlags, ImageAspectFlags aspectFlags)
+        {
+            _device = device;
+
+            Width = width;
+            Height = height;
+            Format = format;
+
+
+            CreateImage(Format, usageFlags, MemoryPropertyFlags.DeviceLocal);
+
+
+            //We need to create the image view now...
+            CreateImageView(aspectFlags);
 
         }
 
@@ -186,7 +206,7 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-        private void CreateImageView()
+        private void CreateImageView(ImageAspectFlags aspectFlags = ImageAspectFlags.Color)
         {
             using (ImageViewCreateInfo createInfo = new()
             {
@@ -202,7 +222,7 @@ namespace MiniEngine.Drivers.Vulkan
                 //    },
                 SubresourceRange = new()
                 {
-                    AspectMask = ImageAspectFlags.Color,
+                    AspectMask = aspectFlags,
                     BaseMipLevel = 0,
                     LevelCount = 1,
                     BaseArrayLayer = 0,

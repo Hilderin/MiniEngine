@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using MiniEngine.Assets;
 
 namespace MiniEngine.Labs.Renderer
 {
-    internal class Test_Cube_Vulkan
+    internal class Test_Cube
     {
        
         private MeshObject _currentMesh;
@@ -70,16 +69,15 @@ void main() {
 
 
 
-            MiniEngine.Renderer.Current.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -1f);
+            Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -1f);
 
-            _currentMesh = PrimitiveObjects.CreateCubeMeshObject();
-            _currentMesh.Location = new Vector3(0f, 0f, 0f);
-
-            _currentMesh.Materials.Add(Context.Renderer.CreateMaterial(new()
-            {
-                DiffuseTexture = BaseTextures.White,
-                Shader = shader
-            }));
+            _currentMesh = PrimitiveObjects.CreateCubeMeshObject()
+                                           .MoveTo(new Vector3(0f, 0f, 0f));
+                                           //.AddMaterial(Context.Renderer.CreateMaterial(new()
+                                           //             {
+                                           //                 DiffuseTexture = BaseTextures.White,
+                                           //                 Shader = shader
+                                           //             }));
 
 
             Scene.Add(_currentMesh);

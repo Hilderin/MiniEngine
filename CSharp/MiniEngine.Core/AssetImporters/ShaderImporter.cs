@@ -54,23 +54,27 @@ namespace MiniEngine.AssetImporters
                         Dictionary<string, string> overwrideVariableFormats = null;
 
 
-                        string assetPath = _assetManager.GetAssetPath(name, ".asset");
+                        string assetPath = _assetManager.GetAssetPath(name, ".ashader");
 
                         if (!String.IsNullOrEmpty(assetPath))
                         {
                             //We have an asset file...
                             var assetInfo = _assetManager.DeserializeFile<ShaderAssetDefinition>(assetPath);
 
-                            //if (String.IsNullOrEmpty(assetInfo.VertexCodePath))
-                            //    throw new FormatException($"VertexCodePath undefined in asset definition file: '{assetPath}'");
-                            //if (String.IsNullOrEmpty(assetInfo.FragmentCodePath))
-                            //    throw new FormatException($"FragmentCodePath undefined in asset definition file: '{assetPath}'");
+                            if (String.IsNullOrEmpty(assetInfo.VertexCodePath))
+                                throw new FormatException($"VertexCodePath undefined in asset definition file: '{assetPath}'");
+                            if (String.IsNullOrEmpty(assetInfo.FragmentCodePath))
+                                throw new FormatException($"FragmentCodePath undefined in asset definition file: '{assetPath}'");
 
                             if (!String.IsNullOrEmpty(assetInfo.VertexCodePath))
                                 vertPath = Path.GetFullPath(assetInfo.VertexCodePath, Path.GetDirectoryName(assetPath));
                             if (!String.IsNullOrEmpty(assetInfo.FragmentCodePath))
                                 fragPath = Path.GetFullPath(assetInfo.FragmentCodePath, Path.GetDirectoryName(assetPath));
 
+                            if (!File.Exists(vertPath))
+                                throw new FileNotFoundException($"Vertex file not found: {vertPath}");
+                            if (!File.Exists(fragPath))
+                                throw new FileNotFoundException($"Fragment file not found: {fragPath}");
 
                             overwrideVariableFormats = assetInfo.OverwrideVariableFormats;
                         }
@@ -79,18 +83,21 @@ namespace MiniEngine.AssetImporters
                             //.asset not found.... check only for .vert et .frag...
                             vertPath = _assetManager.GetAssetPath(name, ".vert");
                             fragPath = _assetManager.GetAssetPath(name, ".frag");
+
+                            if (String.IsNullOrEmpty(vertPath))
+                                throw new FormatException($"VertexCode file not found '{name}.vert'");
+                            if (String.IsNullOrEmpty(fragPath))
+                                throw new FormatException($"FragmentCode file not found '{name}.frag'");
                         }
 
-                        if (!File.Exists(vertPath) && File.Exists(fragPath))
+                        
+
+                        shader = _assetManager.Context.Renderer.CreateShader(new()
                         {
-                            shader = _assetManager.Context.Renderer.CreateShader(new()
-                            {
-                                VertexCode = File.ReadAllText(vertPath),
-                                FragmentCode = File.ReadAllText(fragPath),
-                                OverwrideVariableFormats = overwrideVariableFormats
-                            });
-
-                        }
+                            VertexCode = File.ReadAllText(vertPath),
+                            FragmentCode = File.ReadAllText(fragPath),
+                            OverwrideVariableFormats = overwrideVariableFormats
+                        });
 
                     }
                 }

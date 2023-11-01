@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using ImGuiNET;
-using MiniEngine.Assets;
 using MiniEngine.Rendering.Vulkan;
 
 namespace MiniEngine.Labs.Renderer

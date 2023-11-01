@@ -4,27 +4,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MiniEngine.Assets
+namespace MiniEngine.AssetDefinitions
 {
     /// <summary>
-    /// Mesh importation parameters
+    /// Definition of a mesh asset
     /// </summary>
-    public class MeshImportationParameters
+    public class MeshAssetDefinition
     {
         /// <summary>
-        /// Default parameters
+        /// Path of the mesh file
         /// </summary>
-        private static MeshImportationParameters _default = new MeshImportationParameters();
+        public string MeshPath { get; set; }
 
         /// <summary>
-        /// Default parameters
+        /// Material names
         /// </summary>
-        public static MeshImportationParameters Default { get { return _default; } }
+        public List<string> MaterialNames = new List<string>();
+
 
         /// <summary>
         /// Invert face (default = false)
         /// </summary>
-        public bool InverseFaces;
+        public bool InverseFaces = false;
 
         /// <summary>
         /// Scale

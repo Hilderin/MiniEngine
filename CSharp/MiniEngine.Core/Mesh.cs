@@ -12,8 +12,10 @@ namespace MiniEngine
     /// </summary>
     public abstract class Mesh: IDisposable
     {
-        //public List<Material> Materials;
-        //public List<SubMeshData> SubMeshes;
+        /// <summary>
+        /// Default materials. Represents the slots for the materials for this mesh
+        /// </summary>
+        public Material[] Materials;
 
         /// <summary>
         /// Destruction of the Mesh

@@ -93,6 +93,31 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
+
+        public Format FindSupportedFormat(IEnumerable<Format> candidates, ImageTiling tiling, FormatFeatureFlags features)
+        {
+            foreach (var format in candidates)
+            {
+                FormatProperties formatProps = GetFormatProperties(format);
+                
+                if (tiling == ImageTiling.Linear && (formatProps.LinearTilingFeatures & features) == features)
+                {
+                    return format;
+                }
+                else if (tiling == ImageTiling.Optimal && (formatProps.OptimalTilingFeatures & features) == features)
+                {
+                    return format;
+                }
+            }
+
+            throw new Exception("failed to find supported format!");
+        }
+
+        public Format FindDepthFormat()
+        {
+            return FindSupportedFormat(new[] { Format.D32Sfloat, Format.D32SfloatS8Uint, Format.D24UnormS8Uint }, ImageTiling.Optimal, FormatFeatureFlags.DepthStencilAttachment);
+        }
+
         public FormatProperties GetFormatProperties(Format format)
         {
             FormatProperties pFormatProperties;

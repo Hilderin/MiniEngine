@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 
 namespace MiniEngine
 {
@@ -20,16 +21,30 @@ namespace MiniEngine
             MeshComponent = AddComponent<MeshComponent>();
         }
 
+        public MeshObject SetMesh(string assetName)
+        {
+            return SetMesh(Context.Asset.Get<Mesh>(assetName));
+        }
+
         public MeshObject SetMesh(Mesh mesh)
         {
-            this.Mesh = mesh;
+            MeshComponent.SetMesh(mesh);
+
             return this;
         }
 
 
-        public MeshObject AddMaterial(Material mat)
+        public MeshObject SetMaterial(string assetName, int matIndex)
         {
-            Materials.Add(mat);
+            MeshComponent.SetMaterial(assetName, matIndex);
+
+            return this;
+        }
+
+        public MeshObject SetMaterial(Material mat, int matIndex)
+        {
+            MeshComponent.SetMaterial(mat, matIndex);
+
             return this;
         }
 

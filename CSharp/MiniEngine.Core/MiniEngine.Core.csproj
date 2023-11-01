@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AssimpNet" Version="4.1.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.0.2" />
 	<PackageReference Include="YamlDotNet" Version="13.7.1" />
   </ItemGroup>

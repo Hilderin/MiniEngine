@@ -40,9 +40,28 @@ namespace MiniEngine.AssetImporters
             {
                 try
                 {
-                    string assetPath = _assetManager.GetAssetPath(name, ".asset");
+                    string assetPath = _assetManager.GetAssetPath(name, ".amat");
 
-                    if (!String.IsNullOrEmpty(assetPath))
+                    if (String.IsNullOrEmpty(assetPath))
+                    {
+                        //Check directly with a texture...
+                        if (!String.IsNullOrEmpty(_assetManager.GetAssetPath(name, Texture2DImporter.SUPPORTED_EXTENSIONS)))
+                        {
+                            var texture = _assetManager.Get<Texture2D>(name);
+
+                            mat = _assetManager.Context.Renderer.CreateMaterial(new()
+                            {
+                                DiffuseTexture = texture,
+                                Shader = BaseShaders.Unlit,
+                            });
+
+                        }
+                        else
+                            //Asset not found...
+                            throw new FileNotFoundException($"Material asset file not found '{name}.amat'");
+                    }
+
+                    if (mat == null)
                     {
                         var assetInfo = _assetManager.DeserializeFile<MaterialAssetDefinition>(assetPath);
 

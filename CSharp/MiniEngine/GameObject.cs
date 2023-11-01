@@ -92,6 +92,17 @@ namespace MiniEngine
         /// </summary>
         public T AddComponent<T>(T component) where T : GameComponent
         {
+            AddComponent(component);
+
+            return component;
+
+        }
+
+        /// <summary>
+        /// Add a component to the game object
+        /// </summary>
+        public GameComponent AddComponent(GameComponent component)
+        {
             if (component.Parent != null)
                 throw new InvalidOperationException("Cannot add a component already attached to a GameObject.");
 
@@ -108,83 +119,13 @@ namespace MiniEngine
         /// </summary>
         public void RemoveComponent(GameComponent component)
         {
-            if(component.Parent != this)
+            if (component.Parent != this)
                 throw new InvalidOperationException("The component does not belong to this GameObject.");
 
             component.SetParentInternal(null);
 
             _components.Remove(component);
 
-        }
-
-        /// <summary>
-        /// Rotate on X axis
-        /// </summary>
-        public void RotatePitch(float angleRad)
-        {
-            Transform.RotatePitch(angleRad);
-        }
-
-        /// <summary>
-        /// Rotate on Y axis
-        /// </summary>
-        public void RotateYaw(float angleRad)
-        {
-            Transform.RotateYaw(angleRad);
-        }
-
-        /// <summary>
-        /// Rotate on Z axis
-        /// </summary>
-        public void RotateRoll(float angleRad)
-        {
-            Transform.RotateRoll(angleRad);
-        }
-
-        /// <summary>
-        /// Move forward considering the rotation of the world transform
-        /// </summary>
-        public void MoveForward(float distance)
-        {
-            Transform.MoveForward(distance);
-        }
-
-        /// <summary>
-        /// Move forward considering the rotation of the world transform
-        /// Z < 0 = Forward
-        /// Z < 0 = Backward
-        /// X > 0 = Right
-        /// X < 0 = Left
-        /// Y > 0 = Up
-        /// Y < 0 = Down
-        /// </summary>
-        public void MoveInDirections(float distance, Vector3 directions)
-        {
-            Transform.MoveInDirections(distance, directions);
-        }
-
-        /// <summary>
-        /// Move backward considering the rotation of the world transform
-        /// </summary>
-        public void MoveBackward(float distance)
-        {
-            Transform.MoveBackward(distance);
-        }
-
-        /// <summary>
-        /// Move left considering the rotation of the world transform
-        /// </summary>
-        public void MoveLeft(float distance)
-        {
-            Transform.MoveLeft(distance);
-        }
-
-        /// <summary>
-        /// Move left considering the rotation of the world transform
-        /// </summary>
-        public void MoveRight(float distance)
-        {
-            Transform.MoveRight(distance);
         }
 
         /// <summary>

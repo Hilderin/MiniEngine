@@ -172,17 +172,33 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create framebuffers from imageviews
         /// </summary>
-        public Framebuffer[] CreateFramebuffers(RenderPass renderPass, ImageView[] displayViews, Extent2D extent)
+        public Framebuffer[] CreateFramebuffers(RenderPass renderPass, ImageView[] displayViews, Extent2D extent, ImageView depthImageView)
         {
             var framebuffers = new Framebuffer[displayViews.Length];
 
             for (int i = 0; i < displayViews.Length; i++)
             {
+                ImageView[] attachments;
+                if (depthImageView != null)
+                {
+                    attachments = new ImageView[]
+                    {
+                        displayViews[i], depthImageView
+                    };
+                }
+                else
+                {
+                    attachments = new ImageView[]
+                    {
+                        displayViews[i]
+                    };
+                }
+
                 using (var frameBufferCreateInfo = new FramebufferCreateInfo
                 {
                     Layers = 1,
                     RenderPass = renderPass,
-                    Attachments = new ImageView[] { displayViews[i] },
+                    Attachments = attachments,
                     Width = extent.Width,
                     Height = extent.Height
                 })

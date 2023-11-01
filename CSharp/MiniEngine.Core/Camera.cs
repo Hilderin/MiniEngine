@@ -32,11 +32,6 @@ namespace MiniEngine
         /// </summary>
         public float FarZ = 100.0f;
 
-        ///// <summary>
-        ///// Return the current camera of the current Renderer
-        ///// </summary>
-        //public static Camera Current => RendererManager.CurrentRenderer?.Camera;
-
         /// <summary>
         /// Get the Camera matrix
         /// </summary>

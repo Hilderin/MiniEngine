@@ -110,11 +110,14 @@ namespace MiniEngine.Rendering.Vulkan
             //_pipeline.Dispose();
             //_pipeline = null;
 
-
-            for (int i = 0; i < _renderDatas.Length; i++)
+            if (_renderDatas != null)
             {
-                _renderDatas[i].DescriptorSet?.Dispose();
+                for (int i = 0; i < _renderDatas.Length; i++)
+                {
+                    _renderDatas[i].DescriptorSet?.Dispose();
 
+                }
+                _renderDatas = null;
             }
 
         }
@@ -169,6 +172,7 @@ namespace MiniEngine.Rendering.Vulkan
             public PipelineDescriptorSet DescriptorSet;
             public VkShader Shader;
         }
+
 
     }
 

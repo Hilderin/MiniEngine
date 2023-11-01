@@ -232,7 +232,7 @@ namespace MiniEngine.Rendering.Vulkan
             //If no camera... nothing to render...
             if (Camera != null)
             {
-                RecalculateProjectionMatrix(Camera);
+                RecalculateProjectionMatrix();
             }
 
 
@@ -344,17 +344,16 @@ namespace MiniEngine.Rendering.Vulkan
 
         #region Private methods
 
-
         /// <summary>
         /// Recalculate the projection matrix
         /// </summary>
-        private void RecalculateProjectionMatrix(ICamera camera)
+        private void RecalculateProjectionMatrix()
         {
            
 
             //Update MVP Matrix...
-            Matrix4 viewMat2 = camera.GetViewMatrix();
-            Matrix4 projMat = camera.GetProjectionMatrixVulkan((int)Device.CurrentExtent.Width, (int)Device.CurrentExtent.Height);
+            Matrix4 viewMat2 = Camera.GetViewMatrix();
+            Matrix4 projMat = Camera.GetProjectionMatrixVulkan((int)Device.CurrentExtent.Width, (int)Device.CurrentExtent.Height);
             
             this.MVPMatrix = projMat * viewMat2;
 

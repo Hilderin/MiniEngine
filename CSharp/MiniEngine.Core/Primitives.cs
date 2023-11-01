@@ -13,7 +13,7 @@ namespace MiniEngine
     public static class Primitives
     {
         /// <summary>
-        /// Create a triangle mesh
+        /// Create a triangle mesh definition
         /// </summary>
         public static MeshDefinition CreateTriangleMeshDefinition()
         {
@@ -30,10 +30,10 @@ namespace MiniEngine
             positions[1] = new Vector3(0.5f, -0.5f, 0f);    // Bottom right
             positions[2] = new Vector3(-0.5f, -0.5f, 0f);   // Bottom left
 
-            Vector3[] colors = new Vector3[3];
-            colors[0] = new Vector3(1f, 0f, 0f);            // TopCenter
-            colors[1] = new Vector3(0f, 1f, 0f);            // Bottom right
-            colors[2] = new Vector3(0f, 0f, 1f);            // Bottom left
+            //Vector3[] colors = new Vector3[3];
+            //colors[0] = new Vector3(1f, 0f, 0f);            // TopCenter
+            //colors[1] = new Vector3(0f, 1f, 0f);            // Bottom right
+            //colors[2] = new Vector3(0f, 0f, 1f);            // Bottom left
 
             Vector2[] texCoords = new Vector2[3];
             texCoords[0] = t11;                             // TopCenter
@@ -47,16 +47,18 @@ namespace MiniEngine
             meshDef.SubMeshes.Add(new SubMeshDefinition()
             {
                 Positions = positions,
-                Colors = colors,
+                //Colors = colors,
                 Indices = indices,
                 TexCoords = texCoords
             });
+
+            meshDef.Materials.Add(BaseMaterials.White);
 
             return meshDef;
         }
 
         /// <summary>
-        /// Create a Triangle mesh actor
+        /// Create a Triangle mesh
         /// </summary>
         public static Mesh CreateTriangleMesh()
         {
@@ -64,7 +66,7 @@ namespace MiniEngine
         }
 
         /// <summary>
-        /// Create a pyramid mesh
+        /// Create a pyramid mesh definition
         /// </summary>
         public static MeshDefinition CreatePyramidMeshDefinition()
         {
@@ -77,11 +79,11 @@ namespace MiniEngine
             positions[2] = new Vector3(1.0f, -1.0f, 0.5773f);
             positions[3] = new Vector3(0.0f, 1.0f, 0.0f);
 
-            Vector3[] colors = new Vector3[4];
-            colors[0] = new Vector3(1f, 0f, 0f);
-            colors[1] = new Vector3(0f, 1f, 0f);
-            colors[2] = new Vector3(0f, 0f, 1f);
-            colors[3] = new Vector3(1f, 1f, 0f);
+            //Vector3[] colors = new Vector3[4];
+            //colors[0] = new Vector3(1f, 0f, 0f);
+            //colors[1] = new Vector3(0f, 1f, 0f);
+            //colors[2] = new Vector3(0f, 0f, 1f);
+            //colors[3] = new Vector3(1f, 1f, 0f);
 
             Vector2[] texCoords = new Vector2[4];
             texCoords[0] = new Vector2(0.0f, 0.0f);
@@ -101,10 +103,12 @@ namespace MiniEngine
             meshDef.SubMeshes.Add(new SubMeshDefinition()
             {
                 Positions = positions,
-                Colors = colors,
+                //Colors = colors,
                 Indices = indices,
                 TexCoords = texCoords
             });
+
+            meshDef.Materials.Add(BaseMaterials.White);
 
             return meshDef;
         }
@@ -119,7 +123,7 @@ namespace MiniEngine
 
 
         /// <summary>
-        /// Create a plane mesh
+        /// Create a plane mesh definition
         /// </summary>
         public static MeshDefinition CreatePlaneMeshDefinition()
         {
@@ -139,11 +143,11 @@ namespace MiniEngine
             positions[2] = new Vector3(0.5f, -0.5f, 0f);    // Bottom right
             positions[3] = new Vector3(-0.5f, -0.5f, 0f);   // Bottom left
 
-            Vector3[] colors = new Vector3[4];
-            colors[0] = new Vector3(1f, 0f, 0f);            // Top right
-            colors[1] = new Vector3(0f, 1f, 0f);            // Top left
-            colors[2] = new Vector3(0f, 0f, 1f);            // Bottom right
-            colors[3] = new Vector3(1f, 1f, 1f);            // Bottom left
+            //Vector3[] colors = new Vector3[4];
+            //colors[0] = new Vector3(1f, 0f, 0f);            // Top right
+            //colors[1] = new Vector3(0f, 1f, 0f);            // Top left
+            //colors[2] = new Vector3(0f, 0f, 1f);            // Bottom right
+            //colors[3] = new Vector3(1f, 1f, 1f);            // Bottom left
 
             Vector2[] texCoords = new Vector2[4];
             texCoords[0] = t11;                             // Top right
@@ -161,10 +165,12 @@ namespace MiniEngine
             meshDef.SubMeshes.Add(new SubMeshDefinition()
             {
                 Positions = positions,
-                Colors = colors,
+                //Colors = colors,
                 Indices = indices,
                 TexCoords = texCoords
             });
+
+            meshDef.Materials.Add(BaseMaterials.White);
 
             return meshDef;
 
@@ -179,7 +185,7 @@ namespace MiniEngine
         }
 
         /// <summary>
-        /// Create a cube mesh
+        /// Create a cube mesh definition
         /// </summary>
         public static MeshDefinition CreateCubeMeshDefinition()
         {
@@ -201,15 +207,15 @@ namespace MiniEngine
             positions[6] = new Vector3(0.5f, -0.5f, 0.5f);
             positions[7] = new Vector3(-0.5f, -0.5f, 0.5f);
 
-            Vector3[] colors = new Vector3[8];
-            colors[0] = new Vector3(1f, 0f, 0f);
-            colors[1] = new Vector3(0f, 1f, 0f);
-            colors[2] = new Vector3(0f, 0f, 1f);
-            colors[3] = new Vector3(1f, 1f, 0f);
-            colors[4] = new Vector3(0f, 1f, 1f);
-            colors[5] = new Vector3(1f, 0f, 1f);
-            colors[6] = new Vector3(0f, 0f, 0f);
-            colors[7] = new Vector3(1f, 1f, 1f);
+            //Vector3[] colors = new Vector3[8];
+            //colors[0] = new Vector3(1f, 0f, 0f);
+            //colors[1] = new Vector3(0f, 1f, 0f);
+            //colors[2] = new Vector3(0f, 0f, 1f);
+            //colors[3] = new Vector3(1f, 1f, 0f);
+            //colors[4] = new Vector3(0f, 1f, 1f);
+            //colors[5] = new Vector3(1f, 0f, 1f);
+            //colors[6] = new Vector3(0f, 0f, 0f);
+            //colors[7] = new Vector3(1f, 1f, 1f);
 
             Vector2[] texCoords = new Vector2[8];
             texCoords[0] = t00;
@@ -239,10 +245,12 @@ namespace MiniEngine
             meshDef.SubMeshes.Add(new SubMeshDefinition()
             {
                 Positions = positions,
-                Colors = colors,
+                //Colors = colors,
                 Indices = indices,
                 TexCoords = texCoords
             });
+
+            meshDef.Materials.Add(BaseMaterials.White);
 
             return meshDef;
         }
@@ -253,6 +261,34 @@ namespace MiniEngine
         public static Mesh CreateCubeMesh()
         {
             return Renderer.Current.CreateMesh(CreateCubeMeshDefinition());
+        }
+
+
+        /// <summary>
+        /// Create a empty mesh definition
+        /// </summary>
+        public static MeshDefinition CreateEmptyMeshDefinition()
+        {
+            MeshDefinition meshDef = new MeshDefinition();
+
+
+            meshDef.SubMeshes.Add(new SubMeshDefinition()
+            {
+                Positions = new Vector3[0],
+                //Colors = new Vector3[0],
+                Indices = new int[0],
+                TexCoords = new Vector2[0]
+            });
+
+            return meshDef;
+        }
+
+        /// <summary>
+        /// Create a empty mesh
+        /// </summary>
+        public static Mesh CreateEmptyMesh()
+        {
+            return Renderer.Current.CreateMesh(CreateEmptyMeshDefinition());
         }
     }
 }

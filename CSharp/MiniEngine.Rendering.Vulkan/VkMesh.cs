@@ -64,6 +64,9 @@ namespace MiniEngine.Rendering.Vulkan
 
                 MeshDatas[i].MaterialIndex = subMeshes[i].MaterialIndex;
             }
+
+            //Create default materials slots
+            Materials = meshDef.Materials.ToArray();
         }
 
 
@@ -79,7 +82,7 @@ namespace MiniEngine.Rendering.Vulkan
                 vertices[i] = new Vertex()
                 {
                     Pos = new Vector3(subMeshData.Positions[i].X, subMeshData.Positions[i].Y, subMeshData.Positions[i].Z),
-                    Color = subMeshData.Colors[i],
+                    //Color = subMeshData.Colors[i],
                     TexCoord = subMeshData.TexCoords[i]
                 };
             }

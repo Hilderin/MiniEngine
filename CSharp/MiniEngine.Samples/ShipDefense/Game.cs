@@ -33,21 +33,13 @@ namespace ShipDefense
         /// </summary>
         public void Init()
         {
-            //CameraComponent = new CameraComponent();
-            //CameraComponent.Camera = 
-            //Camera.Current.Location = new Vector3(0f, 0, -3f);
-            //Scene.Camera.RotatePitch(Math.DegToRad(15));
-            //Scene.Camera.AddComponent<BasicMovementComponent>();
+            Scene.Add(new CameraObject())
+                 .MoveBackward(3f)
+                 .AddComponent<BasicMovementComponent>();
 
-            var camera = Scene.Add(new CameraObject());
-            camera.MoveBackward(3f);
-            camera.AddComponent<BasicMovementComponent>();
-
-            //if (Context.Scene != null)
-            //    Context.Scene.Camera = Camera;
             Scene.Add(new MeshObject()
                         .SetMesh(Primitives.CreateCubeMesh())
-                        .AddMaterial(Context.Asset.Get<Material>("materials/test"))
+                        .SetMaterial(Context.Asset.Get<Material>("materials/test"), 0)
                       );
         }
 

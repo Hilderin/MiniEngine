@@ -25,7 +25,15 @@ namespace MiniEngine.Drivers.Vulkan
             _renderPassBeginInfo = new RenderPassBeginInfo
             {
                 RenderPass = _swapchain.RenderPass,
-                ClearValues = new ClearValue[] { new ClearValue { Color = new ClearColorValue(new float[] { 0f, 0f, 0f, 1.0f }) } },
+                ClearValues = new ClearValue[] 
+                { 
+                    new ClearValue {
+                        Color = new ClearColorValue(new float[] { 0f, 0f, 0f, 1.0f })
+                        },
+                    new ClearValue {
+                        DepthStencil = new ClearDepthStencilValue() { Depth = 1f, Stencil = 0 }
+                    } 
+                }
             };
         }
 

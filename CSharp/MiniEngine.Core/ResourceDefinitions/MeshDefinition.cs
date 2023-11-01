@@ -11,6 +11,14 @@ namespace MiniEngine.ResourceDefinitions
     /// </summary>
     public class MeshDefinition
     {
+        /// <summary>
+        /// Default materials. Represents the slots for the materials for this mesh
+        /// </summary>
+        public List<Material> Materials { get; private set; } = new List<Material>();
+
+        /// <summary>
+        /// Submeshes
+        /// </summary>
         public List<SubMeshDefinition> SubMeshes = new List<SubMeshDefinition>();
 
     }
@@ -24,7 +32,6 @@ namespace MiniEngine.ResourceDefinitions
         public Vector3[] Positions;
         public Vector2[] TexCoords;
         public Vector3[] Normals;
-        public Vector3[] Colors;
         public int[] Indices;
         public int MaterialIndex;
     }

@@ -17,7 +17,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Supported extensions
         /// </summary>
-        private static string[] SUPPORTED_EXTENSIONS = new string[] { ".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".gif" };
+        public static readonly string[] SUPPORTED_EXTENSIONS = new string[] { ".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".gif" };
 
 
         private AssetManager _assetManager;
@@ -48,14 +48,16 @@ namespace MiniEngine.AssetImporters
                 {
                     string assetPath = _assetManager.GetAssetPath(name, SUPPORTED_EXTENSIONS);
 
-                    if (!String.IsNullOrEmpty(assetPath))
+                    if (String.IsNullOrEmpty(assetPath))
+                        throw new FileNotFoundException($"Texture not found '{name}' for supported extensions: {String.Join(", ", SUPPORTED_EXTENSIONS)}");
+
+                        
+                    texture = _assetManager.Context.Renderer.CreateTexture2D(new()
                     {
-                        texture = _assetManager.Context.Renderer.CreateTexture2D(new()
-                        {
-                            Data = File.ReadAllBytes(assetPath),
-                            Type = TextureType.RGBA
-                        });
-                    }
+                        Data = File.ReadAllBytes(assetPath),
+                        Type = TextureType.RGBA
+                    });
+
                 }
                 catch (Exception ex)
                 {

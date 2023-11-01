@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace MiniEngine.Drivers.Vulkan
@@ -267,6 +268,17 @@ namespace MiniEngine.Drivers.Vulkan
                 DynamicStates = _dynamicStates
             };
 
+            var pipelineDepthStencil = new PipelineDepthStencilStateCreateInfo()
+            {
+                DepthTestEnable = true,                
+                DepthWriteEnable = true,
+                DepthCompareOp = CompareOp.Less,
+                DepthBoundsTestEnable = false,
+                MinDepthBounds = 0f,
+                MaxDepthBounds = 1f,
+                StencilTestEnable = false
+            };
+
             var pipelineCreateInfo = new GraphicsPipelineCreateInfo
             {
                 Layout = _pipelineLayout,
@@ -278,7 +290,8 @@ namespace MiniEngine.Drivers.Vulkan
                 InputAssemblyState = inputAssemblyStateCreateInfo,
                 VertexInputState = vertexInputStateCreateInfo,
                 RenderPass = _swapchain.RenderPass,
-                DynamicState = dynamicStateCreateInfo
+                DynamicState = dynamicStateCreateInfo,
+                DepthStencilState = pipelineDepthStencil
             };
 
             //var pipelines = _device.CreateGraphicsPipelines(_device.CreatePipelineCache(new PipelineCacheCreateInfo()), new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });

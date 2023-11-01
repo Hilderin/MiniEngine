@@ -189,6 +189,14 @@ namespace MiniEngine
         }
 
         /// <summary>
+        /// Move to a specific location
+        /// </summary>
+        public void MoveTo(Vector3 location)
+        {
+            _location = location;
+        }
+
+        /// <summary>
         /// Move forward considering the rotation of the world transform
         /// </summary>
         public void MoveForward(float distance)

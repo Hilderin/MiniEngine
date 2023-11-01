@@ -17,7 +17,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Image wrapper for vulkan
         /// </summary>
-        public VkImageWrapper ImageWrapper;
+        public ImageWrapper ImageWrapper;
 
         /// <summary>
         /// Format
@@ -29,7 +29,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public unsafe VkTexture2D(byte* pixelData, int width, int height, Format format, VkRenderer vk, VkResourceFactory factory)
         {
-            ImageWrapper = new VkImageWrapper(vk.Device, pixelData, width, height, format);
+            ImageWrapper = new ImageWrapper(vk.Device, pixelData, width, height, format);
 
             this.Width = width;
             this.Height = height;
@@ -47,7 +47,7 @@ namespace MiniEngine.Rendering.Vulkan
         {
 
 
-            ImageWrapper = new VkImageWrapper(vk.Device, pixelData, width, height, format);
+            ImageWrapper = new ImageWrapper(vk.Device, pixelData, width, height, format);
 
             this.Width = width;
             this.Height = height;

@@ -2,6 +2,7 @@
 using MiniEngine.AssetImporters;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -62,6 +63,7 @@ namespace MiniEngine
             _assetImporters.Add(typeof(Texture2D), new Texture2DImporter(this));
             _assetImporters.Add(typeof(Material), new MaterialImporter(this));
             _assetImporters.Add(typeof(Shader), new ShaderImporter(this));
+            _assetImporters.Add(typeof(Mesh), new MeshImporter(this));
 
 
 
@@ -98,7 +100,14 @@ namespace MiniEngine
         /// </summary>
         public string GetAssetPath(string name, string extension)
         {
-            string path = Path.Combine(RootPath, name + extension);
+            string path;
+
+            if (Path.IsPathRooted(name))
+                //Absolute path..
+                path = name + extension;
+            else
+                //Relative path...
+                path = Path.Combine(RootPath, name + extension);
 
             if (!File.Exists(path))
             {
@@ -113,11 +122,27 @@ namespace MiniEngine
         /// </summary>
         public string GetAssetPath(string name, string[] extensions)
         {
-            for (int i = 0; i < extensions.Length; i++)
+            string extension = Path.GetExtension(name);
+
+            if (!String.IsNullOrEmpty(extension) && extensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)))
             {
-                string path = GetAssetPath(name, extensions[i]);
-                if (!String.IsNullOrEmpty(path))
-                    return path;
+                //Extension in the list, we keep it!
+                if (!File.Exists(name))
+                    return String.Empty;
+                return name;
+            }
+
+            //Check each extension
+            string folder = Path.GetDirectoryName(name);
+            if (Directory.Exists(folder))
+            {
+                foreach (string file in Directory.EnumerateFiles(folder, name + ".*"))
+                {
+                    extension = Path.GetExtension(file);
+
+                    if (!String.IsNullOrEmpty(extension) && extensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)))
+                        return file;
+                }
             }
 
             return String.Empty;
