@@ -15,8 +15,6 @@ namespace MiniEngine.Labs.Renderer
 
         public void Init()
         {
-            ((VkRenderer)Context.Renderer).InitGui();
-
             //Just move camera back
             Context.Renderer.Camera.Transform.MoveTo(new Vector3(0.0f, 0f, -6f));
 
@@ -35,12 +33,15 @@ namespace MiniEngine.Labs.Renderer
         {
             ((VkRenderer)Context.Renderer).UpdateImGuiInput(Context.Input);
 
+            Debug.Print("DeltaTime: " + Time.DeltaTime);
+            Context.Current.SetMaxFramerate(60);
+
             ImGui.ShowDemoWindow();
             //ImGui.Begin("Test");
             //ImGui.Button("Wow");
             //ImGui.End();
 
-            _currentMesh.RotateYaw(0.01f);
+            _currentMesh.RotateYaw(1f * Time.DeltaTime);
 
             //System.Threading.Thread.Sleep(3);
 

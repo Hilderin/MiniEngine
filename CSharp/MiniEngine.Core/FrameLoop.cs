@@ -98,6 +98,9 @@ namespace MiniEngine
                 if (_targetElapsedTime == TimeSpan.Zero)
                 {
                     //Has fast has we can...
+                    TimeSpan elapsed = _gameTimer.Elapsed;
+                    Time.DeltaTime = (float)elapsed.TotalSeconds - Time.TotalTime;
+                    Time.TotalTime = (float)elapsed.TotalSeconds;
                     if (!tickAction())
                         return;
 
@@ -137,8 +140,17 @@ namespace MiniEngine
                     // Perform as many full fixed length time steps as we can.
                     while (_accumulatedElapsedTime >= _targetElapsedTime)
                     {
+                        TimeSpan elapsed = _gameTimer.Elapsed;
+                        Time.DeltaTime = (float)elapsed.TotalSeconds - Time.TotalTime;
+                        Time.TotalTime = (float)elapsed.TotalSeconds;
+
+                        if (Time.DeltaTime == 0f)
+                            Debug.Print("ici");
+
                         _accumulatedElapsedTime -= _targetElapsedTime;
                         stepCount += 1;
+
+                        
 
                         if (!tickAction())
                             return;
@@ -189,7 +201,7 @@ namespace MiniEngine
         /// Advanced the time in _accumulatedElapsedTime and _previousTicks
         /// </summary>
         private TimeSpan AdvanceElapsedTime()
-        {
+        {            
             long currentTicks = _gameTimer.Elapsed.Ticks;
             TimeSpan timeAdvanced = TimeSpan.FromTicks(currentTicks - _previousTicks);
             _accumulatedElapsedTime += timeAdvanced;

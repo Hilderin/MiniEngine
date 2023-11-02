@@ -85,9 +85,17 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Activate Dear ImGui
+        /// </summary>
+        void IRenderer.EnableGui()
+        {
+            EnableGui();
+        }
+
+        /// <summary>
         /// Init ImGui
         /// </summary>
-        public VkRenderer InitGui()
+        public VkRenderer EnableGui()
         {
             if(_imGui == null)
                 _imGui = new ImGuiRenderer(this);

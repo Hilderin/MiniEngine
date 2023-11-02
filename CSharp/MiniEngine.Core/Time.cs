@@ -11,9 +11,16 @@ namespace MiniEngine
     /// </summary>
     public static class Time
     {
+        
         /// <summary>
         /// The interval in seconds from the last frame to the current one
         /// </summary>
-        public static float DeltaTime { get; private set; }
+        public static float DeltaTime { get; internal set; }
+
+        /// <summary>
+        /// Total time that the application is running (minus when paused)
+        /// </summary>
+        public static float TotalTime { get; internal set; }
+
     }
 }

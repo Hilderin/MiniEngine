@@ -108,7 +108,9 @@ namespace MiniEngine
 
             DebugEnabled = true;
 
-            System.Diagnostics.Trace.Listeners.Add(new MiniEngineTraceListener());
+            //Replacing de defaults DebugTrace...
+            System.Diagnostics.Trace.Listeners.Clear();
+            System.Diagnostics.Trace.Listeners.Add(new DebugTraceListener());
 
             Asset.StartWatchUpdateContent();
 
@@ -217,6 +219,16 @@ namespace MiniEngine
 
 
         /// <summary>
+        /// Set max framerate (default = 60fps)
+        /// </summary>
+        public Context SetMaxFramerate(int framerate)
+        {
+            _frameLoop.TargetFramerate = framerate;
+
+            return this;
+        }
+
+        /// <summary>
         /// Run the game/application
         /// </summary>
         public void Run(Action runHandler = null)
@@ -245,6 +257,7 @@ namespace MiniEngine
             RunOneFrame(runHandler);
 
         }
+
 
         /// <summary>
         /// Excute on frame
@@ -349,6 +362,10 @@ namespace MiniEngine
 
             //Now we can initialize the renderer...
             _renderer.Init();
+
+            //Enable Gui always... for not anyway
+            //TODO: Check if we really want to activate it always
+            _renderer.EnableGui();
 
             _isInitialized = true;
 

@@ -12,11 +12,6 @@ namespace MiniEngine
     /// </summary>
     public interface IRenderer: IDisposable
     {
-        ///// <summary>
-        ///// Update the window options specific to the engine
-        ///// </summary>
-        //void PreInitGlfw();
-
         /// <summary>
         /// Get or set the current camera
         /// </summary>
@@ -81,6 +76,11 @@ namespace MiniEngine
         /// Remove a mesh from the screen
         /// </summary>
         void RemoveMesh(IRenderHandle handle);
+
+        /// <summary>
+        /// Activate Dear ImGui
+        /// </summary>
+        void EnableGui();
 
     }
 }

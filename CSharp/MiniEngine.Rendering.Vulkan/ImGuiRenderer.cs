@@ -114,10 +114,6 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void ProcessKeyState(Keys key, bool down, ImGuiIOPtr io)
         {
-            
-            Debug.Print("newly " + (down ? "down": "up") + ": " + key);
-            
-
             if (TryMapKey(key, out bool isTextInput, out ImGuiKey imguikey))
             {
                 io.AddKeyEvent(imguikey, down);
@@ -137,7 +133,7 @@ namespace MiniEngine.Rendering.Vulkan
             float newTime = (float)_stopWatch.Elapsed.TotalSeconds;
             io.DeltaTime = newTime - _lastRenderTime; // DeltaTime is in seconds.
             _lastRenderTime = newTime;
-            Debug.Print(io.DeltaTime.ToString());
+            //Debug.Print(io.DeltaTime.ToString());
 
             ImGui.Render();
 
