@@ -72,9 +72,9 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a swapchain
         /// </summary>
-        public SwapchainWrapper CreateSwapchainWrapper(Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode)
+        public SwapchainWrapper CreateSwapchainWrapper(Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode, bool depthTest)
         {
-            return new SwapchainWrapper(this, expectedFormats, expectedColorSpaces, presentMode);
+            return new SwapchainWrapper(this, expectedFormats, expectedColorSpaces, presentMode, depthTest);
         }
 
         /// <summary>

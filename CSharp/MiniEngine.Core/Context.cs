@@ -108,6 +108,8 @@ namespace MiniEngine
 
             DebugEnabled = true;
 
+            System.Diagnostics.Trace.Listeners.Add(new MiniEngineTraceListener());
+
             Asset.StartWatchUpdateContent();
 
             return this;

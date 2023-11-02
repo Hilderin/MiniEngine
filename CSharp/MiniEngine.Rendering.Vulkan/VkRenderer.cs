@@ -121,8 +121,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             Device = vk.Device;
 
-            Swapchain = new SwapchainWrapper(vk.Device, new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox);
-
+            Swapchain = new SwapchainWrapper(vk.Device, new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox, true);
 
             _resourceFactory = new VkResourceFactory(this);
 

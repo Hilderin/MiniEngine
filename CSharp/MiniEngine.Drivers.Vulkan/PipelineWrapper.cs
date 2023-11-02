@@ -62,6 +62,7 @@ namespace MiniEngine.Drivers.Vulkan
             return this;
         }
 
+
         /// <summary>
         /// Add a dynamic state
         /// </summary>
@@ -268,16 +269,21 @@ namespace MiniEngine.Drivers.Vulkan
                 DynamicStates = _dynamicStates
             };
 
-            var pipelineDepthStencil = new PipelineDepthStencilStateCreateInfo()
+            PipelineDepthStencilStateCreateInfo pipelineDepthStencil = null;
+
+            if (_swapchain.DepthTest)
             {
-                DepthTestEnable = true,                
-                DepthWriteEnable = true,
-                DepthCompareOp = CompareOp.Less,
-                DepthBoundsTestEnable = false,
-                MinDepthBounds = 0f,
-                MaxDepthBounds = 1f,
-                StencilTestEnable = false
-            };
+                pipelineDepthStencil = new PipelineDepthStencilStateCreateInfo()
+                {
+                    DepthTestEnable = true,
+                    DepthWriteEnable = true,
+                    DepthCompareOp = CompareOp.Less,
+                    DepthBoundsTestEnable = false,
+                    MinDepthBounds = 0f,
+                    MaxDepthBounds = 1f,
+                    StencilTestEnable = false
+                };
+            }
 
             var pipelineCreateInfo = new GraphicsPipelineCreateInfo
             {

@@ -23,6 +23,7 @@ namespace MiniEngine.Drivers.Vulkan
         private Semaphore _semaphore;
         private SurfaceFormatKhr _surfaceFormat;
         private PresentModeKhr _presentMode;
+        private bool _depthTest;
         private RenderPass _renderPass;
         private CommandPool _commandPool;
         private RenderCommandBuffer[] _renderCommandBuffers;
@@ -40,6 +41,7 @@ namespace MiniEngine.Drivers.Vulkan
         public RenderPass RenderPass => _renderPass;
         public Framebuffer[] Framebuffers => _framebuffers;
         public Extent2D CurrentExtent => _currentExtent;
+        public bool DepthTest => _depthTest;
 
         public int IndexNextImage => _indexNextImage;
 
@@ -47,13 +49,15 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a swapchain
         /// </summary>
-        public SwapchainWrapper(Device device, Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode)
+        public SwapchainWrapper(Device device, Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode, bool depthTest)
         {
             _device = device;
 
             _surfaceFormat = _device.PhysicalDevice.GetSurfaceFormat(_device.Surface, expectedFormats, expectedColorSpaces);
+            
 
             _presentMode = presentMode;
+            _depthTest = depthTest;
 
 
             Init();
@@ -62,12 +66,13 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public SwapchainWrapper(Device device, SurfaceFormatKhr surfaceFormat, PresentModeKhr presentMode)
+        public SwapchainWrapper(Device device, SurfaceFormatKhr surfaceFormat, PresentModeKhr presentMode, bool depthTest)
         {
             _device = device;
                         
             _surfaceFormat = surfaceFormat;
             _presentMode = presentMode;
+            _depthTest = depthTest;
 
             Init();
 
@@ -211,27 +216,7 @@ namespace MiniEngine.Drivers.Vulkan
 
             CreateSwapChainObjects();
 
-            //Now that we kwon the number of images...
-            _renderCommandBuffers = CreateRenderCommandBuffers();
-
-            //Creation of the submitinfos and presentinfos so we don't recreate them at each frame...
-            _submitInfos = new SubmitInfo[_renderCommandBuffers.Length];
-            _presentInfos = new PresentInfoKhr[_renderCommandBuffers.Length];
-            for (int i = 0; i < _submitInfos.Length; i++)
-            {
-                _submitInfos[i] = new SubmitInfo
-                {
-                    WaitSemaphores = new Semaphore[] { _semaphore },
-                    WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
-                    CommandBuffers = new CommandBuffer[] { _renderCommandBuffers[i] }
-                };
-
-                _presentInfos[i] = new PresentInfoKhr
-                {
-                    Swapchains = new SwapchainKhr[] { _swapchainKhr },
-                    ImageIndices = new uint[] { (uint)i },
-                };
-            }
+            
 
         }
 
@@ -275,6 +260,29 @@ namespace MiniEngine.Drivers.Vulkan
             CreateFramebuffers();
 
 
+            //Now that we kwon the number of images...
+            if(_renderCommandBuffers == null)
+                _renderCommandBuffers = CreateRenderCommandBuffers();
+
+            //Creation of the submitinfos and presentinfos so we don't recreate them at each frame...
+            _submitInfos = new SubmitInfo[_renderCommandBuffers.Length];
+            _presentInfos = new PresentInfoKhr[_renderCommandBuffers.Length];
+            for (int i = 0; i < _submitInfos.Length; i++)
+            {
+                _submitInfos[i] = new SubmitInfo
+                {
+                    WaitSemaphores = new Semaphore[] { _semaphore },
+                    WaitDstStageMask = new PipelineStageFlags[] { PipelineStageFlags.AllGraphics },
+                    CommandBuffers = new CommandBuffer[] { _renderCommandBuffers[i] }
+                };
+
+                _presentInfos[i] = new PresentInfoKhr
+                {
+                    Swapchains = new SwapchainKhr[] { _swapchainKhr },
+                    ImageIndices = new uint[] { (uint)i },
+                };
+            }
+
 
         }
 
@@ -295,6 +303,11 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void CreateRenderPass()
         {
+
+            List<AttachmentDescription> attachementDescs = new List<AttachmentDescription>();
+            List<SubpassDependency> subpasseDependencies = new List<SubpassDependency>();
+
+
             var colorAttachementDesc = new AttachmentDescription
             {
                 Format = _surfaceFormat.Format,
@@ -308,45 +321,57 @@ namespace MiniEngine.Drivers.Vulkan
                 //FinalLayout = ImageLayout.ColorAttachmentOptimal
             };
             var colorAttRef = new AttachmentReference { Attachment = 0, Layout = ImageLayout.ColorAttachmentOptimal };
-
-
-            //For Depth test...
-            AttachmentDescription depthAttachmentDesc = new()
-            {
-                Format = _device.PhysicalDevice.FindDepthFormat(),
-                Samples = SampleCountFlags.Count1,
-                LoadOp = AttachmentLoadOp.Clear,
-                StoreOp = AttachmentStoreOp.DontCare,
-                StencilLoadOp = AttachmentLoadOp.DontCare,
-                StencilStoreOp = AttachmentStoreOp.DontCare,
-                InitialLayout = ImageLayout.Undefined,
-                FinalLayout = ImageLayout.DepthStencilAttachmentOptimal,
-            };
-            var depthAttRef = new AttachmentReference { Attachment = 1, Layout = ImageLayout.DepthStencilAttachmentOptimal };
-
-
-            SubpassDependency dependency = new()
-            {
-                SrcSubpass = uint.MaxValue,
-                DstSubpass = 0,
-                SrcStageMask = PipelineStageFlags.ColorAttachmentOutput | PipelineStageFlags.EarlyFragmentTests,
-                SrcAccessMask = 0,
-                DstStageMask = PipelineStageFlags.ColorAttachmentOutput | PipelineStageFlags.EarlyFragmentTests,
-                DstAccessMask = AccessFlags.ColorAttachmentWrite | AccessFlags.DepthStencilAttachmentWrite
-            };
+            attachementDescs.Add(colorAttachementDesc);
 
 
             var subpassDesc = new SubpassDescription
             {
                 PipelineBindPoint = PipelineBindPoint.Graphics,
-                ColorAttachments = new AttachmentReference[] { colorAttRef },
-                DepthStencilAttachment = depthAttRef
+                ColorAttachments = new AttachmentReference[] { colorAttRef }
             };
+
+
+            //For Depth test...
+            if (_depthTest)
+            {
+                AttachmentDescription depthAttachmentDesc = new()
+                {
+                    Format = _device.PhysicalDevice.FindDepthFormat(),
+                    Samples = SampleCountFlags.Count1,
+                    LoadOp = AttachmentLoadOp.Clear,
+                    StoreOp = AttachmentStoreOp.DontCare,
+                    StencilLoadOp = AttachmentLoadOp.DontCare,
+                    StencilStoreOp = AttachmentStoreOp.DontCare,
+                    InitialLayout = ImageLayout.Undefined,
+                    FinalLayout = ImageLayout.DepthStencilAttachmentOptimal,
+                };
+                subpassDesc.DepthStencilAttachment = new AttachmentReference { Attachment = 1, Layout = ImageLayout.DepthStencilAttachmentOptimal };
+
+
+                SubpassDependency dependency = new()
+                {
+                    SrcSubpass = uint.MaxValue,
+                    DstSubpass = 0,
+                    SrcStageMask = PipelineStageFlags.ColorAttachmentOutput | PipelineStageFlags.EarlyFragmentTests,
+                    SrcAccessMask = 0,
+                    DstStageMask = PipelineStageFlags.ColorAttachmentOutput | PipelineStageFlags.EarlyFragmentTests,
+                    DstAccessMask = AccessFlags.ColorAttachmentWrite | AccessFlags.DepthStencilAttachmentWrite
+                };
+
+
+                
+                attachementDescs.Add(depthAttachmentDesc);
+                subpasseDependencies.Add(dependency);
+            }
+
+            
+
+
             using (var renderPassCreateInfo = new RenderPassCreateInfo
             {
-                Attachments = new AttachmentDescription[] { colorAttachementDesc, depthAttachmentDesc },
-                Subpasses = new SubpassDescription[] { subpassDesc },
-                Dependencies = new SubpassDependency[] { dependency }
+                Attachments = attachementDescs.ToArray(),
+                Subpasses = new[] { subpassDesc },
+                Dependencies = subpasseDependencies.ToArray()
             })
             {
                 _renderPass = _device.CreateRenderPass(renderPassCreateInfo, this);
@@ -360,7 +385,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void CreateFramebuffers()
         {
-            _framebuffers = _device.CreateFramebuffers(_renderPass, _swapchainImagesView, _currentExtent, _depthImage.ImageView);
+            _framebuffers = _device.CreateFramebuffers(_renderPass, _swapchainImagesView, _currentExtent, _depthImage?.ImageView);
         }
 
 
@@ -369,9 +394,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void CreateDepthResources()
         {
-            Format depthFormat = _device.PhysicalDevice.FindDepthFormat();
+            if (_depthTest)
+            {
+                Format depthFormat = _device.PhysicalDevice.FindDepthFormat();
 
-            _depthImage = new ImageWrapper(_device, (int)_currentExtent.Width, (int)_currentExtent.Height, depthFormat, ImageUsageFlags.DepthStencilAttachment, ImageAspectFlags.Depth);
+                _depthImage = new ImageWrapper(_device, (int)_currentExtent.Width, (int)_currentExtent.Height, depthFormat, ImageUsageFlags.DepthStencilAttachment, ImageAspectFlags.Depth);
+            }
 
         }
 
