@@ -65,8 +65,6 @@ namespace MiniEngine.Rendering.Vulkan
             _fontTextureSet = _pipeline.CreateDescriptorSet(1);
             _textureSet = _pipeline.CreateDescriptorSet(1);
 
-
-
             UpdateDisplaySize();
 
             RecreateFontDeviceTexture();
@@ -155,29 +153,10 @@ namespace MiniEngine.Rendering.Vulkan
                 //Ensure the capacity of the buffers...
                 EnsureBufferCapacity(draw_data);
 
-
-                ImDrawListPtr[] cmds = new ImDrawListPtr[draw_data.CmdListsCount];
-
-                if (_vk.Swapchain.DepthTest)
-                {
-                    for (int i = draw_data.CmdListsCount - 1; i >= 0; i--)
-                    {
-                        cmds[i] = draw_data.CmdLists[i];
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < draw_data.CmdListsCount; i++)
-                    {
-                        cmds[i] = draw_data.CmdLists[i];
-                    }
-                }
-
-
                 //Update vertex and indices buffer...
                 for (int i = 0; i < draw_data.CmdListsCount; i++)
                 {
-                    ImDrawListPtr cmd_list = cmds[i];
+                    ImDrawListPtr cmd_list = draw_data.CmdLists[i];
 
                     _vertexBuffer.Update(cmd_list.VtxBuffer.Data, vertexOffsetInVertices * _sizeOfDrawVert, (uint)(cmd_list.VtxBuffer.Size * _sizeOfDrawVert));
 
@@ -196,108 +175,47 @@ namespace MiniEngine.Rendering.Vulkan
                 //draw_data.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
 
                 // Render command lists
-                
-                //int[] idx_offsets = new int[draw_data.CmdListsCount];
-                //int[] vtx_offsets = new int[draw_data.CmdListsCount];
-
-
-
-
-                //if (_vk.Swapchain.DepthTest)
-                //{
-                //    //On y va à l'inverse...
-                //    int vtx_offset = 0;
-                //    int idx_offset = 0;
-                //    for (int n = 0; n < draw_data.CmdListsCount; n++)
-                //    {  
-
-                //        ImDrawListPtr cmd_list = draw_data.CmdLists[n];
-
-                //        idx_offsets[n] = idx_offset;
-                //        vtx_offsets[n] = vtx_offset;
-
-                //        idx_offset += cmd_list.IdxBuffer.Size;
-                //        vtx_offset += cmd_list.VtxBuffer.Size;
-
-                //    }
-
-                //    for (int n = draw_data.CmdListsCount - 1; n >= 0; n--)
-                //    {
-                //        ImDrawListPtr cmd_list = draw_data.CmdLists[n];
-
-                //        RenderImGuiCommand(commandBuffer, ref cmd_list, idx_offsets[n], vtx_offsets[n]);
-                //    }
-
-                //}
-                //else
-                //{
-                    //In order...
-                    int vtx_offset = 0;
-                    int idx_offset = 0;
-
-                    for (int n = 0; n < draw_data.CmdListsCount; n++)
+                int vtx_offset = 0;
+                int idx_offset = 0;
+                for (int n = 0; n < draw_data.CmdListsCount; n++)
+                {
+                    ImDrawListPtr cmd_list = draw_data.CmdLists[n];
+                    for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
                     {
-                        ImDrawListPtr cmd_list = cmds[n];
+                        ImDrawCmdPtr pcmd = cmd_list.CmdBuffer[cmd_i];
+                        if (pcmd.UserCallback != IntPtr.Zero)
+                        {
+                            throw new NotImplementedException();
+                        }
+                        else
+                        {
+                            if (pcmd.TextureId != IntPtr.Zero)
+                            {
+                                if (pcmd.TextureId == _fontAtlasID)
+                                {
+                                    commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 1, _fontTextureSet.DescriptorSets, null);
+                                }
+                                else
+                                {
+                                    //TODO: Support custom texture
+                                    throw new InvalidOperationException("Custom texture id is not supported");
+                                }
+                            }
 
-                        RenderImGuiCommandList(commandBuffer, ref cmd_list, idx_offset, vtx_offset);
+                            //Scissor to clip what exceeds the window...
+                            commandBuffer.CmdSetScissor(0, new Rect2D((int)pcmd.ClipRect.X, (int)pcmd.ClipRect.Y, (int)(pcmd.ClipRect.Z - pcmd.ClipRect.X), (int)(pcmd.ClipRect.W - pcmd.ClipRect.Y)));
 
-                        idx_offset += cmd_list.IdxBuffer.Size;
-                        vtx_offset += cmd_list.VtxBuffer.Size;
+                            commandBuffer.CmdDrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
+                        }
                     }
-                //}
+
+                    idx_offset += cmd_list.IdxBuffer.Size;
+                    vtx_offset += cmd_list.VtxBuffer.Size;
+                }
             }
 
 
             ImGui.NewFrame();
-        }
-
-        private void RenderImGuiCommandList(CommandBuffer commandBuffer, ref ImDrawListPtr cmd_list, int idx_offset, int vtx_offset)
-        {
-            if (_vk.Swapchain.DepthTest)
-            {
-                for (int cmd_i = cmd_list.CmdBuffer.Size - 1; cmd_i >= 0; cmd_i--)
-                {
-                    RenderImGuiCommand(commandBuffer, ref cmd_list, idx_offset, vtx_offset, cmd_i);
-                }
-            }
-            else
-            {
-                for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
-                {
-                    RenderImGuiCommand(commandBuffer, ref cmd_list, idx_offset, vtx_offset, cmd_i);
-                }
-            }
-
-        }
-
-        private void RenderImGuiCommand(CommandBuffer commandBuffer, ref ImDrawListPtr cmd_list, int idx_offset, int vtx_offset, int cmd_i)
-        {
-            ImDrawCmdPtr pcmd = cmd_list.CmdBuffer[cmd_i];
-            if (pcmd.UserCallback != IntPtr.Zero)
-            {
-                throw new NotImplementedException();
-            }
-            else
-            {
-                if (pcmd.TextureId != IntPtr.Zero)
-                {
-                    if (pcmd.TextureId == _fontAtlasID)
-                    {
-                        commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 1, _fontTextureSet.DescriptorSets, null);
-                    }
-                    else
-                    {
-                        //TODO: Support custom texture
-                        throw new InvalidOperationException("Custom texture id is not supported");
-                    }
-                }
-
-                //Scissor to clip what exceeds the window...
-                commandBuffer.CmdSetScissor(0, new Rect2D((int)pcmd.ClipRect.X, (int)pcmd.ClipRect.Y, (int)(pcmd.ClipRect.Z - pcmd.ClipRect.X), (int)(pcmd.ClipRect.W - pcmd.ClipRect.Y)));
-
-                commandBuffer.CmdDrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
-            }
-
         }
 
         /// <summary>
