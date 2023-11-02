@@ -25,6 +25,8 @@ namespace MiniEngine.Drivers.Vulkan
         private CullModeFlags _cullMode = CullModeFlags.None;
         private DynamicState[] _dynamicStates = new DynamicState[0];
 
+        private bool _depthTest;
+
         #endregion
 
 
@@ -62,6 +64,14 @@ namespace MiniEngine.Drivers.Vulkan
             return this;
         }
 
+        /// <summary>
+        /// Setup the depth test
+        /// </summary>
+        public PipelineWrapper SetDepthTest(bool depthTest)
+        {
+            _depthTest = depthTest;
+            return this;
+        }
 
         /// <summary>
         /// Add a dynamic state
@@ -269,21 +279,16 @@ namespace MiniEngine.Drivers.Vulkan
                 DynamicStates = _dynamicStates
             };
 
-            PipelineDepthStencilStateCreateInfo pipelineDepthStencil = null;
-
-            if (_swapchain.DepthTest)
+            PipelineDepthStencilStateCreateInfo pipelineDepthStencil = new PipelineDepthStencilStateCreateInfo()
             {
-                pipelineDepthStencil = new PipelineDepthStencilStateCreateInfo()
-                {
-                    DepthTestEnable = true,
-                    DepthWriteEnable = true,
-                    DepthCompareOp = CompareOp.Less,
-                    DepthBoundsTestEnable = false,
-                    MinDepthBounds = 0f,
-                    MaxDepthBounds = 1f,
-                    StencilTestEnable = false
-                };
-            }
+                DepthTestEnable = _depthTest,
+                DepthWriteEnable = _depthTest,
+                DepthCompareOp = CompareOp.Less,
+                DepthBoundsTestEnable = false,
+                MinDepthBounds = 0f,
+                MaxDepthBounds = 1f,
+                StencilTestEnable = false
+            };
 
             var pipelineCreateInfo = new GraphicsPipelineCreateInfo
             {

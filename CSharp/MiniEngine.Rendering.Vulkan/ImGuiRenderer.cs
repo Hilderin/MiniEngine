@@ -57,6 +57,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             _pipeline = _vk.Swapchain.CreatePipelineWrapper(_shader)
                                         .AddDynamicState(DynamicState.Scissor)
+                                        .SetDepthTest(false)
                                         .Build();
 
 

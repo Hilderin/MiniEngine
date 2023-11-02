@@ -270,6 +270,17 @@ namespace MiniEngine
             return this;
         }
 
+        /// <summary>
+        /// Add scale
+        /// </summary>
+        public WorldTransform AddScale(float scale)
+        {
+            _scale.X += scale;
+            _scale.Y += scale;
+            _scale.Z += scale;
+            return this;
+        }
+
         ///// <summary>
         ///// Move in 4 directions
         ///// </summary>

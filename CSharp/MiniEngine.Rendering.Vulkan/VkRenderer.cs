@@ -89,7 +89,8 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public VkRenderer InitGui()
         {
-            _imGui = new ImGuiRenderer(this);
+            if(_imGui == null)
+                _imGui = new ImGuiRenderer(this);
             return this;
         }
 
@@ -290,6 +291,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 pipeline = CreatePipelineWrapper(shader)
                                 .SetCullMode(CullModeFlags.Back)
+                                .SetDepthTest(true)
                                 .Build();
 
                 _cachePipeline.Add(shader, pipeline);

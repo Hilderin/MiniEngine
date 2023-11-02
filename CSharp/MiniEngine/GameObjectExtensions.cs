@@ -114,5 +114,14 @@ namespace MiniEngine
             return gameObject;
         }
 
+        /// <summary>
+        /// Add scale
+        /// </summary>
+        public static T AddScale<T>(this T gameObject, float scale) where T : GameObject
+        {
+            gameObject.Transform.AddScale(scale);
+            return gameObject;
+        }
+
     }
 }
