@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine
 {
     internal static class BytesHelper
     {

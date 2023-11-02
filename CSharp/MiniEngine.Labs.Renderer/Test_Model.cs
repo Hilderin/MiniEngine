@@ -27,6 +27,7 @@ namespace MiniEngine.Labs.Renderer
             _currentMesh = new MeshObject()
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\viking_room.obj")
                                 .SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\viking_room.fbx")
+                                //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\viking_room.dae")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\HighBox_-ZForward_Yup.fbx")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\HighBox_YForward_Zup.fbx")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\HighBox_-ZForward_Yup_Triangulated.fbx")

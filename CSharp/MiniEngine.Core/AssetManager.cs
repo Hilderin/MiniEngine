@@ -136,7 +136,7 @@ namespace MiniEngine
             string folder = Path.GetDirectoryName(name);
             if (Directory.Exists(folder))
             {
-                foreach (string file in Directory.EnumerateFiles(folder, name + ".*"))
+                foreach (string file in Directory.EnumerateFiles(folder, Path.GetFileName(name) + ".*"))
                 {
                     extension = Path.GetExtension(file);
 
