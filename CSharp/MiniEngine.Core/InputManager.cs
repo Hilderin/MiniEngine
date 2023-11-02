@@ -114,25 +114,28 @@ namespace MiniEngine
         public void SetKeyState(Keys key, bool down)
         {
             Debug.Print("SetKeyState - " + key + " " + (down ? "down" : "up"));
-            if (down)
+            if ((int)key > 0 && (int)key < 349)
             {
-                //Key down...
-                if (!_keyDownsFixedIndex[(int)key])
+                if (down)
                 {
-                    //Newly down...
-                    _newlyKeyDowns.Add(key);
-                    _keyDowns.Add(key);
-                    _keyDownsFixedIndex[(int)key] = true;
+                    //Key down...
+                    if (!_keyDownsFixedIndex[(int)key])
+                    {
+                        //Newly down...
+                        _newlyKeyDowns.Add(key);
+                        _keyDowns.Add(key);
+                        _keyDownsFixedIndex[(int)key] = true;
+                    }
                 }
-            }
-            else
-            {
-                //Key up...
-                if (_keyDownsFixedIndex[(int)key])
+                else
                 {
-                    _keyDowns.Remove(key);
-                    _newlyKeyUps.Add(key);
-                    _keyDownsFixedIndex[(int)key] = false;
+                    //Key up...
+                    if (_keyDownsFixedIndex[(int)key])
+                    {
+                        _keyDowns.Remove(key);
+                        _newlyKeyUps.Add(key);
+                        _keyDownsFixedIndex[(int)key] = false;
+                    }
                 }
             }
 

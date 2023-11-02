@@ -12,28 +12,16 @@ namespace MiniEngine
     /// </summary>
     public class FrameLoop
     {
-        //private TimeSpan _elapsedGameTime;
         private Stopwatch _gameTimer = null;
-        private TimeSpan _accumulatedElapsedTime;
-        private long _previousTicks = 0;
-        private TimeSpan _targetElapsedTime;    // = TimeSpan.FromTicks(166667); // 60fps
-        private TimeSpan _maxElapsedTime = TimeSpan.FromMilliseconds(500);
-
-        // must be a power of 2 so we can do a bitmask optimization when checking worst case
-        private const int PREVIOUS_SLEEP_TIME_COUNT = 128;
-        private const int SLEEP_TIME_MASK = PREVIOUS_SLEEP_TIME_COUNT - 1;
-        private TimeSpan _worstCaseSleepPrecision = TimeSpan.FromMilliseconds(1);
-        private TimeSpan[] _previousSleepTimes = new TimeSpan[PREVIOUS_SLEEP_TIME_COUNT];
-        private int _sleepTimeIndex = 0;
-        private int _updateFrameLag;
-        private bool _isRunningSlowly;
         private int _targetFramerate = 60;
+        private TimeSpan _targetElapsedTimePerFrame;    // = TimeSpan.FromTicks(166667); // 60fps
+        private long _previousTicks = 0;
 
 
         /// <summary>
         /// ElapsedTime between frame
         /// </summary>
-        public TimeSpan TargetElapsedTime { get { return _targetElapsedTime; } set { _targetElapsedTime = value; } }
+        public TimeSpan TargetElapsedTime { get { return _targetElapsedTimePerFrame; } set { _targetElapsedTimePerFrame = value; } }
 
 
         /// <summary>
@@ -52,21 +40,10 @@ namespace MiniEngine
         private void RecalculateTargetElapsedTime()
         {
             if (_targetFramerate >= 0)
-                _targetElapsedTime = TimeSpan.FromTicks((long)(1f / _targetFramerate * 10000000L));
+                _targetElapsedTimePerFrame = TimeSpan.FromTicks((long)(1f / _targetFramerate * 10000000L));
             else
-                _targetElapsedTime = TimeSpan.Zero;
+                _targetElapsedTimePerFrame = TimeSpan.Zero;
         }
-
-
-        /// <summary>
-        /// Indicate if the loop is running slowly
-        /// </summary>
-        public bool IsRunningSlowly { get { return _isRunningSlowly; } }
-
-        /// <summary>
-        /// Global game timer
-        /// </summary>
-        public Stopwatch GameTimer { get { return _gameTimer; } }
 
 
         /// <summary>
@@ -76,12 +53,8 @@ namespace MiniEngine
         {
             _gameTimer = Stopwatch.StartNew();
 
-            for (int i = 0; i < _previousSleepTimes.Length; i += 1)
-            {
-                _previousSleepTimes[i] = TimeSpan.FromMilliseconds(1);
-            }
 
-            RecalculateTargetElapsedTime();
+            DebugTimeWatcher.Start();
         }
 
         /// <summary>
@@ -89,168 +62,95 @@ namespace MiniEngine
         /// </summary>
         public void RunLoop(Func<bool> tickAction)
         {
+            TimeSpan elapsed = _gameTimer.Elapsed;
+            float timePassInDebug = 0f;
 
             while (true)
             {
-
-                AdvanceElapsedTime();
-
-                if (_targetElapsedTime == TimeSpan.Zero)
+                Time.LastFrameGenerationTime = _gameTimer.Elapsed - elapsed;
+                
+                if (_targetElapsedTimePerFrame.Ticks > 0)
                 {
-                    //Has fast has we can...
-                    TimeSpan elapsed = _gameTimer.Elapsed;
-                    Time.DeltaTime = (float)elapsed.TotalSeconds - Time.TotalTime;
-                    Time.TotalTime = (float)elapsed.TotalSeconds;
-                    if (!tickAction())
-                        return;
-
+                    if (_targetElapsedTimePerFrame > Time.LastFrameGenerationTime)
+                        System.Threading.Thread.Sleep(_targetElapsedTimePerFrame - Time.LastFrameGenerationTime);
                 }
-                else
+
+                elapsed = _gameTimer.Elapsed;
+                long currentTicks = elapsed.Ticks;
+                TimeSpan timeAdvanced = TimeSpan.FromTicks(currentTicks - _previousTicks);
+                _previousTicks = currentTicks;
+
+                if (DebugTimeWatcher.AccumulatedTimeStopped.Ticks > 0)
                 {
-                    //With a framerate...
-                    while (_accumulatedElapsedTime + _worstCaseSleepPrecision < _targetElapsedTime)
+                    timePassInDebug += (float)DebugTimeWatcher.AccumulatedTimeStopped.TotalSeconds;
+                    timeAdvanced -= DebugTimeWatcher.AccumulatedTimeStopped;
+                    DebugTimeWatcher.AccumulatedTimeStopped = TimeSpan.Zero;
+                    if (timeAdvanced.Ticks < 0)
+                        timeAdvanced = _targetElapsedTimePerFrame;
+                }
+
+                if (_targetElapsedTimePerFrame.Ticks > 0)
+                {
+                    while (timeAdvanced >= _targetElapsedTimePerFrame * 2)
                     {
-                        System.Threading.Thread.Sleep(1);
-                        TimeSpan timeAdvancedSinceSleeping = AdvanceElapsedTime();
-                        UpdateEstimatedSleepPrecision(timeAdvancedSinceSleeping);
-                    }
+                        Time.DeltaTime = (float)_targetElapsedTimePerFrame.TotalSeconds;
+                        Time.TotalTime += Time.DeltaTime;
+                        timeAdvanced -= _targetElapsedTimePerFrame;
 
-                    /* Now that we have slept into the sleep precision threshold, we need to wait
-                     * for just a little bit longer until the target elapsed time has been reached.
-                     * SpinWait(1) works by pausing the thread for very short intervals, so it is
-                     * an efficient and time-accurate way to wait out the rest of the time.
-                     */
-                    while (_accumulatedElapsedTime < _targetElapsedTime)
-                    {
-                        System.Threading.Thread.SpinWait(1);
-                        AdvanceElapsedTime();
-                    }
-
-
-                    // Do not allow any update to take longer than our maximum.
-                    if (_accumulatedElapsedTime > _maxElapsedTime)
-                    {
-                        _accumulatedElapsedTime = _maxElapsedTime;
-                    }
-
-
-                    //_elapsedGameTime = _targetElapsedTime;
-                    int stepCount = 0;
-
-                    // Perform as many full fixed length time steps as we can.
-                    while (_accumulatedElapsedTime >= _targetElapsedTime)
-                    {
-                        TimeSpan elapsed = _gameTimer.Elapsed;
-                        Time.DeltaTime = (float)elapsed.TotalSeconds - Time.TotalTime;
-                        Time.TotalTime = (float)elapsed.TotalSeconds;
-
-                        if (Time.DeltaTime == 0f)
-                            Debug.Print("ici");
-
-                        _accumulatedElapsedTime -= _targetElapsedTime;
-                        stepCount += 1;
-
-                        
-
+                        TimeSpan beforeFrame = _gameTimer.Elapsed;
                         if (!tickAction())
                             return;
+                        Time.LastFrameGenerationTime = _gameTimer.Elapsed - beforeFrame;
                     }
-
-                    // Every update after the first accumulates lag
-                    _updateFrameLag += Math.Max(0, stepCount - 1);
-
-                    /* If we think we are running slowly, wait
-				     * until the lag clears before resetting it
-				     */
-                    if (_isRunningSlowly)
-                    {
-                        if (_updateFrameLag == 0)
-                        {
-                            _isRunningSlowly = false;
-                        }
-                    }
-                    else if (_updateFrameLag >= 5)
-                    {
-                        /* If we lag more than 5 frames,
-					     * start thinking we are running slowly.
-					     */
-                        _isRunningSlowly = true;
-                    }
-
-                    /* Every time we just do one update and one draw,
-				     * then we are not running slowly, so decrease the lag.
-				     */
-                    if (stepCount == 1 && _updateFrameLag > 0)
-                    {
-                        _updateFrameLag -= 1;
-                    }
-
-
-                    ///* Draw needs to know the total elapsed time
-                    // * that occured for the fixed length updates.
-                    // */
-                    //_elapsedGameTime = TimeSpan.FromTicks(_targetElapsedTime.Ticks * stepCount);
                 }
+
+                Time.DeltaTime = (float)timeAdvanced.TotalSeconds;
+                Time.TotalTime = (float)elapsed.TotalSeconds - timePassInDebug;
+
+                if (!tickAction())
+                    return;
 
             }
 
         }
 
-
         /// <summary>
-        /// Advanced the time in _accumulatedElapsedTime and _previousTicks
+        /// Class to be able to accumulate the time diffenrencial
         /// </summary>
-        private TimeSpan AdvanceElapsedTime()
-        {            
-            long currentTicks = _gameTimer.Elapsed.Ticks;
-            TimeSpan timeAdvanced = TimeSpan.FromTicks(currentTicks - _previousTicks);
-            _accumulatedElapsedTime += timeAdvanced;
-            _previousTicks = currentTicks;
-            return timeAdvanced;
-        }
-
-        /// <summary>
-        /// To calculate the sleep precision of the OS, we take the worst case
-        /// time spent sleeping over the results of previous requests to sleep 1ms.
-        /// </summary>
-        private void UpdateEstimatedSleepPrecision(TimeSpan timeSpentSleeping)
+        private static class DebugTimeWatcher
         {
-            /* It is unlikely that the scheduler will actually be more imprecise than
-			 * 4ms and we don't want to get wrecked by a single long sleep so we cap this
-			 * value at 4ms for sanity.
-			 */
-            TimeSpan upperTimeBound = TimeSpan.FromMilliseconds(4);
+            private static Stopwatch _stopwatch;
+            private static System.Timers.Timer pollingTimer;
+            private static TimeSpan _lastMeasuredDebugTimespan;
 
-            if (timeSpentSleeping > upperTimeBound)
+            public static TimeSpan AccumulatedTimeStopped;
+
+
+            public static void Start()
             {
-                timeSpentSleeping = upperTimeBound;
+                _stopwatch = Stopwatch.StartNew();
+
+                pollingTimer = new System.Timers.Timer();
+                pollingTimer.Interval = 10;
+                pollingTimer.Enabled = true;
+                pollingTimer.Elapsed += PollingTimer_Elapsed;
             }
 
-            /* We know the previous worst case - it's saved in _worstCaseSleepPrecision.
-			 * We also know the current index. So the only way the worst case changes
-			 * is if we either 1) just got a new worst case, or 2) the worst case was
-			 * the oldest entry on the list.
-			 */
-            if (timeSpentSleeping >= _worstCaseSleepPrecision)
+            private static void PollingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
             {
-                _worstCaseSleepPrecision = timeSpentSleeping;
-            }
-            else if (_previousSleepTimes[_sleepTimeIndex] == _worstCaseSleepPrecision)
-            {
-                TimeSpan maxSleepTime = TimeSpan.MinValue;
-                for (int i = 0; i < _previousSleepTimes.Length; i += 1)
+                lock (_stopwatch)
                 {
-                    if (_previousSleepTimes[i] > maxSleepTime)
+
+                    TimeSpan elapsed = _stopwatch.Elapsed;
+                    if ((elapsed - _lastMeasuredDebugTimespan).TotalMilliseconds > 100)
                     {
-                        maxSleepTime = _previousSleepTimes[i];
+                        AccumulatedTimeStopped += (elapsed - _lastMeasuredDebugTimespan);
                     }
+                    _lastMeasuredDebugTimespan = elapsed;
                 }
-                _worstCaseSleepPrecision = maxSleepTime;
+
             }
 
-            _previousSleepTimes[_sleepTimeIndex] = timeSpentSleeping;
-            _sleepTimeIndex = (_sleepTimeIndex + 1) & SLEEP_TIME_MASK;
         }
-
     }
 }

@@ -33,7 +33,7 @@ namespace MiniEngine.Labs.Renderer
         {
             ((VkRenderer)Context.Renderer).UpdateImGuiInput(Context.Input);
 
-            Debug.Print("DeltaTime: " + Time.DeltaTime);
+            Debug.Print("DeltaTime: " + Time.DeltaTime + ", LastFrame: " + Time.LastFrameGenerationTime.TotalMilliseconds);
             Context.Current.SetMaxFramerate(60);
 
             ImGui.ShowDemoWindow();
@@ -46,6 +46,9 @@ namespace MiniEngine.Labs.Renderer
             //System.Threading.Thread.Sleep(3);
 
         }
+
+
+
 
     }
 }

@@ -22,5 +22,10 @@ namespace MiniEngine
         /// </summary>
         public static float TotalTime { get; internal set; }
 
+        /// <summary>
+        /// The time that took the last frame to generate
+        /// </summary>
+        public static TimeSpan LastFrameGenerationTime { get; internal set; }
+        
     }
 }

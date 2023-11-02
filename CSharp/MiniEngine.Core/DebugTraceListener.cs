@@ -53,6 +53,11 @@ namespace MiniEngine
             {
                 _log.Clear();
                 int indexToDelete = -1;
+                
+                //We will only keep the 30 most recent
+                if (_logData.Count > 30)
+                    _logData.RemoveRange(0, _logData.Count - 30);
+
                 for (int i = _logData.Count - 1; i >= 0 ; i--)
                 {
                     if (Time.TotalTime - _logData[i].LogTime > 3)
