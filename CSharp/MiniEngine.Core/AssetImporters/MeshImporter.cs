@@ -125,50 +125,84 @@ namespace MiniEngine.AssetImporters
 
             using (AssimpContext context = new AssimpContext())
             {
-                
-                PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.PreTransformVertices;  // | PostProcessSteps.MakeLeftHanded;
-                //PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
 
 
-                //PAS SUR: PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
-                //PAS SUR: PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure;
+                    //------------------
+                    //WORKING GOOD:
+                    PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.PreTransformVertices | PostProcessSteps.MakeLeftHanded;
+
+                    //The base unit of fbx is centimeters...
+                    if (Path.GetExtension(path).Equals(".fbx", StringComparison.OrdinalIgnoreCase))
+                        context.Scale = 0.01f;
+
+                    //------------------
 
 
-                //if (!meshAssetDef.InverseFaces)
-                //    postProcessSteps |= PostProcessSteps.FlipWindingOrder;
+
+                    //PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices;  // | PostProcessSteps.MakeLeftHanded;
+                    //PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
 
 
-                //if (meshAssetDef.Scale != 1f)
-                //    transformMatrix *= Matrix3.FromScaling(new Vector3(meshAssetDef.Scale));
-                //if (meshAssetDef.FlipY)
-                //    transformMatrix *= Matrix3.FromFlipY();
+                    //PAS SUR: PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
+                    //PAS SUR: PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure;
 
-                //if (meshAssetDef.SmoothNormals)
-                //    postProcessSteps |= PostProcessSteps.GenerateSmoothNormals;
-                //else
-                //    postProcessSteps |= PostProcessSteps.GenerateNormals;
 
-                //context.Scale = parameters.Scale;
-                context.Scale = 0.01f;
+                    //if (!meshAssetDef.InverseFaces)
+                    //    postProcessSteps |= PostProcessSteps.FlipWindingOrder;
+
+
+                    //if (meshAssetDef.Scale != 1f)
+                    //    transformMatrix *= Matrix3.FromScaling(new Vector3(meshAssetDef.Scale));
+                    //if (meshAssetDef.FlipY)
+                    //    transformMatrix *= Matrix3.FromFlipY();
+
+                    //if (meshAssetDef.SmoothNormals)
+                    //    postProcessSteps |= PostProcessSteps.GenerateSmoothNormals;
+                    //else
+                    //    postProcessSteps |= PostProcessSteps.GenerateNormals;
+
+                    //context.Scale = parameters.Scale;
+
 
 
 
 
                 Assimp.Scene scene = context.ImportFile(path, postProcessSteps);
 
-
-
-                //Loading meshes.....
-                for (int i = 0; i < scene.MeshCount; i++)
+                if (scene.Metadata.TryGetValue("OriginalUpAxis", out var originalUpAxis) && scene.Metadata.TryGetValue("UpAxis", out var upAxis))
                 {
-                    LoadMesh(scene.Meshes[i], meshDef, ref transformMatrix);
+                    //We will flip it if the up axis have been inverted...
+                    if (!originalUpAxis.Data.Equals(upAxis.Data))
+                    {
+                        postProcessSteps |= PostProcessSteps.FlipWindingOrder;
+                        scene = context.ImportFile(path, postProcessSteps);
+                    }
                 }
 
-                //Loading textures.....
-                for (int i = 0; i < scene.MaterialCount; i++)
+                //if(scene.MeshCount > 0 && scene.Meshes[0].po
+
+                //if (scene.Metadata.TryGetValue("OriginalUnitScaleFactor", out var entry))
+                //    Console.WriteLine(entry);
+
+                //Loading meshes.....
+                Dictionary<int, int> matIndexes = new Dictionary<int, int>();
+                for (int i = 0; i < scene.MeshCount; i++)
+                {
+                    LoadMesh(scene.Meshes[i], meshDef, ref transformMatrix, matIndexes);
+                }
+
+                //Loading textures.....                
+                for (int i = 0; i < matIndexes.Count; i++)
                 {
                     meshDef.Materials.Add(CreateMaterial(scene.Materials[i], i, meshAssetDef, workingDirectory));
                 }
+
+
+                foreach (var subMesh in meshDef.SubMeshes)
+                {
+                    subMesh.MaterialIndex = matIndexes[subMesh.MaterialIndex];
+                }
+
             }
 
             return _assetManager.Context.Renderer.CreateMesh(meshDef);
@@ -189,7 +223,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Load a mesh info meshDef
         /// </summary>
-        private void LoadMesh(Assimp.Mesh mesh, MeshDefinition meshDef, ref Matrix3 transformMatrix)
+        private void LoadMesh(Assimp.Mesh mesh, MeshDefinition meshDef, ref Matrix3 transformMatrix, Dictionary<int, int> matIndexes)
         {
             Vector3[] positions = new Vector3[mesh.Vertices.Count];
             Vector3[] normals = new Vector3[mesh.Vertices.Count];
@@ -218,6 +252,9 @@ namespace MiniEngine.AssetImporters
                 indices[indexIndice++] = mesh.Faces[i].Indices[1];
                 indices[indexIndice++] = mesh.Faces[i].Indices[2];
             }
+
+            if (!matIndexes.ContainsKey(mesh.MaterialIndex))
+                matIndexes.Add(mesh.MaterialIndex, matIndexes.Count);
 
             meshDef.SubMeshes.Add(new SubMeshDefinition()
             {

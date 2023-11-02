@@ -94,8 +94,9 @@ namespace MiniEngine
             if (Mesh == null)
                 throw new Exception("Mesh not set. You must set a Mesh beforce the materials.");
 
-            if (matIndex < 0 || matIndex >= Mesh.Materials.Length)
-                throw new ArgumentOutOfRangeException($"Invalid {nameof(matIndex)}.");
+            //Just not to crash...
+            //if (matIndex < 0 || matIndex >= Mesh.Materials.Length)
+            //    throw new ArgumentOutOfRangeException($"Invalid {nameof(matIndex)}.");
 
             while (Materials.Count <= matIndex)
                 Materials.Add(null);
