@@ -122,11 +122,35 @@ namespace MiniEngine
         }
 
         /// <summary>
+        /// Permet d'arroundir une valeur float
+        /// </summary>
+        public static int Round(float value, int digits)
+        {
+            return (int)MathF.Round(value, digits, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>
+        /// Permet d'arroundir une valeur double
+        /// </summary>
+        public static int Round(double value, int digits)
+        {
+            return (int)System.Math.Round(value, digits, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>
         /// Permet d'arroundir une valeur float en int
         /// </summary>
         public static int RoundInt(float value)
         {
             return (int)MathF.Round(value, 0, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>
+        /// Permet d'arroundir une valeur double en int
+        /// </summary>
+        public static int RoundInt(double value)
+        {
+            return (int)System.Math.Round(value, 0, MidpointRounding.AwayFromZero);
         }
 
 

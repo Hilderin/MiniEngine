@@ -26,6 +26,11 @@ namespace MiniEngine
         /// The time that took the last frame to generate
         /// </summary>
         public static TimeSpan LastFrameGenerationTime { get; internal set; }
-        
+
+        /// <summary>
+        /// Current Number of Frames Per Seconds
+        /// </summary>
+        public static float FramePerSeconds { get; internal set; }
+
     }
 }

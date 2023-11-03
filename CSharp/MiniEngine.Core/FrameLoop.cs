@@ -13,15 +13,10 @@ namespace MiniEngine
     public class FrameLoop
     {
         private Stopwatch _gameTimer = null;
-        private int _targetFramerate = 60;
+        private int _targetFramerate = -1;
         private TimeSpan _targetElapsedTimePerFrame;    // = TimeSpan.FromTicks(166667); // 60fps
         private long _previousTicks = 0;
 
-
-        /// <summary>
-        /// ElapsedTime between frame
-        /// </summary>
-        public TimeSpan TargetElapsedTime { get { return _targetElapsedTimePerFrame; } set { _targetElapsedTimePerFrame = value; } }
 
 
         /// <summary>
@@ -37,15 +32,6 @@ namespace MiniEngine
             }
         }
 
-        private void RecalculateTargetElapsedTime()
-        {
-            if (_targetFramerate >= 0)
-                _targetElapsedTimePerFrame = TimeSpan.FromTicks((long)(1f / _targetFramerate * 10000000L));
-            else
-                _targetElapsedTimePerFrame = TimeSpan.Zero;
-        }
-
-
         /// <summary>
         /// Constructor
         /// </summary>
@@ -53,8 +39,11 @@ namespace MiniEngine
         {
             _gameTimer = Stopwatch.StartNew();
 
+            //Start the watcher for debugger if one is attached. We don't support attach after starting the process for that.
+            if (System.Diagnostics.Debugger.IsAttached)
+                DebugTimeWatcher.Start();
 
-            DebugTimeWatcher.Start();
+            RecalculateTargetElapsedTime();
         }
 
         /// <summary>
@@ -65,10 +54,13 @@ namespace MiniEngine
             TimeSpan elapsed = _gameTimer.Elapsed;
             float timePassInDebug = 0f;
 
+
             while (true)
             {
                 Time.LastFrameGenerationTime = _gameTimer.Elapsed - elapsed;
                 
+                
+
                 if (_targetElapsedTimePerFrame.Ticks > 0)
                 {
                     if (_targetElapsedTimePerFrame > Time.LastFrameGenerationTime)
@@ -100,16 +92,76 @@ namespace MiniEngine
                         TimeSpan beforeFrame = _gameTimer.Elapsed;
                         if (!tickAction())
                             return;
+
                         Time.LastFrameGenerationTime = _gameTimer.Elapsed - beforeFrame;
                     }
                 }
 
                 Time.DeltaTime = (float)timeAdvanced.TotalSeconds;
                 Time.TotalTime = (float)elapsed.TotalSeconds - timePassInDebug;
+                FpsCounter.AddNewFrameTime(currentTicks);
 
                 if (!tickAction())
                     return;
 
+            }
+
+        }
+
+        /// <summary>
+        /// Recalculate the targetet elapsedtime from the target framerate
+        /// </summary>
+        private void RecalculateTargetElapsedTime()
+        {
+            if (_targetFramerate >= 0)
+                _targetElapsedTimePerFrame = TimeSpan.FromTicks((long)(1f / _targetFramerate * 10000000L));
+            else
+                _targetElapsedTimePerFrame = TimeSpan.Zero;
+        }
+
+        /// <summary>
+        /// FpsCounter
+        /// </summary>
+        private static class FpsCounter
+        {
+            private const int NB_FRAMES_FPS = 40;
+            private static long[] _lastFramesTicks = new long[NB_FRAMES_FPS];
+            private static int _nextFrameIndex = 0;
+            private static long _totalTickforLastFrames = 0;
+            private static int _averageFps = 0;
+            private static int _nbFrames = 0;
+            private static long _previousTicks = 0;
+
+            /// <summary>
+            /// Add a frame
+            /// </summary>
+            public static void AddNewFrameTime(long totalElapsedTicks)
+            {
+
+                long frameTicks = totalElapsedTicks - _previousTicks;
+                _previousTicks = totalElapsedTicks;
+
+
+                long previousTicks = _lastFramesTicks[_nextFrameIndex];
+                _lastFramesTicks[_nextFrameIndex] = frameTicks;
+
+                _totalTickforLastFrames -= previousTicks;
+                _totalTickforLastFrames += frameTicks;
+
+                _nextFrameIndex++;
+                if (_nextFrameIndex >= NB_FRAMES_FPS)
+                    _nextFrameIndex = 0;
+
+                if (_nbFrames < NB_FRAMES_FPS)
+                    _nbFrames++;
+
+                double nbSecondsTotal = _totalTickforLastFrames / 10000000D;
+                if (nbSecondsTotal > 0)
+                    _averageFps = Math.RoundInt(_nbFrames / nbSecondsTotal);
+                else
+                    _averageFps = 0;
+
+                //Debug.Print(frameTicks.ToString() + " => " + _averageFps.ToString() + " (" + _nbFrames + " / " + nbSecondsTotal + ")");
             }
 
         }
