@@ -21,8 +21,6 @@ namespace MiniEngine.AssetImporters
         /// </summary>
         private static readonly string[] SUPPORTED_EXTENSIONS = new string[] { ".fbx", ".dae", ".gltf", ".glb", ".blend", ".3ds", ".ase", ".obj", ".ifc", ".xgl", ".zgl", ".ply", ".dxf", ".lwo", ".lws", ".lxo", ".stl", ".x", ".ms3d", ".cob", ".scn" };
 
-        private static readonly MeshAssetDefinition _defaultMeshAssetDefinition = new MeshAssetDefinition();
-
         private AssetManager _assetManager;
 
         /// <summary>
@@ -47,55 +45,14 @@ namespace MiniEngine.AssetImporters
 
             if (!_cache.TryGetValue(name, out Mesh mesh))
             {
-                try
-                {
-                    string meshPath = String.Empty;
-                    MeshAssetDefinition assetInfo;
 
+                MeshAssetDefinition assetMeshDef = GetMeshAssetDefinition(name);
 
-                    string assetPath = _assetManager.GetAssetPath(name, ".amesh");
+                mesh = CreateMesh(assetMeshDef);
 
+                _assetManager.AssetPathToWatch(_assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE), () => ReloadMesh(mesh, name));
+                _assetManager.AssetPathToWatch(assetMeshDef.MeshFullPath, () => ReloadMesh(mesh, name));
 
-                    if (!String.IsNullOrEmpty(assetPath))
-                    {
-                        //We ave a definition file...
-                        assetInfo = _assetManager.DeserializeFile<MeshAssetDefinition>(assetPath);
-
-                        if (String.IsNullOrEmpty(assetInfo.MeshPath))
-                            throw new FormatException($"MeshPath not set in '{assetPath}'");
-
-                        if (!File.Exists(assetInfo.MeshPath))
-                            throw new FileNotFoundException($"Mesh file not found: {assetInfo.MeshPath}");
-
-                        meshPath = assetInfo.MeshPath;
-
-
-                    }
-                    else
-                    {
-                        //Search directly with the extensions...
-                        meshPath = _assetManager.GetAssetPath(name, SUPPORTED_EXTENSIONS);
-
-                        if (String.IsNullOrEmpty(meshPath))
-                            throw new FileNotFoundException($"Mesh not found: {name} for supported extensions: {String.Join(", ", SUPPORTED_EXTENSIONS)}");
-
-                        assetInfo = _defaultMeshAssetDefinition;
-
-                    }
-
-                    mesh = CreateMesh(meshPath, assetInfo);
-
-                }
-                catch (Exception ex)
-                {
-                    //TODO: Ajouter un warning dans l'engine
-                    Debug.Print("Erreur: " + ex.ToString());
-                }
-                finally
-                {
-                    //Mesh not found...
-                    mesh ??= Primitives.CreateEmptyMesh();
-                }
 
                 _cache.Add(name, mesh);
             }
@@ -112,99 +69,92 @@ namespace MiniEngine.AssetImporters
             _cache.Clear();
         }
 
+        /// <summary>
+        /// Load the mesh asset definition from disk
+        /// </summary>
+        private MeshAssetDefinition GetMeshAssetDefinition(string name)
+        {
+            string meshPath;
+            string assetDefPath;
+            MeshAssetDefinition assetMeshDef = null;
+
+
+            try
+            {
+                assetDefPath = _assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE);
+
+                if (File.Exists(assetDefPath))
+                {
+                    //We have a definition file...
+                    assetMeshDef = _assetManager.DeserializeFile<MeshAssetDefinition>(assetDefPath);
+                    assetMeshDef.MeshFullPath = Path.Combine(Path.GetDirectoryName(assetDefPath), assetMeshDef.MeshPath);
+
+                    if (String.IsNullOrEmpty(assetMeshDef.MeshPath))
+                        throw new FormatException($"MeshPath not set in '{assetDefPath}'");
+
+                    if (!File.Exists(assetMeshDef.MeshFullPath))
+                        throw new FileNotFoundException($"Mesh file not found: {assetMeshDef.MeshFullPath}");
+
+                }
+                else
+                {
+                    //Search directly with the extensions...
+                    if (!_assetManager.TryFindAssetPath(name, SUPPORTED_EXTENSIONS, out meshPath))
+                        throw new FileNotFoundException($"Mesh not found: {name} for supported extensions: {String.Join(", ", SUPPORTED_EXTENSIONS)}");
+
+                    assetDefPath = meshPath + AssetManager.ASSET_EXTENSION_FILE;
+                    assetMeshDef = new MeshAssetDefinition();
+                    assetMeshDef.MeshPath = Path.GetFileName(meshPath);
+                    assetMeshDef.MeshFullPath = meshPath;
+
+                    _assetManager.SerializeFile(assetMeshDef, assetDefPath);
+
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Debug.Print("Erreur: " + ex.ToString());
+            }
+            finally
+            {
+                if (assetMeshDef == null)
+                {
+                    assetMeshDef = new MeshAssetDefinition()
+                    {
+                        MeshPath = name
+                    };
+                }
+            }
+
+            
+
+            return assetMeshDef;
+        }
+
+        /// <summary>
+        /// Reload a mesh
+        /// </summary>
+        private void ReloadMesh(Mesh mesh, string name)
+        {
+            MeshAssetDefinition assetMeshDef = GetMeshAssetDefinition(name);
+            MeshDefinition meshDef = CreateMeshDefinition(assetMeshDef);
+
+            if (!String.IsNullOrEmpty(assetMeshDef.MeshFullPath))
+                mesh.Reload(meshDef);
+        }
 
         /// <summary>
         /// Import a mesh from file
         /// </summary>
-        public Mesh CreateMesh(string path, MeshAssetDefinition meshAssetDef)
+        private Mesh CreateMesh(MeshAssetDefinition meshAssetDef)
         {
-            string workingDirectory = Path.GetDirectoryName(path);
-            //Matrix3 transformMatrix = Matrix3.FromEulerAnglesXYZ(Math.DegToRad(90), 0f, 0f);
-            Matrix4x4 transformMatrix = Matrix4x4.Identity;
-            MeshDefinition meshDef = new MeshDefinition();
+            if (String.IsNullOrEmpty(meshAssetDef.MeshFullPath))
+                return Primitives.CreateEmptyMesh();
 
-            using (AssimpContext context = new AssimpContext())
-            {
-
-
-                //------------------
-                //WORKING GOOD:
-                PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.MakeLeftHanded; // | PostProcessSteps.PreTransformVertices; //  | PostProcessSteps.MakeLeftHanded;
-
-                //The base unit of fbx is centimeters...
-                if (Path.GetExtension(path).Equals(".fbx", StringComparison.OrdinalIgnoreCase))
-                    context.Scale = 0.01f;
-
-                //------------------
-
-
-
-                //PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices;  // | PostProcessSteps.MakeLeftHanded;
-                //PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
-
-
-                //PAS SUR: PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
-                //PAS SUR: PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure;
-
-
-                //if (!meshAssetDef.InverseFaces)
-                //    postProcessSteps |= PostProcessSteps.FlipWindingOrder;
-
-
-                //if (meshAssetDef.Scale != 1f)
-                //    transformMatrix *= Matrix3.FromScaling(new Vector3(meshAssetDef.Scale));
-                //if (meshAssetDef.FlipY)
-                //    transformMatrix *= Matrix3.FromFlipY();
-
-                //if (meshAssetDef.SmoothNormals)
-                //    postProcessSteps |= PostProcessSteps.GenerateSmoothNormals;
-                //else
-                //    postProcessSteps |= PostProcessSteps.GenerateNormals;
-
-                //context.Scale = parameters.Scale;
-
-
-
-
-
-                Assimp.Scene scene = context.ImportFile(path, postProcessSteps);
-
-                if (scene.Metadata.TryGetValue("OriginalUpAxis", out var originalUpAxis) && scene.Metadata.TryGetValue("UpAxis", out var upAxis))
-                {
-                    //We will flip it if the up axis have been inverted...
-                    if (!originalUpAxis.Data.Equals(upAxis.Data))
-                    {
-                        postProcessSteps |= PostProcessSteps.FlipWindingOrder;
-                        scene = context.ImportFile(path, postProcessSteps);
-                    }
-                }
-
-                //if(scene.MeshCount > 0 && scene.Meshes[0].po
-
-                //if (scene.Metadata.TryGetValue("OriginalUnitScaleFactor", out var entry))
-                //    Console.WriteLine(entry);
-
-                //Loading meshes.....
-                Dictionary<int, int> matIndexes = new Dictionary<int, int>();
-                ProcessSceneNode(scene, scene.RootNode, meshDef, ref transformMatrix, matIndexes);
-                //for (int i = 0; i < scene.MeshCount; i++)
-                //{
-                //    LoadMesh(scene.Meshes[i], meshDef, ref transformMatrix, matIndexes);
-                //}
-
-                //Loading textures.....                
-                for (int i = 0; i < matIndexes.Count; i++)
-                {
-                    meshDef.Materials.Add(CreateMaterial(scene.Materials[i], i, meshAssetDef, workingDirectory));
-                }
-
-
-                foreach (var subMesh in meshDef.SubMeshes)
-                {
-                    subMesh.MaterialIndex = matIndexes[subMesh.MaterialIndex];
-                }
-
-            }
+            MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
 
             return _assetManager.Context.Renderer.CreateMesh(meshDef);
 
@@ -220,11 +170,100 @@ namespace MiniEngine.AssetImporters
 
         }
 
+        /// <summary>
+        /// Load mesh definition
+        /// </summary>
+        private MeshDefinition CreateMeshDefinition(MeshAssetDefinition meshAssetDef)
+        {
+            MeshDefinition meshDef = new MeshDefinition();
+
+            string workingDirectory = Path.GetDirectoryName(meshAssetDef.MeshFullPath);
+            //Matrix3 transformMatrix = Matrix3.FromEulerAnglesXYZ(Math.DegToRad(90), 0f, 0f);
+            Matrix4x4 transformMatrix = Matrix4x4.Identity;
+            //MeshDefinition meshDef = new MeshDefinition();
+
+            using (AssimpContext context = new AssimpContext())
+            {
+
+
+                //------------------
+                //WORKING GOOD:
+                PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.MakeLeftHanded | PostProcessSteps.GenerateNormals | PostProcessSteps.TransformUVCoords;
+
+                //The base unit of fbx is centimeters...
+                if (Path.GetExtension(meshAssetDef.MeshFullPath).Equals(".fbx", StringComparison.OrdinalIgnoreCase))
+                    context.Scale = 0.01f;
+
+                //------------------
+
+
+
+                //PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices;  // | PostProcessSteps.MakeLeftHanded;
+                //PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
+
+
+                //PAS SUR: PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.SortByPrimitiveType | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure | PostProcessSteps.OptimizeMeshes;
+                //PAS SUR: PostProcessSteps postProcessSteps = PostProcessSteps.CalculateTangentSpace | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.GenerateSmoothNormals | PostProcessSteps.LimitBoneWeights | PostProcessSteps.RemoveRedundantMaterials | PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData | PostProcessSteps.GenerateUVCoords | PostProcessSteps.FindInstances | PostProcessSteps.ValidateDataStructure;
+
+
+                if (meshAssetDef.InverseFaces)
+                    postProcessSteps |= PostProcessSteps.FlipWindingOrder;
+                if (meshAssetDef.SmoothNormals)
+                    postProcessSteps |= PostProcessSteps.GenerateSmoothNormals;
+
+                //if (meshAssetDef.Scale != 1f)
+                //    transformMatrix *= Matrix4x4.FromScaling(new Vector3D(meshAssetDef.Scale));
+                //if (meshAssetDef.RotationX != 0f)
+                //    transformMatrix *= Matrix4x4.FromRotationX(meshAssetDef.RotationX);
+                //if (meshAssetDef.RotationY != 0f)
+                //    transformMatrix *= Matrix4x4.FromRotationX(meshAssetDef.RotationY);
+                //if (meshAssetDef.RotationZ != 0f)
+                //    transformMatrix *= Matrix4x4.FromRotationX(meshAssetDef.RotationZ);
+
+                context.Scale = meshAssetDef.Scale;
+                context.XAxisRotation = meshAssetDef.RotationX;
+                context.YAxisRotation = meshAssetDef.RotationY;
+                context.ZAxisRotation = meshAssetDef.RotationZ;
+
+                Assimp.Scene scene = context.ImportFile(meshAssetDef.MeshFullPath, postProcessSteps);
+
+                if (scene.Metadata.TryGetValue("OriginalUpAxis", out var originalUpAxis) && scene.Metadata.TryGetValue("UpAxis", out var upAxis))
+                {
+                    //We will flip it if the up axis have been inverted...
+                    if (!originalUpAxis.Data.Equals(upAxis.Data))
+                    {
+                        postProcessSteps |= PostProcessSteps.FlipWindingOrder;
+                        scene = context.ImportFile(meshAssetDef.MeshFullPath, postProcessSteps);
+                    }
+                }
+
+                //Loading meshes.....                
+                ProcessSceneNode(scene, scene.RootNode, meshDef, ref transformMatrix);
+
+
+
+                //Loading textures.....                
+                for (int i = 0; i < scene.MaterialCount; i++)
+                {
+                    meshDef.Materials.Add(CreateMaterial(scene.Materials[i], i, meshAssetDef, workingDirectory));
+                }
+
+
+                //foreach (var subMesh in meshDef.SubMeshes)
+                //{
+                //    subMesh.MaterialIndex = matIndexes[subMesh.MaterialIndex];
+                //}
+
+            }
+
+            return meshDef;
+        }
+
 
         /// <summary>
         /// Load a mesh info meshDef
         /// </summary>
-        private void LoadMesh(Assimp.Mesh mesh, MeshDefinition meshDef, ref Matrix4x4 transformMatrix, Dictionary<int, int> matIndexes)
+        private void LoadMesh(Assimp.Mesh mesh, MeshDefinition meshDef, ref Matrix4x4 transformMatrix)
         {
             Vector3[] positions = new Vector3[mesh.Vertices.Count];
             Vector3[] normals = new Vector3[mesh.Vertices.Count];
@@ -257,8 +296,8 @@ namespace MiniEngine.AssetImporters
                 indices[indexIndice++] = mesh.Faces[i].Indices[2];
             }
 
-            if (!matIndexes.ContainsKey(mesh.MaterialIndex))
-                matIndexes.Add(mesh.MaterialIndex, matIndexes.Count);
+            //if (!matIndexes.ContainsKey(mesh.MaterialIndex))
+            //    matIndexes.Add(mesh.MaterialIndex, matIndexes.Count);
 
             meshDef.SubMeshes.Add(new SubMeshDefinition()
             {
@@ -272,7 +311,7 @@ namespace MiniEngine.AssetImporters
         }
 
 
-        private void ProcessSceneNode(Scene scene, Node node, MeshDefinition meshDef, ref Matrix4x4 transformMatrix, Dictionary<int, int> matIndexes)
+        private void ProcessSceneNode(Scene scene, Node node, MeshDefinition meshDef, ref Matrix4x4 transformMatrix)
         {
             Matrix4x4 transformNodeMatrix = node.Transform * transformMatrix;
 
@@ -282,7 +321,7 @@ namespace MiniEngine.AssetImporters
 
                 
 
-                LoadMesh(mesh, meshDef, ref transformNodeMatrix, matIndexes);
+                LoadMesh(mesh, meshDef, ref transformNodeMatrix);
 
                 //Vector3[] positions = new Vector3[mesh.Vertices.Count];
                 //Vector3[] normals = new Vector3[mesh.Vertices.Count];
@@ -345,7 +384,7 @@ namespace MiniEngine.AssetImporters
 
             for (int c = 0; c < node.ChildCount; c++)
             {
-                ProcessSceneNode(scene, node.Children[c], meshDef, ref transformNodeMatrix, matIndexes);
+                ProcessSceneNode(scene, node.Children[c], meshDef, ref transformNodeMatrix);
             }
         }
 
@@ -404,7 +443,10 @@ namespace MiniEngine.AssetImporters
             {
                 if (assmat.GetMaterialTexture(type, 0, out TextureSlot assTexture))
                 {
-                    return _assetManager.Get<Texture2D>(Path.Combine(workingDirectory, assTexture.FilePath));
+                    string assetDefPath = assTexture.FilePath;
+                    if (Path.IsPathRooted(assetDefPath))
+                        assetDefPath = Path.GetFileName(assetDefPath);
+                    return _assetManager.Get<Texture2D>(Path.Combine(workingDirectory, assetDefPath));
                 }
             }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniEngine.ResourceDefinitions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,12 +24,19 @@ namespace MiniEngine
         protected abstract void Destroy();
 
         /// <summary>
+        /// Reload the asset
+        /// </summary>
+        public abstract void Reload(MeshDefinition meshDef);
+
+        /// <summary>
         /// Dispose
         /// </summary>
         public void Dispose()
         {
             Destroy();
         }
+
+        
     }
 
 }

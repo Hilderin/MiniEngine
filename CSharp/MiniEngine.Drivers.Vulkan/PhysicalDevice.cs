@@ -99,7 +99,7 @@ namespace MiniEngine.Drivers.Vulkan
             foreach (var format in candidates)
             {
                 FormatProperties formatProps = GetFormatProperties(format);
-                
+
                 if (tiling == ImageTiling.Linear && (formatProps.LinearTilingFeatures & features) == features)
                 {
                     return format;
@@ -145,7 +145,29 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
+        /// <summary>
+        /// Get the best queue index for transfer data
+        /// </summary>
+        public int GetQueueFamilyPriorityForTransfer(QueueFamilyProperties queueFamProp)
+        {
+            if (queueFamProp.QueueFlags.HasFlag(QueueFlags.Transfer))
+            {
+                //Important...
+                if (!queueFamProp.QueueFlags.HasFlag(QueueFlags.Graphics) && !queueFamProp.QueueFlags.HasFlag(QueueFlags.Compute))
+                    //Perfect, a queue specific to transfers...
+                    return 0;
 
+                if (!queueFamProp.QueueFlags.HasFlag(QueueFlags.Graphics))
+                    //Perfect, a queue almost specific to transfers...
+                    return 1;
+
+                return 3;
+
+            }
+            else
+                //Not good...
+                return Int32.MaxValue;
+        }
 
         /// <summary>
         /// Create the device with it's queues
@@ -154,28 +176,56 @@ namespace MiniEngine.Drivers.Vulkan
         {
             var queueFamilyProperties = GetQueueFamilyProperties();
 
-            uint queueFamilyUsedIndex;
-            for (queueFamilyUsedIndex = 0; queueFamilyUsedIndex < queueFamilyProperties.Length; ++queueFamilyUsedIndex)
+            uint graphicsQueueIndex;
+            for (graphicsQueueIndex = 0; graphicsQueueIndex < queueFamilyProperties.Length; ++graphicsQueueIndex)
             {
-                if (!GetSurfaceSupportKHR(queueFamilyUsedIndex, surface))
+                if (!GetSurfaceSupportKHR(graphicsQueueIndex, surface))
                     //This queue does not support SurfaceKHR...
                     continue;
 
-                if (queueFamilyProperties[queueFamilyUsedIndex].QueueFlags.HasFlag(QueueFlags.Graphics))
+                if (queueFamilyProperties[graphicsQueueIndex].QueueFlags.HasFlag(QueueFlags.Graphics))
                     //Found it! Should be good
                     break;
             }
 
-            var queueInfo = new DeviceQueueCreateInfo
+            uint transfersQueueIndex = graphicsQueueIndex;
+            int bestPriority = Int32.MaxValue;
+            for (int i = 0; i < queueFamilyProperties.Length; ++i)
+            {
+                if (queueFamilyProperties[i].QueueFlags.HasFlag(QueueFlags.Transfer))
+                {
+                    int priority = GetQueueFamilyPriorityForTransfer(queueFamilyProperties[i]);
+                    if (priority < bestPriority)
+                    {
+                        //This one is better...
+                        transfersQueueIndex = (uint)i;
+                        bestPriority = priority;
+                    }
+                }
+
+            }
+
+            List<DeviceQueueCreateInfo> queueCreateInfos = new List<DeviceQueueCreateInfo>();
+
+            queueCreateInfos.Add(new DeviceQueueCreateInfo
             {
                 QueuePriorities = new float[] { 1.0f },
-                QueueFamilyIndex = queueFamilyUsedIndex,
-            };
+                QueueFamilyIndex = graphicsQueueIndex,
+            });
+
+            if (transfersQueueIndex != graphicsQueueIndex)
+            {
+                queueCreateInfos.Add(new DeviceQueueCreateInfo
+                {
+                    QueuePriorities = new float[] { 1.0f },
+                    QueueFamilyIndex = transfersQueueIndex,
+                });
+            }
 
             using (var deviceInfo = new DeviceCreateInfo
             {
                 EnabledExtensionNames = new string[] { "VK_KHR_swapchain" },
-                QueueCreateInfos = new DeviceQueueCreateInfo[] { queueInfo },
+                QueueCreateInfos = queueCreateInfos.ToArray(),
                 EnabledFeatures = new()
                 {
                     SamplerAnisotropy = true            //Enable Anisotrophy
@@ -207,7 +257,17 @@ namespace MiniEngine.Drivers.Vulkan
 
                 pDevice.UpdateSurfaceCapabilities();
 
+                //We will keep the queue indexes that we just created...
+                uint[] queueIndexes = new uint[(int)pCreateInfo.QueueCreateInfoCount];
+                for (int i = 0; i < queueIndexes.Length; i++)
+                {
+                    queueIndexes[i] = pCreateInfo.QueueCreateInfos[i].QueueFamilyIndex;
+                }
+                pDevice.QueueIndexes = queueIndexes;
+
                 pDevice.MemoryManager = new MemoryManager(pDevice);
+
+                
 
                 Devices.Add(pDevice);
 
@@ -849,20 +909,20 @@ namespace MiniEngine.Drivers.Vulkan
                 var refpRects = new NativeReference((int)(size * pRectCount));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpRects = refpRects.Handle;
-                    result = Interop.NativeMethods.vkGetPhysicalDevicePresentRectanglesKHX(this.m, surface != null ? surface.Handle : default(UInt64), &pRectCount, (Rect2D*)ptrpRects);
-                    if (result != Result.Success)
-                        throw new ResultException(result);
+                result = Interop.NativeMethods.vkGetPhysicalDevicePresentRectanglesKHX(this.m, surface != null ? surface.Handle : default(UInt64), &pRectCount, (Rect2D*)ptrpRects);
+                if (result != Result.Success)
+                    throw new ResultException(result);
 
-                    if (pRectCount <= 0)
-                        return null;
-                    var arr = new Rect2D[pRectCount];
-                    for (int i = 0; i < pRectCount; i++)
-                    {
-                        arr[i] = (((Rect2D*)ptrpRects)[i]);
-                    }
+                if (pRectCount <= 0)
+                    return null;
+                var arr = new Rect2D[pRectCount];
+                for (int i = 0; i < pRectCount; i++)
+                {
+                    arr[i] = (((Rect2D*)ptrpRects)[i]);
+                }
 
-                    return arr;
-                
+                return arr;
+
             }
         }
 
@@ -909,22 +969,22 @@ namespace MiniEngine.Drivers.Vulkan
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSurfaceFormats = new NativeReference((int)(size * pSurfaceFormatCount));
 #pragma warning disable CA2000 // Dispose objects before losing scope
-                
-                    var ptrpSurfaceFormats = refpSurfaceFormats.Handle;
-                    result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormats2KHR(this.m, pSurfaceInfo != null ? pSurfaceInfo.m : (Interop.PhysicalDeviceSurfaceInfo2Khr*)default(IntPtr), &pSurfaceFormatCount, (Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats);
-                    if (result != Result.Success)
-                        throw new ResultException(result);
 
-                    if (pSurfaceFormatCount <= 0)
-                        return null;
-                    var arr = new SurfaceFormat2Khr[pSurfaceFormatCount];
-                    for (int i = 0; i < pSurfaceFormatCount; i++)
-                    {
-                        arr[i] = new SurfaceFormat2Khr(new NativePointer(refpSurfaceFormats, (IntPtr)(&((Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats)[i])));
-                    }
+                var ptrpSurfaceFormats = refpSurfaceFormats.Handle;
+                result = Interop.NativeMethods.vkGetPhysicalDeviceSurfaceFormats2KHR(this.m, pSurfaceInfo != null ? pSurfaceInfo.m : (Interop.PhysicalDeviceSurfaceInfo2Khr*)default(IntPtr), &pSurfaceFormatCount, (Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats);
+                if (result != Result.Success)
+                    throw new ResultException(result);
 
-                    return arr;
-                
+                if (pSurfaceFormatCount <= 0)
+                    return null;
+                var arr = new SurfaceFormat2Khr[pSurfaceFormatCount];
+                for (int i = 0; i < pSurfaceFormatCount; i++)
+                {
+                    arr[i] = new SurfaceFormat2Khr(new NativePointer(refpSurfaceFormats, (IntPtr)(&((Interop.SurfaceFormat2Khr*)ptrpSurfaceFormats)[i])));
+                }
+
+                return arr;
+
             }
         }
 

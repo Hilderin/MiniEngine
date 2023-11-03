@@ -15,7 +15,7 @@ namespace MiniEngine.Labs.Renderer
         public void Init()
         {
 
-            Context.LockCursor();
+            //Context.LockCursor();
 
             //View from up and look down at 45deg
             //Context.Renderer.Camera.Transform.MoveTo(new Vector3(0.0f, 6f, -6f))
@@ -26,7 +26,7 @@ namespace MiniEngine.Labs.Renderer
 
             _currentMesh = new MeshObject()
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\viking_room.obj")
-                                .SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\viking_room.fbx")
+                                //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\viking_room.fbx")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\viking_room.dae")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\HighBox_-ZForward_Yup.fbx")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\HighBox_YForward_Zup.fbx")
@@ -39,11 +39,12 @@ namespace MiniEngine.Labs.Renderer
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\Plane.fbx")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\Plane.glb")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\Plane.dae")
-
+                                .SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\Table\\odesd2_B2_obj.obj")
+                                .SetScale(0.03f);
 
 
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\VikingRoom_from_Blender.obj")                                
-                                .SetMaterial("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\viking_room.png", 0);
+                                //.SetMaterial("C:\\Projects\\MiniEngine\\Assets\\Tests\\VikingRoom\\viking_room.png", 0);
 
             Scene.Add(_currentMesh);
         }

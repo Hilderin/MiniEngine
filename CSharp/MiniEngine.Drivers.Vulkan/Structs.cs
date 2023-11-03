@@ -14651,6 +14651,11 @@ namespace MiniEngine.Drivers.Vulkan
         {
             result = res;
         }
+
+        public override string ToString()
+        {
+            return result.ToString();
+        }
     }
 
     public class VkVersion

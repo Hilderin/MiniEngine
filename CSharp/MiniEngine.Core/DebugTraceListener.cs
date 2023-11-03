@@ -78,11 +78,6 @@ namespace MiniEngine
                     ImGui.Begin("DebugOutput", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoInputs);
                     ImGui.SetWindowPos(new System.Numerics.Vector2(0, 0));
                     ImGui.Text(_log.ToString());
-                    //GUILayout.BeginArea(new Rect(10, 10, Screen.width - 10, Screen.height - 10));
-                    //GUI.contentColor = Color.cyan;
-                    //GUI.skin.label.fontSize = 10;
-                    //GUILayout.Label(_log.ToString());
-                    //GUILayout.EndArea();
                     ImGui.End();
                 }
             }

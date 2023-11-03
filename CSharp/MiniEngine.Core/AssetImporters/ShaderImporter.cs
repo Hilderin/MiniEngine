@@ -54,9 +54,9 @@ namespace MiniEngine.AssetImporters
                         Dictionary<string, string> overwrideVariableFormats = null;
 
 
-                        string assetPath = _assetManager.GetAssetPath(name, ".ashader");
+                        string assetPath = _assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE);
 
-                        if (!String.IsNullOrEmpty(assetPath))
+                        if (File.Exists(assetPath))
                         {
                             //We have an asset file...
                             var assetInfo = _assetManager.DeserializeFile<ShaderAssetDefinition>(assetPath);
@@ -84,9 +84,9 @@ namespace MiniEngine.AssetImporters
                             vertPath = _assetManager.GetAssetPath(name, ".vert");
                             fragPath = _assetManager.GetAssetPath(name, ".frag");
 
-                            if (String.IsNullOrEmpty(vertPath))
+                            if (!File.Exists(vertPath))
                                 throw new FormatException($"VertexCode file not found '{name}.vert'");
-                            if (String.IsNullOrEmpty(fragPath))
+                            if (!File.Exists(fragPath))
                                 throw new FormatException($"FragmentCode file not found '{name}.frag'");
                         }
 

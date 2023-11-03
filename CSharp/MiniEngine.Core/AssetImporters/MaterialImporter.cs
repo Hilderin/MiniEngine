@@ -40,12 +40,12 @@ namespace MiniEngine.AssetImporters
             {
                 try
                 {
-                    string assetPath = _assetManager.GetAssetPath(name, ".amat");
+                    string assetPath = _assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE);
 
-                    if (String.IsNullOrEmpty(assetPath))
+                    if (File.Exists(assetPath))
                     {
                         //Check directly with a texture...
-                        if (!String.IsNullOrEmpty(_assetManager.GetAssetPath(name, Texture2DImporter.SUPPORTED_EXTENSIONS)))
+                        if(_assetManager.TryFindAssetPath(name, Texture2DImporter.SUPPORTED_EXTENSIONS, out assetPath))
                         {
                             var texture = _assetManager.Get<Texture2D>(name);
 

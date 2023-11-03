@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using YamlDotNet.Serialization;
 
 namespace MiniEngine.AssetDefinitions
 {
@@ -11,6 +12,12 @@ namespace MiniEngine.AssetDefinitions
     /// </summary>
     public class MeshAssetDefinition
     {
+        /// <summary>
+        /// Full path of the mesh file
+        /// </summary>
+        [YamlIgnore]
+        public string MeshFullPath { get; set; }
+
         /// <summary>
         /// Path of the mesh file
         /// </summary>
@@ -33,9 +40,19 @@ namespace MiniEngine.AssetDefinitions
         public float Scale = 1f;
 
         /// <summary>
-        /// Flip Y
+        /// Rotation on X axis
         /// </summary>
-        public bool FlipY = false;
+        public float RotationX;
+
+        /// <summary>
+        /// Rotation on Y axis
+        /// </summary>
+        public float RotationY;
+
+        /// <summary>
+        /// Rotation on Z axis
+        /// </summary>
+        public float RotationZ;
 
         /// <summary>
         /// Smooth normals

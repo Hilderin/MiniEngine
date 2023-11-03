@@ -12,6 +12,11 @@ namespace MiniEngine.Drivers.Vulkan
     {
         internal IntPtr m;
 
+        private int _graphicsQueueIndex = -1;
+        private Queue _graphicsQueue;
+        private int _transferQueueIndex = -1;
+        private Queue _transferQueue;
+
         public bool IsDisposed { get; private set; } = false;
 
         public PhysicalDevice PhysicalDevice;
@@ -28,6 +33,7 @@ namespace MiniEngine.Drivers.Vulkan
         public Dictionary<int, ShaderModule> CacheShaderModule = new Dictionary<int, ShaderModule>();
 
         public MemoryManager MemoryManager;
+        public uint[] QueueIndexes;
 
 
         internal Device() { }
@@ -315,6 +321,69 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 Interop.NativeMethods.vkDestroyDevice(this.m, pAllocator != null ? pAllocator.m : null);
             }
+        }
+
+        public uint GetGraphicsQueueIndex()
+        {
+            if (_graphicsQueueIndex == -1)
+            {
+                var queueFamProps = PhysicalDevice.GetQueueFamilyProperties();
+                for (int i = 0; i < QueueIndexes.Length; i++)
+                {
+                    uint queueIndex = QueueIndexes[i];
+                    if (queueFamProps[queueIndex].QueueFlags.HasFlag(QueueFlags.Graphics))
+                    {
+                        //This one...
+                        _graphicsQueueIndex = (int)queueIndex;
+                        break;
+                    }
+                }
+            }
+            return (uint)_graphicsQueueIndex;
+        }
+
+        public Queue GetGraphicsQueue()
+        {
+            if (_graphicsQueue == null)
+            {
+                _graphicsQueue = GetQueue(GetGraphicsQueueIndex(), 0);
+            }
+            return _graphicsQueue;
+        }
+
+        public uint GetTransferQueueIndex()
+        {
+            if (_transferQueueIndex == -1)
+            {
+                uint transfersQueueIndex = QueueIndexes[0];
+                int bestPriority = Int32.MaxValue;
+                var queueFamProps = PhysicalDevice.GetQueueFamilyProperties();
+                for (int i = 0; i < QueueIndexes.Length; i++)
+                {
+                    uint queueIndex = QueueIndexes[i];
+                    if (queueFamProps[queueIndex].QueueFlags.HasFlag(QueueFlags.Transfer))
+                    {
+                        int priority = PhysicalDevice.GetQueueFamilyPriorityForTransfer(queueFamProps[queueIndex]);
+                        if (priority < bestPriority)
+                        {
+                            //This one is better...
+                            transfersQueueIndex = (uint)i;
+                            bestPriority = priority;
+                        }
+                    }
+                }
+                _transferQueueIndex = (int)transfersQueueIndex;
+            }
+            return (uint)_transferQueueIndex;
+        }
+
+        public Queue GetTransferQueue()
+        {
+            if (_transferQueue == null)
+            {
+                _transferQueue = GetQueue(GetTransferQueueIndex(), 0);
+            }
+            return _transferQueue;
         }
 
         public Queue GetQueue(UInt32 queueFamilyIndex, UInt32 queueIndex)
@@ -1456,9 +1525,23 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public CommandPool CreateCommandPool(CommandPoolCreateFlags flags)
+        public CommandPool CreateGraphicsCommandPool()
         {
-            using (var createPoolInfo = new CommandPoolCreateInfo { Flags = CommandPoolCreateFlags.ResetCommandBuffer })
+            return CreateCommandPool(GetGraphicsQueueIndex(), CommandPoolCreateFlags.ResetCommandBuffer);
+        }
+
+        public CommandPool CreateTransferCommandPool()
+        {
+            return CreateCommandPool(GetTransferQueueIndex(), CommandPoolCreateFlags.ResetCommandBuffer);
+        }
+
+        public CommandPool CreateCommandPool(uint queueFamilyIndex, CommandPoolCreateFlags flags)
+        {
+            using (var createPoolInfo = new CommandPoolCreateInfo
+            { 
+                Flags = CommandPoolCreateFlags.ResetCommandBuffer,
+                QueueFamilyIndex = queueFamilyIndex
+            })
             {
                 return CreateCommandPool(createPoolInfo);
             }

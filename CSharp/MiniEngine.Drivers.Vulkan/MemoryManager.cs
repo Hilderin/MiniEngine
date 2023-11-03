@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Threading;
+
 namespace MiniEngine.Drivers.Vulkan
 {
     /// <summary>
@@ -7,8 +11,9 @@ namespace MiniEngine.Drivers.Vulkan
     public class MemoryManager: IDisposable
     {
         private Device _device;
-        private Queue Queue;
         private CommandPool _commandPool;
+        private ConcurrentQueue<ExecutionThreadElement> _commandQueue = new ConcurrentQueue<ExecutionThreadElement>();
+        private Thread _mainThread;
 
         /// <summary>
         /// Constructor
@@ -17,9 +22,13 @@ namespace MiniEngine.Drivers.Vulkan
         {
             _device = device;
 
-            _commandPool = device.CreateCommandPool(CommandPoolCreateFlags.ResetCommandBuffer);
+            _commandPool = device.CreateTransferCommandPool();
 
-            Queue = _device.GetQueue(0, 0);
+
+            _mainThread = new Thread(MainThread);
+            _mainThread.IsBackground = true;
+            _mainThread.Start();
+
         }
 
         /// <summary>
@@ -29,21 +38,38 @@ namespace MiniEngine.Drivers.Vulkan
         {
             var commandBuffer = _device.AllocateCommandBuffer(_commandPool);
 
-            using (Fence fence = _device.CreateFence())
+            
+            commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
+
+            //Populate the actions...
+            commandActions(commandBuffer);
+
+
+            commandBuffer.End();
+
+            var element = new ExecutionThreadElement()
             {
+                CommandBuffer = commandBuffer,
+            };
+            _commandQueue.Enqueue(element);
 
-                commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
+            element.waitHandle.WaitOne();
 
-                //Populate the actions...
-                commandActions(commandBuffer);
+            //using (Fence fence = _device.CreateFence())
+            //{
+
+            //    commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
+
+            //    //Populate the actions...
+            //    commandActions(commandBuffer);
 
 
-                commandBuffer.End();
+            //    commandBuffer.End();
 
-                fence.Reset();
-                Queue.Submit(commandBuffer, fence);
-                fence.Wait();
-            }
+            //    fence.Reset();
+            //    _commandQueue.Enqueue(commandBuffer);
+            //    fence.Wait();
+            //}
 
             _device.FreeCommandBuffer(_commandPool, commandBuffer);
 
@@ -93,5 +119,57 @@ namespace MiniEngine.Drivers.Vulkan
                 _commandPool = null;
             }
         }
+
+        /// <summary>
+        /// Main thread
+        /// </summary>
+        private void MainThread()
+        {
+            try
+            {
+                Queue queue = _device.GetTransferQueue();
+                while (true)
+                {
+                    if (_commandQueue.TryDequeue(out var element))
+                    {
+                        try
+                        {
+                            ExecuteCommandBuffer(queue, element.CommandBuffer);
+                        }
+                        catch(Exception exIn)
+                        {
+                            Debug.Print("MemoryManager.MainThread - Erreur: " + exIn.ToString());
+                        }
+
+                        //All done!
+                        element.waitHandle.Set();
+                    }
+                    else
+                        System.Threading.Thread.Sleep(1);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print("MemoryManager.MainThread - Erreur: " + ex.ToString());
+            }
+        }
+
+        private void ExecuteCommandBuffer(Queue queue, CommandBuffer commandBuffer)
+        {
+            using (Fence fence = _device.CreateFence())
+            {
+                fence.Reset();
+                queue.Submit(commandBuffer);
+                fence.Wait();
+            }
+            
+        }
+
+        private class ExecutionThreadElement
+        {
+            public EventWaitHandle waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+            public CommandBuffer CommandBuffer;
+        }
+
     }
 }

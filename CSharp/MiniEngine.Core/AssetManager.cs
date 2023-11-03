@@ -1,8 +1,10 @@
 ﻿using MiniEngine.AssetDefinitions;
 using MiniEngine.AssetImporters;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,14 +20,21 @@ namespace MiniEngine
     public class AssetManager
     {
         /// <summary>
+        /// Extension for asset file
+        /// </summary>
+        public const string ASSET_EXTENSION_FILE = ".asset";
+
+        /// <summary>
         /// Event when assets have changed
         /// </summary>
         public event Action OnAssetChanged;
 
 
-        private FileSystemWatcher _fsw;
+        private FileSystemWatcher _rootFsw;
+        private Dictionary<string, FileSystemWatcher> _fileWatchers = new Dictionary<string, FileSystemWatcher>(StringComparer.OrdinalIgnoreCase);
         private Task _taskUpdateContent = null;
         private DateTime _lastUpdatedContent = DateTime.MinValue;
+        private Dictionary<string, bool> _updatedPaths = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
 
         /// <summary>
@@ -39,6 +48,20 @@ namespace MiniEngine
         private IDeserializer _deserializer = new DeserializerBuilder()
                                                         .WithAttemptingUnquotedStringTypeDeserialization()
                                                         .Build();
+
+        /// <summary>
+        /// Yaml serialization
+        /// </summary>
+        private ISerializer _serializer = new SerializerBuilder()
+                                                    .Build();
+
+
+
+        /// <summary>
+        /// Reloadable assets
+        /// </summary>
+        private Dictionary<string, Action> _reloadableAssetsActions = new Dictionary<string, Action>(StringComparer.OrdinalIgnoreCase);
+
 
         /// <summary>
         /// Context
@@ -94,6 +117,53 @@ namespace MiniEngine
 
         }
 
+        /// <summary>
+        /// Serialize a file
+        /// </summary>
+        public void SerializeFile(object assetObj, string path)
+        {
+
+            using (TextWriter writer = File.CreateText(path))
+            {
+                _serializer.Serialize(writer, assetObj);
+            }
+
+        }
+
+        /// <summary>
+        /// Add a path to watch
+        /// </summary>
+        public void AssetPathToWatch(string path, Action reloadAction)
+        {
+            if (String.IsNullOrEmpty(path))
+                return;
+
+            if (!path.StartsWith(RootPath, StringComparison.OrdinalIgnoreCase))
+            {
+                //Only if we are watching...
+                string folder = Path.GetDirectoryName(path);
+                if (!_fileWatchers.ContainsKey(folder) && Directory.Exists(folder))
+                {
+                    FileSystemWatcher fsw = new FileSystemWatcher(folder);
+                    //fsw.IncludeSubdirectories = true;
+
+                    fsw.Changed += Fsw_Changed;
+                    fsw.Created += Fsw_Changed;
+                    fsw.Deleted += Fsw_Changed;
+                    fsw.Renamed += Fsw_Renamed;
+
+                    fsw.EnableRaisingEvents = true;
+
+                    _fileWatchers.Add(folder, fsw);
+                }
+
+            }
+
+
+
+            _reloadableAssetsActions[path] = reloadAction;
+        }
+
 
         /// <summary>
         /// Get the path for an asset
@@ -109,10 +179,10 @@ namespace MiniEngine
                 //Relative path...
                 path = Path.Combine(RootPath, name + extension);
 
-            if (!File.Exists(path))
-            {
-                return String.Empty;
-            }
+            //if (!File.Exists(path))
+            //{
+            //    return String.Empty;
+            //}
 
             return path;
         }
@@ -120,7 +190,7 @@ namespace MiniEngine
         /// <summary>
         /// Get the path for an asset that can have multiple extensions
         /// </summary>
-        public string GetAssetPath(string name, string[] extensions)
+        public bool TryFindAssetPath(string name, string[] extensions, out string assetPath)
         {
             string extension = Path.GetExtension(name);
 
@@ -128,8 +198,15 @@ namespace MiniEngine
             {
                 //Extension in the list, we keep it!
                 if (!File.Exists(name))
-                    return String.Empty;
-                return name;
+                {
+                    assetPath = String.Empty;
+                    return false;
+                }
+                else
+                {
+                    assetPath = name;
+                    return true;
+                }
             }
 
             //Check each extension
@@ -141,11 +218,15 @@ namespace MiniEngine
                     extension = Path.GetExtension(file);
 
                     if (!String.IsNullOrEmpty(extension) && extensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)))
-                        return file;
+                    {
+                        assetPath = file;
+                        return true;
+                    }
                 }
             }
 
-            return String.Empty;
+            assetPath = String.Empty;
+            return false;
         }
 
 
@@ -183,19 +264,19 @@ namespace MiniEngine
         /// </summary>
         public void StartWatchUpdateContent()
         {
-            if (_fsw == null)
+            if (_rootFsw == null)
             {
                 if (Directory.Exists(RootPath))
                 {
-                    _fsw = new FileSystemWatcher(RootPath);
-                    _fsw.IncludeSubdirectories = true;
+                    _rootFsw = new FileSystemWatcher(RootPath);
+                    _rootFsw.IncludeSubdirectories = true;
 
-                    _fsw.Changed += Fsw_Changed;
-                    _fsw.Created += Fsw_Changed;
-                    _fsw.Deleted += Fsw_Changed;
-                    _fsw.Renamed += Fsw_Renamed;
+                    _rootFsw.Changed += Fsw_Changed;
+                    _rootFsw.Created += Fsw_Changed;
+                    _rootFsw.Deleted += Fsw_Changed;
+                    _rootFsw.Renamed += Fsw_Renamed;
 
-                    _fsw.EnableRaisingEvents = true;
+                    _rootFsw.EnableRaisingEvents = true;
 
                 }
             }
@@ -224,9 +305,11 @@ namespace MiniEngine
         /// </summary>
         private void ProcessChange(string fullPath)
         {
-            lock (_fsw)
+            lock (_updatedPaths)
             {
-                if(_taskUpdateContent != null)
+                _updatedPaths[fullPath] = true;
+
+                if (_taskUpdateContent == null)
                     _taskUpdateContent = Task.Factory.StartNew(TaskWaitBeforeForNotification);
             }
 
@@ -246,9 +329,26 @@ namespace MiniEngine
                 while (DateTime.Now.Subtract(_lastUpdatedContent).TotalMilliseconds < 100)
                     System.Threading.Thread.Sleep(10);
 
+                string[] updatesPaths;
+                lock (_updatedPaths)
+                    updatesPaths = _updatedPaths.Keys.ToArray();
+
+                foreach (string path in updatesPaths)
+                {
+                    try
+                    {
+                        if (_reloadableAssetsActions.TryGetValue(path, out Action reloadableAssetAction))
+                            reloadableAssetAction();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.Print($"Reload asset '{path}' - Error: {ex.ToString()}");
+                    }
+
+                }
 
                 //On indique qu'on a du contenu à reloader
-                ResetCacheAllImporters();
+                //ResetCacheAllImporters();
 
                 OnAssetChanged?.Invoke();
 
@@ -259,14 +359,15 @@ namespace MiniEngine
             }
         }
 
-        /// <summary>
-        /// Reset the cache for all importers
-        /// </summary>
-        private void ResetCacheAllImporters()
-        {
-            foreach (var importer in _assetImporters.Values)
-                importer.ResetCache();
-        }
+        ///// <summary>
+        ///// Reset the cache for all importers
+        ///// </summary>
+        //private void ResetCacheAllImporters()
+        //{
+        //    foreach (var importer in _assetImporters.Values)
+        //        importer.ResetCache();
+        //}
+
 
     }
 }

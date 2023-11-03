@@ -281,6 +281,17 @@ namespace MiniEngine
             return this;
         }
 
+        /// <summary>
+        /// Set scale
+        /// </summary>
+        public WorldTransform SetScale(float scale)
+        {
+            _scale.X = scale;
+            _scale.Y = scale;
+            _scale.Z = scale;
+            return this;
+        }
+
         ///// <summary>
         ///// Move in 4 directions
         ///// </summary>

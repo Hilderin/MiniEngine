@@ -1,0 +1,7 @@
+MaterialNames: []
+InverseFaces: false
+Scale: 1
+SmoothNormals: true
+RotationX: -90
+ResetMaterialAmbientColor: false
+MeshPath: odesd2_B2_obj.obj

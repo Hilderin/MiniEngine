@@ -123,5 +123,14 @@ namespace MiniEngine
             return gameObject;
         }
 
+        /// <summary>
+        /// Set the scale
+        /// </summary>
+        public static T SetScale<T>(this T gameObject, float scale) where T : GameObject
+        {
+            gameObject.Transform.SetScale(scale);
+            return gameObject;
+        }
+
     }
 }

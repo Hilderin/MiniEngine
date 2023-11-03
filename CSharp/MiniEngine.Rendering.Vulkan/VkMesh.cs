@@ -32,6 +32,25 @@ namespace MiniEngine.Rendering.Vulkan
             factory?.Add(this);
         }
 
+
+        /// <summary>
+        /// Reload the asset
+        /// </summary>
+        public override void Reload(MeshDefinition meshDef)
+        {
+            var oldMeshDatas = new List<VulkanMeshData>(MeshDatas);
+
+
+            Init(meshDef);
+
+            foreach(var oldMeshData in oldMeshDatas)
+            {
+                oldMeshData.vertexBuffer?.Dispose();
+                oldMeshData.indexBuffer?.Dispose();
+            }
+        }
+
+
         /// <summary>
         /// Destruction
         /// </summary>
@@ -55,15 +74,18 @@ namespace MiniEngine.Rendering.Vulkan
         {
             List<SubMeshDefinition> subMeshes = meshDef.SubMeshes;
 
-            MeshDatas = new VulkanMeshData[subMeshes.Count];
+            VulkanMeshData[] newMeshDatas = new VulkanMeshData[subMeshes.Count];
 
             for (int i = 0; i < subMeshes.Count; i++)
             {
-                CreateVertexBuffer(subMeshes[i], ref MeshDatas[i]);
-                CreateIndexBuffer(subMeshes[i], ref MeshDatas[i]);
+                CreateVertexBuffer(subMeshes[i], ref newMeshDatas[i]);
+                CreateIndexBuffer(subMeshes[i], ref newMeshDatas[i]);
 
-                MeshDatas[i].MaterialIndex = subMeshes[i].MaterialIndex;
+                newMeshDatas[i].MaterialIndex = subMeshes[i].MaterialIndex;
             }
+
+            //All good, we can switch it now...
+            MeshDatas = newMeshDatas;
 
             //Create default materials slots
             Materials = meshDef.Materials.ToArray();

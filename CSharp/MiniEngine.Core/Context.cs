@@ -80,6 +80,11 @@ namespace MiniEngine
         /// </summary>
         public bool DebugEnabled;
 
+        /// <summary>
+        /// Window
+        /// </summary>
+        public IWindow Window { get { return _window; } }
+
 
         #endregion
 
@@ -93,6 +98,8 @@ namespace MiniEngine
             Input = new InputManager();
 
             Asset = new AssetManager(this);
+
+            Asset.StartWatchUpdateContent();
 
             _frameLoop = new FrameLoop();
         }
@@ -112,7 +119,6 @@ namespace MiniEngine
             System.Diagnostics.Trace.Listeners.Clear();
             System.Diagnostics.Trace.Listeners.Add(new DebugTraceListener());
 
-            Asset.StartWatchUpdateContent();
 
             return this;
         }

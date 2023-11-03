@@ -30,7 +30,7 @@ namespace MiniEngine
         /// <summary>
         /// Current Number of Frames Per Seconds
         /// </summary>
-        public static float FramePerSeconds { get; internal set; }
+        public static int FramePerSeconds { get; internal set; }
 
     }
 }

@@ -205,14 +205,14 @@ namespace MiniEngine.Drivers.Vulkan
             if (!presentModes.Contains(_presentMode))
                 throw new NotSupportedException($"Present mode not supported by the surface: {_presentMode}");
 
-            _queue = _device.GetQueue(0, 0);
+            _queue = _device.GetGraphicsQueue();
             _fence = _device.CreateFence();
             _semaphore = _device.CreateSemaphore();
 
 
             CreateRenderPass();
 
-            _commandPool = _device.CreateCommandPool(CommandPoolCreateFlags.ResetCommandBuffer);
+            _commandPool = _device.CreateGraphicsCommandPool();
 
             CreateSwapChainObjects();
 

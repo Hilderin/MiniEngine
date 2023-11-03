@@ -44,11 +44,11 @@ namespace MiniEngine.AssetImporters
 
             if (!_cache.TryGetValue(name, out Texture2D texture))
             {
+                string assetPath = String.Empty;
+
                 try
                 {
-                    string assetPath = _assetManager.GetAssetPath(name, SUPPORTED_EXTENSIONS);
-
-                    if (String.IsNullOrEmpty(assetPath))
+                    if(!_assetManager.TryFindAssetPath(name, SUPPORTED_EXTENSIONS, out assetPath))
                         throw new FileNotFoundException($"Texture not found '{name}' for supported extensions: {String.Join(", ", SUPPORTED_EXTENSIONS)}");
 
                         
