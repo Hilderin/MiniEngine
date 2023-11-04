@@ -397,9 +397,20 @@ namespace MiniEngine
                 _debugCallback(level, messageCode, message);
 
             if (level == DebugLevel.Error)
+            {
+                Debug.Error($"{level}: {message}");
                 throw new Exception($"Renderer error: {message}");
+            }
+            else if (level == DebugLevel.Warning)
+            {
+                Debug.Warning(message);
+            }
+            else
+            {
+                Debug.Info(message);
+            }
 
-            Debug.WriteLine($"{level}: {message}");
+
 
 
 

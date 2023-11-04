@@ -45,11 +45,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             foreach(var oldMeshData in oldMeshDatas)
             {
-                oldMeshData.vertexBuffer?.Dispose();
-                oldMeshData.indexBuffer?.Dispose();
+                _renderer.AddActionsBeforeNextFrame(() => DisposeVulkanMeshData(oldMeshData));
             }
         }
-
 
         /// <summary>
         /// Destruction
@@ -58,11 +56,21 @@ namespace MiniEngine.Rendering.Vulkan
         {
             foreach (var subMeshData in MeshDatas)
             {
-                subMeshData.vertexBuffer?.Dispose();
-                subMeshData.indexBuffer?.Dispose();
+                DisposeVulkanMeshData(subMeshData);
             }
 
             _factory?.Remove(this);
+        }
+
+
+
+        /// <summary>
+        /// Dispose mesh data
+        /// </summary>
+        private void DisposeVulkanMeshData(VulkanMeshData meshData)
+        {
+            meshData.vertexBuffer?.Dispose();
+            meshData.indexBuffer?.Dispose();
         }
 
 

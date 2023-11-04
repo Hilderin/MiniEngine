@@ -56,7 +56,7 @@ namespace MiniEngine.Rendering.Vulkan
         private SurfaceKhr _surface;
         private SwapchainWrapper _swapchain;
 
-        private ConcurrentQueue<ImageWrapper> _imageTransferNeededToGraphicsQueue = new ConcurrentQueue<ImageWrapper>();
+        private ConcurrentQueue<Action> _actionsBeforeNextFrame = new ConcurrentQueue<Action>();
 
 
         private uint _graphicsQueueIndex;
@@ -296,8 +296,8 @@ namespace MiniEngine.Rendering.Vulkan
 
 
             //Transfert the images that was loaded in the transfer queue...
-            while (_imageTransferNeededToGraphicsQueue.TryDequeue(out var imageWrapper))
-                _graphicsQueue.ExecuteAndWait(imageWrapper.CmdTransferToGraphicsQueue);
+            while (_actionsBeforeNextFrame.TryDequeue(out var action))
+                action();
 
 
             //Render the frame...
@@ -441,11 +441,11 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
-        /// Add the image in the transfer list
+        /// Add an action to execute before next frame
         /// </summary>
-        public void AddImageTransferNeededToGraphicsQueue(ImageWrapper imageWrapper)
+        public void AddActionsBeforeNextFrame(Action action)
         {
-            _imageTransferNeededToGraphicsQueue.Enqueue(imageWrapper);
+            _actionsBeforeNextFrame.Enqueue(action);
         }
 
 

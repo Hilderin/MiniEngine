@@ -42,7 +42,7 @@ namespace MiniEngine.AssetImporters
                 {
                     string assetPath = _assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE);
 
-                    if (File.Exists(assetPath))
+                    if (!File.Exists(assetPath))
                     {
                         //Check directly with a texture...
                         if(_assetManager.TryFindAssetPath(name, Texture2DImporter.SUPPORTED_EXTENSIONS, out assetPath))
@@ -82,7 +82,7 @@ namespace MiniEngine.AssetImporters
                 catch(Exception ex)
                 {
                     //TODO: Ajouter un warning dans l'engine
-                    Debug.Print("Erreur: " + ex.ToString());
+                    Debug.Error("Erreur: " + ex.ToString());
                 }
                 finally
                 {

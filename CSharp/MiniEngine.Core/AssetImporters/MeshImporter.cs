@@ -116,7 +116,7 @@ namespace MiniEngine.AssetImporters
             }
             catch (Exception ex)
             {
-                Debug.Print("Erreur: " + ex.ToString());
+                Debug.Error("Erreur: " + ex.ToString());
             }
             finally
             {

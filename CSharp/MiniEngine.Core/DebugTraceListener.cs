@@ -25,6 +25,8 @@ namespace MiniEngine
         /// </summary>
         public DebugTraceListener()
         {
+            Debug.DebugTraceListener = this;
+
             Context.Current.RegisterUpdate(Update);
         }
 

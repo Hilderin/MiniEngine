@@ -344,7 +344,7 @@ namespace MiniEngine
                     }
                     catch (Exception ex)
                     {
-                        Debug.Print($"Reload asset '{path}' - Error: {ex}");
+                        Debug.Error($"Reload asset '{path}' - Error: {ex}");
                     }
 
                 }

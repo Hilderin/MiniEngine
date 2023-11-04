@@ -113,7 +113,7 @@ namespace MiniEngine
         /// </summary>
         public void SetKeyState(Keys key, bool down)
         {
-            Debug.Print("SetKeyState - " + key + " " + (down ? "down" : "up"));
+            Debug.Info("SetKeyState - " + key + " " + (down ? "down" : "up"));
             if ((int)key > 0 && (int)key < 349)
             {
                 if (down)
@@ -169,7 +169,7 @@ namespace MiniEngine
             if (MouseScroll != scroll)
             {
                 //Calculate the diff and the deplacement vector...
-                Debug.Print("Old scroll: " + MouseScroll + ", new: " + scroll.ToString());
+                Debug.Info("Old scroll: " + MouseScroll + ", new: " + scroll.ToString());
                 Vector2 movement = (scroll - MouseScroll) / 200;
                 //movement.Normalize();
                 MouseScrollDelta = movement;

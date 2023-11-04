@@ -36,10 +36,10 @@ namespace MiniEngine.Labs.Renderer
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\HighBox_-ZForward_Yup_TransformWithApplyUnit1.fbx")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\Plate_Rectangle.fbx")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\Plane.obj")
-                                //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\Plane.fbx")
+                                .SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\Plane.fbx")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\Plane.glb")
                                 //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\SimpleModels\\Plane.dae")
-                                .SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\Table\\odesd2_B2_obj.obj")
+                                //.SetMesh("C:\\Projects\\MiniEngine\\Assets\\Tests\\Table\\odesd2_B2_obj.obj")
                                 .SetScale(0.03f);
 
 

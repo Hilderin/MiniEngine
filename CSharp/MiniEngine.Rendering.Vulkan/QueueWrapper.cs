@@ -115,6 +115,34 @@ namespace MiniEngine.Rendering.Vulkan
             //DestroyCommandBuffer(commandBuffer);
 
         }
+
+
+        /// <summary>
+        /// Execute actions on command buffer
+        /// </summary>
+        public void ExecuteAsync(Action<CommandBuffer> commandActions, Action callback)
+        {
+            using (Fence fence = _device.CreateFence())
+            {
+                using (var commandBuffer = CreateCommandBuffer())
+                {
+                    commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
+
+                    //Populate the actions...
+                    commandActions(commandBuffer);
+
+
+                    commandBuffer.End();
+
+                    fence.Reset();
+                    _queue.Submit(commandBuffer, fence);
+                    fence.Wait();
+
+                    callback();
+                }
+            }
+
+        }
     }
 
 }

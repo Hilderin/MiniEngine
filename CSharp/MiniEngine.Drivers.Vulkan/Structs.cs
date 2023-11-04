@@ -2580,8 +2580,9 @@ namespace MiniEngine.Drivers.Vulkan
 			get {
 				if (m->CodeSize == UIntPtr.Zero)
 					return null;
+#pragma warning disable CA2020 // Prevent from behavioral change
                 var values = new UInt32[((uint)m->CodeSize >> 2)];
-				unsafe
+                unsafe
 				{
 					UInt32* ptr = (UInt32*)m->Code;
 					for (int i = 0; i < values.Length; i++) 

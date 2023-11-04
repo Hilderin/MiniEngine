@@ -64,7 +64,7 @@ namespace MiniEngine.Labs.Renderer
             if (level == DebugLevel.Error)
                 throw new Exception($"Vulkan error: {message}");
 
-            Debug.WriteLine($"{level}: {message}");
+            Debug.Info($"{level}: {message}");
 
         }
 

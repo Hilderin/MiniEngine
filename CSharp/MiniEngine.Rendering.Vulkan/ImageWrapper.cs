@@ -150,7 +150,7 @@ namespace MiniEngine.Rendering.Vulkan
 
 
                 //The image still needed to change layout in the graphics queue...
-                _renderer.AddImageTransferNeededToGraphicsQueue(this);
+                _renderer.AddActionsBeforeNextFrame(() => _renderer.GraphicsQueue.ExecuteAndWait(this.CmdTransferToGraphicsQueue));
             }
 
             //We need to create the image view now...
@@ -214,7 +214,7 @@ namespace MiniEngine.Rendering.Vulkan
             PipelineStageFlags srcStage,
             PipelineStageFlags dstStage)
         {
-            _renderer.MemoryManager.ExecuteCommandBuffer(commandBuffer =>
+            _renderer.MemoryManager.ExecuteOnTransferQueue(commandBuffer =>
             {
                 CmdTransferImageLayout(srcAccessMask, dstAccessMask, oldLayout, newLayout, srcQueueFamilyIndex, dstQueueFamilyIndex, srcStage, dstStage, commandBuffer);
             });
@@ -283,7 +283,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CopyBufferToImage(Buffer buffer)
         {
-            _renderer.MemoryManager.ExecuteCommandBuffer(commandBuffer =>
+            _renderer.MemoryManager.ExecuteOnTransferQueue(commandBuffer =>
             {
                 BufferImageCopy region = new()
                 {
