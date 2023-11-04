@@ -1163,12 +1163,13 @@ namespace MiniEngine.Drivers.Vulkan.Interop
         internal ShaderStageFlags StageFlags;
     }
 
-    internal partial struct PhysicalDeviceFeatures2Khr
+    internal partial struct PhysicalDeviceFeatures2
     {
         internal StructureType SType;
         internal IntPtr Next;
         internal PhysicalDeviceFeatures Features;
     }
+
 
     internal partial struct PhysicalDeviceProperties2Khr
     {

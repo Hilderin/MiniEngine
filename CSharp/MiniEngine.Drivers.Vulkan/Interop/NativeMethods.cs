@@ -542,10 +542,10 @@ namespace MiniEngine.Drivers.Vulkan.Interop
 		[DllImport (VulkanLibrary, CallingConvention = CallingConvention.Winapi)]
 		internal static unsafe extern void vkGetPhysicalDeviceGeneratedCommandsPropertiesNVX (IntPtr physicalDevice, DeviceGeneratedCommandsFeaturesNvx* pFeatures, DeviceGeneratedCommandsLimitsNvx* pLimits);
 
-		[DllImport (VulkanLibrary, CallingConvention = CallingConvention.Winapi)]
-		internal static unsafe extern void vkGetPhysicalDeviceFeatures2KHR (IntPtr physicalDevice, PhysicalDeviceFeatures2Khr* pFeatures);
+        [DllImport(VulkanLibrary, CallingConvention = CallingConvention.Winapi)]
+        internal static unsafe extern void vkGetPhysicalDeviceFeatures2(IntPtr physicalDevice, PhysicalDeviceFeatures2* pFeatures);
 
-		[DllImport (VulkanLibrary, CallingConvention = CallingConvention.Winapi)]
+        [DllImport (VulkanLibrary, CallingConvention = CallingConvention.Winapi)]
 		internal static unsafe extern void vkGetPhysicalDeviceProperties2KHR (IntPtr physicalDevice, PhysicalDeviceProperties2Khr* pProperties);
 
 		[DllImport (VulkanLibrary, CallingConvention = CallingConvention.Winapi)]

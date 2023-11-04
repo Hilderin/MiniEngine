@@ -62,7 +62,6 @@ namespace MiniEngine.Rendering.Vulkan
         private Dictionary<int, ShaderModule> _cacheShaderModule = new Dictionary<int, ShaderModule>();
         private bool _isDisposing;
 
-
         private VkInstance _vi;
         private Device _device;
         private PhysicalDevice _physicalDevice;
@@ -184,6 +183,9 @@ namespace MiniEngine.Rendering.Vulkan
             _resourceFactory = new VkResourceFactory(this);
 
             DefaultSampler = SamplerHelper.CreateMaxAnisotropy(_device);
+
+            if (!_physicalDevice.CheckBindlessSupport())
+                throw new NotSupportedException("Your graphic card does not support Bindless rendering.");
 
             _initialized = true;
         }

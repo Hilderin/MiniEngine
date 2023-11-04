@@ -584,17 +584,39 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public PhysicalDeviceFeatures2Khr GetFeatures2KHR()
+        public PhysicalDeviceFeatures2 GetFeatures2()
         {
-            PhysicalDeviceFeatures2Khr pFeatures;
+            PhysicalDeviceFeatures2 pFeatures;
             unsafe
             {
-                pFeatures = new PhysicalDeviceFeatures2Khr();
-                Interop.NativeMethods.vkGetPhysicalDeviceFeatures2KHR(this.m, pFeatures != null ? pFeatures.m : (Interop.PhysicalDeviceFeatures2Khr*)default(IntPtr));
+                pFeatures = new PhysicalDeviceFeatures2();
+                Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
 
                 return pFeatures;
             }
         }
+
+
+        public PhysicalDeviceDescriptorIndexingFeatures GetFeatures2Indexing()
+        {
+            PhysicalDeviceFeatures2 pFeatures;
+            unsafe
+            {
+                using (pFeatures = new PhysicalDeviceFeatures2())
+                {
+                    var indexingFeatures = new PhysicalDeviceDescriptorIndexingFeatures()
+                    {
+                        SType = StructureType.PhysicalDeviceDescriptorIndexingFeatures
+                    };
+                    pFeatures.Next = (IntPtr)(&indexingFeatures);
+
+                    Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
+
+                    return indexingFeatures;
+                }
+            }
+        }
+
 
         public PhysicalDeviceProperties2Khr GetProperties2KHR()
         {
@@ -892,14 +914,6 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        //public void Dispose()
-        //{
-        //    foreach (Device device in Devices)
-        //        device.Dispose();
-
-        //    Devices.Clear();
-        //}
-
         /// <summary>
         /// Return the format supported by the surface
         /// </summary>
@@ -912,6 +926,14 @@ namespace MiniEngine.Drivers.Vulkan
             }
 
             throw new System.Exception("didn't find the expected formats and colorspaces.");
+        }
+
+        public bool CheckBindlessSupport()
+        {
+            var features = GetFeatures2Indexing();
+            
+            return features.DescriptorBindingPartiallyBound && features.RuntimeDescriptorArray;
+            
         }
     }
 }
