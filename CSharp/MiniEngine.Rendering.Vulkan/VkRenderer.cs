@@ -14,24 +14,36 @@ namespace MiniEngine.Rendering.Vulkan
     {
         #region Internal members
 
+        /// <summary>
+        /// Current ViewProjectionMatrix
+        /// </summary>
+        internal Matrix4 ViewProjectionMVPMatrix;
 
-        public Matrix4 MVPMatrix;
-
-        public Sampler Sampler;
+        /// <summary>
+        /// Default sampler
+        /// </summary>
+        internal Sampler DefaultSampler;
 
         #endregion
 
         #region Public members
 
-        /// <summary>
-        /// Resource factory
-        /// </summary>
-        public VkResourceFactory ResourceFactory { get { return _resourceFactory; } }
 
         /// <summary>
         /// Get or set the current camera
         /// </summary>
         public Camera Camera { get; set; } = new Camera();
+
+
+        public Device Device => _device;
+        public SwapchainWrapper Swapchain => _swapchain;
+        public uint GraphicsQueueIndex => _graphicsQueueIndex;
+        public QueueWrapper GraphicsQueue => _graphicsQueue;
+        public uint TransferQueueIndex => _transferQueueIndex;
+        public Extent2D CurrentExtent => _currentExtent;
+        public SurfaceCapabilitiesKhr SurfaceCapabilities => _surfaceCapabilities;
+        public MemoryManager MemoryManager => _memoryManager;
+        public VkResourceFactory ResourceFactory => _resourceFactory;
 
         #endregion
 
@@ -47,6 +59,7 @@ namespace MiniEngine.Rendering.Vulkan
         private ImGuiRenderer _imGui;
         private IntPtr _windowsHandle = IntPtr.Zero;
         private Dictionary<VkShader, PipelineWrapper> _cachePipeline = new Dictionary<VkShader, PipelineWrapper>();
+        private Dictionary<int, ShaderModule> _cacheShaderModule = new Dictionary<int, ShaderModule>();
         private bool _isDisposing;
 
 
@@ -55,6 +68,9 @@ namespace MiniEngine.Rendering.Vulkan
         private PhysicalDevice _physicalDevice;
         private SurfaceKhr _surface;
         private SwapchainWrapper _swapchain;
+        private Extent2D _currentExtent;
+        private SurfaceCapabilitiesKhr _surfaceCapabilities;
+        private MemoryManager _memoryManager;
 
         private ConcurrentQueue<Action> _actionsBeforeNextFrame = new ConcurrentQueue<Action>();
 
@@ -64,25 +80,7 @@ namespace MiniEngine.Rendering.Vulkan
         private uint _transferQueueIndex;
         //private Queue _transferQueue;
 
-        public Extent2D CurrentExtent;
-        //public Vector2 ClientSize;
-        public SurfaceCapabilitiesKhr SurfaceCapabilities;
-        public List<Fence> Fences = new List<Fence>();
-        public List<Semaphore> Semaphores = new List<Semaphore>();
-        //public List<SwapchainWrapper> Swapchains = new List<SwapchainWrapper>();
-        public List<CommandPool> CommandPools = new List<CommandPool>();
-        public List<RenderPass> RenderPasses = new List<RenderPass>();
-        public List<Sampler> Samplers = new List<Sampler>();
-        public Dictionary<int, ShaderModule> CacheShaderModule = new Dictionary<int, ShaderModule>();
-
-        public MemoryManager MemoryManager;
         
-        public Device Device => _device;
-        public SwapchainWrapper Swapchain => _swapchain;
-        public uint GraphicsQueueIndex => _graphicsQueueIndex;
-        public QueueWrapper GraphicsQueue => _graphicsQueue;
-        public uint TransferQueueIndex => _transferQueueIndex;
-
 
         #endregion
 
@@ -179,13 +177,13 @@ namespace MiniEngine.Rendering.Vulkan
 
             _graphicsQueue = new QueueWrapper(_device, _graphicsQueueIndex, 0, false);
 
-            MemoryManager = new MemoryManager(this);
+            _memoryManager = new MemoryManager(this);
 
             _swapchain = new SwapchainWrapper(this, new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox, true);
 
             _resourceFactory = new VkResourceFactory(this);
 
-            Sampler = SamplerHelper.CreateMaxAnisotropy(_device);
+            DefaultSampler = SamplerHelper.CreateMaxAnisotropy(_device);
 
             _initialized = true;
         }
@@ -375,7 +373,7 @@ namespace MiniEngine.Rendering.Vulkan
             int key = BytesHelper.CombineHash(BytesHelper.GetHashCodeBytes(shaderCode), (int)flags);
 
             //Already in the cache??
-            if (CacheShaderModule.TryGetValue(key, out ShaderModule shaderModule))
+            if (_cacheShaderModule.TryGetValue(key, out ShaderModule shaderModule))
                 return shaderModule;
 
             using (ShaderModuleCreateInfo createInfo = new ShaderModuleCreateInfo
@@ -387,7 +385,7 @@ namespace MiniEngine.Rendering.Vulkan
                 shaderModule = _device.CreateShaderModule(createInfo, allocator);
             }
 
-            CacheShaderModule[key] = shaderModule;
+            _cacheShaderModule[key] = shaderModule;
 
             return shaderModule;
 
@@ -398,9 +396,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void UpdateSurfaceCapabilities()
         {
-            SurfaceCapabilities = _physicalDevice.GetSurfaceCapabilitiesKHR(_surface);
+            _surfaceCapabilities = _physicalDevice.GetSurfaceCapabilitiesKHR(_surface);
 
-            CurrentExtent = SurfaceCapabilities.CurrentExtent;
+            _currentExtent = _surfaceCapabilities.CurrentExtent;
         }
 
         /// <summary>
@@ -485,43 +483,19 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
 
-
-            foreach (Semaphore semaphore in Semaphores)
-                _device.DestroySemaphore(semaphore);
-            Semaphores.Clear();
-
-            foreach (Fence fence in Fences)
-                _device.DestroyFence(fence);
-            Fences.Clear();
-
             //foreach (SwapchainWrapper swapchain in Swapchains.ToArray())
             //    swapchain.Dispose();
             //Swapchains.Clear();
 
 
-            if (MemoryManager != null)
+            if (_memoryManager != null)
             {
-                MemoryManager.Dispose();
-                MemoryManager = null;
+                _memoryManager.Dispose();
+                _memoryManager = null;
             }
 
-
-            foreach (RenderPass renderPass in RenderPasses)
-                _device.DestroyRenderPass(renderPass);
-            RenderPasses.Clear();
-
-            foreach (CommandPool commandPool in CommandPools)
-                _device.DestroyCommandPool(commandPool);
-            CommandPools.Clear();
-
-            foreach (Sampler sampler in Samplers)
-                _device.DestroySampler(sampler);
-            Samplers.Clear();
-
-
-
             //We don't need it anymore...
-            foreach (ShaderModule shaderModule in CacheShaderModule.Values)
+            foreach (ShaderModule shaderModule in _cacheShaderModule.Values)
                 _device.DestroyShaderModule(shaderModule);
 
 
@@ -558,9 +532,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             //Update MVP Matrix...
             Matrix4 viewMat2 = Camera.GetViewMatrix();
-            Matrix4 projMat = Camera.GetProjectionMatrixVulkan((int)CurrentExtent.Width, (int)CurrentExtent.Height);
+            Matrix4 projMat = Camera.GetProjectionMatrixVulkan((int)_currentExtent.Width, (int)_currentExtent.Height);
 
-            this.MVPMatrix = projMat * viewMat2;
+            this.ViewProjectionMVPMatrix = projMat * viewMat2;
 
         }
 

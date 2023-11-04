@@ -43,7 +43,7 @@ namespace MiniEngine.Rendering.Vulkan
             if(!_initialized)
                 Init();
 
-            Matrix4 mvp = _vk.MVPMatrix * _transform.GetMatrix();
+            Matrix4 mvp = _vk.ViewProjectionMVPMatrix * _transform.GetMatrix();
             //Matrix4 mvpTransposed = Matrix4.Transpose(ref mvp);
 
             //Debug.Print("--------------");
@@ -155,7 +155,7 @@ namespace MiniEngine.Rendering.Vulkan
 
                         _renderDatas[i].Shader = shader;
 
-                        _renderDatas[i].DescriptorSet = pipeline.CreateDescriptorSet().Set("texSampler", mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.Sampler);
+                        _renderDatas[i].DescriptorSet = pipeline.CreateDescriptorSet().Set("texSampler", mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
                     }
                 }
 

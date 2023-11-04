@@ -65,7 +65,7 @@ namespace MiniEngine.Rendering.Vulkan
                                         .Build();
 
 
-            _mainSet = _pipeline.CreateDescriptorSet(0).Set("FontSampler", _renderer.Sampler)
+            _mainSet = _pipeline.CreateDescriptorSet(0).Set("FontSampler", _renderer.DefaultSampler)
                                                        .Set("ProjectionMatrixBuffer", _projMatrixBuffer);
             _fontTextureSet = _pipeline.CreateDescriptorSet(1);
             _textureSet = _pipeline.CreateDescriptorSet(1);
