@@ -52,7 +52,7 @@ namespace MiniEngine
                 TexCoords = texCoords
             });
 
-            meshDef.Materials.Add(BaseMaterials.White);
+            meshDef.Materials.Add(BaseMaterials.Default);
 
             return meshDef;
         }
@@ -108,7 +108,7 @@ namespace MiniEngine
                 TexCoords = texCoords
             });
 
-            meshDef.Materials.Add(BaseMaterials.White);
+            meshDef.Materials.Add(BaseMaterials.Default);
 
             return meshDef;
         }
@@ -170,7 +170,7 @@ namespace MiniEngine
                 TexCoords = texCoords
             });
 
-            meshDef.Materials.Add(BaseMaterials.White);
+            meshDef.Materials.Add(BaseMaterials.Default);
 
             return meshDef;
 
@@ -250,7 +250,7 @@ namespace MiniEngine
                 TexCoords = texCoords
             });
 
-            meshDef.Materials.Add(BaseMaterials.White);
+            meshDef.Materials.Add(BaseMaterials.Default);
 
             return meshDef;
         }

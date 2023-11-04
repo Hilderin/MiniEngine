@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MiniEngine.AssetImporters
@@ -51,7 +52,7 @@ namespace MiniEngine.AssetImporters
                     if(!_assetManager.TryFindAssetPath(name, SUPPORTED_EXTENSIONS, out assetPath))
                         throw new FileNotFoundException($"Texture not found '{name}' for supported extensions: {String.Join(", ", SUPPORTED_EXTENSIONS)}");
 
-                        
+
                     texture = _assetManager.Context.Renderer.CreateTexture2D(new()
                     {
                         Data = File.ReadAllBytes(assetPath),
@@ -61,8 +62,7 @@ namespace MiniEngine.AssetImporters
                 }
                 catch (Exception ex)
                 {
-                    //TODO: Ajouter un warning dans l'engine
-                    Debug.Error("Erreur: " + ex.ToString());
+                    Debug.Error(ex);
                 }
                 finally
                 {

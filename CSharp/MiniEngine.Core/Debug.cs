@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace MiniEngine
 {
     /// <summary>
@@ -28,6 +30,17 @@ namespace MiniEngine
                 DebugTraceListener.WriteLine("ERROR: " + message);
             else
                 System.Diagnostics.Debug.WriteLine("ERROR: " + message);
+        }
+
+        /// <summary>
+        /// Print a debug error message from the Exception
+        /// </summary>
+        public static void Error(Exception ex)
+        {
+            if (DebugTraceListener != null)
+                DebugTraceListener.WriteLine("ERROR: " + ex.ToString());
+            else
+                System.Diagnostics.Debug.WriteLine("ERROR: " + ex.ToString());
         }
 
         /// <summary>

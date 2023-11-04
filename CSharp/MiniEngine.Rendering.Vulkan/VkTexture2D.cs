@@ -60,6 +60,14 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Reloading of the texture
+        /// </summary>
+        protected override void Reload()
+        {
+            
+        }
+
+        /// <summary>
         /// Destruction
         /// </summary>
         protected override void Destroy()

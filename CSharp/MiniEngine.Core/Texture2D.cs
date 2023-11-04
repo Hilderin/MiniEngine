@@ -38,6 +38,11 @@ namespace MiniEngine
         protected abstract void Destroy();
 
         /// <summary>
+        /// Reload the texture
+        /// </summary>
+        protected abstract void Reload();
+
+        /// <summary>
         /// Dispose
         /// </summary>
         public void Dispose()

@@ -52,7 +52,7 @@ namespace MiniEngine.AssetImporters
                             mat = _assetManager.Context.Renderer.CreateMaterial(new()
                             {
                                 DiffuseTexture = texture,
-                                Shader = BaseShaders.Unlit,
+                                Shader = BaseShaders.Default,
                             });
 
                         }
@@ -81,8 +81,7 @@ namespace MiniEngine.AssetImporters
                 }
                 catch(Exception ex)
                 {
-                    //TODO: Ajouter un warning dans l'engine
-                    Debug.Error("Erreur: " + ex.ToString());
+                    Debug.Error(ex);
                 }
                 finally
                 {

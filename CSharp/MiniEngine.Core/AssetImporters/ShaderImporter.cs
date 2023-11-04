@@ -103,13 +103,12 @@ namespace MiniEngine.AssetImporters
                 }
                 catch (Exception ex)
                 {
-                    //TODO: Ajouter un warning dans l'engine
-                    Debug.Error("Erreur: " + ex.ToString());
+                    Debug.Error(ex);
                 }
                 finally
                 {
                     //Shader not found...
-                    shader ??= BaseShaders.Unlit;
+                    shader ??= BaseShaders.Default;
                 }
 
 

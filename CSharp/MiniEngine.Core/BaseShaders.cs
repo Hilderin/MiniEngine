@@ -1,5 +1,4 @@
 ﻿using MiniEngine.ResourceDefinitions;
-using MiniEngine.Ressources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +16,11 @@ namespace MiniEngine
         /// Unlit shader
         /// </summary>
         public static Shader _unlit;
+
+        /// <summary>
+        /// Default shader
+        /// </summary>
+        public static Shader Default => Unlit;
 
 
         /// <summary>

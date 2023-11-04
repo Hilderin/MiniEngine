@@ -20,13 +20,23 @@ namespace MiniEngine
         private static Material _magenta;
 
         /// <summary>
+        /// Aqua
+        /// </summary>
+        private static Material _aqua;
+
+        /// <summary>
+        /// Default material
+        /// </summary>
+        public static Material Default => White;
+
+        /// <summary>
         /// Get a base white material
         /// </summary>
         public static Material White
         {
             get
             {
-                _white ??= CreateUnlitMaterial(BaseTextures.White);
+                _white ??= CreateUnlitMaterial(BaseTextures.Default);
 
                 return _white;
             }
@@ -45,6 +55,19 @@ namespace MiniEngine
             }
         }
 
+        /// <summary>
+        /// Get a base aqua material
+        /// </summary>
+        public static Material Aqua
+        {
+            get
+            {
+                _aqua ??= CreateUnlitMaterial(BaseTextures.Aqua);
+
+                return _aqua;
+            }
+        }
+
 
         /// <summary>
         /// Create a material with base unlit shader
@@ -57,7 +80,7 @@ namespace MiniEngine
             MaterialDefinition matDef = new MaterialDefinition()
             {
                 DiffuseTexture = texture,
-                Shader = BaseShaders.Unlit
+                Shader = BaseShaders.Default
             };
 
             return Context.Current.Renderer.CreateMaterial(matDef);

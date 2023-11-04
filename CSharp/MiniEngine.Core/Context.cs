@@ -398,7 +398,7 @@ namespace MiniEngine
 
             if (level == DebugLevel.Error)
             {
-                Debug.Error($"{level}: {message}");
+                Debug.Error(message);
                 throw new Exception($"Renderer error: {message}");
             }
             else if (level == DebugLevel.Warning)

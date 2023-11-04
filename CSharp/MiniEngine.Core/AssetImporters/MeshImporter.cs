@@ -45,14 +45,21 @@ namespace MiniEngine.AssetImporters
 
             if (!_cache.TryGetValue(name, out Mesh mesh))
             {
+                try
+                {
+                    MeshAssetDefinition assetMeshDef = GetMeshAssetDefinition(name);
 
-                MeshAssetDefinition assetMeshDef = GetMeshAssetDefinition(name);
+                    mesh = CreateMesh(assetMeshDef);
 
-                mesh = CreateMesh(assetMeshDef);
+                    _assetManager.AssetPathToWatch(_assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE), () => ReloadMesh(mesh, name));
+                    _assetManager.AssetPathToWatch(assetMeshDef.MeshFullPath, () => ReloadMesh(mesh, name));
 
-                _assetManager.AssetPathToWatch(_assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE), () => ReloadMesh(mesh, name));
-                _assetManager.AssetPathToWatch(assetMeshDef.MeshFullPath, () => ReloadMesh(mesh, name));
-
+                }
+                catch (Exception ex)
+                {
+                    Debug.Error(ex);
+                    mesh ??= Primitives.CreateEmptyMesh();
+                }
 
                 _cache.Add(name, mesh);
             }
@@ -116,7 +123,7 @@ namespace MiniEngine.AssetImporters
             }
             catch (Exception ex)
             {
-                Debug.Error("Erreur: " + ex.ToString());
+                Debug.Error(ex);
             }
             finally
             {
@@ -402,7 +409,7 @@ namespace MiniEngine.AssetImporters
                 return _assetManager.Context.Renderer.CreateMaterial(new()
                 {
                     DiffuseTexture = GetTexture(Assimp.TextureType.Diffuse, assmat, workingDirectory),
-                    Shader = BaseShaders.Unlit
+                    Shader = BaseShaders.Default
                 });
             }
 
@@ -447,7 +454,7 @@ namespace MiniEngine.AssetImporters
                 }
             }
 
-            return BaseTextures.White;
+            return BaseTextures.Default;
         }
 
 

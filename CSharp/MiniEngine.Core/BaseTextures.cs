@@ -1,7 +1,7 @@
 ﻿using MiniEngine.ResourceDefinitions;
-using MiniEngine.Ressources;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +22,16 @@ namespace MiniEngine
         /// Magenta
         /// </summary>
         private static Texture2D _magenta;
+
+        /// <summary>
+        /// Aqua
+        /// </summary>
+        private static Texture2D _aqua;
+
+        /// <summary>
+        /// Default texture
+        /// </summary>
+        public static Texture2D Default => White;
 
         /// <summary>
         /// Get a basic white texture
@@ -47,6 +57,19 @@ namespace MiniEngine
                 _magenta ??= CreateTexture2D(Resources.PixelMagenta);
 
                 return _magenta;
+            }
+        }
+
+        /// <summary>
+        /// Get a basic aqua texture
+        /// </summary>
+        public static Texture2D Aqua
+        {
+            get
+            {
+                _aqua ??= CreateTexture2D(Resources.PixelAqua);
+
+                return _aqua;
             }
         }
 
