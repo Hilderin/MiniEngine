@@ -1,0 +1,9 @@
+MaterialNames: []
+InverseFaces: false
+Scale: 1
+RotationX: 0
+RotationY: 0
+RotationZ: 0
+SmoothNormals: true
+ResetMaterialAmbientColor: false
+MeshPath: viking_room.fbx

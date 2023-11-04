@@ -224,7 +224,7 @@ namespace MiniEngine.AssetImporters
                 //if (meshAssetDef.RotationZ != 0f)
                 //    transformMatrix *= Matrix4x4.FromRotationX(meshAssetDef.RotationZ);
 
-                context.Scale = meshAssetDef.Scale;
+                context.Scale = context.Scale * meshAssetDef.Scale;
                 context.XAxisRotation = meshAssetDef.RotationX;
                 context.YAxisRotation = meshAssetDef.RotationY;
                 context.ZAxisRotation = meshAssetDef.RotationZ;

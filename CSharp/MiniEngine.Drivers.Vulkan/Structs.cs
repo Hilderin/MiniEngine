@@ -492,7 +492,13 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		public UInt32 QueueCreateInfoCount {
+        public IntPtr Next
+        {
+            get { return m->Next; }
+            set { m->Next = value; }
+        }
+
+        public UInt32 QueueCreateInfoCount {
 			get { return m->QueueCreateInfoCount; }
 			set { m->QueueCreateInfoCount = value; }
 		}
@@ -5311,32 +5317,6 @@ namespace MiniEngine.Drivers.Vulkan
 
 
 
-    unsafe public partial struct PhysicalDeviceDescriptorIndexingFeatures
-    {
-        internal StructureType SType;
-        internal IntPtr Next;
-        public Bool32 ShaderInputAttachmentArrayDynamicIndexing;
-        public Bool32 ShaderUniformTexelBufferArrayDynamicIndexing;
-        public Bool32 ShaderStorageTexelBufferArrayDynamicIndexing;
-        public Bool32 ShaderUniformBufferArrayNonUniformIndexing;
-        public Bool32 ShaderSampledImageArrayNonUniformIndexing;
-        public Bool32 ShaderStorageBufferArrayNonUniformIndexing;
-        public Bool32 ShaderStorageImageArrayNonUniformIndexing;
-        public Bool32 ShaderInputAttachmentArrayNonUniformIndexing;
-        public Bool32 ShaderUniformTexelBufferArrayNonUniformIndexing;
-        public Bool32 ShaderStorageTexelBufferArrayNonUniformIndexing;
-        public Bool32 DescriptorBindingUniformBufferUpdateAfterBind;
-        public Bool32 DescriptorBindingSampledImageUpdateAfterBind;
-        public Bool32 DescriptorBindingStorageImageUpdateAfterBind;
-        public Bool32 DescriptorBindingStorageBufferUpdateAfterBind;
-        public Bool32 DescriptorBindingUniformTexelBufferUpdateAfterBind;
-        public Bool32 DescriptorBindingStorageTexelBufferUpdateAfterBind;
-        public Bool32 DescriptorBindingUpdateUnusedWhilePending;
-        public Bool32 DescriptorBindingPartiallyBound;
-        public Bool32 DescriptorBindingVariableDescriptorCount;
-        public Bool32 RuntimeDescriptorArray;
-    }
-
     unsafe public partial struct PhysicalDeviceSparseProperties
 	{
 		public Bool32 ResidencyStandard2DBlockShape;
@@ -8385,6 +8365,65 @@ namespace MiniEngine.Drivers.Vulkan
 		}
 
 	}
+
+    unsafe public partial class PhysicalDeviceDescriptorIndexingFeatures : MarshalledObject
+    {   
+
+        public IntPtr Next
+        {
+            get { return m->Next; }
+            set { m->Next = value; }
+        }
+
+        public Bool32 ShaderInputAttachmentArrayDynamicIndexing { get { return m->ShaderInputAttachmentArrayDynamicIndexing; } }
+        public Bool32 ShaderUniformTexelBufferArrayDynamicIndexing { get { return m->ShaderUniformTexelBufferArrayDynamicIndexing; } }
+        public Bool32 ShaderStorageTexelBufferArrayDynamicIndexing { get { return m->ShaderStorageTexelBufferArrayDynamicIndexing; } }
+        public Bool32 ShaderUniformBufferArrayNonUniformIndexing { get { return m->ShaderUniformBufferArrayNonUniformIndexing; } }
+        public Bool32 ShaderSampledImageArrayNonUniformIndexing { get { return m->ShaderSampledImageArrayNonUniformIndexing; } }
+        public Bool32 ShaderStorageBufferArrayNonUniformIndexing { get { return m->ShaderStorageBufferArrayNonUniformIndexing; } }
+        public Bool32 ShaderStorageImageArrayNonUniformIndexing { get { return m->ShaderStorageImageArrayNonUniformIndexing; } }
+        public Bool32 ShaderInputAttachmentArrayNonUniformIndexing { get { return m->ShaderInputAttachmentArrayNonUniformIndexing; } }
+        public Bool32 ShaderUniformTexelBufferArrayNonUniformIndexing { get { return m->ShaderUniformTexelBufferArrayNonUniformIndexing; } }
+        public Bool32 ShaderStorageTexelBufferArrayNonUniformIndexing { get { return m->ShaderStorageTexelBufferArrayNonUniformIndexing; } }
+        public Bool32 DescriptorBindingUniformBufferUpdateAfterBind { get { return m->DescriptorBindingUniformBufferUpdateAfterBind; } }
+        public Bool32 DescriptorBindingSampledImageUpdateAfterBind { get { return m->DescriptorBindingSampledImageUpdateAfterBind; } }
+        public Bool32 DescriptorBindingStorageImageUpdateAfterBind { get { return m->DescriptorBindingStorageImageUpdateAfterBind; } }
+        public Bool32 DescriptorBindingStorageBufferUpdateAfterBind { get { return m->DescriptorBindingStorageBufferUpdateAfterBind; } }
+        public Bool32 DescriptorBindingUniformTexelBufferUpdateAfterBind { get { return m->DescriptorBindingUniformTexelBufferUpdateAfterBind; } }
+        public Bool32 DescriptorBindingStorageTexelBufferUpdateAfterBind { get { return m->DescriptorBindingStorageTexelBufferUpdateAfterBind; } }
+        public Bool32 DescriptorBindingUpdateUnusedWhilePending { get { return m->DescriptorBindingUpdateUnusedWhilePending; } }
+        public Bool32 DescriptorBindingPartiallyBound { get { return m->DescriptorBindingPartiallyBound; } }
+        public Bool32 DescriptorBindingVariableDescriptorCount { get { return m->DescriptorBindingVariableDescriptorCount; } }
+        public Bool32 RuntimeDescriptorArray { get { return m->RuntimeDescriptorArray; } }
+
+        internal Interop.PhysicalDeviceDescriptorIndexingFeatures* m
+        {
+
+            get
+            {
+                return (Interop.PhysicalDeviceDescriptorIndexingFeatures*)native.Handle;
+            }
+        }
+
+        public PhysicalDeviceDescriptorIndexingFeatures()
+        {
+            native = Interop.Structure.Allocate(typeof(Interop.PhysicalDeviceDescriptorIndexingFeatures));
+            Initialize();
+        }
+
+        internal PhysicalDeviceDescriptorIndexingFeatures(NativePointer pointer)
+        {
+            native = pointer;
+            Initialize();
+        }
+
+
+        internal void Initialize()
+        {
+            m->SType = StructureType.PhysicalDeviceDescriptorIndexingFeatures;
+        }
+
+    }
 
     unsafe public partial class PhysicalDeviceProperties2Khr : MarshalledObject
 	{

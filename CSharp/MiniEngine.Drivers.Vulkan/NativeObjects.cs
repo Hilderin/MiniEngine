@@ -63,7 +63,7 @@ namespace MiniEngine.Drivers.Vulkan
     internal class NativePointer
     {
         internal NativeReference Reference { get; private set; }
-        internal IntPtr Handle { get; private set; }
+        public IntPtr Handle { get; private set; }
 
         internal NativePointer(NativeReference reference, IntPtr pointer)
         {
@@ -88,7 +88,7 @@ namespace MiniEngine.Drivers.Vulkan
     {
         internal NativePointer native;
 
-        IntPtr IMarshalling.Handle
+        public IntPtr Handle
         {
             get
             {

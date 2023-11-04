@@ -79,7 +79,7 @@ namespace MiniEngine.Rendering.Vulkan
         private uint _transferQueueIndex;
         //private Queue _transferQueue;
 
-        
+
 
         #endregion
 
@@ -168,9 +168,7 @@ namespace MiniEngine.Rendering.Vulkan
             _graphicsQueueIndex = GetGraphicsQueueFamilyIndex(_surface);
             _transferQueueIndex = GetTransferQueueFamilyIndex();
 
-
-            //And we can create a device...
-            _device = _physicalDevice.CreateDevice(_surface, new[] { _graphicsQueueIndex, _transferQueueIndex });
+            _device = CreateDevice();
 
             UpdateSurfaceCapabilities();
 
@@ -184,8 +182,6 @@ namespace MiniEngine.Rendering.Vulkan
 
             DefaultSampler = SamplerHelper.CreateMaxAnisotropy(_device);
 
-            if (!_physicalDevice.CheckBindlessSupport())
-                throw new NotSupportedException("Your graphic card does not support Bindless rendering.");
 
             _initialized = true;
         }
@@ -515,6 +511,110 @@ namespace MiniEngine.Rendering.Vulkan
 
         #region Private methods
 
+        /// <summary>
+        /// Create the device
+        /// </summary>
+        private unsafe Device CreateDevice()
+        {
+
+            //Get the PhysicalDeviceDescriptorIndexingFeatures feature....
+            var pFeatures = _physicalDevice.GetFeatures2Indexing(out var indexingFeatures);
+
+            //Check if the graphic card is compatible with bindless rendering...
+            if (!indexingFeatures.DescriptorBindingPartiallyBound || !indexingFeatures.RuntimeDescriptorArray)
+                throw new NotSupportedException("Your graphic card does not support Bindless rendering.");
+
+
+            List<DeviceQueueCreateInfo> queueCreateInfos = new List<DeviceQueueCreateInfo>
+            {
+                //Graphics queue...
+                new DeviceQueueCreateInfo
+                {
+                    QueuePriorities = new float[] { 1.0f },
+                    QueueFamilyIndex = _graphicsQueueIndex,
+                },
+
+                //Transfer queue... 
+                new DeviceQueueCreateInfo
+                {
+                    QueuePriorities = new float[] { 1.0f },
+                    QueueFamilyIndex = _transferQueueIndex,
+                }
+            };
+
+            using (var deviceInfo = new DeviceCreateInfo
+            {
+                EnabledExtensionNames = new string[] { "VK_KHR_swapchain" },
+                QueueCreateInfos = queueCreateInfos.ToArray(),
+                Next = pFeatures.Handle
+            })
+            {
+
+                return _physicalDevice.CreateDevice(deviceInfo, _surface, null);
+
+            }
+            
+
+
+        }
+
+
+
+        ///// <summary>
+        ///// Create the device with it's queues
+        ///// </summary>
+        //public unsafe Device CreateDevice(SurfaceKhr surface, uint[] queueFamilityIndexes, IntPtr nextFeature2 = 0)
+        //{
+
+        //    var pFeatures = new PhysicalDeviceFeatures2();
+
+        //    var indexingFeatures = new PhysicalDeviceDescriptorIndexingFeatures()
+        //    {
+        //        SType = StructureType.PhysicalDeviceDescriptorIndexingFeatures
+        //    };
+        //    pFeatures.Next = (IntPtr)(&indexingFeatures);
+
+        //    Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
+
+        //    List<DeviceQueueCreateInfo> queueCreateInfos = new List<DeviceQueueCreateInfo>();
+
+        //    foreach (uint queueIndex in queueFamilityIndexes)
+        //    {
+        //        queueCreateInfos.Add(new DeviceQueueCreateInfo
+        //        {
+        //            QueuePriorities = new float[] { 1.0f },
+        //            QueueFamilyIndex = queueIndex,
+        //        });
+        //    }
+
+        //    using (var deviceInfo = new DeviceCreateInfo
+        //    {
+        //        EnabledExtensionNames = new string[] { "VK_KHR_swapchain" },
+        //        QueueCreateInfos = queueCreateInfos.ToArray(),
+        //        //EnabledFeatures = new()
+        //        //{
+        //        //    SamplerAnisotropy = true            //Enable Anisotrophy
+        //        //}
+        //    })
+        //    {
+        //        unsafe
+        //        {
+        //            if (nextFeature2 > 0)
+        //            {
+        //                Interop.PhysicalDeviceFeatures2 physical_features2 = new Interop.PhysicalDeviceFeatures2();
+        //                physical_features2.SType = StructureType.PhysicalDeviceFeatures2;
+        //                Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, &physical_features2);
+
+        //                physical_features2.Next = (IntPtr)(&indexingFeatures);
+
+        //                deviceInfo.Next = (IntPtr)(pFeatures.m);
+        //            }
+
+        //            return CreateDevice(deviceInfo, surface, null);
+        //        }
+        //    }
+
+        //}
 
         /// <summary>
         /// Get the right Physical device
@@ -548,7 +648,7 @@ namespace MiniEngine.Rendering.Vulkan
             RenderCommandBuffer commandBuffer = _swapchain.GetNextRenderCommandBuffer();
 
             commandBuffer.Begin();
-                       
+
 
             //If no camera, nothing to render... in 3D
             if (Camera != null)
@@ -691,7 +791,7 @@ namespace MiniEngine.Rendering.Vulkan
                 }
             }
 
-            if(!found)
+            if (!found)
                 throw new Exception("Not device found for transfer queue.");
 
             return transfersQueueIndex;

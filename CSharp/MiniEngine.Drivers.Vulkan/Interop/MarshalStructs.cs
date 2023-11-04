@@ -1171,6 +1171,33 @@ namespace MiniEngine.Drivers.Vulkan.Interop
     }
 
 
+
+    internal partial struct PhysicalDeviceDescriptorIndexingFeatures
+    {
+        public StructureType SType;
+        public IntPtr Next;
+        public Bool32 ShaderInputAttachmentArrayDynamicIndexing;
+        public Bool32 ShaderUniformTexelBufferArrayDynamicIndexing;
+        public Bool32 ShaderStorageTexelBufferArrayDynamicIndexing;
+        public Bool32 ShaderUniformBufferArrayNonUniformIndexing;
+        public Bool32 ShaderSampledImageArrayNonUniformIndexing;
+        public Bool32 ShaderStorageBufferArrayNonUniformIndexing;
+        public Bool32 ShaderStorageImageArrayNonUniformIndexing;
+        public Bool32 ShaderInputAttachmentArrayNonUniformIndexing;
+        public Bool32 ShaderUniformTexelBufferArrayNonUniformIndexing;
+        public Bool32 ShaderStorageTexelBufferArrayNonUniformIndexing;
+        public Bool32 DescriptorBindingUniformBufferUpdateAfterBind;
+        public Bool32 DescriptorBindingSampledImageUpdateAfterBind;
+        public Bool32 DescriptorBindingStorageImageUpdateAfterBind;
+        public Bool32 DescriptorBindingStorageBufferUpdateAfterBind;
+        public Bool32 DescriptorBindingUniformTexelBufferUpdateAfterBind;
+        public Bool32 DescriptorBindingStorageTexelBufferUpdateAfterBind;
+        public Bool32 DescriptorBindingUpdateUnusedWhilePending;
+        public Bool32 DescriptorBindingPartiallyBound;
+        public Bool32 DescriptorBindingVariableDescriptorCount;
+        public Bool32 RuntimeDescriptorArray;
+    }
+
     internal partial struct PhysicalDeviceProperties2Khr
     {
         internal StructureType SType;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniEngine.Drivers.Vulkan.Interop;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -144,37 +145,6 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-
-        /// <summary>
-        /// Create the device with it's queues
-        /// </summary>
-        public Device CreateDevice(SurfaceKhr surface, uint[] queueFamilityIndexes)
-        {
-            List<DeviceQueueCreateInfo> queueCreateInfos = new List<DeviceQueueCreateInfo>();
-
-            foreach (uint queueIndex in queueFamilityIndexes)
-            {
-                queueCreateInfos.Add(new DeviceQueueCreateInfo
-                {
-                    QueuePriorities = new float[] { 1.0f },
-                    QueueFamilyIndex = queueIndex,
-                });
-            }
-
-            using (var deviceInfo = new DeviceCreateInfo
-            {
-                EnabledExtensionNames = new string[] { "VK_KHR_swapchain" },
-                QueueCreateInfos = queueCreateInfos.ToArray(),
-                EnabledFeatures = new()
-                {
-                    SamplerAnisotropy = true            //Enable Anisotrophy
-                }
-            })
-            {
-                return CreateDevice(deviceInfo, surface);
-            }
-
-        }
 
         public Device CreateDevice(DeviceCreateInfo pCreateInfo, SurfaceKhr surface, AllocationCallbacks pAllocator = null)
         {
@@ -597,23 +567,21 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-        public PhysicalDeviceDescriptorIndexingFeatures GetFeatures2Indexing()
+        public PhysicalDeviceFeatures2 GetFeatures2Indexing(out PhysicalDeviceDescriptorIndexingFeatures indexingFeatures)
         {
             PhysicalDeviceFeatures2 pFeatures;
             unsafe
             {
-                using (pFeatures = new PhysicalDeviceFeatures2())
-                {
-                    var indexingFeatures = new PhysicalDeviceDescriptorIndexingFeatures()
-                    {
-                        SType = StructureType.PhysicalDeviceDescriptorIndexingFeatures
-                    };
-                    pFeatures.Next = (IntPtr)(&indexingFeatures);
 
-                    Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
+                pFeatures = new PhysicalDeviceFeatures2();
+                indexingFeatures = new PhysicalDeviceDescriptorIndexingFeatures();
 
-                    return indexingFeatures;
-                }
+                pFeatures.Next = indexingFeatures.Handle;
+
+                Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
+
+                return pFeatures;
+
             }
         }
 
@@ -928,12 +896,5 @@ namespace MiniEngine.Drivers.Vulkan
             throw new System.Exception("didn't find the expected formats and colorspaces.");
         }
 
-        public bool CheckBindlessSupport()
-        {
-            var features = GetFeatures2Indexing();
-            
-            return features.DescriptorBindingPartiallyBound && features.RuntimeDescriptorArray;
-            
-        }
     }
 }
