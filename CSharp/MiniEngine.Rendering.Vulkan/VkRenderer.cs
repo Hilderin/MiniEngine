@@ -2,6 +2,7 @@
 using MiniEngine.Drivers.Vulkan.Windows;
 using MiniEngine.ResourceDefinitions;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace MiniEngine.Rendering.Vulkan
@@ -55,11 +56,13 @@ namespace MiniEngine.Rendering.Vulkan
         private SurfaceKhr _surface;
         private SwapchainWrapper _swapchain;
 
+        private ConcurrentQueue<ImageWrapper> _imageTransferNeededToGraphicsQueue = new ConcurrentQueue<ImageWrapper>();
+
 
         private uint _graphicsQueueIndex;
-        private Queue _graphicsQueue;
+        private QueueWrapper _graphicsQueue;
         private uint _transferQueueIndex;
-        private Queue _transferQueue;
+        //private Queue _transferQueue;
 
         public Extent2D CurrentExtent;
         //public Vector2 ClientSize;
@@ -77,6 +80,7 @@ namespace MiniEngine.Rendering.Vulkan
         public Device Device => _device;
         public SwapchainWrapper Swapchain => _swapchain;
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
+        public QueueWrapper GraphicsQueue => _graphicsQueue;
         public uint TransferQueueIndex => _transferQueueIndex;
 
 
@@ -172,6 +176,8 @@ namespace MiniEngine.Rendering.Vulkan
             _device = _physicalDevice.CreateDevice(_surface, new[] { _graphicsQueueIndex, _transferQueueIndex });
 
             UpdateSurfaceCapabilities();
+
+            _graphicsQueue = new QueueWrapper(_device, _graphicsQueueIndex, 0);
 
             MemoryManager = new MemoryManager(this);
 
@@ -289,6 +295,11 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
 
+            //Transfert the images that was loaded in the transfer queue...
+            while (_imageTransferNeededToGraphicsQueue.TryDequeue(out var imageWrapper))
+                _graphicsQueue.ExecuteAndWait(imageWrapper.CmdTransferToGraphicsQueue);
+
+
             //Render the frame...
             RenderFrame();
         }
@@ -400,33 +411,10 @@ namespace MiniEngine.Rendering.Vulkan
             return new SwapchainWrapper(this, expectedFormats, expectedColorSpaces, presentMode, depthTest);
         }
 
-
-
-        public Queue GetGraphicsQueue()
-        {
-            _graphicsQueue ??= _device.GetQueue(GraphicsQueueIndex, 0);
-            return _graphicsQueue;
-        }
-
-        
-
-        public Queue GetTransferQueue()
-        {
-            _transferQueue ??= _device.GetQueue(TransferQueueIndex, 0);
-            return _transferQueue;
-        }
-
-
         public CommandPool CreateGraphicsCommandPool()
         {
             return _device.CreateCommandPool(GraphicsQueueIndex, CommandPoolCreateFlags.ResetCommandBuffer);
         }
-
-        public CommandPool CreateTransferCommandPool()
-        {
-            return _device.CreateCommandPool(TransferQueueIndex, CommandPoolCreateFlags.ResetCommandBuffer);
-        }
-
 
 
         /// <summary>
@@ -450,6 +438,14 @@ namespace MiniEngine.Rendering.Vulkan
         public unsafe BufferWrapper CreateBufferWrapper(uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
         {
             return new BufferWrapper(this, size, usageFlags, memoryPropertyFlags);
+        }
+
+        /// <summary>
+        /// Add the image in the transfer list
+        /// </summary>
+        public void AddImageTransferNeededToGraphicsQueue(ImageWrapper imageWrapper)
+        {
+            _imageTransferNeededToGraphicsQueue.Enqueue(imageWrapper);
         }
 
 
@@ -576,6 +572,7 @@ namespace MiniEngine.Rendering.Vulkan
             RenderCommandBuffer commandBuffer = _swapchain.GetNextRenderCommandBuffer();
 
             commandBuffer.Begin();
+                       
 
             //If no camera, nothing to render... in 3D
             if (Camera != null)

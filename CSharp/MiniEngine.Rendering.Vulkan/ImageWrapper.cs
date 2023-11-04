@@ -92,6 +92,24 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Transferer laytout to graphics queue
+        /// </summary>
+        public void CmdTransferToGraphicsQueue(CommandBuffer commandBuffer)
+        {
+            CmdTransferImageLayout(
+                   srcAccessMask: 0,
+                   dstAccessMask: AccessFlags.ShaderRead, 
+                   oldLayout: ImageLayout.Undefined,
+                   newLayout: ImageLayout.ShaderReadOnlyOptimal,
+                   srcQueueFamilyIndex: _renderer.TransferQueueIndex,
+                   dstQueueFamilyIndex: _renderer.GraphicsQueueIndex,                   
+                   srcStage: PipelineStageFlags.TopOfPipe,
+                   dstStage: PipelineStageFlags.FragmentShader,
+                   commandBuffer
+                   );
+        }
+
+        /// <summary>
         /// Create the image
         /// </summary>
         private unsafe void Init(byte* data, uint size)
@@ -102,12 +120,37 @@ namespace MiniEngine.Rendering.Vulkan
 
                 CreateImage(Format, ImageUsageFlags.TransferDst | ImageUsageFlags.Sampled, MemoryPropertyFlags.DeviceLocal);
 
-                TransitionImageLayout(ImageLayout.Undefined, ImageLayout.TransferDstOptimal);
+                //Making the image ready to be copied to the gpu...
+                TransitionImageLayout(
+                    oldLayout: ImageLayout.Undefined, 
+                    newLayout: ImageLayout.TransferDstOptimal,
+                    srcQueueFamilyIndex: uint.MaxValue,
+                    dstQueueFamilyIndex: uint.MaxValue,
+                    srcAccessMask: 0,
+                    dstAccessMask: AccessFlags.TransferWrite,
+                    srcStage: PipelineStageFlags.TopOfPipe,
+                    dstStage: PipelineStageFlags.Transfer
+                    );
 
+                //Copy the image on the GPU...
                 CopyBufferToImage(bufferStaging.Buffer);
 
-                TransitionImageLayout(ImageLayout.TransferDstOptimal, ImageLayout.ShaderReadOnlyOptimal);
+                //The texture is now on the GPU, but it is still not usable from the main queue.
+                //That is why we need another memory barrier that will also transfer ownership from transfer queue to graphics queue
+                TransitionImageLayout(
+                    oldLayout: ImageLayout.TransferDstOptimal,
+                    newLayout: ImageLayout.ShaderReadOnlyOptimal,
+                    srcQueueFamilyIndex: _renderer.TransferQueueIndex,
+                    dstQueueFamilyIndex: _renderer.GraphicsQueueIndex,
+                    srcAccessMask: 0,
+                    dstAccessMask: AccessFlags.TransferWrite,
+                    srcStage: PipelineStageFlags.Transfer,
+                    dstStage: PipelineStageFlags.BottomOfPipe
+                    );
 
+
+                //The image still needed to change layout in the graphics queue...
+                _renderer.AddImageTransferNeededToGraphicsQueue(this);
             }
 
             //We need to create the image view now...
@@ -161,69 +204,50 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Transition the image layout
         /// </summary>
-        private void TransitionImageLayout(ImageLayout oldLayout, ImageLayout newLayout)
+        private void TransitionImageLayout(
+            ImageLayout oldLayout, 
+            ImageLayout newLayout, 
+            uint srcQueueFamilyIndex,
+            uint dstQueueFamilyIndex,
+            AccessFlags srcAccessMask,
+            AccessFlags dstAccessMask,
+            PipelineStageFlags srcStage,
+            PipelineStageFlags dstStage)
         {
             _renderer.MemoryManager.ExecuteCommandBuffer(commandBuffer =>
             {
-
-                ImageMemoryBarrier barrier = new()
-                {
-                    OldLayout = oldLayout,
-                    NewLayout = newLayout,
-                    SrcQueueFamilyIndex = uint.MaxValue,
-                    DstQueueFamilyIndex = uint.MaxValue,
-                    Image = Image,
-                    SubresourceRange = new()
-                    {
-                        AspectMask = ImageAspectFlags.Color,
-                        BaseMipLevel = 0,
-                        LevelCount = 1,
-                        BaseArrayLayer = 0,
-                        LayerCount = 1,
-                    }
-                };
-
-
-                PipelineStageFlags sourceStage;
-                PipelineStageFlags destinationStage;
-
-                if (oldLayout == ImageLayout.Undefined && newLayout == ImageLayout.TransferDstOptimal)
-                {
-                    barrier.SrcAccessMask = 0;
-                    barrier.DstAccessMask = AccessFlags.TransferWrite;
-
-                    sourceStage = PipelineStageFlags.TopOfPipe;
-                    destinationStage = PipelineStageFlags.Transfer;
-                }
-                else if (oldLayout == ImageLayout.TransferDstOptimal && newLayout == ImageLayout.ShaderReadOnlyOptimal)
-                {
-                    barrier.SrcAccessMask = AccessFlags.TransferWrite;
-                    barrier.DstAccessMask = AccessFlags.ShaderRead;
-
-                    sourceStage = PipelineStageFlags.Transfer;
-                    destinationStage = PipelineStageFlags.FragmentShader;
-
-
-
-                    if (_renderer.GraphicsQueueIndex != _renderer.TransferQueueIndex)
-                    {
-                        barrier.SrcQueueFamilyIndex = _renderer.TransferQueueIndex;
-                        barrier.DstQueueFamilyIndex = _renderer.GraphicsQueueIndex;
-
-                        destinationStage = PipelineStageFlags.BottomOfPipe;
-                    }
-
-                }
-                else
-                {
-                    throw new Exception("unsupported layout transition!");
-                }
-
-                commandBuffer.CmdPipelineBarrier(sourceStage, destinationStage, DependencyFlags.ByRegion, null, null, barrier);
+                CmdTransferImageLayout(srcAccessMask, dstAccessMask, oldLayout, newLayout, srcQueueFamilyIndex, dstQueueFamilyIndex, srcStage, dstStage, commandBuffer);
             });
 
         }
 
+        /// <summary>
+        /// Create the transfert layout command
+        /// </summary>
+        private void CmdTransferImageLayout(AccessFlags srcAccessMask, AccessFlags dstAccessMask, ImageLayout oldLayout, ImageLayout newLayout, uint srcQueueFamilyIndex, uint dstQueueFamilyIndex, PipelineStageFlags srcStage, PipelineStageFlags dstStage, CommandBuffer commandBuffer)
+        {
+            using (ImageMemoryBarrier barrier = new()
+            {
+                SrcAccessMask = srcAccessMask,
+                DstAccessMask = dstAccessMask,
+                OldLayout = oldLayout,
+                NewLayout = newLayout,
+                SrcQueueFamilyIndex = srcQueueFamilyIndex,
+                DstQueueFamilyIndex = dstQueueFamilyIndex,
+                Image = Image,
+                SubresourceRange = new()
+                {
+                    AspectMask = ImageAspectFlags.Color,
+                    BaseMipLevel = 0,
+                    LevelCount = 1,
+                    BaseArrayLayer = 0,
+                    LayerCount = 1,
+                }
+            })
+            {
+                commandBuffer.CmdPipelineBarrier(srcStage, dstStage, DependencyFlags.ByRegion, null, null, barrier);
+            }
+        }
 
         private void CreateImageView(ImageAspectFlags aspectFlags = ImageAspectFlags.Color)
         {

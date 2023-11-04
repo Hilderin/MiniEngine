@@ -6234,20 +6234,20 @@ namespace MiniEngine.Drivers.Vulkan
 
 		NativeReference refCommandBuffers;
 		public CommandBuffer[] CommandBuffers {
-			get {
-				if (m->CommandBufferCount == 0)
-					return null;
-				var values = new CommandBuffer [m->CommandBufferCount];
-				unsafe
-				{
-					IntPtr* ptr = (IntPtr*)m->CommandBuffers;
-					for (int i = 0; i < values.Length; i++) {
-						values [i] = new CommandBuffer ();
-						values [i].m = ptr [i];
-					}
-				}
-				return values;
-			}
+			//get {
+			//	if (m->CommandBufferCount == 0)
+			//		return null;
+			//	var values = new CommandBuffer [m->CommandBufferCount];
+			//	unsafe
+			//	{
+			//		IntPtr* ptr = (IntPtr*)m->CommandBuffers;
+			//		for (int i = 0; i < values.Length; i++) {
+			//			values [i] = new CommandBuffer ();
+			//			values [i].m = ptr [i];
+			//		}
+			//	}
+			//	return values;
+			//}
 
 			set {
 				if (value == null) {

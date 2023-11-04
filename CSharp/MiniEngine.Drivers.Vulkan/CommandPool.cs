@@ -60,6 +60,17 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
+        /// <summary>
+        /// Free a command buffer
+        /// </summary>
+        public void FreeCommandBuffer(CommandBuffer commandBuffer)
+        {
+            _device.FreeCommandBuffer(this, commandBuffer);
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
         public void Dispose()
         {
             if (_device != null && m != 0)

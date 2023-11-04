@@ -15,8 +15,9 @@ namespace MiniEngine.Rendering.Vulkan
         private Device _device;
         private Queue _queue;
         private CommandPool _commandPool;
+        private CommandBuffer _commandBufferMainThreadWait;
         private Fence _fenceMainThreadWait;
-        
+        private SubmitInfo _submitInfoMainThreadWait;
 
         /// <summary>
         /// Constructor
@@ -30,6 +31,13 @@ namespace MiniEngine.Rendering.Vulkan
             _commandPool = device.CreateCommandPool(queueFamilyIndex, CommandPoolCreateFlags.ResetCommandBuffer);
 
             _fenceMainThreadWait = _device.CreateFence();
+            _commandBufferMainThreadWait = CreateCommandBuffer();
+
+            _submitInfoMainThreadWait = new SubmitInfo()
+            {
+                CommandBufferCount = 1,
+                CommandBuffers = new CommandBuffer[] { _commandBufferMainThreadWait }
+            };
         }
 
         /// <summary>
@@ -37,6 +45,13 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Dispose()
         {
+
+            if (_commandBufferMainThreadWait != null)
+            {
+                _commandBufferMainThreadWait.Dispose();
+                _commandBufferMainThreadWait = null;
+            }
+
             if (_fenceMainThreadWait != null)
             {
                 _fenceMainThreadWait.Dispose();
@@ -71,13 +86,13 @@ namespace MiniEngine.Rendering.Vulkan
             return _commandPool.AllocateCommandBuffers(level, count, createNewBufferFunc);
         }
 
-        /// <summary>
-        /// Destroy a commandbuffer
-        /// </summary>
-        public void DestroyCommandBuffer(CommandBuffer commandBuffer)
-        {
-            _device.FreeCommandBuffer(_commandPool, commandBuffer);
-        }
+        ///// <summary>
+        ///// Destroy a commandbuffer
+        ///// </summary>
+        //public void DestroyCommandBuffer(CommandBuffer commandBuffer)
+        //{
+        //    _device.FreeCommandBuffer(_commandPool, commandBuffer);
+        //}
 
         /// <summary>
         /// Execute actions on command buffer
@@ -85,22 +100,19 @@ namespace MiniEngine.Rendering.Vulkan
         public void ExecuteAndWait(Action<CommandBuffer> commandActions)
         {
 
-            var commandBuffer = CreateCommandBuffer();
-
-            
-            commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
+            _commandBufferMainThreadWait.Begin();
 
             //Populate the actions...
-            commandActions(commandBuffer);
+            commandActions(_commandBufferMainThreadWait);
 
 
-            commandBuffer.End();
+            _commandBufferMainThreadWait.End();
 
             _fenceMainThreadWait.Reset();
-            _queue.Submit(commandBuffer, _fenceMainThreadWait);
+            _queue.Submit(_submitInfoMainThreadWait, _fenceMainThreadWait);
             _fenceMainThreadWait.Wait();
 
-            DestroyCommandBuffer(commandBuffer);
+            //DestroyCommandBuffer(commandBuffer);
 
         }
     }

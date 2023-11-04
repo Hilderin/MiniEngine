@@ -18,7 +18,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public RenderCommandBuffer(SwapchainWrapper swapchain, int imageIndex)
+        public RenderCommandBuffer(SwapchainWrapper swapchain, int imageIndex, CommandPool commandPool): base(commandPool)
         {
             _swapchain = swapchain;
             _imageIndex = imageIndex;

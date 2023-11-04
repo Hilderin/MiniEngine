@@ -1357,7 +1357,7 @@ namespace MiniEngine.Drivers.Vulkan
 
         public CommandBuffer[] AllocateCommandBuffers(CommandBufferAllocateInfo pAllocateInfo)
         {
-            return AllocateCommandBuffers<CommandBuffer>(pAllocateInfo, () => new CommandBuffer());
+            return AllocateCommandBuffers<CommandBuffer>(pAllocateInfo, () => new CommandBuffer(pAllocateInfo.CommandPool));
         }
 
         public T[] AllocateCommandBuffers<T>(CommandBufferAllocateInfo pAllocateInfo, Func<T> createNewBufferFunc) where T : CommandBuffer

@@ -6,9 +6,14 @@ namespace MiniEngine.Drivers.Vulkan
 {
 
 
-    public partial class CommandBuffer : IMarshalling
+    public partial class CommandBuffer : IDisposable, IMarshalling
     {
-        public CommandBuffer() { }
+        private CommandPool _commandPool;
+
+        public CommandBuffer(CommandPool commandPool)
+        {
+            _commandPool = commandPool;
+        }
 
         internal IntPtr m;
 
@@ -940,6 +945,11 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 Interop.NativeMethods.vkCmdWriteBufferMarkerAMD(this.m, pipelineStage, dstBuffer != null ? dstBuffer.m : default(UInt64), dstOffset, marker);
             }
+        }
+
+        public void Dispose()
+        {
+            _commandPool.FreeCommandBuffer(this);
         }
     }
 }

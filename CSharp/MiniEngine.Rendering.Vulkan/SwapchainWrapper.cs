@@ -208,7 +208,7 @@ namespace MiniEngine.Rendering.Vulkan
             if (!presentModes.Contains(_presentMode))
                 throw new NotSupportedException($"Present mode not supported by the surface: {_presentMode}");
 
-            _queue = _renderer.GetGraphicsQueue();
+            _queue = _renderer.Device.GetQueue(_renderer.GraphicsQueueIndex, 0);
             _fence = _device.CreateFence();
             _semaphore = _device.CreateSemaphore();
 
@@ -300,7 +300,7 @@ namespace MiniEngine.Rendering.Vulkan
         private RenderCommandBuffer[] CreateRenderCommandBuffers()
         {
             int imageIndex = 0;
-            return _commandPool.AllocateCommandBuffers(CommandBufferLevel.Primary, _swapchainImages.Length, () => new RenderCommandBuffer(this, imageIndex++));
+            return _commandPool.AllocateCommandBuffers(CommandBufferLevel.Primary, _swapchainImages.Length, () => new RenderCommandBuffer(this, imageIndex++, _commandPool));
         }
 
         /// <summary>
