@@ -152,44 +152,17 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void InvokeOnMainThread(Action<CommandBuffer> commandActions)
         {
+            var waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-            using (var commandBuffer = CreateCommandBuffer())
+            _actionsQueue.Enqueue(() =>
             {
-                commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
+                ExecuteAndWait(commandActions);
 
-                //Populate the actions...
-                commandActions(commandBuffer);
+                waitHandle.Set();
+            });
 
-                commandBuffer.End();
+            waitHandle.WaitOne();
 
-                var waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
-
-                _actionsQueue.Enqueue(() =>
-                {
-                    using (Fence fence = _device.CreateFence())
-                    {
-                        fence.Reset();
-                        _queue.Submit(commandBuffer, fence);
-                        fence.Wait();
-                    }
-
-                    waitHandle.Set();
-                });
-
-                waitHandle.WaitOne();
-            }
-
-
-            //bool done = false;
-            //_actionsQueue.Enqueue(() =>
-            //{
-            //    ExecuteAsync(commandActions, () => done = true);
-            //});
-
-            //while (!done)
-            //{
-            //    Thread.Sleep(1);
-            //}
         }
 
         /// <summary>
