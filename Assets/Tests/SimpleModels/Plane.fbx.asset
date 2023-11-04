@@ -1,4 +1,5 @@
-MaterialNames: []
+MaterialNames:
+- C:\Projects\MiniEngine\Assets\Tests\table\dcmap_odesd2_B2_diff(1).jpg
 InverseFaces: false
 Scale: 1
 RotationX: 0

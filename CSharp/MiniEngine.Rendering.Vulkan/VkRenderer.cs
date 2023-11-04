@@ -177,7 +177,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             UpdateSurfaceCapabilities();
 
-            _graphicsQueue = new QueueWrapper(_device, _graphicsQueueIndex, 0);
+            _graphicsQueue = new QueueWrapper(_device, _graphicsQueueIndex, 0, false);
 
             MemoryManager = new MemoryManager(this);
 

@@ -1,8 +1,10 @@
 ﻿using MiniEngine.Drivers.Vulkan;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MiniEngine.Rendering.Vulkan
@@ -10,7 +12,7 @@ namespace MiniEngine.Rendering.Vulkan
     /// <summary>
     /// Wrapper around a queue
     /// </summary>
-    public class QueueWrapper: IDisposable
+    public class QueueWrapper : IDisposable
     {
         private Device _device;
         private Queue _queue;
@@ -18,16 +20,24 @@ namespace MiniEngine.Rendering.Vulkan
         private CommandBuffer _commandBufferMainThreadWait;
         private Fence _fenceMainThreadWait;
         private SubmitInfo _submitInfoMainThreadWait;
+        private bool _supportMultiThreading;
+        private uint _queueFamilyIndex;
+        private uint _queueIndex;
+
+        private ConcurrentQueue<Action> _actionsQueue = new ConcurrentQueue<Action>();
+        private Thread _mainThread;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public QueueWrapper(Device device, uint queueFamilyIndex, uint queueIndex)
+        public QueueWrapper(Device device, uint queueFamilyIndex, uint queueIndex, bool supportMultiThreading)
         {
             _device = device;
 
-            _queue = _device.GetQueue(queueFamilyIndex, queueIndex);
-            
+            _queueFamilyIndex = queueFamilyIndex;
+            _queueIndex = queueIndex;
+            _supportMultiThreading = supportMultiThreading;
+
             _commandPool = device.CreateCommandPool(queueFamilyIndex, CommandPoolCreateFlags.ResetCommandBuffer);
 
             _fenceMainThreadWait = _device.CreateFence();
@@ -38,6 +48,19 @@ namespace MiniEngine.Rendering.Vulkan
                 CommandBufferCount = 1,
                 CommandBuffers = new CommandBuffer[] { _commandBufferMainThreadWait }
             };
+
+            //Start main thread if needed
+            if (_supportMultiThreading)
+            {
+                _mainThread = new Thread(MainThread);
+                _mainThread.IsBackground = true;
+                _mainThread.Start();
+            }
+            else
+            {
+                //We can create the queue already...
+                _queue = _device.GetQueue(queueFamilyIndex, queueIndex);
+            }
         }
 
         /// <summary>
@@ -99,28 +122,80 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void ExecuteAndWait(Action<CommandBuffer> commandActions)
         {
+            if (_supportMultiThreading && Thread.CurrentThread != _mainThread)
+            {
+                InvokeOnMainThread(commandActions);
+            }
+            else
+            {
+                //Execution on the current thread...
+                _commandBufferMainThreadWait.Begin();
 
-            _commandBufferMainThreadWait.Begin();
-
-            //Populate the actions...
-            commandActions(_commandBufferMainThreadWait);
+                //Populate the actions...
+                commandActions(_commandBufferMainThreadWait);
 
 
-            _commandBufferMainThreadWait.End();
+                _commandBufferMainThreadWait.End();
 
-            _fenceMainThreadWait.Reset();
-            _queue.Submit(_submitInfoMainThreadWait, _fenceMainThreadWait);
-            _fenceMainThreadWait.Wait();
+                _fenceMainThreadWait.Reset();
+                _queue.Submit(_submitInfoMainThreadWait, _fenceMainThreadWait);
+                _fenceMainThreadWait.Wait();
 
-            //DestroyCommandBuffer(commandBuffer);
+                //DestroyCommandBuffer(commandBuffer);
+            }
 
         }
 
 
         /// <summary>
+        /// Execute actions on mainthread
+        /// </summary>
+        private void InvokeOnMainThread(Action<CommandBuffer> commandActions)
+        {
+
+            using (var commandBuffer = CreateCommandBuffer())
+            {
+                commandBuffer.Begin(CommandBufferUsageFlags.OneTimeSubmit);
+
+                //Populate the actions...
+                commandActions(commandBuffer);
+
+                commandBuffer.End();
+
+                var waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+                _actionsQueue.Enqueue(() =>
+                {
+                    using (Fence fence = _device.CreateFence())
+                    {
+                        fence.Reset();
+                        _queue.Submit(commandBuffer, fence);
+                        fence.Wait();
+                    }
+
+                    waitHandle.Set();
+                });
+
+                waitHandle.WaitOne();
+            }
+
+
+            //bool done = false;
+            //_actionsQueue.Enqueue(() =>
+            //{
+            //    ExecuteAsync(commandActions, () => done = true);
+            //});
+
+            //while (!done)
+            //{
+            //    Thread.Sleep(1);
+            //}
+        }
+
+        /// <summary>
         /// Execute actions on command buffer
         /// </summary>
-        public void ExecuteAsync(Action<CommandBuffer> commandActions, Action callback)
+        private void ExecuteAsync(Action<CommandBuffer> commandActions, Action callback)
         {
             using (Fence fence = _device.CreateFence())
             {
@@ -143,6 +218,44 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
         }
+
+
+        /// <summary>
+        /// Main thread
+        /// </summary>
+        private void MainThread()
+        {
+            try
+            {
+                //Now that the thread is running, we will create the thread...
+                _queue = _device.GetQueue(_queueFamilyIndex, _queueIndex);
+
+                while (_queue != null)
+                {
+                    if (_actionsQueue.TryDequeue(out var action))
+                    {
+                        try
+                        {
+                            action();
+                        }
+                        catch (Exception exAction)
+                        {
+                            Debug.Error($"QueueWrapper - Error: {exAction}");
+                        }
+                    }
+                    else
+                        Thread.Sleep(1);
+                }
+            }
+            catch (ThreadAbortException)
+            {
+            }
+            catch (Exception ex)
+            {
+                Debug.Error($"QueueWrapper.MainThread - Error: {ex}");
+            }
+        }
+
     }
 
 }

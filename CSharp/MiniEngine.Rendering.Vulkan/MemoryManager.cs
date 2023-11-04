@@ -13,8 +13,6 @@ namespace MiniEngine.Rendering.Vulkan
         private Device _device;
         private VkRenderer _renderer;
         private QueueWrapper _queue;
-        private ConcurrentQueue<Action> _actionsQueue = new ConcurrentQueue<Action>();
-        private Thread _mainThread;
 
         /// <summary>
         /// Constructor
@@ -24,9 +22,7 @@ namespace MiniEngine.Rendering.Vulkan
             _renderer = renderer;
             _device = renderer.Device;
 
-            _mainThread = new Thread(MainThread);
-            _mainThread.IsBackground = true;
-            _mainThread.Start();
+            _queue = new QueueWrapper(_device, _renderer.TransferQueueIndex, 0, true);
         }
 
         /// <summary>
@@ -34,24 +30,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void ExecuteOnTransferQueue(Action<CommandBuffer> commandActions)
         {
-            if (Thread.CurrentThread == _mainThread)
-            {
-                _queue.ExecuteAndWait(commandActions);
-            }
-            else
-            {
-                //Invoke...
-                bool done = false;
-                _actionsQueue.Enqueue(() =>
-                {
-                    _queue.ExecuteAsync(commandActions, () => done = true);
-                });
-
-                while (!done)
-                {
-                    Thread.Sleep(1);
-                }
-            }
+            _queue.ExecuteAndWait(commandActions);
         }
 
 
@@ -99,43 +78,6 @@ namespace MiniEngine.Rendering.Vulkan
                 _queue = null;
             }
         }
-
-
-        /// <summary>
-        /// Main thread
-        /// </summary>
-        private void MainThread()
-        {
-            try
-            {
-                _queue = new QueueWrapper(_device, _renderer.TransferQueueIndex, 0);
-                
-                while (_queue != null)
-                {
-                    if (_actionsQueue.TryDequeue(out var action))
-                    {
-                        try
-                        {
-                            action();
-                        }
-                        catch (Exception exAction)
-                        {
-                            Debug.Error($"MemoryManager - Error: {exAction}");
-                        }
-                    }
-                    else
-                        Thread.Sleep(1);
-                }
-            }
-            catch (ThreadAbortException)
-            {
-            }
-            catch (Exception ex)
-            {
-                Debug.Error($"MemoryManager.MainThread - Error: {ex}");
-            }
-        }
-
 
     }
 }
