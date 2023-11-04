@@ -1,7 +1,8 @@
 ﻿using MiniEngine.Drivers.Vulkan;
 using MiniEngine.Drivers.Vulkan.Windows;
 using MiniEngine.ResourceDefinitions;
-using System.Diagnostics;
+using System;
+using System.Collections.Generic;
 
 namespace MiniEngine.Rendering.Vulkan
 {
@@ -12,13 +13,10 @@ namespace MiniEngine.Rendering.Vulkan
     {
         #region Internal members
 
-        internal VkInstance vk;
-        internal Device Device;
-        internal SwapchainWrapper Swapchain;
 
-        internal Matrix4 MVPMatrix;
+        public Matrix4 MVPMatrix;
 
-        internal Sampler Sampler;
+        public Sampler Sampler;
 
         #endregion
 
@@ -49,7 +47,39 @@ namespace MiniEngine.Rendering.Vulkan
         private IntPtr _windowsHandle = IntPtr.Zero;
         private Dictionary<VkShader, PipelineWrapper> _cachePipeline = new Dictionary<VkShader, PipelineWrapper>();
         private bool _isDisposing;
+
+
+        private VkInstance _vi;
+        private Device _device;
+        private PhysicalDevice _physicalDevice;
+        private SurfaceKhr _surface;
+        private SwapchainWrapper _swapchain;
+
+
+        private uint _graphicsQueueIndex;
+        private Queue _graphicsQueue;
+        private uint _transferQueueIndex;
+        private Queue _transferQueue;
+
+        public Extent2D CurrentExtent;
+        //public Vector2 ClientSize;
+        public SurfaceCapabilitiesKhr SurfaceCapabilities;
+        public List<Fence> Fences = new List<Fence>();
+        public List<Semaphore> Semaphores = new List<Semaphore>();
+        //public List<SwapchainWrapper> Swapchains = new List<SwapchainWrapper>();
+        public List<CommandPool> CommandPools = new List<CommandPool>();
+        public List<RenderPass> RenderPasses = new List<RenderPass>();
+        public List<Sampler> Samplers = new List<Sampler>();
+        public Dictionary<int, ShaderModule> CacheShaderModule = new Dictionary<int, ShaderModule>();
+
+        public MemoryManager MemoryManager;
         
+        public Device Device => _device;
+        public SwapchainWrapper Swapchain => _swapchain;
+        public uint GraphicsQueueIndex => _graphicsQueueIndex;
+        public uint TransferQueueIndex => _transferQueueIndex;
+
+
         #endregion
 
         #region Constructor
@@ -97,8 +127,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public VkRenderer EnableGui()
         {
-            if(_imGui == null)
-                _imGui = new ImGuiRenderer(this);
+            _imGui ??= new ImGuiRenderer(this);
             return this;
         }
 
@@ -126,15 +155,31 @@ namespace MiniEngine.Rendering.Vulkan
             if (_debugCallback != null)
                 callback = DebugReportCallback;
 
-            vk = new VkInstance(_applicationName, _applicationVersion, CreateSurfaceCallback, callback);
+            _vi = new VkInstance(_applicationName, _applicationVersion, callback);
 
-            Device = vk.Device;
 
-            Swapchain = new SwapchainWrapper(vk.Device, new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox, true);
+            //Surface creation...
+            _surface = CreateSurfaceCallback();
+
+            //Physical device...
+            _physicalDevice = PickPhysicalDevice();
+
+            _graphicsQueueIndex = GetGraphicsQueueFamilyIndex(_surface);
+            _transferQueueIndex = GetTransferQueueFamilyIndex();
+
+
+            //And we can create a device...
+            _device = _physicalDevice.CreateDevice(_surface, new[] { _graphicsQueueIndex, _transferQueueIndex });
+
+            UpdateSurfaceCapabilities();
+
+            MemoryManager = new MemoryManager(this);
+
+            _swapchain = new SwapchainWrapper(this, new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox, true);
 
             _resourceFactory = new VkResourceFactory(this);
 
-            Sampler = SamplerHelper.CreateMaxAnisotropy(Device);
+            Sampler = SamplerHelper.CreateMaxAnisotropy(_device);
 
             _initialized = true;
         }
@@ -162,7 +207,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public PipelineWrapper CreatePipelineWrapper(VkShader shader)
         {
-            return Swapchain.CreatePipelineWrapper(shader.ShaderData);
+            return _swapchain.CreatePipelineWrapper(shader.ShaderData);
         }
 
 
@@ -311,6 +356,105 @@ namespace MiniEngine.Rendering.Vulkan
 
 
         /// <summary>
+        /// Create a shader module
+        /// </summary>
+        public ShaderModule CreateShaderModule(byte[] shaderCode, uint flags = 0, AllocationCallbacks allocator = null)
+        {
+
+            int key = BytesHelper.CombineHash(BytesHelper.GetHashCodeBytes(shaderCode), (int)flags);
+
+            //Already in the cache??
+            if (CacheShaderModule.TryGetValue(key, out ShaderModule shaderModule))
+                return shaderModule;
+
+            using (ShaderModuleCreateInfo createInfo = new ShaderModuleCreateInfo
+            {
+                CodeBytes = shaderCode,
+                Flags = flags
+            })
+            {
+                shaderModule = _device.CreateShaderModule(createInfo, allocator);
+            }
+
+            CacheShaderModule[key] = shaderModule;
+
+            return shaderModule;
+
+        }
+
+        /// <summary>
+        /// Update the current surface capabilities
+        /// </summary>
+        public void UpdateSurfaceCapabilities()
+        {
+            SurfaceCapabilities = _physicalDevice.GetSurfaceCapabilitiesKHR(_surface);
+
+            CurrentExtent = SurfaceCapabilities.CurrentExtent;
+        }
+
+        /// <summary>
+        /// Create a swapchain
+        /// </summary>
+        public SwapchainWrapper CreateSwapchainWrapper(Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode, bool depthTest)
+        {
+            return new SwapchainWrapper(this, expectedFormats, expectedColorSpaces, presentMode, depthTest);
+        }
+
+
+
+        public Queue GetGraphicsQueue()
+        {
+            _graphicsQueue ??= _device.GetQueue(GraphicsQueueIndex, 0);
+            return _graphicsQueue;
+        }
+
+        
+
+        public Queue GetTransferQueue()
+        {
+            _transferQueue ??= _device.GetQueue(TransferQueueIndex, 0);
+            return _transferQueue;
+        }
+
+
+        public CommandPool CreateGraphicsCommandPool()
+        {
+            return _device.CreateCommandPool(GraphicsQueueIndex, CommandPoolCreateFlags.ResetCommandBuffer);
+        }
+
+        public CommandPool CreateTransferCommandPool()
+        {
+            return _device.CreateCommandPool(TransferQueueIndex, CommandPoolCreateFlags.ResetCommandBuffer);
+        }
+
+
+
+        /// <summary>
+        /// Create a buffer
+        /// </summary>
+        public unsafe BufferWrapper CreateBufferWrapper<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        {
+            Type type = typeof(T);
+            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
+
+            BufferWrapper buffer = CreateBufferWrapper((uint)size, usageFlags, memoryPropertyFlags);
+
+            buffer.Update(values);
+
+            return buffer;
+        }
+
+        /// <summary>
+        /// Create a buffer
+        /// </summary>
+        public unsafe BufferWrapper CreateBufferWrapper(uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        {
+            return new BufferWrapper(this, size, usageFlags, memoryPropertyFlags);
+        }
+
+
+
+        /// <summary>
         /// Destruction
         /// </summary>
         public void Dispose()
@@ -335,35 +479,91 @@ namespace MiniEngine.Rendering.Vulkan
             foreach (PipelineWrapper pipeline in _cachePipeline.Values)
                 pipeline.Dispose();
 
-            Swapchain?.Dispose();
 
-            
+            _swapchain?.Dispose();
 
-            vk?.Dispose();
+            if (_surface != null)
+            {
+                _vi.DestroySurfaceKHR(_surface);
+                _surface = null;
+            }
+
+
+
+            foreach (Semaphore semaphore in Semaphores)
+                _device.DestroySemaphore(semaphore);
+            Semaphores.Clear();
+
+            foreach (Fence fence in Fences)
+                _device.DestroyFence(fence);
+            Fences.Clear();
+
+            //foreach (SwapchainWrapper swapchain in Swapchains.ToArray())
+            //    swapchain.Dispose();
+            //Swapchains.Clear();
+
+
+            if (MemoryManager != null)
+            {
+                MemoryManager.Dispose();
+                MemoryManager = null;
+            }
+
+
+            foreach (RenderPass renderPass in RenderPasses)
+                _device.DestroyRenderPass(renderPass);
+            RenderPasses.Clear();
+
+            foreach (CommandPool commandPool in CommandPools)
+                _device.DestroyCommandPool(commandPool);
+            CommandPools.Clear();
+
+            foreach (Sampler sampler in Samplers)
+                _device.DestroySampler(sampler);
+            Samplers.Clear();
+
+
+
+            //We don't need it anymore...
+            foreach (ShaderModule shaderModule in CacheShaderModule.Values)
+                _device.DestroyShaderModule(shaderModule);
+
+
+            _vi?.Dispose();
 
             if (Renderer.Current == this)
                 Renderer.Current = null;
         }
 
 
-        
+
 
         #endregion
 
 
         #region Private methods
 
+
+        /// <summary>
+        /// Get the right Physical device
+        /// </summary>
+        private PhysicalDevice PickPhysicalDevice()
+        {
+            //TODO: Check the physical device suitable for our project
+            return _vi.EnumeratePhysicalDevices()[0];
+        }
+
         /// <summary>
         /// Recalculate the projection matrix
         /// </summary>
         private void RecalculateProjectionMatrix()
         {
-           
+
 
             //Update MVP Matrix...
             Matrix4 viewMat2 = Camera.GetViewMatrix();
-            Matrix4 projMat = Camera.GetProjectionMatrixVulkan((int)Device.CurrentExtent.Width, (int)Device.CurrentExtent.Height);
-            
+            Matrix4 projMat = Camera.GetProjectionMatrixVulkan((int)CurrentExtent.Width, (int)CurrentExtent.Height);
+
             this.MVPMatrix = projMat * viewMat2;
 
         }
@@ -373,7 +573,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void RenderFrame()
         {
-            RenderCommandBuffer commandBuffer = Swapchain.GetNextRenderCommandBuffer();
+            RenderCommandBuffer commandBuffer = _swapchain.GetNextRenderCommandBuffer();
 
             commandBuffer.Begin();
 
@@ -383,7 +583,7 @@ namespace MiniEngine.Rendering.Vulkan
                 foreach (var meshRenderer in _meshRenderers)
                     meshRenderer.PopulateCommandBuffers(commandBuffer);
             }
-            
+
             //Rendering of ImGui...
             _imGui?.Render(commandBuffer);
 
@@ -392,20 +592,20 @@ namespace MiniEngine.Rendering.Vulkan
 
 
             //Execute the command buffer and show the results on surface...
-            Swapchain.Present();
+            _swapchain.Present();
         }
 
 
         /// <summary>
         /// Create the surface
         /// </summary>
-        private SurfaceKhr CreateSurfaceCallback(VkInstance vi)
+        private SurfaceKhr CreateSurfaceCallback()
         {
             //Function to create a Surface...
             if (_window != null)
             {
                 //Already have a window...
-                return CreateSurfaceFromWindow(vi, _window);
+                return CreateSurfaceFromWindow(_vi, _window);
             }
             else if (_windowsHandle != IntPtr.Zero)
             {
@@ -413,10 +613,10 @@ namespace MiniEngine.Rendering.Vulkan
                 using (var createInfo = new Win32SurfaceCreateInfoKhr
                 {
                     Hwnd = _windowsHandle,
-                    Hinstance = Process.GetCurrentProcess().Handle
+                    Hinstance = System.Diagnostics.Process.GetCurrentProcess().Handle
                 })
                 {
-                    return vi.CreateWin32SurfaceKHR(createInfo);
+                    return _vi.CreateWin32SurfaceKHR(createInfo);
                 }
             }
             else
@@ -431,9 +631,9 @@ namespace MiniEngine.Rendering.Vulkan
         private void Window_OnWindowResized(Vector2 obj)
         {
             //Update the suface capability and current extend in the device...
-            Device.UpdateSurfaceCapabilities();
+            UpdateSurfaceCapabilities();
 
-            Swapchain?.NotifyWindowResized();
+            _swapchain?.NotifyWindowResized();
 
             _imGui?.NotifyWindowResized();
         }
@@ -445,6 +645,83 @@ namespace MiniEngine.Rendering.Vulkan
         {
             _debugCallback((DebugLevel)flags, messageCode, message);
             return true;
+        }
+
+
+        /// <summary>
+        /// Get the best queue index for transfer data
+        /// </summary>
+        private int GetQueueFamilyPriorityForTransfer(QueueFamilyProperties queueFamProp)
+        {
+            if (queueFamProp.QueueFlags.HasFlag(QueueFlags.Transfer))
+            {
+                //Important...
+                if (!queueFamProp.QueueFlags.HasFlag(QueueFlags.Graphics) && !queueFamProp.QueueFlags.HasFlag(QueueFlags.Compute))
+                    //Perfect, a queue specific to transfers...
+                    return 0;
+
+                if (!queueFamProp.QueueFlags.HasFlag(QueueFlags.Graphics))
+                    //Perfect, a queue almost specific to transfers...
+                    return 1;
+
+                return 3;
+
+            }
+            else
+                //Not good...
+                return Int32.MaxValue;
+        }
+
+
+        /// <summary>
+        /// Get the graphic queue family index
+        /// </summary>
+        public uint GetGraphicsQueueFamilyIndex(SurfaceKhr surface)
+        {
+            var queueFamilyProperties = _physicalDevice.GetQueueFamilyProperties();
+
+            for (uint graphicsQueueIndex = 0; graphicsQueueIndex < queueFamilyProperties.Length; ++graphicsQueueIndex)
+            {
+                if (!_physicalDevice.GetSurfaceSupportKHR(graphicsQueueIndex, surface))
+                    //This queue does not support SurfaceKHR...
+                    continue;
+
+                if (queueFamilyProperties[graphicsQueueIndex].QueueFlags.HasFlag(QueueFlags.Graphics))
+                    //Found it! Should be good
+                    return graphicsQueueIndex;
+            }
+
+            throw new Exception("Not device found for graphics queue.");
+        }
+
+        /// <summary>
+        /// Get the transferer queue famility index
+        /// </summary>
+        public uint GetTransferQueueFamilyIndex()
+        {
+            bool found = false;
+            uint transfersQueueIndex = 0;
+            int bestPriority = Int32.MaxValue;
+            var queueFamProps = _physicalDevice.GetQueueFamilyProperties();
+            for (int i = 0; i < queueFamProps.Length; i++)
+            {
+                if (queueFamProps[i].QueueFlags.HasFlag(QueueFlags.Transfer))
+                {
+                    int priority = GetQueueFamilyPriorityForTransfer(queueFamProps[i]);
+                    if (priority < bestPriority)
+                    {
+                        //This one is better...
+                        transfersQueueIndex = (uint)i;
+                        bestPriority = priority;
+                        found = true;
+                    }
+                }
+            }
+
+            if(!found)
+                throw new Exception("Not device found for transfer queue.");
+
+            return transfersQueueIndex;
         }
 
         #endregion

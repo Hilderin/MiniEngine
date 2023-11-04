@@ -14,7 +14,7 @@ namespace MiniEngine.Rendering.Vulkan
     public class VkMesh: Mesh
     {
         private VkResourceFactory _factory;
-        private VkRenderer _vk;
+        private VkRenderer _renderer;
 
         public VulkanMeshData[] MeshDatas;
 
@@ -22,9 +22,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkMesh(MeshDefinition meshDef, VkRenderer vk, VkResourceFactory factory)
+        public VkMesh(MeshDefinition meshDef, VkRenderer renderer, VkResourceFactory factory)
         {
-            _vk = vk;
+            _renderer = renderer;
 
             Init(meshDef);
 
@@ -110,7 +110,7 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
             //vulkanMeshData.vertexBuffer = _vi.Device.CreateBuffer(vertices, BufferUsageFlags.VertexBuffer);
-            vulkanMeshData.vertexBuffer = _vk.Device.MemoryManager.CreateBufferOnGPU(vertices, BufferUsageFlags.VertexBuffer);
+            vulkanMeshData.vertexBuffer = _renderer.MemoryManager.CreateBufferOnGPU(vertices, BufferUsageFlags.VertexBuffer);
 
         }
 
@@ -120,7 +120,7 @@ namespace MiniEngine.Rendering.Vulkan
         private void CreateIndexBuffer(SubMeshDefinition subMeshData, ref VulkanMeshData vulkanMeshData)
         {
             vulkanMeshData.nbIndices = subMeshData.Indices.Length;
-            vulkanMeshData.indexBuffer = _vk.Device.MemoryManager.CreateBufferOnGPU(subMeshData.Indices, BufferUsageFlags.IndexBuffer);
+            vulkanMeshData.indexBuffer = _renderer.MemoryManager.CreateBufferOnGPU(subMeshData.Indices, BufferUsageFlags.IndexBuffer);
 
         }
 

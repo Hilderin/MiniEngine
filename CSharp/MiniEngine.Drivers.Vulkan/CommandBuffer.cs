@@ -8,7 +8,7 @@ namespace MiniEngine.Drivers.Vulkan
 
     public partial class CommandBuffer : IMarshalling
     {
-        internal CommandBuffer() { }
+        public CommandBuffer() { }
 
         internal IntPtr m;
 

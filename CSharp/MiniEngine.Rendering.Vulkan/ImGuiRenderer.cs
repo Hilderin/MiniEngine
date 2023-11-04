@@ -1,5 +1,7 @@
 ﻿using ImGuiNET;
 using MiniEngine.Drivers.Vulkan;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -15,7 +17,7 @@ namespace MiniEngine.Rendering.Vulkan
         private static uint _sizeOfIndice = sizeof(ushort);
 
         private IntPtr _context;
-        private VkRenderer _vk;
+        private VkRenderer _renderer;
         private Device _device;
         private BufferWrapper _vertexBuffer;
         private BufferWrapper _indexBuffer;
@@ -30,6 +32,8 @@ namespace MiniEngine.Rendering.Vulkan
         private Extent2D _currentExtent;
         private Stopwatch _stopWatch;
         private float _lastRenderTime = 0f;
+
+        public Device Device => _device;
 
         public ImGuiRenderer(VkRenderer renderer)
         {
@@ -46,22 +50,22 @@ namespace MiniEngine.Rendering.Vulkan
             io.Fonts.AddFontDefault();
             io.Fonts.Flags |= ImFontAtlasFlags.NoBakedLines;
 
-            _vk = renderer;
-            _device = _vk.Device;
+            _renderer = renderer;
+            _device = _renderer.Device;
 
-            _vertexBuffer = _device.CreateBufferWrapper(10000, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst);
-            _indexBuffer = _device.CreateBufferWrapper(2000, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst);
-            _projMatrixBuffer = _device.CreateBufferWrapper((uint)Marshal.SizeOf<Matrix4>(), BufferUsageFlags.UniformBuffer | BufferUsageFlags.TransferDst);
+            _vertexBuffer = _renderer.CreateBufferWrapper(10000, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst);
+            _indexBuffer = _renderer.CreateBufferWrapper(2000, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst);
+            _projMatrixBuffer = _renderer.CreateBufferWrapper((uint)Marshal.SizeOf<Matrix4>(), BufferUsageFlags.UniformBuffer | BufferUsageFlags.TransferDst);
 
             CreateShader();
 
-            _pipeline = _vk.Swapchain.CreatePipelineWrapper(_shader)
+            _pipeline = _renderer.Swapchain.CreatePipelineWrapper(_shader)
                                         .AddDynamicState(DynamicState.Scissor)
                                         .SetDepthTest(false)
                                         .Build();
 
 
-            _mainSet = _pipeline.CreateDescriptorSet(0).Set("FontSampler", _vk.Sampler)
+            _mainSet = _pipeline.CreateDescriptorSet(0).Set("FontSampler", _renderer.Sampler)
                                                        .Set("ProjectionMatrixBuffer", _projMatrixBuffer);
             _fontTextureSet = _pipeline.CreateDescriptorSet(1);
             _textureSet = _pipeline.CreateDescriptorSet(1);
@@ -220,7 +224,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void UpdateDisplaySize()
         {
-            _currentExtent = _vk.Device.CurrentExtent;
+            _currentExtent = _renderer.CurrentExtent;
 
             ImGuiIOPtr io = ImGui.GetIO();
             io.DisplaySize = new System.Numerics.Vector2(_currentExtent.Width, _currentExtent.Height);
@@ -272,7 +276,7 @@ namespace MiniEngine.Rendering.Vulkan
             //var data = new Span<byte>(pixels, width * height * bytesPerPixel);
             //var dataBytes = data.ToArray();
             //File.WriteAllBytes("C:\\Projects\\Temp\\test.bin", dataBytes);
-            _fontTexture = new VkTexture2D(pixels, width, height, Format.R8G8B8A8Unorm, _vk, _vk.ResourceFactory);
+            _fontTexture = new VkTexture2D(pixels, width, height, Format.R8G8B8A8Unorm, _renderer, _renderer.ResourceFactory);
             _fontTextureSet.Set("FontTexture", _fontTexture.ImageWrapper.ImageView);
 
             io.Fonts.ClearTexData();
@@ -283,7 +287,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CreateShader()
         {
-            _shader = new ShaderWrapper(_vk.Device,
+            _shader = new ShaderWrapper(_renderer,
 @"#version 450
 
 #extension GL_ARB_separate_shader_objects : enable

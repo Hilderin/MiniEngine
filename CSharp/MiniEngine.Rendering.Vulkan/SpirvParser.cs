@@ -1,8 +1,9 @@
-﻿using System;
+﻿using MiniEngine.Drivers.Vulkan;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Parser for spirv
@@ -494,7 +495,7 @@ namespace MiniEngine.Drivers.Vulkan
                                     constants.Add(pushConstant);
                                 }
 
-                                pushConstant.StageFlags = pushConstant.StageFlags | stage;
+                                pushConstant.StageFlags |= stage;
 
 
                             }
@@ -553,7 +554,7 @@ namespace MiniEngine.Drivers.Vulkan
                         Set = id.set,
                         Binding = id.binding,
                         Location = id.location,
-                        Format = GetMemberFormat(typeid, ids),
+                        Format = GetMemberFormat(typeid),
                         Size = GetMemberWidth(typeid, ids)
                     };
                     
@@ -637,7 +638,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Calculate the Format of a member
         /// </summary>
-        private static Format GetMemberFormat(Id id, Id[] ids)
+        private static Format GetMemberFormat(Id id)
         {
 
             switch (id.op)

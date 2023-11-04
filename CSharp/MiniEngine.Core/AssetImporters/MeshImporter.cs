@@ -120,13 +120,10 @@ namespace MiniEngine.AssetImporters
             }
             finally
             {
-                if (assetMeshDef == null)
-                {
-                    assetMeshDef = new MeshAssetDefinition()
+                assetMeshDef ??= new MeshAssetDefinition()
                     {
                         MeshPath = name
                     };
-                }
             }
 
             

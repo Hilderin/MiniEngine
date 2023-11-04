@@ -12,19 +12,10 @@ namespace MiniEngine.Drivers.Vulkan
     public partial class RenderPass : IDisposable, INonDispatchableHandleMarshalling
     {
         private Device _device;
-        private SwapchainWrapper _swapChain;
 
-        public Device Device => _device;
-        public SwapchainWrapper Swapchain => _swapChain;
-
-        internal RenderPass(Device device, SwapchainWrapper swapChain)
+        internal RenderPass(Device device)
         {
             _device = device;
-            _swapChain = swapChain;
-
-            if (device != null)
-                device.RenderPasses.Add(this);
-
         }
 
         internal UInt64 m;
@@ -46,5 +37,6 @@ namespace MiniEngine.Drivers.Vulkan
                 m = 0;
             }
         }
+
     }
 }

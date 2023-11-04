@@ -15,7 +15,6 @@ namespace ShipDefense
         public CameraComponent CameraComponent;
 
         private bool _mustReload = false;
-        private Mesh _mesh;
 
         /// <summary>
         /// Constructor

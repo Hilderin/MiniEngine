@@ -309,8 +309,10 @@ namespace MiniEngine
             {
                 _updatedPaths[fullPath] = true;
 
+#pragma warning disable IDE0074 // Use compound assignment
                 if (_taskUpdateContent == null)
                     _taskUpdateContent = Task.Factory.StartNew(TaskWaitBeforeForNotification);
+#pragma warning restore IDE0074 // Use compound assignment
             }
 
         }
@@ -342,7 +344,7 @@ namespace MiniEngine
                     }
                     catch (Exception ex)
                     {
-                        Debug.Print($"Reload asset '{path}' - Error: {ex.ToString()}");
+                        Debug.Print($"Reload asset '{path}' - Error: {ex}");
                     }
 
                 }

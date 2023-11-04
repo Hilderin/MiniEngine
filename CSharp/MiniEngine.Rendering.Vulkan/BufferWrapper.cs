@@ -1,17 +1,20 @@
-﻿using System;
+﻿using MiniEngine.Drivers.Vulkan;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Buffer = MiniEngine.Drivers.Vulkan.Buffer;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Encapsulate a Buffer and his BufferMemory
     /// </summary>
     public class BufferWrapper: IDisposable
     {
+        private VkRenderer _renderer;
         private Device _device;
         
         public uint Size { get; private set; }
@@ -23,9 +26,10 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public BufferWrapper(Device device, uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        public BufferWrapper(VkRenderer renderer, uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
         {
-            _device = device;
+            _renderer = renderer;
+            _device = renderer.Device;
 
             UsageFlags = usageFlags;
             Size = size;

@@ -1,16 +1,18 @@
-﻿using System;
+﻿using MiniEngine.Drivers.Vulkan;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Represent a High level reprensentation of a Swapchain
     /// </summary>
     public class SwapchainWrapper: IDisposable
     {
+        private VkRenderer _renderer;
         private Device _device;
 
         private Queue _queue;
@@ -49,9 +51,10 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Create a swapchain
         /// </summary>
-        public SwapchainWrapper(Device device, Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode, bool depthTest)
+        public SwapchainWrapper(VkRenderer renderer, Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode, bool depthTest)
         {
-            _device = device;
+            _renderer = renderer;
+            _device = renderer.Device;
 
             _surfaceFormat = _device.PhysicalDevice.GetSurfaceFormat(_device.Surface, expectedFormats, expectedColorSpaces);
             
@@ -134,7 +137,7 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 //The screen was resized...
                 //Update the suface capability and current extend in the device...
-                _device.UpdateSurfaceCapabilities();
+                _renderer.UpdateSurfaceCapabilities();
 
                 //And now that we have the new screensize in memory... let's recreate the swapchain
                 Rebuild();
@@ -205,14 +208,14 @@ namespace MiniEngine.Drivers.Vulkan
             if (!presentModes.Contains(_presentMode))
                 throw new NotSupportedException($"Present mode not supported by the surface: {_presentMode}");
 
-            _queue = _device.GetGraphicsQueue();
+            _queue = _renderer.GetGraphicsQueue();
             _fence = _device.CreateFence();
             _semaphore = _device.CreateSemaphore();
 
 
             CreateRenderPass();
 
-            _commandPool = _device.CreateGraphicsCommandPool();
+            _commandPool = _renderer.CreateGraphicsCommandPool();
 
             CreateSwapChainObjects();
 
@@ -226,21 +229,21 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void CreateSwapChainObjects()
         {
-            _currentExtent = _device.SurfaceCapabilities.CurrentExtent;
+            _currentExtent = _renderer.SurfaceCapabilities.CurrentExtent;
 
-            var compositeAlpha = _device.SurfaceCapabilities.SupportedCompositeAlpha.HasFlag(CompositeAlphaFlagsKhr.Inherit)
+            var compositeAlpha = _renderer.SurfaceCapabilities.SupportedCompositeAlpha.HasFlag(CompositeAlphaFlagsKhr.Inherit)
                 ? CompositeAlphaFlagsKhr.Inherit
                 : CompositeAlphaFlagsKhr.Opaque;
 
             using (var swapchainInfo = new SwapchainCreateInfoKhr
             {
                 Surface = _device.Surface,
-                MinImageCount = _device.SurfaceCapabilities.MinImageCount,
+                MinImageCount = _renderer.SurfaceCapabilities.MinImageCount,
                 ImageFormat = _surfaceFormat.Format,
                 ImageColorSpace = _surfaceFormat.ColorSpace,
-                ImageExtent = _device.SurfaceCapabilities.CurrentExtent,
+                ImageExtent = _renderer.SurfaceCapabilities.CurrentExtent,
                 ImageUsage = ImageUsageFlags.ColorAttachment,
-                PreTransform = _device.SurfaceCapabilities.CurrentTransform,
+                PreTransform = _renderer.SurfaceCapabilities.CurrentTransform,
                 ImageArrayLayers = 1,
                 ImageSharingMode = SharingMode.Exclusive,
                 QueueFamilyIndices = new uint[] { 0 },
@@ -261,10 +264,12 @@ namespace MiniEngine.Drivers.Vulkan
 
 
             //Now that we kwon the number of images...
-            if(_renderCommandBuffers == null)
+#pragma warning disable IDE0074 // Use compound assignment
+            if (_renderCommandBuffers == null)
                 _renderCommandBuffers = CreateRenderCommandBuffers();
 
-            //Creation of the submitinfos and presentinfos so we don't recreate them at each frame...
+
+                //Creation of the submitinfos and presentinfos so we don't recreate them at each frame...
             _submitInfos = new SubmitInfo[_renderCommandBuffers.Length];
             _presentInfos = new PresentInfoKhr[_renderCommandBuffers.Length];
             for (int i = 0; i < _submitInfos.Length; i++)
@@ -374,7 +379,7 @@ namespace MiniEngine.Drivers.Vulkan
                 Dependencies = subpasseDependencies.ToArray()
             })
             {
-                _renderPass = _device.CreateRenderPass(renderPassCreateInfo, this);
+                _renderPass = _device.CreateRenderPass(renderPassCreateInfo);
             }
         }
 
@@ -398,7 +403,7 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 Format depthFormat = _device.PhysicalDevice.FindDepthFormat();
 
-                _depthImage = new ImageWrapper(_device, (int)_currentExtent.Width, (int)_currentExtent.Height, depthFormat, ImageUsageFlags.DepthStencilAttachment, ImageAspectFlags.Depth);
+                _depthImage = new ImageWrapper(_renderer, (int)_currentExtent.Width, (int)_currentExtent.Height, depthFormat, ImageUsageFlags.DepthStencilAttachment, ImageAspectFlags.Depth);
             }
 
         }

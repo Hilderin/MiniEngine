@@ -1,4 +1,5 @@
 using MiniEngine.Drivers.Vulkan;
+using MiniEngine.Rendering.Vulkan;
 
 namespace MiniEngine.Tests.Drivers.Vulkan
 {

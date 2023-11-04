@@ -1,10 +1,11 @@
-﻿using System;
+﻿using MiniEngine.Drivers.Vulkan;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Wrapper for a DescriptorSet
@@ -14,8 +15,6 @@ namespace MiniEngine.Drivers.Vulkan
         private DescriptorSetLayoutBinding[][] _bindingSets;
         private DescriptorSetLayout[] _descriptorSetLayouts;
         private Device _device;
-        private PipelineWrapper _pipeline;
-        //private VkShader _shader;
 
         public DescriptorSet[] DescriptorSets;
         public DescriptorPool DescriptorPool;
@@ -29,7 +28,6 @@ namespace MiniEngine.Drivers.Vulkan
         public PipelineDescriptorSet(Device device, PipelineWrapper pipeline, int setIndex = -1)
         {
             _device = device;
-            _pipeline = pipeline;
             //_shader = pipeline.Shader;
 
             if (setIndex == -1)
@@ -328,13 +326,6 @@ namespace MiniEngine.Drivers.Vulkan
 
         //    _device.UpdateDescriptorSets(writeSets.ToArray(), null);
         //}
-
-        private class CombinedImageSampler
-        {
-            public ImageView ImageView;
-            public Sampler Sampler;
-        }
-
 
         private class DescriptorSetData
         {

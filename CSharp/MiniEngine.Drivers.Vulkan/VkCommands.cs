@@ -31,8 +31,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(Interop.LayerProperties));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpProperties = new NativeReference((int)(size * pPropertyCount));
-#pragma warning disable CA2000 // Dispose objects before losing scope
-
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkEnumerateInstanceLayerProperties(&pPropertyCount, (Interop.LayerProperties*)ptrpProperties);
                 if (result != Result.Success)
@@ -66,8 +64,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(Interop.ExtensionProperties));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpProperties = new NativeReference((int)(size * pPropertyCount));
-#pragma warning disable CA2000 // Dispose objects before losing scope
-
                 var ptrpProperties = refpProperties.Handle;
                 result = Interop.NativeMethods.vkEnumerateInstanceExtensionProperties(pLayerName, &pPropertyCount, (Interop.ExtensionProperties*)ptrpProperties);
                 if (result != Result.Success)

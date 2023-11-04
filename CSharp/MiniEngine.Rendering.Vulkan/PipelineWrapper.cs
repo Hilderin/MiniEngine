@@ -1,10 +1,11 @@
-﻿using System;
+﻿using MiniEngine.Drivers.Vulkan;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Contains a pipeline
@@ -23,7 +24,7 @@ namespace MiniEngine.Drivers.Vulkan
         private PipelineShaderStageCreateInfo[] pipelineShaderStages;
 
         private CullModeFlags _cullMode = CullModeFlags.None;
-        private DynamicState[] _dynamicStates = new DynamicState[0];
+        private DynamicState[] _dynamicStates = Array.Empty<DynamicState>();
 
         private bool _depthTest;
 
@@ -81,8 +82,10 @@ namespace MiniEngine.Drivers.Vulkan
 
             if (!_dynamicStates.Contains(dynamicState))
             {
-                List<DynamicState> newList = new List<DynamicState>(_dynamicStates);
-                newList.Add(dynamicState);
+                List<DynamicState> newList = new List<DynamicState>(_dynamicStates)
+                {
+                    dynamicState
+                };
                 _dynamicStates = newList.ToArray();
             }
 

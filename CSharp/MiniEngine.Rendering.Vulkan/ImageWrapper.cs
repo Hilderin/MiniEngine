@@ -6,14 +6,17 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp.Advanced;
+using MiniEngine.Drivers.Vulkan;
+using Buffer = MiniEngine.Drivers.Vulkan.Buffer;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Wrapper for images
     /// </summary>
     public class ImageWrapper : IDisposable
     {
+        private VkRenderer _renderer;
         private Device _device;
 
 
@@ -29,9 +32,10 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public unsafe ImageWrapper(Device device, byte* data, int width, int height, Format format)
+        public unsafe ImageWrapper(VkRenderer renderer, byte* data, int width, int height, Format format)
         {
-            _device = device;
+            _renderer = renderer;
+            _device = renderer.Device;
             
             Width = width;
             Height = height;
@@ -47,9 +51,10 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public ImageWrapper(Device device, byte[] data, int width, int height, Format format)
+        public ImageWrapper(VkRenderer renderer, byte[] data, int width, int height, Format format)
         {
-            _device = device;
+            _renderer = renderer;
+            _device = renderer.Device;
 
             Width = width;
             Height = height;
@@ -68,9 +73,10 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor for an empty image
         /// </summary>
-        public unsafe ImageWrapper(Device device, int width, int height, Format format, ImageUsageFlags usageFlags, ImageAspectFlags aspectFlags)
+        public unsafe ImageWrapper(VkRenderer renderer, int width, int height, Format format, ImageUsageFlags usageFlags, ImageAspectFlags aspectFlags)
         {
-            _device = device;
+            _renderer = renderer;
+            _device = renderer.Device;
 
             Width = width;
             Height = height;
@@ -90,7 +96,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private unsafe void Init(byte* data, uint size)
         {
-            using (BufferWrapper bufferStaging = _device.CreateBufferWrapper(size, BufferUsageFlags.TransferSrc))
+            using (BufferWrapper bufferStaging = _renderer.CreateBufferWrapper(size, BufferUsageFlags.TransferSrc))
             {
                 bufferStaging.UpdateFrom(data, size);
 
@@ -157,8 +163,9 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void TransitionImageLayout(ImageLayout oldLayout, ImageLayout newLayout)
         {
-            _device.MemoryManager.ExecuteCommandBuffer(commandBuffer =>
+            _renderer.MemoryManager.ExecuteCommandBuffer(commandBuffer =>
             {
+
                 ImageMemoryBarrier barrier = new()
                 {
                     OldLayout = oldLayout,
@@ -175,6 +182,7 @@ namespace MiniEngine.Drivers.Vulkan
                         LayerCount = 1,
                     }
                 };
+
 
                 PipelineStageFlags sourceStage;
                 PipelineStageFlags destinationStage;
@@ -194,6 +202,17 @@ namespace MiniEngine.Drivers.Vulkan
 
                     sourceStage = PipelineStageFlags.Transfer;
                     destinationStage = PipelineStageFlags.FragmentShader;
+
+
+
+                    if (_renderer.GraphicsQueueIndex != _renderer.TransferQueueIndex)
+                    {
+                        barrier.SrcQueueFamilyIndex = _renderer.TransferQueueIndex;
+                        barrier.DstQueueFamilyIndex = _renderer.GraphicsQueueIndex;
+
+                        destinationStage = PipelineStageFlags.BottomOfPipe;
+                    }
+
                 }
                 else
                 {
@@ -240,7 +259,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         private void CopyBufferToImage(Buffer buffer)
         {
-            _device.MemoryManager.ExecuteCommandBuffer(commandBuffer =>
+            _renderer.MemoryManager.ExecuteCommandBuffer(commandBuffer =>
             {
                 BufferImageCopy region = new()
                 {

@@ -8,134 +8,15 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Vulkan Device
     /// </summary>
-    public partial class Device : IMarshalling, IDisposable
+    public partial class Device : IDisposable, IMarshalling
     {
+        private bool _isDisposed;
         internal IntPtr m;
-
-        private int _graphicsQueueIndex = -1;
-        private Queue _graphicsQueue;
-        private int _transferQueueIndex = -1;
-        private Queue _transferQueue;
-
-        public bool IsDisposed { get; private set; } = false;
-
-        public PhysicalDevice PhysicalDevice;
-        public SurfaceKhr Surface;
-        public Extent2D CurrentExtent;
-        //public Vector2 ClientSize;
-        public SurfaceCapabilitiesKhr SurfaceCapabilities;
-        public List<Fence> Fences = new List<Fence>();
-        public List<Semaphore> Semaphores = new List<Semaphore>();
-        //public List<SwapchainWrapper> Swapchains = new List<SwapchainWrapper>();
-        public List<CommandPool> CommandPools = new List<CommandPool>();
-        public List<RenderPass> RenderPasses = new List<RenderPass>();
-        public List<Sampler> Samplers = new List<Sampler>();
-        public Dictionary<int, ShaderModule> CacheShaderModule = new Dictionary<int, ShaderModule>();
-
-        public MemoryManager MemoryManager;
-        public uint[] QueueIndexes;
-
 
         internal Device() { }
 
-        /// <summary>
-        /// Create a shader module
-        /// </summary>
-        public ShaderModule CreateShaderModule(byte[] shaderCode, uint flags = 0, AllocationCallbacks allocator = null)
-        {
-
-            int key = BytesHelper.CombineHash(BytesHelper.GetHashCodeBytes(shaderCode), (int)flags);
-
-            //Already in the cache??
-            if (CacheShaderModule.TryGetValue(key, out ShaderModule shaderModule))
-                return shaderModule;
-
-            using (ShaderModuleCreateInfo createInfo = new ShaderModuleCreateInfo
-            {
-                CodeBytes = shaderCode,
-                Flags = flags
-            })
-            {
-                shaderModule = CreateShaderModule(createInfo, allocator);
-            }
-
-            CacheShaderModule[key] = shaderModule;
-
-            return shaderModule;
-
-        }
-
-        /// <summary>
-        /// Update the current surface capabilities
-        /// </summary>
-        public void UpdateSurfaceCapabilities()
-        {
-            SurfaceCapabilities = PhysicalDevice.GetSurfaceCapabilitiesKHR(Surface);
-
-            CurrentExtent = SurfaceCapabilities.CurrentExtent;
-        }
-
-        /// <summary>
-        /// Create a swapchain
-        /// </summary>
-        public SwapchainWrapper CreateSwapchainWrapper(Format[] expectedFormats, ColorSpaceKhr[] expectedColorSpaces, PresentModeKhr presentMode, bool depthTest)
-        {
-            return new SwapchainWrapper(this, expectedFormats, expectedColorSpaces, presentMode, depthTest);
-        }
-
-        /// <summary>
-        /// Disposing of the object
-        /// </summary>
-        public void Dispose()
-        {
-
-
-            foreach (Semaphore semaphore in Semaphores)
-                DestroySemaphoreInternal(semaphore);
-            Semaphores.Clear();
-
-            foreach (Fence fence in Fences)
-                DestroyFenceInternal(fence);
-            Fences.Clear();
-
-            //foreach (SwapchainWrapper swapchain in Swapchains.ToArray())
-            //    swapchain.Dispose();
-            //Swapchains.Clear();
-
-
-            if (MemoryManager != null)
-            {
-                MemoryManager.Dispose();
-                MemoryManager = null;
-            }
-
-
-            foreach (RenderPass renderPass in RenderPasses)
-                DestroyRenderPassInternal(renderPass);
-            RenderPasses.Clear();
-
-            foreach (CommandPool commandPool in CommandPools)
-                DestroyCommandPoolInternal(commandPool);
-            CommandPools.Clear();
-
-            foreach (Sampler sampler in Samplers)
-                DestroySamplerInternal(sampler);
-            Samplers.Clear();
-
-
-
-            //We don't need it anymore...
-            foreach (ShaderModule shaderModule in CacheShaderModule.Values)
-                DestroyShaderModule(shaderModule);
-
-
-            if (!IsDisposed)
-            {
-                Destroy();
-                IsDisposed = true;
-            }
-        }
-
+        public PhysicalDevice PhysicalDevice;
+        public SurfaceKhr Surface;
 
 
         /// <summary>
@@ -215,31 +96,6 @@ namespace MiniEngine.Drivers.Vulkan
 
             return framebuffers;
         }
-
-
-        /// <summary>
-        /// Create a buffer
-        /// </summary>
-        public unsafe BufferWrapper CreateBufferWrapper<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
-        {
-            Type type = typeof(T);
-            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
-
-            BufferWrapper buffer = CreateBufferWrapper((uint)size, usageFlags, memoryPropertyFlags);
-
-            buffer.Update(values);
-
-            return buffer;
-        }
-
-        /// <summary>
-        /// Create a buffer
-        /// </summary>
-        public unsafe BufferWrapper CreateBufferWrapper(uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
-        {
-            return new BufferWrapper(this, size, usageFlags, memoryPropertyFlags);
-        }
-
 
         /// <summary>
         /// Allocate a DeviceMemory
@@ -321,69 +177,6 @@ namespace MiniEngine.Drivers.Vulkan
             {
                 Interop.NativeMethods.vkDestroyDevice(this.m, pAllocator != null ? pAllocator.m : null);
             }
-        }
-
-        public uint GetGraphicsQueueIndex()
-        {
-            if (_graphicsQueueIndex == -1)
-            {
-                var queueFamProps = PhysicalDevice.GetQueueFamilyProperties();
-                for (int i = 0; i < QueueIndexes.Length; i++)
-                {
-                    uint queueIndex = QueueIndexes[i];
-                    if (queueFamProps[queueIndex].QueueFlags.HasFlag(QueueFlags.Graphics))
-                    {
-                        //This one...
-                        _graphicsQueueIndex = (int)queueIndex;
-                        break;
-                    }
-                }
-            }
-            return (uint)_graphicsQueueIndex;
-        }
-
-        public Queue GetGraphicsQueue()
-        {
-            if (_graphicsQueue == null)
-            {
-                _graphicsQueue = GetQueue(GetGraphicsQueueIndex(), 0);
-            }
-            return _graphicsQueue;
-        }
-
-        public uint GetTransferQueueIndex()
-        {
-            if (_transferQueueIndex == -1)
-            {
-                uint transfersQueueIndex = QueueIndexes[0];
-                int bestPriority = Int32.MaxValue;
-                var queueFamProps = PhysicalDevice.GetQueueFamilyProperties();
-                for (int i = 0; i < QueueIndexes.Length; i++)
-                {
-                    uint queueIndex = QueueIndexes[i];
-                    if (queueFamProps[queueIndex].QueueFlags.HasFlag(QueueFlags.Transfer))
-                    {
-                        int priority = PhysicalDevice.GetQueueFamilyPriorityForTransfer(queueFamProps[queueIndex]);
-                        if (priority < bestPriority)
-                        {
-                            //This one is better...
-                            transfersQueueIndex = (uint)i;
-                            bestPriority = priority;
-                        }
-                    }
-                }
-                _transferQueueIndex = (int)transfersQueueIndex;
-            }
-            return (uint)_transferQueueIndex;
-        }
-
-        public Queue GetTransferQueue()
-        {
-            if (_transferQueue == null)
-            {
-                _transferQueue = GetQueue(GetTransferQueueIndex(), 0);
-            }
-            return _transferQueue;
         }
 
         public Queue GetQueue(UInt32 queueFamilyIndex, UInt32 queueIndex)
@@ -589,7 +382,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(SparseImageMemoryRequirements));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSparseMemoryRequirements = new NativeReference((int)(size * pSparseMemoryRequirementCount));
-#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpSparseMemoryRequirements = refpSparseMemoryRequirements.Handle;
                 Interop.NativeMethods.vkGetImageSparseMemoryRequirements(this.m, image != null ? image.m : default(UInt64), &pSparseMemoryRequirementCount, (SparseImageMemoryRequirements*)ptrpSparseMemoryRequirements);
 
@@ -646,18 +438,11 @@ namespace MiniEngine.Drivers.Vulkan
 
         public void DestroyFence(Fence fence = null, AllocationCallbacks pAllocator = null)
         {
-            DestroyFenceInternal(fence, pAllocator);
-
-            Fences.Remove(fence);
-
-        }
-
-        private void DestroyFenceInternal(Fence fence = null, AllocationCallbacks pAllocator = null)
-        {
             unsafe
             {
                 Interop.NativeMethods.vkDestroyFence(this.m, fence != null ? fence.m : default(UInt64), pAllocator != null ? pAllocator.m : null);
             }
+
         }
 
         public void ResetFences(Fence[] pFences)
@@ -771,13 +556,6 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
         public void DestroySemaphore(Semaphore semaphore = null, AllocationCallbacks pAllocator = null)
-        {
-            DestroySemaphoreInternal(semaphore, pAllocator);
-
-            Semaphores.Remove(semaphore);
-        }
-
-        private void DestroySemaphoreInternal(Semaphore semaphore = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1117,7 +895,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(UInt64));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpPipelines = new NativeReference((int)(size * pCreateInfos.Length));
-#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpPipelines = refpPipelines.Handle;
                 var arraypCreateInfos = pCreateInfos == null ? IntPtr.Zero : Marshal.AllocHGlobal(pCreateInfos.Length * sizeof(Interop.GraphicsPipelineCreateInfo));
                 var lenpCreateInfos = pCreateInfos == null ? 0 : pCreateInfos.Length;
@@ -1154,7 +931,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(UInt64));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpPipelines = new NativeReference((int)(size * pCreateInfos.Length));
-#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpPipelines = refpPipelines.Handle;
                 var arraypCreateInfos = pCreateInfos == null ? IntPtr.Zero : Marshal.AllocHGlobal(pCreateInfos.Length * sizeof(Interop.ComputePipelineCreateInfo));
                 var lenpCreateInfos = pCreateInfos == null ? 0 : pCreateInfos.Length;
@@ -1254,26 +1030,16 @@ namespace MiniEngine.Drivers.Vulkan
                 if (result != Result.Success)
                     throw new ResultException(result);
 
-                Samplers.Add(pSampler);
-
                 return pSampler;
             }
         }
 
         public void DestroySampler(Sampler sampler = null, AllocationCallbacks pAllocator = null)
         {
-            DestroySamplerInternal(sampler, pAllocator);
-
-            Samplers.Remove(sampler);
-        }
-
-        private void DestroySamplerInternal(Sampler sampler = null, AllocationCallbacks pAllocator = null)
-        {
             unsafe
             {
                 Interop.NativeMethods.vkDestroySampler(this.m, sampler != null ? sampler.m : default(UInt64), pAllocator != null ? pAllocator.m : null);
             }
-
         }
 
 
@@ -1365,7 +1131,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(UInt64));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpDescriptorSets = new NativeReference((int)(size * pAllocateInfo.DescriptorSetCount));
-#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpDescriptorSets = refpDescriptorSets.Handle;
                 result = Interop.NativeMethods.vkAllocateDescriptorSets(this.m, pAllocateInfo != null ? pAllocateInfo.m : (Interop.DescriptorSetAllocateInfo*)default(IntPtr), (UInt64*)ptrpDescriptorSets);
                 if (result != Result.Success)
@@ -1479,13 +1244,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public RenderPass CreateRenderPass(RenderPassCreateInfo pCreateInfo, SwapchainWrapper swapChain = null, AllocationCallbacks pAllocator = null)
+        public RenderPass CreateRenderPass(RenderPassCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)
         {
             Result result;
             RenderPass pRenderPass;
             unsafe
             {
-                pRenderPass = new RenderPass(this, swapChain);
+                pRenderPass = new RenderPass(this);
 
                 fixed (UInt64* ptrpRenderPass = &pRenderPass.m)
                 {
@@ -1499,13 +1264,6 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
         public void DestroyRenderPass(RenderPass renderPass = null, AllocationCallbacks pAllocator = null)
-        {
-            DestroyRenderPassInternal(renderPass, pAllocator);
-
-            RenderPasses.Remove(renderPass);
-        }
-
-        private void DestroyRenderPassInternal(RenderPass renderPass = null, AllocationCallbacks pAllocator = null)
         {
             unsafe
             {
@@ -1525,21 +1283,12 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
-        public CommandPool CreateGraphicsCommandPool()
-        {
-            return CreateCommandPool(GetGraphicsQueueIndex(), CommandPoolCreateFlags.ResetCommandBuffer);
-        }
-
-        public CommandPool CreateTransferCommandPool()
-        {
-            return CreateCommandPool(GetTransferQueueIndex(), CommandPoolCreateFlags.ResetCommandBuffer);
-        }
 
         public CommandPool CreateCommandPool(uint queueFamilyIndex, CommandPoolCreateFlags flags)
         {
             using (var createPoolInfo = new CommandPoolCreateInfo
             { 
-                Flags = CommandPoolCreateFlags.ResetCommandBuffer,
+                Flags = flags,
                 QueueFamilyIndex = queueFamilyIndex
             })
             {
@@ -1568,18 +1317,12 @@ namespace MiniEngine.Drivers.Vulkan
 
         public void DestroyCommandPool(CommandPool commandPool = null, AllocationCallbacks pAllocator = null)
         {
-            DestroyCommandPoolInternal(commandPool, pAllocator);
-
-            CommandPools.Remove(commandPool);
-        }
-
-        private void DestroyCommandPoolInternal(CommandPool commandPool = null, AllocationCallbacks pAllocator = null)
-        {
             unsafe
             {
                 Interop.NativeMethods.vkDestroyCommandPool(this.m, commandPool != null ? commandPool.m : default(UInt64), pAllocator != null ? pAllocator.m : null);
             }
         }
+
 
         public void ResetCommandPool(CommandPool commandPool, CommandPoolResetFlags flags = (CommandPoolResetFlags)0)
         {
@@ -1628,8 +1371,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(IntPtr));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpCommandBuffers = new NativeReference((int)(size * pAllocateInfo.CommandBufferCount));
-#pragma warning disable CA2000 // Dispose objects before losing scope
-
                 var ptrpCommandBuffers = refpCommandBuffers.Handle;
                 result = Interop.NativeMethods.vkAllocateCommandBuffers(this.m, pAllocateInfo != null ? pAllocateInfo.m : (Interop.CommandBufferAllocateInfo*)default(IntPtr), (IntPtr*)ptrpCommandBuffers);
                 if (result != Result.Success)
@@ -1685,7 +1426,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(UInt64));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSwapchains = new NativeReference((int)(size * pCreateInfos.Length));
-#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpSwapchains = refpSwapchains.Handle;
                 var arraypCreateInfos = pCreateInfos == null ? IntPtr.Zero : Marshal.AllocHGlobal(pCreateInfos.Length * sizeof(Interop.SwapchainCreateInfoKhr));
                 var lenpCreateInfos = pCreateInfos == null ? 0 : pCreateInfos.Length;
@@ -1753,7 +1493,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(UInt64));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpSwapchainImages = new NativeReference((int)(size * pSwapchainImageCount));
-#pragma warning disable CA2000 // Dispose objects before losing scope
                 var ptrpSwapchainImages = refpSwapchainImages.Handle;
                 result = Interop.NativeMethods.vkGetSwapchainImagesKHR(this.m, swapchain != null ? swapchain.m : default(UInt64), &pSwapchainImageCount, (UInt64*)ptrpSwapchainImages);
                 if (result != Result.Success)
@@ -2372,8 +2111,6 @@ namespace MiniEngine.Drivers.Vulkan
                 int size = Marshal.SizeOf(typeof(PastPresentationTimingGoogle));
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 var refpPresentationTimings = new NativeReference((int)(size * pPresentationTimingCount));
-#pragma warning disable CA2000 // Dispose objects before losing scope
-
                 var ptrpPresentationTimings = refpPresentationTimings.Handle;
                 result = Interop.NativeMethods.vkGetPastPresentationTimingGOOGLE(this.m, swapchain != null ? swapchain.m : default(UInt64), &pPresentationTimingCount, (PastPresentationTimingGoogle*)ptrpPresentationTimings);
                 if (result != Result.Success)
@@ -2598,5 +2335,13 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                Destroy();
+                _isDisposed = true;
+            }
+        }
     }
 }

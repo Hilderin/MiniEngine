@@ -16,10 +16,6 @@ namespace MiniEngine.Drivers.Vulkan
         internal CommandPool(Device device)
         {
             _device = device;
-
-            if (device != null)
-                device.CommandPools.Add(this);
-
         }
 
         internal UInt64 m;

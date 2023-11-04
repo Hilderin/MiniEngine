@@ -44,7 +44,7 @@ namespace MiniEngine.AssetImporters
 
             if (!_cache.TryGetValue(name, out Texture2D texture))
             {
-                string assetPath = String.Empty;
+                string assetPath;
 
                 try
                 {

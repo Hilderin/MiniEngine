@@ -8,22 +8,6 @@ namespace MiniEngine.Drivers.Vulkan
 {
     public partial class VkInstance : IMarshalling, IDisposable
     {
-        /// <summary>
-        /// Physical device
-        /// </summary>
-        public PhysicalDevice PhysicalDevice;
-
-        /// <summary>
-        /// Surface where to render
-        /// </summary>
-        public SurfaceKhr Surface;
-
-        /// <summary>
-        /// Device used
-        /// </summary>
-        public Device Device;
-
-
         public IntPtr Handle;
 
         private NativeMethods.vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT;
@@ -33,12 +17,12 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkInstance(string applicationName, VkVersion applicationVersion, Func<VkInstance, SurfaceKhr> surfaceCreationCallback, DebugReportCallback debugCallback = null)
+        public VkInstance(string applicationName, VkVersion applicationVersion, DebugReportCallback debugCallback = null)
         {
 
             var layerProperties = VkCommands.EnumerateInstanceLayerProperties();
 
-            string[] layersToEnable = new string[0];
+            string[] layersToEnable = Array.Empty<string>();
             if (debugCallback != null)
             {
                 if (!layerProperties.Any(l => l.LayerName == "VK_LAYER_KHRONOS_validation"))
@@ -67,45 +51,9 @@ namespace MiniEngine.Drivers.Vulkan
             if (debugCallback != null)
                 EnableDebug(debugCallback);
 
-            //Surface creation...
-            Surface = surfaceCreationCallback(this);
-
-            //Physical device...
-            PhysicalDevice = PickPhysicalDevice();
-
-            //And we can create a device...
-            Device = PhysicalDevice.CreateDevice(Surface);
         }
 
-        /// <summary>
-        /// Get the right Physical device
-        /// </summary>
-        public PhysicalDevice PickPhysicalDevice()
-        {
-            //TODO: Check the physical device suitable for our project
-            PhysicalDevice = EnumeratePhysicalDevices()[0];
 
-            return PhysicalDevice;
-        }
-
-        /// <summary>
-        /// Dispose high level objects
-        /// </summary>
-        private void DisposeHighLevelObjects()
-        {
-            if (PhysicalDevice != null)
-            {
-                PhysicalDevice.Dispose();
-                PhysicalDevice = null;
-            }
-
-
-            if (Surface != null)
-            {
-                DestroySurfaceKHR(Surface);
-                Surface = null;
-            }
-        }
 
         private Delegate GetMethod(string name, Type type)
         {
@@ -146,8 +94,6 @@ namespace MiniEngine.Drivers.Vulkan
 
         public void Dispose()
         {
-            DisposeHighLevelObjects();
-
             if (debugCallback != null && vkDestroyDebugReportCallbackEXT != null)
             {
                 DestroyDebugReportCallbackEXT(debugCallback);

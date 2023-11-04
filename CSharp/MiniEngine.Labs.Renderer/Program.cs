@@ -32,7 +32,7 @@ namespace MiniEngine.Labs.Renderer
 
                 using (Context context = new Context())
                 {
-                    var t = new Test_Model();
+                    var t = new Test_Triangle();
 
                     using (var render = new VkRenderer(t.GetType().Name, "1.0.0"))
                     using (var window = new GlfwWindow(WIDTH, HEIGHT, TITLE, context))

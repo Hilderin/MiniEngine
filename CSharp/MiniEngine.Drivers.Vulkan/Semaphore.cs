@@ -17,9 +17,6 @@ namespace MiniEngine.Drivers.Vulkan
         internal Semaphore(Device device)
         {
             _device = device;
-
-            if (device != null)
-                device.Semaphores.Add(this);
         }
 
         internal UInt64 m;

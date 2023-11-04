@@ -16,7 +16,7 @@ namespace MiniEngine.Rendering.Vulkan
     /// </summary>
     public class VkResourceFactory: IDisposable
     {
-        private VkRenderer _vk;
+        private VkRenderer _renderer;
 
         private Dictionary<int, IDisposable> _resources = new Dictionary<int, IDisposable>();
 
@@ -24,9 +24,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkResourceFactory(VkRenderer vk)
+        public VkResourceFactory(VkRenderer renderer)
         {
-            _vk = vk;
+            _renderer = renderer;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace MiniEngine.Rendering.Vulkan
                 byte[] pixelData = new byte[image.Width * image.Height * image.PixelType.BitsPerPixel / 8];
 
                 image.CopyPixelDataTo(pixelData);
-                return new VkTexture2D(pixelData, image.Width, image.Height, Format.R8G8B8A8Srgb, _vk, this);
+                return new VkTexture2D(pixelData, image.Width, image.Height, Format.R8G8B8A8Srgb, _renderer, this);
             }
         }
 
@@ -56,7 +56,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public VkMesh CreateMesh(MeshDefinition meshDef)
         {
-            return new VkMesh(meshDef, _vk, this);
+            return new VkMesh(meshDef, _renderer, this);
 
         }
 
@@ -83,7 +83,7 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
 
-            return new VkShader(new ShaderWrapper(_vk.Device, shaderDef.VertexCode, shaderDef.FragmentCode, overwrideVariableFormats));
+            return new VkShader(new ShaderWrapper(_renderer, shaderDef.VertexCode, shaderDef.FragmentCode, overwrideVariableFormats));
 
         }
 

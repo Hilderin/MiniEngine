@@ -1,16 +1,18 @@
-﻿using System;
+﻿using MiniEngine.Drivers.Vulkan;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Information on a shader for Vulkan
     /// </summary>
     public class ShaderWrapper
     {
+        private VkRenderer _renderer;
         private Device _device;
 
         /// <summary>
@@ -61,9 +63,10 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public ShaderWrapper(Device device, byte[] vertexSpirv, byte[] fragmentSpirv, Dictionary<string, Format> overwrideVariableFormats = null)
+        public ShaderWrapper(VkRenderer renderer, byte[] vertexSpirv, byte[] fragmentSpirv, Dictionary<string, Format> overwrideVariableFormats = null)
         {
-            _device = device;
+            _renderer = renderer;
+            _device = renderer.Device;
 
             this.VertexSpirv = vertexSpirv;
             this.FragmentSpirv = fragmentSpirv;
@@ -78,12 +81,13 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public ShaderWrapper(Device device, string vertexCode, string fragmentCode, Dictionary<string, Format> overwrideVariableFormats = null)
+        public ShaderWrapper(VkRenderer renderer, string vertexCode, string fragmentCode, Dictionary<string, Format> overwrideVariableFormats = null)
         {
-            _device = device;
+            _renderer = renderer;
+            _device = renderer.Device;
 
-            this.VertexSpirv = VkShaderCompiler.Compile(vertexCode, ShaderStageFlags.Vertex);
-            this.FragmentSpirv = VkShaderCompiler.Compile(fragmentCode, ShaderStageFlags.Fragment);
+            this.VertexSpirv = ShaderCompiler.Compile(vertexCode, ShaderStageFlags.Vertex);
+            this.FragmentSpirv = ShaderCompiler.Compile(fragmentCode, ShaderStageFlags.Fragment);
 
             SpirvParser.ParseUpdateShader(this, overwrideVariableFormats);
 
@@ -97,8 +101,8 @@ namespace MiniEngine.Drivers.Vulkan
         /// </summary>
         public void CreateModules()
         {
-            VertexShaderModule = _device.CreateShaderModule(VertexSpirv);
-            FragmentShaderModule = _device.CreateShaderModule(FragmentSpirv);
+            VertexShaderModule = _renderer.CreateShaderModule(VertexSpirv);
+            FragmentShaderModule = _renderer.CreateShaderModule(FragmentSpirv);
         }
     }
 }

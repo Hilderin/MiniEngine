@@ -8,7 +8,7 @@ namespace MiniEngine.Drivers.Vulkan
     /// <summary>
     /// Helper for the shader
     /// </summary>
-    public static class VkShaderCompiler
+    public static class ShaderCompiler
     {
         /// <summary>
         /// Compile a shader

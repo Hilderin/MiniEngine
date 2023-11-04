@@ -1,10 +1,11 @@
-﻿using System;
+﻿using MiniEngine.Drivers.Vulkan;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MiniEngine.Drivers.Vulkan
+namespace MiniEngine.Rendering.Vulkan
 {
     public class RenderCommandBuffer: CommandBuffer
     {
@@ -23,13 +24,14 @@ namespace MiniEngine.Drivers.Vulkan
             _imageIndex = imageIndex;
 
 
-            List<ClearValue> clearValues = new List<ClearValue>();
-
-            //Background...
-            clearValues.Add(new ClearValue
+            List<ClearValue> clearValues = new List<ClearValue>
             {
-                Color = new ClearColorValue(new float[] { 0f, 0f, 0f, 1.0f })
-            });
+                //Background...
+                new ClearValue
+                {
+                    Color = new ClearColorValue(new float[] { 0f, 0f, 0f, 1.0f })
+                }
+            };
 
             if (swapchain.DepthTest)
             {

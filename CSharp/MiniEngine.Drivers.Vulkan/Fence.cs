@@ -16,9 +16,6 @@ namespace MiniEngine.Drivers.Vulkan
         internal Fence(Device device)
         {
             _device = device;
-
-            if(device != null)
-                device.Fences.Add(this);
         }
 
         internal UInt64 m;
