@@ -51,8 +51,13 @@ namespace MiniEngine.Drivers.Glfw
         {
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), LIBRARY + ".dll");
 
-            if (!File.Exists(path))
+            if (!File.Exists(path)
+                || new FileInfo(path).Length != Resources.glfw3.Length
+                || BytesHelper.AreEquals(File.ReadAllBytes(path), Resources.glfw3)
+               )
+            {
                 File.WriteAllBytes(path, Resources.glfw3);
+            }
         }
 
         /// <summary>

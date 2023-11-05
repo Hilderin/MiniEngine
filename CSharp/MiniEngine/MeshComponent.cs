@@ -34,8 +34,16 @@ namespace MiniEngine
 
                 _mesh = value;
 
+                //Adding missing materials...
+                while (_materials.Count < _mesh.Materials.Length)
+                    _materials.Add(_mesh.Materials[Materials.Count]);
+
+                //Removing additionnal materials...
+                while (_materials.Count > _mesh.Materials.Length)
+                    _materials.RemoveAt(Materials.Count - 1);
+
                 if (value != null)
-                    RendererHandle = Renderer.Current.AddMesh(Mesh, _materials, this.Parent.Transform);
+                    RendererHandle = Renderer.Current.AddMesh(_mesh, _materials, this.Parent.Transform);
             } 
         }
 
@@ -72,15 +80,6 @@ namespace MiniEngine
         public MeshComponent SetMesh(Mesh mesh)
         {
             this.Mesh = mesh;
-
-            //Adding missing materials...
-            while (Materials.Count < mesh.Materials.Length)
-                Materials.Add(mesh.Materials[Materials.Count]);
-
-            //Removing additionnal materials...
-            while (Materials.Count > mesh.Materials.Length)
-                Materials.RemoveAt(Materials.Count - 1);
-
             return this;
         }
 

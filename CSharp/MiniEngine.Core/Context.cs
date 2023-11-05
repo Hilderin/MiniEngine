@@ -95,7 +95,7 @@ namespace MiniEngine
         {
             _current = this;
 
-            Input = new InputManager();
+            Input = new InputManager(this);
 
             Asset = new AssetManager(this);
 
@@ -200,16 +200,29 @@ namespace MiniEngine
         }
 
         /// <summary>
-        /// Unlock the cursor in the window
+        /// Show the cursor in the window in normal mode
         /// </summary>
-        public Context UnlockCursor()
+        public Context ShowCursor()
         {
             EnsureWindowExists();
 
-            _window.UnlockCursor();
+            _window.ShowCursor();
 
             return this;
         }
+
+        /// <summary>
+        /// Hide the cursor in the window
+        /// </summary>
+        public Context HideCursor()
+        {
+            EnsureWindowExists();
+
+            _window.HideCursor();
+
+            return this;
+        }
+
         /// <summary>
         /// Init the game/application
         /// </summary>

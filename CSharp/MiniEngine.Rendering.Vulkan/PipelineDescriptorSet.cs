@@ -214,13 +214,14 @@ namespace MiniEngine.Rendering.Vulkan
                 poolSizes.Add(new DescriptorPoolSize()
                 {
                     Type = kv.Key,
-                    DescriptorCount = (uint)kv.Value
+                    DescriptorCount = (uint)kv.Value,
+                    
                 });
             }
             using (var descriptorPoolCreateInfo = new DescriptorPoolCreateInfo
             {
                 PoolSizes = poolSizes.ToArray(),
-                MaxSets = 1
+                MaxSets = 1,
             })
             {
                 DescriptorPool = _device.CreateDescriptorPool(descriptorPoolCreateInfo);
@@ -266,66 +267,6 @@ namespace MiniEngine.Rendering.Vulkan
 
         }
 
-
-        ///// <summary>
-        ///// Create uniform buffers....
-        ///// </summary>
-        //private void UpdateDescriptorSets()
-        //{
-
-        //    List<WriteDescriptorSet> writeSets = new List<WriteDescriptorSet>();
-
-        //    foreach (DescriptorSetData descriptorData in _descriptorSetList)
-        //    {
-        //        if (descriptorData.DescriptorType == DescriptorType.UniformBuffer)
-        //        {
-        //            //UniformBuffer...
-        //            if (descriptorData.UniformBuffer != null)
-        //            {
-        //                var uniformBufferInfo = new DescriptorBufferInfo
-        //                {
-        //                    Buffer = descriptorData.UniformBuffer,
-        //                    Offset = 0,
-        //                    Range = descriptorData.UniformBuffer.Size
-        //                };
-
-        //                writeSets.Add(new WriteDescriptorSet
-        //                {
-        //                    DstSet = descriptorData.DescriptorSet,
-        //                    DescriptorType = DescriptorType.UniformBuffer,
-        //                    BufferInfo = new DescriptorBufferInfo[] { uniformBufferInfo },
-        //                    DstBinding = descriptorData.Binding
-        //                });
-        //            }
-        //        }
-        //        else if (descriptorData.DescriptorType == DescriptorType.CombinedImageSampler)
-        //        {
-        //            //Image...
-        //            if (descriptorData.ImageView != null && descriptorData.Sampler != null)
-        //            {
-        //                var imageInfo = new DescriptorImageInfo
-        //                {
-        //                    ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
-        //                    ImageView = descriptorData.ImageView,
-        //                    Sampler = descriptorData.Sampler,
-        //                };
-
-        //                writeSets.Add(new WriteDescriptorSet
-        //                {
-        //                    DstSet = descriptorData.DescriptorSet,
-        //                    DescriptorType = DescriptorType.CombinedImageSampler,
-        //                    ImageInfo = new DescriptorImageInfo[] { imageInfo },
-        //                    DstBinding = descriptorData.Binding
-        //                });
-        //            }
-        //        }
-        //        else
-        //            throw new NotSupportedException($"Descriptor type not supported: {descriptorData.DescriptorType}");
-
-        //    }
-
-        //    _device.UpdateDescriptorSets(writeSets.ToArray(), null);
-        //}
 
         private class DescriptorSetData
         {

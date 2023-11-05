@@ -63,6 +63,10 @@ namespace MiniEngine.Rendering.Vulkan
 
             for (int i = 0; i < _renderDatas.Length; i++)
             {
+                //not loaded?
+                if (_renderDatas[i].Pipeline == null)
+                    continue;
+
                 if (lastPipeline != _renderDatas[i].Pipeline)
                 {
                     //We have changed the pipeline...
@@ -131,7 +135,8 @@ namespace MiniEngine.Rendering.Vulkan
         {
             //Pipeline creation...
             _renderDatas = new RenderData[_mesh.MeshDatas.Length];
-            
+
+            _initialized = true;
 
             for (int i = 0; i < _mesh.MeshDatas.Length; i++)
             {
@@ -147,22 +152,30 @@ namespace MiniEngine.Rendering.Vulkan
 
                     if (mat != null)
                     {
-                        VkShader shader = mat.Shader;
+                        if (mat.VkDiffuseTexture.IsLoaded)
+                        {
+                            VkShader shader = mat.Shader;
 
-                        var pipeline = _vk.GetPipeline(shader);
+                            var pipeline = _vk.GetPipeline(shader);
 
-                        _renderDatas[i].Pipeline = pipeline;
+                            _renderDatas[i].Pipeline = pipeline;
 
-                        _renderDatas[i].Shader = shader;
+                            _renderDatas[i].Shader = shader;
 
-                        _renderDatas[i].DescriptorSet = pipeline.CreateDescriptorSet().Set("texSampler", mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
+                            _renderDatas[i].DescriptorSet = pipeline.CreateDescriptorSet().Set("texSampler", mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
+                        }
+                        else
+                        {
+                            //Not totally initialized...
+                            _initialized = false;
+                        }
                     }
                 }
 
             }
 
 
-            _initialized = true;
+            
 
         }
 

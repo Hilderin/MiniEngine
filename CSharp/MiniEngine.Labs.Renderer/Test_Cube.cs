@@ -13,10 +13,7 @@ namespace MiniEngine.Labs.Renderer
 
         public void Init()
         {
-
-            Context.LockCursor();
-
-
+            Context.SetMaxFramerate(60);
             Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -1f);
 
             _currentMesh = PrimitiveObjects.CreateCubeMeshObject()

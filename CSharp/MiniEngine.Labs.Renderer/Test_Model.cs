@@ -14,9 +14,6 @@ namespace MiniEngine.Labs.Renderer
 
         public void Init()
         {
-
-            //Context.LockCursor();
-
             //View from up and look down at 45deg
             //Context.Renderer.Camera.Transform.MoveTo(new Vector3(0.0f, 6f, -6f))
             //                                 .RotatePitch(Math.DegToRad(-45));

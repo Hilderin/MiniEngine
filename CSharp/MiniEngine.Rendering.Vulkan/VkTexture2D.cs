@@ -25,6 +25,11 @@ namespace MiniEngine.Rendering.Vulkan
         public Format Format;
 
         /// <summary>
+        /// Indicate if the texture is loaded and ready to use
+        /// </summary>
+        public bool IsLoaded { get { return ImageWrapper.IsLoaded; } }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public unsafe VkTexture2D(byte* pixelData, int width, int height, Format format, VkRenderer renderer, VkResourceFactory factory)

@@ -32,6 +32,15 @@ namespace MiniEngine.Labs.Renderer
             if (context.Input.IsKeyDown(Keys.F))
                 camera.Transform.RotateRoll(0.1f);
 
+            if (context.Input.IsJustMouseDown(MouseButton.Right))
+            {
+                context.LockCursor();
+            }
+            if (context.Input.IsJustMouseUp(MouseButton.Right))
+            {
+                context.ShowCursor();
+            }
+
             //if (context.Input.IsKeyDown(Keys.PageUp))
             //{
             //    if (Scene.DirectionalLight != null)
@@ -46,13 +55,19 @@ namespace MiniEngine.Labs.Renderer
             //if (Scene.DirectionalLight != null)
             //    Scene.DirectionalLight.Intensity = Math.Clamp(Scene.DirectionalLight.Intensity, 0f, 1f);
 
-            //if (context.Input.IsJustMouseMoved)
-            //{
-            //    Vector2 mouseMovement = context.Input.MouseMovement;
-            //    Camera.RotatePitch(mouseMovement.Y * -0.1f);
-            //    //Camera.RotateYaw(mouseMovement.X * 0.1f);
-            //    Debug.Print(mouseMovement.ToString());
-            //}
+            if (context.Input.IsJustMouseMoved && context.Input.IsMouseDown(MouseButton.Right))
+            {
+                Vector2 mouseMovement = context.Input.MouseMovement;
+                mouseMovement.Normalize();
+                camera.Transform.RotateYaw(mouseMovement.X * 5f * Time.DeltaTime);
+                camera.Transform.RotatePitch(mouseMovement.Y * -5f * Time.DeltaTime);
+                //Camera.RotateYaw(mouseMovement.X * 0.1f);
+                Debug.Info((mouseMovement.X * 1f * Time.DeltaTime).ToString());
+
+                //context.ShowCursor();
+                //context.LockCursor();
+            }
+//            Debug.Info(context.Input.MouseMovement.ToString());
         }
 
     }

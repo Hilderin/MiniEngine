@@ -29,7 +29,7 @@ namespace MiniEngine
         /// </summary>
         public int Height { get; set; }
 
-
+        
 
 
         /// <summary>

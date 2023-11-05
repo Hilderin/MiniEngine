@@ -30,6 +30,11 @@ namespace MiniEngine.Rendering.Vulkan
         public DeviceMemory DeviceMemory;
 
         /// <summary>
+        /// Indicate if the image is loaded and ready to use
+        /// </summary>
+        public bool IsLoaded { get; private set; }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public unsafe ImageWrapper(VkRenderer renderer, byte* data, int width, int height, Format format)
@@ -150,7 +155,14 @@ namespace MiniEngine.Rendering.Vulkan
 
 
                 //The image still needed to change layout in the graphics queue...
-                _renderer.AddActionsBeforeNextFrame(() => _renderer.GraphicsQueue.ExecuteAndWait(this.CmdTransferToGraphicsQueue));
+                IsLoaded = false;
+                _renderer.AddActionsBeforeNextFrame(() =>
+                {
+                    _renderer.GraphicsQueue.ExecuteAndWait(this.CmdTransferToGraphicsQueue);
+
+                    //Now it's ready!
+                    IsLoaded = true;
+                });
             }
 
             //We need to create the image view now...

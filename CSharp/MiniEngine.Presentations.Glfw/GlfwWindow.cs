@@ -227,8 +227,6 @@ namespace MiniEngine.Presentations.Glfw
             get => (CursorMode)GLFW.GetInputMode(_glfwWindow, InputMode.Cursor);
             set
             {
-                GLFW.SetInputMode(_glfwWindow, InputMode.Cursor, (int)value);
-
                 if (GLFW.RawMouseMotionSupported())
                 {
                     if (value == CursorMode.Disabled)
@@ -236,6 +234,11 @@ namespace MiniEngine.Presentations.Glfw
                     else
                         GLFW.SetInputMode(_glfwWindow, InputMode.RawMouseMotion, (int)Constants.False);
                 }
+
+                GLFW.SetInputMode(_glfwWindow, InputMode.Cursor, (int)value);
+
+
+                
             }
         }
 
@@ -425,11 +428,19 @@ namespace MiniEngine.Presentations.Glfw
         }
 
         /// <summary>
-        /// Unlock the cursor in the window
+        /// Show the cursor in the window in normal mode
         /// </summary>
-        public void UnlockCursor()
+        public void ShowCursor()
         {
             CursorMode = CursorMode.Normal;
+        }
+
+        /// <summary>
+        /// Hide the cursor in the window
+        /// </summary>
+        public void HideCursor()
+        {
+            CursorMode = CursorMode.Hidden;
         }
 
 
@@ -669,7 +680,6 @@ namespace MiniEngine.Presentations.Glfw
         /// </summary>
         private void OnCursorPosition(Window window, double x, double y)
         {
-            //Debug.Print("OnCursorPosition " + x + ", " + y);
             _context.Input.SetMousePosition(new Vector2((float)x, (float)y));
         }
 

@@ -12,6 +12,13 @@ namespace MiniEngine
     /// </summary>
     public class InputManager
     {
+        private Context _context;
+
+        /// <summary>
+        /// Last cursormode
+        /// </summary>
+        private CursorMode _lastCursorMode = CursorMode.Normal;
+
         /// <summary>
         /// Keys that are down at a fixed position
         /// </summary>
@@ -102,8 +109,9 @@ namespace MiniEngine
         /// <summary>
         /// Constructor
         /// </summary>
-        public InputManager()
+        public InputManager(Context context)
         {
+            _context = context;
         }
 
 
@@ -142,6 +150,7 @@ namespace MiniEngine
             
         }
 
+
         /// <summary>
         /// Set the mouse position
         /// </summary>
@@ -149,15 +158,33 @@ namespace MiniEngine
         {
             if (MousePosition != position)
             {
-                //Calculate the diff and the deplacement vector...
-                //Debug.Print("Old position: " + MousePosition + ", new: " + position.ToString());
-                Vector2 movement = (position - MousePosition) / 200;
-                //movement.Normalize();
-                MouseMovement = movement;
-                //Debug.Print(movement.ToString());
+                CursorMode currentCursorMode = _context.Window.CursorMode;
+
+                Vector2 movement;
+                if (_lastCursorMode != currentCursorMode)
+                {
+                    //No movement...
+                    _lastCursorMode = currentCursorMode;
+                    movement = Vector2.Zero;
+                }
+                else
+                {
+                    //Calculate the diff and the deplacement vector...
+                    //Debug.Print("Old position: " + MousePosition + ", new: " + position.ToString());
+                    movement = (position - MousePosition);
+                    movement.X /= (_context.Window.ClientSize.X / 2);
+                    movement.Y /= (_context.Window.ClientSize.Y / 2);
+
+                    MouseMovement = movement;
+                }
+
+               
+                Debug.Info("position: " + position + ", Movement: " + (position - MousePosition).ToString() + ", Relative mov: " + movement.ToString());
 
                 MousePosition = position;
-                IsJustMouseMoved = true;
+
+                if(movement != Vector2.Zero)
+                    IsJustMouseMoved = true;
             }
         }
 
@@ -176,7 +203,6 @@ namespace MiniEngine
                 //Debug.Print(movement.ToString());
 
                 MouseScroll = scroll;
-                IsJustMouseMoved = true;
             }
         }
 
@@ -232,6 +258,17 @@ namespace MiniEngine
         }
 
         /// <summary>
+        /// Check if the key just released since the last frame
+        /// </summary>
+        public bool IsJustKeyUp(Keys key)
+        {
+            if (!IsKeyDown(key))
+                return _newlyKeyUps.Contains(key);
+            else
+                return false;
+        }
+
+        /// <summary>
         /// Check if a mouse button is down
         /// </summary>
         public bool IsMouseDown(MouseButton mouseDown)
@@ -246,6 +283,17 @@ namespace MiniEngine
         {
             if (IsMouseDown(mouseDown))
                 return _newlyMouseDowns.Contains(mouseDown);
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// Check if the mouseDown just released since the last frame
+        /// </summary>
+        public bool IsJustMouseUp(MouseButton mouseDown)
+        {
+            if (!IsMouseDown(mouseDown))
+                return _newlyMouseUps.Contains(mouseDown);
             else
                 return false;
         }

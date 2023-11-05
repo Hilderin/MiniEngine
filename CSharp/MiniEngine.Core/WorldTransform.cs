@@ -165,7 +165,14 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform RotatePitch(float angleRad)
         {
-            _rotation.Pitch += angleRad;
+            if (float.IsNaN(angleRad))
+            {
+                Debug.Warning("Rotation Pitch NaN");
+            }
+            else
+            {
+                _rotation.Pitch += angleRad;
+            }
             return this;
         }
 
@@ -174,7 +181,14 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform RotateYaw(float angleRad)
         {
-            _rotation.Yaw += angleRad;
+            if (float.IsNaN(angleRad))
+            {
+                Debug.Warning("Rotation Yaw NaN");
+            }
+            else
+            {
+                _rotation.Yaw += angleRad;
+            }
             return this;
         }
 
@@ -183,7 +197,14 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform RotateRoll(float angleRad)
         {
-            _rotation.Roll += angleRad;
+            if (float.IsNaN(angleRad))
+            {
+                Debug.Warning("Rotation Roll NaN");
+            }
+            else
+            {
+                _rotation.Roll += angleRad;
+            }
             return this;
         }
 
