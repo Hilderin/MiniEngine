@@ -58,9 +58,9 @@ namespace MiniEngine.Labs.Renderer
             if (context.Input.IsJustMouseMoved && context.Input.IsMouseDown(MouseButton.Right))
             {
                 Vector2 mouseMovement = context.Input.MouseMovement;
-                mouseMovement.Normalize();
-                camera.Transform.RotateYaw(mouseMovement.X * 5f * Time.DeltaTime);
-                camera.Transform.RotatePitch(mouseMovement.Y * -5f * Time.DeltaTime);
+                //mouseMovement.Normalize();
+                camera.Transform.RotateYaw(mouseMovement.X * 1000f * Time.DeltaTime);
+                camera.Transform.RotatePitch(mouseMovement.Y * -1000f * Time.DeltaTime);
                 //Camera.RotateYaw(mouseMovement.X * 0.1f);
                 Debug.Info((mouseMovement.X * 1f * Time.DeltaTime).ToString());
 
