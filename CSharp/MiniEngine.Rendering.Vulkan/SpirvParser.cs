@@ -14,17 +14,17 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Parse dthe spirv codes
         /// </summary>
-        public static void ParseUpdateShader(ShaderWrapper shader, Dictionary<string, Format> overwrideVariableFormats = null)
+        public static void ParseUpdateShader(ShaderWrapper shader, Dictionary<string, SpirvVariableDefinition> variableDefinitions = null)
         {
-            ParseBytes(shader.VertexSpirv, shader, overwrideVariableFormats);
-            ParseBytes(shader.FragmentSpirv, shader, overwrideVariableFormats);
+            ParseBytes(shader.VertexSpirv, shader, variableDefinitions);
+            ParseBytes(shader.FragmentSpirv, shader, variableDefinitions);
 
         }
 
         /// <summary>
         /// Parse the byte codes for a shader
         /// </summary>
-        private unsafe static void ParseBytes(byte[] dataBytes, ShaderWrapper shader, Dictionary<string, Format> overwrideVariableFormats)
+        private unsafe static void ParseBytes(byte[] dataBytes, ShaderWrapper shader, Dictionary<string, SpirvVariableDefinition> variableDefinitions)
         {
             if (dataBytes.Length % 4 != 0)
                 throw new ArgumentException("Invalid spirv, length % 4 != 0");
@@ -395,7 +395,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             //--------------------------------------
             //Vertex buffer...
-            UpdateVertexBindings(ids, entry_variables_index, vertexBindings, vertexInputAttributes, overwrideVariableFormats);
+            UpdateVertexBindings(ids, entry_variables_index, vertexBindings, vertexInputAttributes, variableDefinitions);
 
 
 
@@ -434,31 +434,18 @@ namespace MiniEngine.Rendering.Vulkan
                                 binding.Name = id.name;
                                 binding.Size = uniform_type.width;
 
-                                switch (uniform_type.op)
+                                UpdateBindingDescriptorType(binding, uniform_type, ids);
+
+                                if (binding.IsArray)
                                 {
-                                    case SpvOp.SpvOpTypeStruct:
-                                        binding.Name = uniform_type.name;
-                                        binding.DescriptorType = DescriptorType.UniformBuffer;
-                                        binding.DescriptorCount = 1;
-                                        break;
 
-                                    case SpvOp.SpvOpTypeSampledImage:
-                                        binding.DescriptorType = DescriptorType.CombinedImageSampler;
-                                        binding.DescriptorCount = 1;
-                                        break;
+                                    if (variableDefinitions != null && variableDefinitions.TryGetValue(id.name, out var varDef))
+                                    {
+                                        binding.DescriptorCount = (uint)varDef.Count;
+                                        binding.Bindless = varDef.Bindless;
+                                    }
 
-                                    case SpvOp.SpvOpTypeImage:
-                                        binding.DescriptorType = DescriptorType.SampledImage;
-                                        binding.DescriptorCount = 1;
-                                        break;
 
-                                    case SpvOp.SpvOpTypeSampler:
-                                        binding.DescriptorType = DescriptorType.Sampler;
-                                        binding.DescriptorCount = 1;
-                                        break;
-
-                                    default:
-                                        throw new InvalidOperationException($"Binding '{id.name}' type not supported: {uniform_type.op}");
                                 }
 
                                 bindings.Add(binding);
@@ -492,10 +479,18 @@ namespace MiniEngine.Rendering.Vulkan
                                     pushConstant.Size = member_id.width;
                                     pushConstant.Offset = mc.offset;
 
+
                                     constants.Add(pushConstant);
                                 }
+                                else if (mc.name != pushConstant.Name)
+                                {
+                                    //Multiple constants with different name at the same offset...
+                                    throw new InvalidOperationException($"Multiple constants with different name at the same offset {mc.offset}, constant '{pushConstant.Name}' and '{mc.name}'");
+                                }
+
 
                                 pushConstant.StageFlags |= stage;
+
 
 
                             }
@@ -522,6 +517,49 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Update the bindings for a desccriptor type
+        /// </summary>
+        private static unsafe void UpdateBindingDescriptorType(DescriptorSetLayoutBinding binding, Id uniform_type, Id[] ids)
+        {
+            switch (uniform_type.op)
+            {
+                case SpvOp.SpvOpTypeStruct:
+                    binding.Name = uniform_type.name;
+                    binding.DescriptorType = DescriptorType.UniformBuffer;
+                    binding.DescriptorCount = 1;
+                    break;
+
+                case SpvOp.SpvOpTypeSampledImage:
+                    binding.DescriptorType = DescriptorType.CombinedImageSampler;
+                    binding.DescriptorCount = 1;
+                    break;
+
+                case SpvOp.SpvOpTypeImage:
+                    binding.DescriptorType = DescriptorType.SampledImage;
+                    binding.DescriptorCount = 1;
+                    break;
+
+                case SpvOp.SpvOpTypeSampler:
+                    binding.DescriptorType = DescriptorType.Sampler;
+                    binding.DescriptorCount = 1;
+                    break;
+
+                case SpvOp.SpvOpTypeRuntimeArray:
+
+                    Id array_type = ids[uniform_type.type_index];
+
+                    binding.IsArray = true;
+
+                    UpdateBindingDescriptorType(binding, array_type, ids);
+
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Binding '{binding.Name}' type not supported: {uniform_type.op}");
+            }
+        }
+
+        /// <summary>
         /// Calculate the vertex bindings
         /// </summary>
         private static unsafe void UpdateVertexBindings(
@@ -529,7 +567,7 @@ namespace MiniEngine.Rendering.Vulkan
             List<uint> entry_variables_index,
             List<VertexInputBindingDescription> vertexBindings,
             List<VertexInputAttributeDescription> vertexInputAttributes,
-            Dictionary<string, Format> overwrideVariableFormats)
+            Dictionary<string, SpirvVariableDefinition> variableDefinitions)
         {
 
 
@@ -558,10 +596,10 @@ namespace MiniEngine.Rendering.Vulkan
                         Size = GetMemberWidth(typeid, ids)
                     };
                     
-                    if(overwrideVariableFormats != null && overwrideVariableFormats.TryGetValue(id.name, out Format format))
+                    if(variableDefinitions != null && variableDefinitions.TryGetValue(id.name, out var varDef) && varDef.Format != Format.Undefined)
                     {
-                        new_entry.Format = format;
-                        new_entry.Size = (uint)(FormatHelper.GetFormatSizeBits(format) / 8);
+                        new_entry.Format = varDef.Format;
+                        new_entry.Size = (uint)(FormatHelper.GetFormatSizeBits(varDef.Format) / 8);
                     }
 
 
@@ -1699,5 +1737,15 @@ namespace MiniEngine.Rendering.Vulkan
 
         #endregion
 
+    }
+
+    /// <summary>
+    /// Information on a variable to help parse the spirv
+    /// </summary>
+    public class SpirvVariableDefinition
+    {
+        public Format Format = Format.Undefined;
+        public int Count = 1;
+        public bool Bindless = false;
     }
 }

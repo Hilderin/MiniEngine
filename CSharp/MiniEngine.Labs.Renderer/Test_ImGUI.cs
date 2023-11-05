@@ -33,7 +33,7 @@ namespace MiniEngine.Labs.Renderer
         {
             ((VkRenderer)Context.Renderer).UpdateImGuiInput(Context.Input);
 
-            Debug.Info("DeltaTime: " + Time.DeltaTime + ", LastFrame: " + Time.LastFrameGenerationTime.TotalMilliseconds);
+            //Debug.Info("DeltaTime: " + Time.DeltaTime + ", LastFrame: " + Time.LastFrameGenerationTime.TotalMilliseconds);
             //Context.Current.SetMaxFramerate(60);
 
             var windowSize = Context.Window.ClientSize;

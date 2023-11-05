@@ -66,24 +66,37 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public VkShader CreateShader(ShaderDefinition shaderDef)
         {
-            Dictionary<string, Format> overwrideVariableFormats = null;
+            Dictionary<string, SpirvVariableDefinition> variableDefinitions = null;
 
-            if (shaderDef.OverwrideVariableFormats != null && shaderDef.OverwrideVariableFormats.Count > 0)
+            if (shaderDef.VariableDefinitions != null && shaderDef.VariableDefinitions.Count > 0)
             {
-                overwrideVariableFormats = new Dictionary<string, Format>();
+                variableDefinitions = new Dictionary<string, SpirvVariableDefinition>();
 
-                foreach (var kv in shaderDef.OverwrideVariableFormats)
+                foreach (var kv in shaderDef.VariableDefinitions)
                 {
-                    if (!Enum.TryParse<Format>(kv.Value, true, out Format format))
-                        throw new FormatException($"Invalid format for variable {kv.Key}: {kv.Value}");
+                    SpirvVariableDefinition spirvDef = new SpirvVariableDefinition();
 
-                    overwrideVariableFormats.Add(kv.Key, format);
+                    var varDef = kv.Value;
+
+                    if (!String.IsNullOrEmpty(varDef.Format))
+                    {
+                        if (!Enum.TryParse<Format>(varDef.Format, true, out Format format))
+                            throw new FormatException($"Invalid format for variable {kv.Key}: {varDef.Format}");
+
+                        spirvDef.Format = format;
+                    }
+
+                    spirvDef.Count = varDef.Count;
+                    spirvDef.Bindless = varDef.Bindless;
+                    
+
+                    variableDefinitions.Add(kv.Key, spirvDef);
                 }
 
             }
 
 
-            return new VkShader(new ShaderWrapper(_renderer, shaderDef.VertexCode, shaderDef.FragmentCode, overwrideVariableFormats));
+            return new VkShader(new ShaderWrapper(_renderer, shaderDef.VertexCode, shaderDef.FragmentCode, variableDefinitions));
 
         }
 

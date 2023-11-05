@@ -59,10 +59,10 @@ namespace MiniEngine.Labs.Renderer
             {
                 Vector2 mouseMovement = context.Input.MouseMovement;
                 //mouseMovement.Normalize();
-                camera.Transform.RotateYaw(mouseMovement.X * 1000f * Time.DeltaTime);
-                camera.Transform.RotatePitch(mouseMovement.Y * -1000f * Time.DeltaTime);
+                camera.Transform.RotateYaw(mouseMovement.X * 10f * Time.DeltaTime);
+                camera.Transform.RotatePitch(mouseMovement.Y * -10f * Time.DeltaTime);
                 //Camera.RotateYaw(mouseMovement.X * 0.1f);
-                Debug.Info((mouseMovement.X * 1f * Time.DeltaTime).ToString());
+                //Debug.Info((mouseMovement.X * 1f * Time.DeltaTime).ToString());
 
                 //context.ShowCursor();
                 //context.LockCursor();

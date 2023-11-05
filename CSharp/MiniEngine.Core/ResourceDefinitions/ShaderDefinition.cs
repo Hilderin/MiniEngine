@@ -22,8 +22,19 @@ namespace MiniEngine.ResourceDefinitions
         public string FragmentCode { get; set; }
 
         /// <summary>
-        /// Overwrides for variable formats
+        /// Information on the variables in the shader
         /// </summary>
-        public Dictionary<string, string> OverwrideVariableFormats = new Dictionary<string, string>();
+        public Dictionary<string, ShaderVariableDefinition> VariableDefinitions = new Dictionary<string, ShaderVariableDefinition>();
+    }
+
+
+    /// <summary>
+    /// Information on a variable in the shader
+    /// </summary>
+    public class ShaderVariableDefinition
+    {
+        public string Format = String.Empty;
+        public int Count = 1;
+        public bool Bindless = false;
     }
 }

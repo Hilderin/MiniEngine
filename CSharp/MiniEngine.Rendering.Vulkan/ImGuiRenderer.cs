@@ -337,9 +337,9 @@ void main()
     //outputColor = color;
 }
 "
-, new Dictionary<string, Format>()
+, new Dictionary<string, SpirvVariableDefinition>()
 {
-    { "in_color", Format.R8G8B8A8Unorm }
+    { "in_color", new() { Format = Format.R8G8B8A8Unorm } }
 });
 
         }

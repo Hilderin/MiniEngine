@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniEngine.ResourceDefinitions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,8 +23,8 @@ namespace MiniEngine.AssetDefinitions
         public string FragmentCodePath { get; set; }
 
         /// <summary>
-        /// Overwrides for variable formats
+        /// Information on the variables in the shader
         /// </summary>
-        public Dictionary<string, string> OverwrideVariableFormats = new Dictionary<string, string>();
+        public Dictionary<string, ShaderVariableDefinition> VariableDefinitions = new Dictionary<string, ShaderVariableDefinition>();
     }
 }

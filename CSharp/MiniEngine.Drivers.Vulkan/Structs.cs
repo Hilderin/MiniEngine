@@ -2673,8 +2673,10 @@ namespace MiniEngine.Drivers.Vulkan
 	{
 		public string Name;
 		public uint Size;
+        public bool IsArray;
+        public bool Bindless;
 
-		public UInt32 Binding {
+        public UInt32 Binding {
 			get { return m->Binding; }
 			set { m->Binding = value; }
 		}
@@ -2762,7 +2764,13 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		public UInt32 BindingCount {
+        public IntPtr Next
+        {
+            get { return m->Next; }
+            set { m->Next = value; }
+        }
+
+        public UInt32 BindingCount {
 			get { return m->BindingCount; }
 			set { m->BindingCount = value; }
 		}
@@ -2926,7 +2934,89 @@ namespace MiniEngine.Drivers.Vulkan
 
 	}
 
-	unsafe public partial class DescriptorSetAllocateInfo : MarshalledObject
+    unsafe public partial class DescriptorSetLayoutBindingFlagsCreateInfo : MarshalledObject
+    {
+       
+        public UInt32 BindingCount
+        {
+            get { return m->BindingCount; }
+            set { m->BindingCount = value; }
+        }
+
+        NativeReference refBindings;
+        public DescriptorBindingFlags[] BindingFlags
+        {
+            get
+            {
+                if (m->BindingCount == 0)
+                    return null;
+                var values = new DescriptorBindingFlags[m->BindingCount];
+                unsafe
+                {
+                    DescriptorBindingFlags* ptr = (DescriptorBindingFlags*)m->BindingFlags;
+                    for (int i = 0; i < values.Length; i++)
+                        values[i] = ptr[i];
+                }
+                return values;
+            }
+
+            set
+            {
+                if (value == null)
+                {
+                    m->BindingCount = 0;
+                    m->BindingFlags = IntPtr.Zero;
+                    return;
+                }
+                m->BindingCount = (uint)value.Length;
+                refBindings = new NativeReference((int)(sizeof(DescriptorBindingFlags) * value.Length));
+                m->BindingFlags = refBindings.Handle;
+                unsafe
+                {
+                    DescriptorBindingFlags* ptr = (DescriptorBindingFlags*)m->BindingFlags;
+                    for (int i = 0; i < value.Length; i++)
+                        ptr[i] = value[i];
+                }
+            }
+        }
+        internal Interop.DescriptorSetLayoutBindingFlagsCreateInfo* m
+        {
+
+            get
+            {
+                return (Interop.DescriptorSetLayoutBindingFlagsCreateInfo*)native.Handle;
+            }
+        }
+
+        public DescriptorSetLayoutBindingFlagsCreateInfo()
+        {
+            native = Interop.Structure.Allocate(typeof(Interop.DescriptorSetLayoutBindingFlagsCreateInfo));
+            Initialize();
+        }
+
+        internal DescriptorSetLayoutBindingFlagsCreateInfo(NativePointer pointer)
+        {
+            native = pointer;
+            Initialize();
+        }
+
+        override public void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (!disposing)
+                return;
+            refBindings?.Dispose();
+            refBindings = null;
+        }
+
+        internal void Initialize()
+        {
+            m->SType = StructureType.DescriptorSetLayoutBindingFlagsCreateInfo;
+        }
+
+    }
+
+    unsafe public partial class DescriptorSetAllocateInfo : MarshalledObject
 	{
 		DescriptorPool lDescriptorPool;
 		public DescriptorPool DescriptorPool {

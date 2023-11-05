@@ -390,6 +390,8 @@ namespace MiniEngine.Drivers.Vulkan.Interop
         internal IntPtr Bindings;
     }
 
+
+
     internal partial struct DescriptorPoolCreateInfo
     {
         internal StructureType SType;
@@ -398,6 +400,14 @@ namespace MiniEngine.Drivers.Vulkan.Interop
         internal UInt32 MaxSets;
         internal UInt32 PoolSizeCount;
         internal IntPtr PoolSizes;
+    }
+
+    internal partial struct DescriptorSetLayoutBindingFlagsCreateInfo
+    {
+        internal StructureType SType;
+        internal IntPtr Next;
+        internal UInt32 BindingCount;
+        internal IntPtr BindingFlags;
     }
 
     internal partial struct DescriptorSetAllocateInfo

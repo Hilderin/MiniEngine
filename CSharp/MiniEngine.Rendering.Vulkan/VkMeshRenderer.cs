@@ -91,7 +91,22 @@ namespace MiniEngine.Rendering.Vulkan
             //Constants...
             for (int iConst = 0; iConst < shader.ShaderData.Constants.Length; iConst++)
             {
-                commandBuffer.CmdPushConstants(pipeline.PipelineLayout, shader.ShaderData.Constants[iConst].StageFlags, 0, ref mvp);
+                var pushContant = shader.ShaderData.Constants[iConst];
+
+                switch (pushContant.Name)
+                {
+                    case "render_matrix":
+                        commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref mvp);
+                        break;
+
+                    case "textureRID":
+                        commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref meshData.MaterialIndex);
+                        break;
+
+                    default:
+                        Debug.Warning($"Constant not found: {pushContant.Name}");
+                        break;
+                }
             }
 
             //DescriptorSets...

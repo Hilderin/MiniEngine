@@ -187,7 +187,40 @@ namespace MiniEngine.Rendering.Vulkan
             descriptorSetLayouts = new DescriptorSetLayout[_shader.BindingSets.Length];
             for (uint i = 0; i < descriptorSetLayouts.Length; i++)
             {
-                descriptorSetLayouts[i] = _device.CreateDescriptorSetLayout(_shader.BindingSets[i]);
+                //Flag each set's bindings as partiallyBound and updateAfterBind features
+                bool atLeastOneBindless = false;
+
+                DescriptorSetLayoutCreateFlags layoutFlags = 0;
+                DescriptorBindingFlags[] bindingFlags = new DescriptorBindingFlags[_shader.BindingSets[i].Length];
+
+                for (int iDesc = 0; iDesc < bindingFlags.Length; iDesc++)
+                {
+                    if (_shader.BindingSets[i][iDesc].Bindless)
+                    {
+                        bindingFlags[iDesc] = DescriptorBindingFlags.PartiallyBound | DescriptorBindingFlags.UpdateAfterBind;
+                        atLeastOneBindless = true;
+                    }
+                }
+
+                DescriptorSetLayoutBindingFlagsCreateInfo extended_info = null;
+                if (atLeastOneBindless)
+                {
+                    layoutFlags |= DescriptorSetLayoutCreateFlags.UpdaterAfterBindPool;
+
+                    extended_info = new DescriptorSetLayoutBindingFlagsCreateInfo()
+                    {
+                        BindingFlags = bindingFlags
+                    };
+                }
+                using (var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
+                {
+                    Bindings = _shader.BindingSets[i],
+                    Next = extended_info != null ? extended_info.Handle : IntPtr.Zero,
+                    Flags = layoutFlags
+                })
+                {
+                    descriptorSetLayouts[i] = _device.CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo);
+                }
             }
 
             PushConstantRange[] constantRanges = _shader.Constants;

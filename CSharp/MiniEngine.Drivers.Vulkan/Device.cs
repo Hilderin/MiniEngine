@@ -1043,16 +1043,17 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
 
-        public DescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutBinding[] bindings, AllocationCallbacks pAllocator = null)
-        {
-            using (var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
-            {
-                Bindings = bindings
-            })
-            {
-                return CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo, pAllocator);
-            }
-        }
+        //public DescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutBinding[] bindings, AllocationCallbacks pAllocator = null, MarshalledObject next = null)
+        //{
+        //    using (var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
+        //    {
+        //        Bindings = bindings,
+        //        Next = next != null ? next.Handle : IntPtr.Zero
+        //    })
+        //    {
+        //        return CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo, pAllocator);
+        //    }
+        //}
 
 
         public DescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutCreateInfo pCreateInfo, AllocationCallbacks pAllocator = null)

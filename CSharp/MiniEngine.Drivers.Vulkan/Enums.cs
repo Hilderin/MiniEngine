@@ -122,7 +122,12 @@ namespace MiniEngine.Drivers.Vulkan
 	public enum DescriptorSetLayoutCreateFlags : int
 	{
 		PushDescriptorKhr = 0x1,
-	}
+        UpdaterAfterBindPool = 0x00000002,
+        DescriptorBuffer = 0x00000010,
+        EmbeddedImmutableSamplers = 0x00000020,
+        IndirectBindable = 0x00000080,
+        HostOnlyPool = 0x00000004
+    }
 
 	[Flags]
 	public enum BufferCreateFlags : int
@@ -1054,7 +1059,8 @@ namespace MiniEngine.Drivers.Vulkan
 		BindBufferMemoryInfoKhr = 1000157000,
 		BindImageMemoryInfoKhr = 1000157001,
 		ValidationCacheCreateInfoExt = 1000160000,
-		ShaderModuleValidationCacheCreateInfoExt = 1000160001,
+        ShaderModuleValidationCacheCreateInfoExt = 1000160001,
+        DescriptorSetLayoutBindingFlagsCreateInfo = 1000161000,
         PhysicalDeviceDescriptorIndexingFeatures = 1000161001,
         DeviceQueueGlobalPriorityCreateInfoExt = 1000174000,
 		ImportMemoryHostPointerInfoExt = 1000178000,
@@ -1157,7 +1163,18 @@ namespace MiniEngine.Drivers.Vulkan
 	public enum DescriptorPoolCreateFlags : int
 	{
 		FreeDescriptorSet = 0x1,
-	}
+        UpdateAfterBind = 0x00000002,
+        HostOnlyEXT = 0x00000004
+    }
+
+    [Flags]
+    public enum DescriptorBindingFlags
+    {
+        UpdateAfterBind = 0x00000001,
+        UpdateUnusedWhilePending = 0x00000002,
+        PartiallyBound = 0x00000004,
+        VariableDescriptorCount = 0x00000008
+    }
 
 	[Flags]
 	public enum DependencyFlags : int

@@ -1,4 +1,5 @@
 ﻿using MiniEngine.AssetDefinitions;
+using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -51,7 +52,7 @@ namespace MiniEngine.AssetImporters
 
                         string vertPath = String.Empty;
                         string fragPath = String.Empty;
-                        Dictionary<string, string> overwrideVariableFormats = null;
+                        Dictionary<string, ShaderVariableDefinition> variableDefinitions = null;
 
 
                         string assetPath = _assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE);
@@ -76,7 +77,7 @@ namespace MiniEngine.AssetImporters
                             if (!File.Exists(fragPath))
                                 throw new FileNotFoundException($"Fragment file not found: {fragPath}");
 
-                            overwrideVariableFormats = assetInfo.OverwrideVariableFormats;
+                            variableDefinitions = assetInfo.VariableDefinitions;
                         }
                         else
                         {
@@ -96,7 +97,7 @@ namespace MiniEngine.AssetImporters
                         {
                             VertexCode = File.ReadAllText(vertPath),
                             FragmentCode = File.ReadAllText(fragPath),
-                            OverwrideVariableFormats = overwrideVariableFormats
+                            VariableDefinitions = variableDefinitions
                         });
 
                     }

@@ -55,13 +55,16 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Set a uniform buffer
         /// </summary>
-        public PipelineDescriptorSet Set(string name, BufferWrapper uniformBuffer)
+        public PipelineDescriptorSet Set(string name, BufferWrapper uniformBuffer, uint arrayElementIndex = 0)
         {
             if (!_descriptorSetsPerName.TryGetValue(name, out var descriptorData))
                 throw new InvalidOperationException($"Descriptor name not found '{name}'");
 
             if (descriptorData.DescriptorType != DescriptorType.UniformBuffer)
                 throw new InvalidOperationException($"Wrong DescryptorName, expected '{DescriptorType.UniformBuffer}', current type: {descriptorData.DescriptorType}");
+
+            if (arrayElementIndex > 0 && !descriptorData.IsArray)
+                throw new InvalidOperationException($"Cannot set an {nameof(arrayElementIndex)} != 0 for a non array descriptor.");
 
             var uniformBufferInfo = new DescriptorBufferInfo
             {
@@ -75,7 +78,8 @@ namespace MiniEngine.Rendering.Vulkan
                 DstSet = descriptorData.DescriptorSet,
                 DescriptorType = DescriptorType.UniformBuffer,
                 BufferInfo = new DescriptorBufferInfo[] { uniformBufferInfo },
-                DstBinding = descriptorData.Binding
+                DstBinding = descriptorData.Binding,
+                DstArrayElement = arrayElementIndex
             })
             {
                 _device.UpdateDescriptorSets(writeSet);
@@ -87,7 +91,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Set a combined image and sampler
         /// </summary>
-        public PipelineDescriptorSet Set(string name, ImageView imageView, Sampler sampler)
+        public PipelineDescriptorSet Set(string name, ImageView imageView, Sampler sampler, uint arrayElementIndex = 0)
         {
 
             if (!_descriptorSetsPerName.TryGetValue(name, out var descriptorData))
@@ -95,6 +99,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             if (descriptorData.DescriptorType != DescriptorType.CombinedImageSampler)
                 throw new InvalidOperationException($"Wrong DescryptorName, expected '{DescriptorType.CombinedImageSampler}', current type: {descriptorData.DescriptorType}");
+
+            if (arrayElementIndex > 0 && !descriptorData.IsArray)
+                throw new InvalidOperationException($"Cannot set an {nameof(arrayElementIndex)} != 0 for a non array descriptor.");
 
             var imageInfo = new DescriptorImageInfo
             {
@@ -108,7 +115,8 @@ namespace MiniEngine.Rendering.Vulkan
                 DstSet = descriptorData.DescriptorSet,
                 DescriptorType = DescriptorType.CombinedImageSampler,
                 ImageInfo = new DescriptorImageInfo[] { imageInfo },
-                DstBinding = descriptorData.Binding
+                DstBinding = descriptorData.Binding,
+                DstArrayElement = arrayElementIndex
             })
             {
                 _device.UpdateDescriptorSets(writeSet);
@@ -120,7 +128,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Set a sampled image only
         /// </summary>
-        public PipelineDescriptorSet Set(string name, ImageView imageView)
+        public PipelineDescriptorSet Set(string name, ImageView imageView, uint arrayElementIndex = 0)
         {
 
             if (!_descriptorSetsPerName.TryGetValue(name, out var descriptorData))
@@ -128,6 +136,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             if(descriptorData.DescriptorType != DescriptorType.SampledImage)
                 throw new InvalidOperationException($"Wrong DescryptorName, expected '{DescriptorType.SampledImage}', current type: {descriptorData.DescriptorType}");
+
+            if (arrayElementIndex > 0 && !descriptorData.IsArray)
+                throw new InvalidOperationException($"Cannot set an {nameof(arrayElementIndex)} != 0 for a non array descriptor.");
 
             var imageInfo = new DescriptorImageInfo
             {
@@ -140,7 +151,8 @@ namespace MiniEngine.Rendering.Vulkan
                 DstSet = descriptorData.DescriptorSet,
                 DescriptorType = DescriptorType.SampledImage,
                 ImageInfo = new DescriptorImageInfo[] { imageInfo },
-                DstBinding = descriptorData.Binding
+                DstBinding = descriptorData.Binding,
+                DstArrayElement = arrayElementIndex
             })
             {
                 _device.UpdateDescriptorSets(writeSet);
@@ -152,7 +164,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Set a sampler only
         /// </summary>
-        public PipelineDescriptorSet Set(string name, Sampler sampler)
+        public PipelineDescriptorSet Set(string name, Sampler sampler, uint arrayElementIndex = 0)
         {
 
             if (!_descriptorSetsPerName.TryGetValue(name, out var descriptorData))
@@ -160,6 +172,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             if (descriptorData.DescriptorType != DescriptorType.Sampler)
                 throw new InvalidOperationException($"Wrong DescryptorName, expected '{DescriptorType.Sampler}', current type: {descriptorData.DescriptorType}");
+
+            if(arrayElementIndex > 0 && !descriptorData.IsArray)
+                throw new InvalidOperationException($"Cannot set an {nameof(arrayElementIndex)} != 0 for a non array descriptor.");
 
             var imageInfo = new DescriptorImageInfo
             {
@@ -172,7 +187,8 @@ namespace MiniEngine.Rendering.Vulkan
                 DstSet = descriptorData.DescriptorSet,
                 DescriptorType = DescriptorType.Sampler,
                 ImageInfo = new DescriptorImageInfo[] { imageInfo },
-                DstBinding = descriptorData.Binding
+                DstBinding = descriptorData.Binding,
+                DstArrayElement = arrayElementIndex
             })
             {
                 _device.UpdateDescriptorSets(writeSet);
@@ -197,14 +213,18 @@ namespace MiniEngine.Rendering.Vulkan
 
         private void CreateDescriptorPool()
         {
-            Dictionary<DescriptorType, int> poolSizesDict = new Dictionary<DescriptorType, int>();
+            Dictionary<DescriptorType, uint> poolSizesDict = new Dictionary<DescriptorType, uint>();
+            DescriptorPoolCreateFlags flags = 0;
 
             for (int iSet = 0; iSet < _bindingSets.Length; iSet++)
             {
                 foreach (var binding in _bindingSets[iSet])
                 {
-                    poolSizesDict.TryGetValue(binding.DescriptorType, out int nb);
-                    poolSizesDict[binding.DescriptorType] = nb + 1;
+                    poolSizesDict.TryGetValue(binding.DescriptorType, out uint nb);
+                    poolSizesDict[binding.DescriptorType] = nb + binding.DescriptorCount;
+
+                    if (binding.Bindless)
+                        flags |= DescriptorPoolCreateFlags.UpdateAfterBind;
                 }
             }
 
@@ -214,14 +234,14 @@ namespace MiniEngine.Rendering.Vulkan
                 poolSizes.Add(new DescriptorPoolSize()
                 {
                     Type = kv.Key,
-                    DescriptorCount = (uint)kv.Value,
-                    
+                    DescriptorCount = kv.Value,
                 });
             }
             using (var descriptorPoolCreateInfo = new DescriptorPoolCreateInfo
             {
                 PoolSizes = poolSizes.ToArray(),
                 MaxSets = 1,
+                Flags = flags
             })
             {
                 DescriptorPool = _device.CreateDescriptorPool(descriptorPoolCreateInfo);
@@ -256,7 +276,8 @@ namespace MiniEngine.Rendering.Vulkan
                         {
                             DescriptorSet = DescriptorSets[iSet],
                             DescriptorType = binding.DescriptorType,
-                            Binding = binding.Binding
+                            Binding = binding.Binding,
+                            IsArray = binding.IsArray
                         });
                     }
                 }
@@ -272,6 +293,7 @@ namespace MiniEngine.Rendering.Vulkan
         {
             public DescriptorSet DescriptorSet;
             public DescriptorType DescriptorType;
+            public bool IsArray;
             //public BufferWrapper UniformBuffer;
             //public ImageView ImageView;
             //public Sampler Sampler;
