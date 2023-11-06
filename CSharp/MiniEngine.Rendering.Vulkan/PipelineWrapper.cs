@@ -18,6 +18,8 @@ namespace MiniEngine.Rendering.Vulkan
         private ShaderWrapper _shader;
         private SwapchainWrapper _swapchain;
 
+        private bool _bindless;
+        private PipelineDescriptorSet _bindlessDescriptorSet;
         private DescriptorSetLayout[] descriptorSetLayouts;
         private PipelineLayout _pipelineLayout;
         private Pipeline _pipeline;
@@ -25,6 +27,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         private CullModeFlags _cullMode = CullModeFlags.None;
         private DynamicState[] _dynamicStates = Array.Empty<DynamicState>();
+        private Dictionary<int, uint> _imageSamplerBindlessIndex = new Dictionary<int, uint>();
 
         private bool _depthTest;
 
@@ -37,6 +40,7 @@ namespace MiniEngine.Rendering.Vulkan
         public PipelineLayout PipelineLayout { get { return _pipelineLayout; } }
         public ShaderWrapper Shader { get { return _shader; } }
         public DescriptorSetLayout[] DescriptorSetLayouts { get { return descriptorSetLayouts; } }
+        public bool Bindless { get { return _bindless; } }
 
         #endregion
 
@@ -162,10 +166,41 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Get or Add an bindless index for an image and a sampler
+        /// </summary>
+        public uint GetOrAddBindlessIndex(ImageView imageView, Sampler sampler)
+        {
+            int key = BytesHelper.CombineHash(imageView.GetHashCode(), sampler.GetHashCode());
+            if (!_imageSamplerBindlessIndex.TryGetValue(key, out uint index))
+            {
+                index = (uint)_imageSamplerBindlessIndex.Count;
+                _imageSamplerBindlessIndex.Add(key, index);
+
+                GetBindlessDescriptorSet().Set("texSampler", imageView, sampler, index);
+            }
+            return index;
+        }
+        /// <summary>
+        /// Create a descriptor set
+        /// </summary>
+        public PipelineDescriptorSet GetBindlessDescriptorSet()
+        {
+            if (!_bindless)
+                throw new InvalidOperationException("Cannot use GetBindlessDescriptorSet for a bindless pipeline. Must use CreateDescriptorSet.");
+
+            _bindlessDescriptorSet ??= new PipelineDescriptorSet(_device, this);
+
+            return _bindlessDescriptorSet;
+        }
+
+        /// <summary>
         /// Create a descriptor set
         /// </summary>
         public PipelineDescriptorSet CreateDescriptorSet()
         {
+            if (_bindless)
+                throw new InvalidOperationException("Cannot create new DescriptorSet for bindless pipeline. You must use GetBindlessDescriptorSet.");
+
             return new PipelineDescriptorSet(_device, this);
         }
 
@@ -174,6 +209,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public PipelineDescriptorSet CreateDescriptorSet(int setIndex)
         {
+            if (_bindless)
+                throw new InvalidOperationException("Cannot create new DescriptorSet for bindless pipeline. You must use GetBindlessDescriptorSet.");
+
             return new PipelineDescriptorSet(_device, this, setIndex);
         }
 
@@ -211,6 +249,8 @@ namespace MiniEngine.Rendering.Vulkan
                     {
                         BindingFlags = bindingFlags
                     };
+
+                    _bindless = true;
                 }
                 using (var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
                 {

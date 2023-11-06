@@ -72,6 +72,10 @@ namespace MiniEngine.Rendering.Vulkan
                     //We have changed the pipeline...
                     commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _renderDatas[i].Pipeline.Pipeline);
                     lastPipeline = _renderDatas[i].Pipeline;
+
+                    //If bindless, we need to bind once for the pipeline, everything is in the GPU memory
+                    if(_renderDatas[i].Pipeline.Bindless)
+                        commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _renderDatas[i].Pipeline.PipelineLayout, 0, _renderDatas[i].Pipeline.GetBindlessDescriptorSet().DescriptorSets, null);
                 }
 
                 
@@ -100,7 +104,7 @@ namespace MiniEngine.Rendering.Vulkan
                         break;
 
                     case "textureRID":
-                        commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref meshData.MaterialIndex);
+                        commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref renderData.BindlessDiffuseTextureIndex);
                         break;
 
                     default:
@@ -177,7 +181,10 @@ namespace MiniEngine.Rendering.Vulkan
 
                             _renderDatas[i].Shader = shader;
 
-                            _renderDatas[i].DescriptorSet = pipeline.CreateDescriptorSet().Set("texSampler", mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
+                            if (pipeline.Bindless)
+                                _renderDatas[i].BindlessDiffuseTextureIndex = pipeline.GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
+                            else
+                                _renderDatas[i].DescriptorSet = pipeline.CreateDescriptorSet().Set("texSampler", mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
                         }
                         else
                         {
@@ -200,6 +207,7 @@ namespace MiniEngine.Rendering.Vulkan
             public PipelineWrapper Pipeline;
             public PipelineDescriptorSet DescriptorSet;
             public VkShader Shader;
+            public uint BindlessDiffuseTextureIndex;
         }
 
 

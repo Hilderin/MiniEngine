@@ -69,19 +69,28 @@ void main() {
                                         }
             });
 
-            var mat = Context.Renderer.CreateMaterial(new()
+            var matWhite = Context.Renderer.CreateMaterial(new()
             {
                 DiffuseTexture = BaseTextures.White,
                 Shader = shader
             });
 
+            var matAqua = Context.Renderer.CreateMaterial(new()
+            {
+                DiffuseTexture = BaseTextures.Aqua,
+                Shader = shader
+            });
 
-            _currentMesh = PrimitiveObjects.CreateCubeMeshObject()
-                                           .MoveTo(new Vector3(0f, 0f, 0f))
-                                           .SetMaterial(mat, 0);
 
+            Scene.Add(PrimitiveObjects.CreateCubeMeshObject()
+                                           .MoveTo(new Vector3(-2f, 0f, 0f))
+                                           .SetMaterial(matWhite, 0)
+                     );
 
-            Scene.Add(_currentMesh);
+            Scene.Add(PrimitiveObjects.CreateCubeMeshObject()
+                                           .MoveTo(new Vector3(2f, 0f, 0f))
+                                           .SetMaterial(matAqua, 0)
+                     );
 
         }
 
