@@ -54,9 +54,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a Mesh
         /// </summary>
-        public VkMesh CreateMesh(MeshDefinition meshDef)
+        public VkMesh CreateMesh()
         {
-            return new VkMesh(meshDef, _renderer, this);
+            return new VkMesh(_renderer, this);
 
         }
 

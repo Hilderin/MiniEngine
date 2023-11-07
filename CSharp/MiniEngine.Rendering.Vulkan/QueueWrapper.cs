@@ -122,6 +122,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void ExecuteAndWait(Action<CommandBuffer> commandActions)
         {
+            if (_commandBufferMainThreadWait == null)
+                //disposed...
+                return;
+
             if (_supportMultiThreading && Thread.CurrentThread != _mainThread)
             {
                 InvokeOnMainThread(commandActions);

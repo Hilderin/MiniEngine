@@ -16,17 +16,19 @@ namespace MiniEngine.Rendering.Vulkan
         private VkResourceFactory _factory;
         private VkRenderer _renderer;
 
+        public bool IsLoaded { get; private set; }
+
         public VulkanMeshData[] MeshDatas;
 
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkMesh(MeshDefinition meshDef, VkRenderer renderer, VkResourceFactory factory)
+        public VkMesh(VkRenderer renderer, VkResourceFactory factory)
         {
             _renderer = renderer;
 
-            Init(meshDef);
+            //Init(meshDef);
 
             _factory = factory;
             factory?.Add(this);
@@ -36,17 +38,24 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Reload the asset
         /// </summary>
-        public override void Reload(MeshDefinition meshDef)
+        public override Mesh Load(MeshDefinition meshDef)
         {
-            var oldMeshDatas = new List<VulkanMeshData>(MeshDatas);
-
+            List<VulkanMeshData> oldMeshDatas = null;
+            
+            if(MeshDatas != null)
+                oldMeshDatas = new List<VulkanMeshData>(MeshDatas);
 
             Init(meshDef);
 
-            foreach(var oldMeshData in oldMeshDatas)
+            if (oldMeshDatas != null)
             {
-                _renderer.AddActionsBeforeNextFrame(() => DisposeVulkanMeshData(oldMeshData));
+                foreach (var oldMeshData in oldMeshDatas)
+                {
+                    _renderer.AddActionsBeforeNextFrame(() => DisposeVulkanMeshData(oldMeshData));
+                }
             }
+
+            return this;
         }
 
         /// <summary>
@@ -54,9 +63,12 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         protected override void Destroy()
         {
-            foreach (var subMeshData in MeshDatas)
+            if (MeshDatas != null)
             {
-                DisposeVulkanMeshData(subMeshData);
+                foreach (var subMeshData in MeshDatas)
+                {
+                    DisposeVulkanMeshData(subMeshData);
+                }
             }
 
             _factory?.Remove(this);
@@ -97,6 +109,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             //Create default materials slots
             Materials = meshDef.Materials.ToArray();
+
+            //Everything is ready!
+            IsLoaded = true;
         }
 
 

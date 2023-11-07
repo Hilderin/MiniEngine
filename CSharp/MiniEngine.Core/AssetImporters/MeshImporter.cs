@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MiniEngine.AssetImporters
@@ -143,11 +144,14 @@ namespace MiniEngine.AssetImporters
         /// </summary>
         private void ReloadMesh(Mesh mesh, string name)
         {
-            MeshAssetDefinition assetMeshDef = GetMeshAssetDefinition(name);
-            MeshDefinition meshDef = CreateMeshDefinition(assetMeshDef);
+            MeshAssetDefinition meshAssetDef = GetMeshAssetDefinition(name);
 
-            if (!String.IsNullOrEmpty(assetMeshDef.MeshFullPath))
-                mesh.Reload(meshDef);
+            ThreadPool.QueueUserWorkItem((arg) =>
+            {
+                MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
+                mesh.Load(meshDef);
+            });
+
         }
 
         /// <summary>
@@ -158,19 +162,16 @@ namespace MiniEngine.AssetImporters
             if (String.IsNullOrEmpty(meshAssetDef.MeshFullPath))
                 return Primitives.CreateEmptyMesh();
 
-            MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
 
-            return _assetManager.Context.Renderer.CreateMesh(meshDef);
+            Mesh mesh = _assetManager.Context.Renderer.CreateMesh();
 
+            ThreadPool.QueueUserWorkItem((arg) =>
+            {
+                MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
+                mesh.Load(meshDef);
+            });
 
-            //////Resetting ambient color on mats if asked...
-            ////if (parameters.ResetMaterialAmbientColor)
-            ////{
-            ////    foreach (Material m in _mesh.Materials)
-            ////        m.AmbientColor = Color3.White;
-            ////}
-
-            //return _mesh;
+            return mesh;
 
         }
 
@@ -192,7 +193,8 @@ namespace MiniEngine.AssetImporters
 
                 //------------------
                 //WORKING GOOD:
-                PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.MakeLeftHanded | PostProcessSteps.GenerateNormals | PostProcessSteps.TransformUVCoords;
+                PostProcessSteps postProcessSteps = PostProcessSteps.Triangulate | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.GenerateNormals | PostProcessSteps.TransformUVCoords;
+                //PostProcessSteps.MakeLeftHanded | 
 
                 //The base unit of fbx is centimeters...
                 if (Path.GetExtension(meshAssetDef.MeshFullPath).Equals(".fbx", StringComparison.OrdinalIgnoreCase))
@@ -287,7 +289,7 @@ namespace MiniEngine.AssetImporters
                     normals[i] = Vector3.Up;
 
                 if (mesh.HasTextureCoords(0))
-                    texCoords[i] = new Vector2(mesh.TextureCoordinateChannels[0][i].X, mesh.TextureCoordinateChannels[0][i].Y);
+                    texCoords[i] = new Vector2(mesh.TextureCoordinateChannels[0][i].X, -mesh.TextureCoordinateChannels[0][i].Y);
                 else
                     texCoords[i] = Vector2.Zero;
             }
@@ -327,6 +329,7 @@ namespace MiniEngine.AssetImporters
 
                 LoadMesh(mesh, meshDef, ref transformNodeMatrix);
 
+
                 //Vector3[] positions = new Vector3[mesh.Vertices.Count];
                 //Vector3[] normals = new Vector3[mesh.Vertices.Count];
                 //Vector2[] texCoords = new Vector2[mesh.Vertices.Count];
@@ -334,56 +337,56 @@ namespace MiniEngine.AssetImporters
                 //List<int> indices = new List<int>(mesh.FaceCount * 3);
                 //var vertexMap = new Dictionary<int, int>();
 
-                //int indexVertice = 0;
-                //bool hasTexCoords = mesh.HasTextureCoords(0);
-                //bool hasNormals = mesh.HasNormals;
+                    //int indexVertice = 0;
+                    //bool hasTexCoords = mesh.HasTextureCoords(0);
+                    //bool hasNormals = mesh.HasNormals;
 
-                //for (int f = 0; f < mesh.FaceCount; f++)
-                //{
-                //    var face = mesh.Faces[f];
+                    //for (int f = 0; f < mesh.FaceCount; f++)
+                    //{
+                    //    var face = mesh.Faces[f];
 
-                //    for (int i = 0; i < face.IndexCount; i++)
-                //    {
-                //        int index = face.Indices[i];
+                    //    for (int i = 0; i < face.IndexCount; i++)
+                    //    {
+                    //        int index = face.Indices[i];
 
-                //        var position = mesh.Vertices[index];
-                //        positions[indexVertice].X = position.X;
-                //        positions[indexVertice].Y = position.Y;
-                //        positions[indexVertice].Z = position.Z;
-
-
-                //        if (hasNormals)
-                //        {
-                //            var normal = mesh.Normals[i];
-                //            normals[i].X = normal.X;
-                //            normals[i].Y = normal.Y;
-                //            normals[i].Z = normal.Z;
-                //        }
+                    //        var position = mesh.Vertices[index];
+                    //        positions[indexVertice].X = position.X;
+                    //        positions[indexVertice].Y = position.Y;
+                    //        positions[indexVertice].Z = position.Z;
 
 
-                //        if (hasTexCoords)
-                //        {
-                //            var textureCoord = mesh.TextureCoordinateChannels[0][index];
+                    //        if (hasNormals)
+                    //        {
+                    //            var normal = mesh.Normals[i];
+                    //            normals[i].X = normal.X;
+                    //            normals[i].Y = normal.Y;
+                    //            normals[i].Z = normal.Z;
+                    //        }
 
-                //            texCoords[indexVertice].X = textureCoord.X;
-                //            texCoords[indexVertice].Y = textureCoord.Y;
-                //        }
+
+                    //        if (hasTexCoords)
+                    //        {
+                    //            var textureCoord = mesh.TextureCoordinateChannels[0][index];
+
+                    //            texCoords[indexVertice].X = textureCoord.X;
+                    //            texCoords[indexVertice].Y = textureCoord.Y;
+                    //        }
 
 
 
-                //        int hash = BytesHelper.CombineHash(BytesHelper.CombineHash(positions[indexVertice].GetHashCode(), normals[i].GetHashCode()), texCoords[indexVertice].GetHashCode());
-                //        if (vertexMap.TryGetValue(hash, out var newIndexVertice))
-                //        {
-                //            indices.Add(newIndexVertice);
-                //        }
-                //        else
-                //        {
-                //            indices.Add(indexVertice);
-                //            vertexMap[hash] = indexVertice;
-                //            indexVertice++;
-                //        }
-                //    }
-                //}
+                    //        int hash = BytesHelper.CombineHash(BytesHelper.CombineHash(positions[indexVertice].GetHashCode(), normals[i].GetHashCode()), texCoords[indexVertice].GetHashCode());
+                    //        if (vertexMap.TryGetValue(hash, out var newIndexVertice))
+                    //        {
+                    //            indices.Add(newIndexVertice);
+                    //        }
+                    //        else
+                    //        {
+                    //            indices.Add(indexVertice);
+                    //            vertexMap[hash] = indexVertice;
+                    //            indexVertice++;
+                    //        }
+                    //    }
+                    //}
             }
 
             for (int c = 0; c < node.ChildCount; c++)
@@ -406,11 +409,7 @@ namespace MiniEngine.AssetImporters
             else
             {
                 //Creation of a basic Material
-                return _assetManager.Context.Renderer.CreateMaterial(new()
-                {
-                    DiffuseTexture = GetTexture(Assimp.TextureType.Diffuse, assmat, workingDirectory),
-                    Shader = BaseShaders.Default
-                });
+                return GetMaterial(Assimp.TextureType.Diffuse, assmat, workingDirectory);
             }
 
             //Material material = new Material();
@@ -440,7 +439,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Get a texture of a type
         /// </summary>
-        private Texture2D GetTexture(Assimp.TextureType type, Assimp.Material assmat, string workingDirectory)
+        private Material GetMaterial(Assimp.TextureType type, Assimp.Material assmat, string workingDirectory)
         {
             //Diffuse texture...
             if (assmat.GetMaterialTextureCount(type) > 0)
@@ -450,11 +449,11 @@ namespace MiniEngine.AssetImporters
                     string assetDefPath = assTexture.FilePath;
                     if (Path.IsPathRooted(assetDefPath))
                         assetDefPath = Path.GetFileName(assetDefPath);
-                    return _assetManager.Get<Texture2D>(Path.Combine(workingDirectory, assetDefPath));
+                    return _assetManager.Get<Material>(Path.Combine(workingDirectory, assetDefPath));
                 }
             }
 
-            return BaseTextures.Default;
+            return BaseMaterials.Default;
         }
 
 

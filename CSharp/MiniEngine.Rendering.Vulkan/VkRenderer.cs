@@ -312,9 +312,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a new mesh
         /// </summary>
-        public Mesh CreateMesh(MeshDefinition meshDefinition)
+        public Mesh CreateMesh()
         {
-            return _resourceFactory.CreateMesh(meshDefinition);
+            return _resourceFactory.CreateMesh();
         }
 
         /// <summary>

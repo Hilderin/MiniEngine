@@ -43,9 +43,9 @@ namespace MiniEngine
         byte[] GetFramebufferRGBA(int x, int y, int width, int height);
 
         /// <summary>
-        /// Create a new mesh
+        /// Create a new empty mesh
         /// </summary>
-        Mesh CreateMesh(MeshDefinition meshDefinition);
+        Mesh CreateMesh();
 
         /// <summary>
         /// Create a Texture2D

@@ -43,6 +43,9 @@ namespace MiniEngine.Rendering.Vulkan
             if(!_initialized)
                 Init();
 
+            if (!_mesh.IsLoaded)
+                return;
+
             Matrix4 mvp = _vk.ViewProjectionMVPMatrix * _transform.GetMatrix();
             //Matrix4 mvpTransposed = Matrix4.Transpose(ref mvp);
 
@@ -152,6 +155,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void Init()
         {
+            if (!_mesh.IsLoaded)
+                return;
+
             //Pipeline creation...
             _renderDatas = new RenderData[_mesh.MeshDatas.Length];
 
@@ -163,8 +169,11 @@ namespace MiniEngine.Rendering.Vulkan
                 {
                     VkMaterial mat;
 
-                    if (_materials.Count > _mesh.MeshDatas[i].MaterialIndex)
+                    if (_materials.Count > _mesh.MeshDatas[i].MaterialIndex && _materials[_mesh.MeshDatas[i].MaterialIndex] != null)
                         mat = (VkMaterial)_materials[_mesh.MeshDatas[i].MaterialIndex];
+                    //Default mat?
+                    else if (_mesh.Materials != null && _mesh.Materials.Length > _mesh.MeshDatas[i].MaterialIndex && _mesh.Materials[_mesh.MeshDatas[i].MaterialIndex] != null)
+                        mat = (VkMaterial)_mesh.Materials[_mesh.MeshDatas[i].MaterialIndex];
                     else
                         //Material not found...
                         mat = (VkMaterial)BaseMaterials.Magenta;

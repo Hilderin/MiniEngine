@@ -59,6 +59,8 @@ namespace MiniEngine.AssetImporters
                         Type = TextureType.RGBA
                     });
 
+                    texture.Name = Path.GetFileName(name);
+
                 }
                 catch (Exception ex)
                 {

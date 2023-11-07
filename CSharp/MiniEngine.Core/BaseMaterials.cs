@@ -83,7 +83,9 @@ namespace MiniEngine
                 Shader = BaseShaders.Default
             };
 
-            return Context.Current.Renderer.CreateMaterial(matDef);
+            Material mat = Context.Current.Renderer.CreateMaterial(matDef);
+            mat.Name = texture.Name;
+            return mat;
         }
 
     }

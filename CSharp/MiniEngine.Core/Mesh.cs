@@ -24,9 +24,9 @@ namespace MiniEngine
         protected abstract void Destroy();
 
         /// <summary>
-        /// Reload the asset
+        /// Load or reload the asset
         /// </summary>
-        public abstract void Reload(MeshDefinition meshDef);
+        public abstract Mesh Load(MeshDefinition meshDef);
 
         /// <summary>
         /// Dispose

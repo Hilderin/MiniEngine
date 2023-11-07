@@ -62,7 +62,8 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreateTriangleMesh()
         {
-            return Renderer.Current.CreateMesh(CreateTriangleMeshDefinition());
+            return Renderer.Current.CreateMesh()
+                                   .Load(CreateTriangleMeshDefinition());
         }
 
         /// <summary>
@@ -118,7 +119,8 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreatePyramidMesh()
         {
-            return Renderer.Current.CreateMesh(CreatePyramidMeshDefinition());
+            return Renderer.Current.CreateMesh()
+                                   .Load(CreatePyramidMeshDefinition());
         }
 
 
@@ -181,7 +183,8 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreatePlaneMesh()
         {
-            return Renderer.Current.CreateMesh(CreatePlaneMeshDefinition());
+            return Renderer.Current.CreateMesh()
+                                   .Load(CreatePlaneMeshDefinition());
         }
 
         /// <summary>
@@ -260,7 +263,8 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreateCubeMesh()
         {
-            return Renderer.Current.CreateMesh(CreateCubeMeshDefinition());
+            return Renderer.Current.CreateMesh()
+                                   .Load(CreateCubeMeshDefinition());
         }
 
 
@@ -288,7 +292,8 @@ namespace MiniEngine
         /// </summary>
         public static Mesh CreateEmptyMesh()
         {
-            return Renderer.Current.CreateMesh(CreateEmptyMeshDefinition());
+            return Renderer.Current.CreateMesh()
+                                   .Load(CreateEmptyMeshDefinition());
         }
     }
 }

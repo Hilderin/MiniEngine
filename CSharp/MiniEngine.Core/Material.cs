@@ -8,6 +8,11 @@ namespace MiniEngine
 {
     public abstract class Material: IDisposable
     {
+        /// <summary>
+        /// Name of the material
+        /// </summary>
+        public string Name { get; set; }
+
         ///// <summary>
         ///// Not found material (magenta)
         ///// </summary>

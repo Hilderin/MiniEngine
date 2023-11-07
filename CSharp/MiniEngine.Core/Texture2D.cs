@@ -15,6 +15,11 @@ namespace MiniEngine
     public abstract class Texture2D: IDisposable
     {
         /// <summary>
+        /// Name of the texture
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
         /// Texture type
         /// </summary>
         public TextureType Type { get; set; } = TextureType.RGB;

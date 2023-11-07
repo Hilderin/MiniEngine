@@ -78,6 +78,8 @@ namespace MiniEngine.AssetImporters
                         });
                     }
 
+                    mat.Name = Path.GetFileName(name);
+
                 }
                 catch(Exception ex)
                 {

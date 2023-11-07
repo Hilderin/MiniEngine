@@ -40,7 +40,7 @@ namespace MiniEngine.Labs.Renderer
             //var mesh = assetManager.GetMeshFromFile(MODEL_PATH, new MeshImportationParameters() { InverseFaces = true });
             //var mesh = new CubeMesh();
             //var mesh = new PlaneMesh();
-            var mesh = renderer.CreateMesh(Primitives.CreateTriangleMeshDefinition());
+            var mesh = renderer.CreateMesh().Load(Primitives.CreateTriangleMeshDefinition());
             var transform = new WorldTransform()
             {
                 Location = new Vector3(0f, 0f, 3f)

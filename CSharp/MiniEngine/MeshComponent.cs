@@ -34,13 +34,13 @@ namespace MiniEngine
 
                 _mesh = value;
 
-                //Adding missing materials...
-                while (_materials.Count < _mesh.Materials.Length)
-                    _materials.Add(_mesh.Materials[Materials.Count]);
+                ////Adding missing materials...
+                //while (_materials.Count < _mesh.Materials.Length)
+                //    _materials.Add(_mesh.Materials[Materials.Count]);
 
-                //Removing additionnal materials...
-                while (_materials.Count > _mesh.Materials.Length)
-                    _materials.RemoveAt(Materials.Count - 1);
+                ////Removing additionnal materials...
+                //while (_materials.Count > _mesh.Materials.Length)
+                //    _materials.RemoveAt(Materials.Count - 1);
 
                 if (value != null)
                     RendererHandle = Renderer.Current.AddMesh(_mesh, _materials, this.Parent.Transform);
