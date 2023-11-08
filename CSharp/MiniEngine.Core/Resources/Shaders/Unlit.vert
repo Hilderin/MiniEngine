@@ -3,8 +3,8 @@
 //push constants block
 layout( push_constant ) uniform constants
 {
-	mat4 render_matrix;
-} PushConstants;
+	mat4 _matrix_mvp;
+};
 
 
 layout(location = 0) in vec3 inPosition;
@@ -15,8 +15,13 @@ layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
 void main() {
-    gl_Position = PushConstants.render_matrix * vec4(inPosition, 1.0);
+    gl_Position = _matrix_mvp * vec4(inPosition, 1.0);
     
     fragColor = inColor;
     fragTexCoord = inTexCoord;
 }
+
+
+
+
+

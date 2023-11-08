@@ -10,6 +10,15 @@ namespace MiniEngine.Rendering.Vulkan
     /// </summary>
     public static class SpirvParser
     {
+        /// <summary>
+        /// Default bindless array count. (65535)
+        /// </summary>
+        private const uint DEFAULT_BINDLESS_COUNT = ushort.MaxValue;
+
+        /// <summary>
+        /// Variable names that are always bindless
+        /// </summary>
+        private static readonly string[] BINDLESS_VARIABLE_NAMES = new string[] { ShaderVariableNames.SamplerDiffuse };
 
         /// <summary>
         /// Parse dthe spirv codes
@@ -438,14 +447,17 @@ namespace MiniEngine.Rendering.Vulkan
 
                                 if (binding.IsArray)
                                 {
-
                                     if (variableDefinitions != null && variableDefinitions.TryGetValue(id.name, out var varDef))
                                     {
                                         binding.DescriptorCount = (uint)varDef.Count;
                                         binding.Bindless = varDef.Bindless;
                                     }
-
-
+                                    else if (BINDLESS_VARIABLE_NAMES.Contains(binding.Name))
+                                    {
+                                        //Default bindless...
+                                        binding.DescriptorCount = DEFAULT_BINDLESS_COUNT;
+                                        binding.Bindless = true;
+                                    }
                                 }
 
                                 bindings.Add(binding);

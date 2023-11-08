@@ -68,7 +68,6 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Dispose()
         {
-
             if (_commandBufferMainThreadWait != null)
             {
                 _commandBufferMainThreadWait.Dispose();

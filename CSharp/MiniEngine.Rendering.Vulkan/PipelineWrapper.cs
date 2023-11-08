@@ -176,7 +176,7 @@ namespace MiniEngine.Rendering.Vulkan
                 index = (uint)_imageSamplerBindlessIndex.Count;
                 _imageSamplerBindlessIndex.Add(key, index);
 
-                GetBindlessDescriptorSet().Set("texSampler", imageView, sampler, index);
+                GetBindlessDescriptorSet().Set(ShaderVariableNames.SamplerDiffuse, imageView, sampler, index);
             }
             return index;
         }

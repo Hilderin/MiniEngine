@@ -26,8 +26,8 @@ namespace MiniEngine.Labs.Renderer
 //push constants block
 layout( push_constant ) uniform constants
 {
-	mat4 render_matrix;
-} PushConstants;
+	mat4 _matrix_mvp;
+};
 
 
 layout(location = 0) in vec3 inPosition;
@@ -38,7 +38,7 @@ layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
 void main() {
-    gl_Position = PushConstants.render_matrix * vec4(inPosition, 1.0);
+    gl_Position = _matrix_mvp * vec4(inPosition, 1.0);
     
     fragColor = inColor;
     fragTexCoord = inTexCoord;
@@ -46,11 +46,11 @@ void main() {
                 FragmentCode = @"#version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(push_constant) uniform _PushConstant {
-    layout(offset = 64) int textureRID;
+layout(push_constant) uniform constants {
+    layout(offset = 64) int _mat_diffuse_index;
 };
 
-layout(binding = 1) uniform sampler2D texSampler[];
+layout(binding = 1) uniform sampler2D _sampler_diffuse[];
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTexCoord;
@@ -60,12 +60,12 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
     //outColor = vec4(fragColor, 1.0);
-    outColor = texture(texSampler[textureRID], fragTexCoord);
+    outColor = texture(_sampler_diffuse[_mat_diffuse_index], fragTexCoord);
 }"
 ,
                 VariableDefinitions = new()
                                         {
-                                            { "texSampler", new() { Count = 10, Bindless = true } }
+                                            { "_sampler_diffuse", new() { Count = 10, Bindless = true } }
                                         }
             });
 

@@ -102,11 +102,11 @@ namespace MiniEngine.Rendering.Vulkan
 
                 switch (pushContant.Name)
                 {
-                    case "render_matrix":
+                    case ShaderVariableNames.MatrixMVP:
                         commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref mvp);
                         break;
 
-                    case "textureRID":
+                    case ShaderVariableNames.MaterialDiffuseIndex:
                         commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref renderData.BindlessDiffuseTextureIndex);
                         break;
 
@@ -193,7 +193,7 @@ namespace MiniEngine.Rendering.Vulkan
                             if (pipeline.Bindless)
                                 _renderDatas[i].BindlessDiffuseTextureIndex = pipeline.GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
                             else
-                                _renderDatas[i].DescriptorSet = pipeline.CreateDescriptorSet().Set("texSampler", mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
+                                _renderDatas[i].DescriptorSet = pipeline.CreateDescriptorSet().Set(ShaderVariableNames.SamplerDiffuse, mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
                         }
                         else
                         {
