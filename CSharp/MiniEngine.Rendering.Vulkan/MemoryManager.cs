@@ -34,42 +34,6 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
 
-        /// <summary>
-        /// Create a buffer on the GPU
-        /// </summary>
-        public BufferWrapper CreateBufferOnGPU<T>(T[] values, BufferUsageFlags usageFlags)
-        {
-            //Create a stating buffer available from the CPU... so we can copy values into it...
-            using (BufferWrapper stagingBuffer = _renderer.CreateBufferWrapper(values, BufferUsageFlags.TransferSrc, MemoryPropertyFlags.HostVisible | MemoryPropertyFlags.HostCoherent))
-            {
-                //Create a buffer on the GPU..
-                BufferWrapper gpuBuffer = _renderer.CreateBufferWrapper(stagingBuffer.Size, BufferUsageFlags.TransferDst | usageFlags, MemoryPropertyFlags.DeviceLocal);
-
-                //Copy the data to the GPU...
-                CopyBuffer(stagingBuffer, gpuBuffer);
-
-                return gpuBuffer;
-            }
-        }
-
-        /// <summary>
-        /// Copy a buffer
-        /// </summary>
-        public void CopyBuffer(BufferWrapper bufferSource, BufferWrapper bufferDest)
-        {
-            ExecuteOnTransferQueue(commandBuffer =>
-            {
-
-                BufferCopy copyRegion = new()
-                {
-                    Size = bufferSource.Size,
-                };
-
-                commandBuffer.CmdCopyBuffer(bufferSource.Buffer, bufferDest.Buffer, copyRegion);
-
-            });
-        }
-
         public void Dispose()
         {
             if (_queue != null)

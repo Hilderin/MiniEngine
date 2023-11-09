@@ -17,6 +17,5 @@ layout(location = 0) out vec4 outColor;
 
 
 void main() {
-    //outColor = vec4(fragColor, 1.0);
     outColor = texture(_sampler_diffuse[_mat_diffuse_index], fragTexCoord);
 }

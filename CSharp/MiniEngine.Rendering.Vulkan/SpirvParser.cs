@@ -592,6 +592,10 @@ namespace MiniEngine.Rendering.Vulkan
                 //We take only the SpvStorageClassInput... which means vertexbuffer...
                 if (id.storage_class == SpvStorageClass.SpvStorageClassInput)
                 {
+                    //Internal variable to glsl...
+                    if (id.name.StartsWith("gl_"))
+                        continue;
+
                     Id typeid = ids[id.type_index];
 
                     // If the type is a pointer, resolve it

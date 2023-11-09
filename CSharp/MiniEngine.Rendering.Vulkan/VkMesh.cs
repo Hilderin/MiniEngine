@@ -3,6 +3,7 @@ using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,7 +20,6 @@ namespace MiniEngine.Rendering.Vulkan
         public bool IsLoaded { get; private set; }
 
         public VulkanMeshData[] MeshDatas;
-
 
         /// <summary>
         /// Constructor
@@ -81,8 +81,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void DisposeVulkanMeshData(VulkanMeshData meshData)
         {
-            meshData.vertexBuffer?.Dispose();
-            meshData.indexBuffer?.Dispose();
+            //TODO: release memory from GPU buffer
+            //meshData.VertexBuffer?.Dispose();
+            //meshData.IndexBuffer?.Dispose();
         }
 
 
@@ -133,7 +134,8 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
             //vulkanMeshData.vertexBuffer = _vi.Device.CreateBuffer(vertices, BufferUsageFlags.VertexBuffer);
-            vulkanMeshData.vertexBuffer = _renderer.MemoryManager.CreateBufferOnGPU(vertices, BufferUsageFlags.VertexBuffer);
+            vulkanMeshData.VertexBufferIndex = _renderer.VertexBuffer.Append(vertices) / (uint)Marshal.SizeOf<Vertex>();
+            //vulkanMeshData.VertexBuffer = _renderer.CreateBufferWrapper(vertices, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
         }
 
@@ -142,8 +144,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CreateIndexBuffer(SubMeshDefinition subMeshData, ref VulkanMeshData vulkanMeshData)
         {
-            vulkanMeshData.nbIndices = subMeshData.Indices.Length;
-            vulkanMeshData.indexBuffer = _renderer.MemoryManager.CreateBufferOnGPU(subMeshData.Indices, BufferUsageFlags.IndexBuffer);
+            vulkanMeshData.NbIndices = subMeshData.Indices.Length;
+            //vulkanMeshData.IndexBuffer = _renderer.CreateBufferWrapper(subMeshData.Indices, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            vulkanMeshData.IndexBufferIndex = _renderer.IndexBuffer.Append(subMeshData.Indices) / sizeof(uint);
 
         }
 
@@ -153,9 +156,10 @@ namespace MiniEngine.Rendering.Vulkan
 
     public struct VulkanMeshData
     {
-        public BufferWrapper vertexBuffer;
-        public BufferWrapper indexBuffer;
-        public int nbIndices;
+        //public BufferWrapper VertexBuffer;
+        public uint VertexBufferIndex;
+        public uint IndexBufferIndex;
+        public int NbIndices;
         public int MaterialIndex;
     }
 }

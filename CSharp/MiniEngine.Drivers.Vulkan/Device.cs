@@ -98,34 +98,36 @@ namespace MiniEngine.Drivers.Vulkan
         }
 
         /// <summary>
-        /// Allocate a DeviceMemory
+        /// Allocate a DeviceMemory for a buffer
         /// </summary>
         public DeviceMemory CreateDeviceMemory(Buffer buffer, MemoryPropertyFlags memoryPropertyFlags)
         {
             var memoryReq = this.GetBufferMemoryRequirements(buffer);
 
-            using (var allocInfo = new MemoryAllocateInfo { AllocationSize = memoryReq.Size })
+            using (var allocInfo = new MemoryAllocateInfo
+            { 
+                AllocationSize = memoryReq.Size,
+                MemoryTypeIndex = GetMemoryTypeIndex(memoryReq.MemoryTypeBits, memoryPropertyFlags)
+            })
             {
-                using (var memoryProperties = this.PhysicalDevice.GetMemoryProperties())
-                {
-                    bool heapIndexSet = false;
-                    var memoryTypes = memoryProperties.MemoryTypes;
+                return this.AllocateMemory(allocInfo);
+            }
+        }
 
-                    for (uint i = 0; i < memoryProperties.MemoryTypeCount; i++)
-                    {
-                        if (((memoryReq.MemoryTypeBits >> (int)i) & 1) == 1 &&
-                            (memoryTypes[i].PropertyFlags & MemoryPropertyFlags.HostVisible) == MemoryPropertyFlags.HostVisible)
-                        {
-                            allocInfo.MemoryTypeIndex = i;
-                            heapIndexSet = true;
-                        }
-                    }
+        /// <summary>
+        /// Allocate a DeviceMemory for an image
+        /// </summary>
+        public DeviceMemory CreateDeviceMemory(Image image, MemoryPropertyFlags memoryPropertyFlags)
+        {
+            var memoryReq = this.GetImageMemoryRequirements(image);
 
-                    if (!heapIndexSet)
-                        allocInfo.MemoryTypeIndex = GetMemoryTypeIndex(memoryReq.MemoryTypeBits, memoryPropertyFlags);
-
-                    return this.AllocateMemory(allocInfo);
-                }
+            using (var allocInfo = new MemoryAllocateInfo
+            { 
+                AllocationSize = memoryReq.Size,
+                MemoryTypeIndex = GetMemoryTypeIndex(memoryReq.MemoryTypeBits, memoryPropertyFlags)
+            })
+            {
+                return this.AllocateMemory(allocInfo);
             }
         }
 
@@ -141,15 +143,16 @@ namespace MiniEngine.Drivers.Vulkan
 
                 for (uint i = 0; i < memoryProperties.MemoryTypeCount; i++)
                 {
-                    if (((memoryTypeBits >> (int)i) & 1) == 1 &&
+                    if ((memoryTypeBits & 1) == 1 &&
                         (memoryTypes[i].PropertyFlags & memoryPropertyFlags) == memoryPropertyFlags)
                     {
                         return i;
                     }
+                    memoryTypeBits >>= 1;
                 }
 
-                //On the heap...
-                return memoryProperties.MemoryTypes[0].HeapIndex;
+                //Not found, we take the first one...
+                return 0;
             }
         }
 

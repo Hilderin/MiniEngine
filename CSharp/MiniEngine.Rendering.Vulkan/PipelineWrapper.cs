@@ -28,6 +28,7 @@ namespace MiniEngine.Rendering.Vulkan
         private CullModeFlags _cullMode = CullModeFlags.None;
         private DynamicState[] _dynamicStates = Array.Empty<DynamicState>();
         private Dictionary<int, uint> _imageSamplerBindlessIndex = new Dictionary<int, uint>();
+        private Dictionary<int, uint> _vertexBindlessIndex = new Dictionary<int, uint>();
 
         private bool _depthTest;
 
@@ -180,6 +181,8 @@ namespace MiniEngine.Rendering.Vulkan
             }
             return index;
         }
+
+
         /// <summary>
         /// Create a descriptor set
         /// </summary>

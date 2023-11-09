@@ -1,6 +1,7 @@
 ﻿using MiniEngine.Drivers.Vulkan;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace MiniEngine.Rendering.Vulkan
 {
@@ -15,6 +16,7 @@ namespace MiniEngine.Rendering.Vulkan
         private WorldTransform _transform;
 
         private RenderData[] _renderDatas;
+        private BufferWrapper _indirectDrawBuffer;
 
         private bool _initialized = false;
 
@@ -31,7 +33,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             _vk = vi;
 
-            
+
         }
 
 
@@ -40,11 +42,11 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void PopulateCommandBuffers(CommandBuffer commandBuffer)
         {
-            if(!_initialized)
-                Init();
-
-            if (!_mesh.IsLoaded)
-                return;
+            if (!_initialized)
+            {
+                if (!Init())
+                    return;
+            }
 
             Matrix4 mvp = _vk.ViewProjectionMVPMatrix * _transform.GetMatrix();
             //Matrix4 mvpTransposed = Matrix4.Transpose(ref mvp);
@@ -62,7 +64,7 @@ namespace MiniEngine.Rendering.Vulkan
             //}
 
             PipelineWrapper lastPipeline = null;
-            
+
 
             for (int i = 0; i < _renderDatas.Length; i++)
             {
@@ -77,11 +79,11 @@ namespace MiniEngine.Rendering.Vulkan
                     lastPipeline = _renderDatas[i].Pipeline;
 
                     //If bindless, we need to bind once for the pipeline, everything is in the GPU memory
-                    if(_renderDatas[i].Pipeline.Bindless)
+                    if (_renderDatas[i].Pipeline.Bindless)
                         commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _renderDatas[i].Pipeline.PipelineLayout, 0, _renderDatas[i].Pipeline.GetBindlessDescriptorSet().DescriptorSets, null);
                 }
 
-                
+
                 PopulateCommandBuffer(commandBuffer, ref mvp, ref _mesh.MeshDatas[i], ref _renderDatas[i]);
 
             }
@@ -106,6 +108,10 @@ namespace MiniEngine.Rendering.Vulkan
                         commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref mvp);
                         break;
 
+                    //case ShaderVariableNames.VertexBufferIndex:
+                    //    commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref renderData.BindlessVertexBufferIndex);
+                    //    break;
+
                     case ShaderVariableNames.MaterialDiffuseIndex:
                         commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref renderData.BindlessDiffuseTextureIndex);
                         break;
@@ -122,9 +128,17 @@ namespace MiniEngine.Rendering.Vulkan
                 commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, pipeline.PipelineLayout, 0, renderData.DescriptorSet.DescriptorSets, null);
             }
 
-            commandBuffer.CmdBindVertexBuffer(0, meshData.vertexBuffer, 0);
-            commandBuffer.CmdBindIndexBuffer(meshData.indexBuffer, 0, IndexType.Uint32);
-            commandBuffer.CmdDrawIndexed((uint)meshData.nbIndices, 1, 0, 0, 0);
+            //commandBuffer.CmdBindIndexBuffer(meshData.IndexBuffer, 0, IndexType.Uint32);
+
+
+            //if (_indirectDrawBuffer == null)
+            //{
+            //    commandBuffer.CmdBindIndexBuffer(meshData.IndexBuffer, 0, IndexType.Uint32);
+            //    commandBuffer.CmdDrawIndexed((uint)meshData.NbIndices, 1, 0, (int)meshData.VertexBufferIndex, 0);
+            //}
+            //else
+            commandBuffer.CmdDrawIndexedIndirect(_indirectDrawBuffer.Buffer, 0, 1, (uint)Marshal.SizeOf<DrawIndexedIndirectCommand>());
+
 
         }
 
@@ -153,18 +167,22 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Init the mesh
         /// </summary>
-        private void Init()
+        private bool Init()
         {
             if (!_mesh.IsLoaded)
-                return;
+                return false;
 
             //Pipeline creation...
-            _renderDatas = new RenderData[_mesh.MeshDatas.Length];
+            if (_renderDatas == null)
+                _renderDatas = new RenderData[_mesh.MeshDatas.Length];
 
             _initialized = true;
 
             for (int i = 0; i < _mesh.MeshDatas.Length; i++)
             {
+                
+
+
                 if (_mesh.MeshDatas[i].MaterialIndex >= 0)
                 {
                     VkMaterial mat;
@@ -190,6 +208,7 @@ namespace MiniEngine.Rendering.Vulkan
 
                             _renderDatas[i].Shader = shader;
 
+
                             if (pipeline.Bindless)
                                 _renderDatas[i].BindlessDiffuseTextureIndex = pipeline.GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _vk.DefaultSampler);
                             else
@@ -206,16 +225,48 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
 
-            
+            //When everything is initialized, then we can create the indirect command buffer...
+            if (_initialized)
+                CreateIndirectCommandsBuffer();
+
+            return _initialized;
+
+        }
+
+        /// <summary>
+        /// Create the indirect command buffers
+        /// </summary>
+        private void CreateIndirectCommandsBuffer()
+        {
+
+            DrawIndexedIndirectCommand[] drawIndexedIndirectCommands = new DrawIndexedIndirectCommand[_mesh.MeshDatas.Length];
+
+            for (int i = 0; i < _mesh.MeshDatas.Length; i++)
+            {
+                var meshData = _mesh.MeshDatas[i];
+
+                drawIndexedIndirectCommands[i] = new()
+                {
+                    IndexCount = (uint)meshData.NbIndices,
+                    InstanceCount = 2,
+                    FirstIndex = (uint)meshData.IndexBufferIndex,
+                    VertexOffset = (int)meshData.VertexBufferIndex,
+                    FirstInstance = 0
+                };
+            }
+
+            _indirectDrawBuffer = _vk.CreateBufferWrapper(drawIndexedIndirectCommands, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
         }
 
 
         private struct RenderData
         {
+            public bool IsVertexBufferInitialized;
             public PipelineWrapper Pipeline;
             public PipelineDescriptorSet DescriptorSet;
             public VkShader Shader;
+            //public uint BindlessVertexBufferIndex;
             public uint BindlessDiffuseTextureIndex;
         }
 

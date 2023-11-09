@@ -119,9 +119,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private unsafe void Init(byte* data, uint size)
         {
-            using (BufferWrapper bufferStaging = _renderer.CreateBufferWrapper(size, BufferUsageFlags.TransferSrc))
+            using (BufferWrapper bufferStaging = _renderer.CreateBufferWrapper(size, BufferUsageFlags.TransferSrc, MemoryPropertyFlags.HostVisible))
             {
-                bufferStaging.UpdateFrom(data, size);
+                bufferStaging.Update(data, size);
 
                 CreateImage(Format, ImageUsageFlags.TransferDst | ImageUsageFlags.Sampled, MemoryPropertyFlags.DeviceLocal);
 
@@ -197,17 +197,7 @@ namespace MiniEngine.Rendering.Vulkan
                 Image = _device.CreateImage(imageInfo);
             }
 
-
-            var memRequirements = _device.GetImageMemoryRequirements(Image);
-
-            using (MemoryAllocateInfo allocInfo = new()
-            {
-                AllocationSize = memRequirements.Size,
-                MemoryTypeIndex = _device.GetMemoryTypeIndex(memRequirements.MemoryTypeBits, properties),
-            })
-            {
-                DeviceMemory = _device.AllocateMemory(allocInfo);
-            }
+            DeviceMemory = _device.CreateDeviceMemory(Image, properties);
 
             _device.BindImageMemory(Image, DeviceMemory, 0);
         }

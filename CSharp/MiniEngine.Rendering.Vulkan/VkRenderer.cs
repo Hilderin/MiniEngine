@@ -44,11 +44,14 @@ namespace MiniEngine.Rendering.Vulkan
         public SurfaceCapabilitiesKhr SurfaceCapabilities => _surfaceCapabilities;
         public MemoryManager MemoryManager => _memoryManager;
         public VkResourceFactory ResourceFactory => _resourceFactory;
+        public BufferWrapper VertexBuffer => _vertexBuffer;
+        public BufferWrapper IndexBuffer => _indexBuffer;
 
         #endregion
 
         #region Private members
 
+        private List<VkInstance> _meshInstances = new List<VkInstance>();
         private List<VkMeshRenderer> _meshRenderers = new List<VkMeshRenderer>();
         private IWindow _window;
         private string _applicationName;
@@ -73,6 +76,8 @@ namespace MiniEngine.Rendering.Vulkan
 
         private ConcurrentQueue<Action> _actionsBeforeNextFrame = new ConcurrentQueue<Action>();
 
+        private BufferWrapper _vertexBuffer;
+        private BufferWrapper _indexBuffer;
 
         private uint _graphicsQueueIndex;
         private QueueWrapper _graphicsQueue;
@@ -165,6 +170,8 @@ namespace MiniEngine.Rendering.Vulkan
             //Physical device...
             _physicalDevice = PickPhysicalDevice();
 
+            var deviceProp = _physicalDevice.GetProperties();
+
             _graphicsQueueIndex = GetGraphicsQueueFamilyIndex(_surface);
             _transferQueueIndex = GetTransferQueueFamilyIndex();
 
@@ -182,6 +189,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             DefaultSampler = SamplerHelper.CreateMaxAnisotropy(_device);
 
+            //TODO: Dynamiccaly calculate best size
+            _vertexBuffer = new BufferWrapper(this, 100 * 1024 * 1024, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _indexBuffer = new BufferWrapper(this, 100 * 1024 * 1024, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
             _initialized = true;
         }
@@ -416,7 +426,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a buffer
         /// </summary>
-        public unsafe BufferWrapper CreateBufferWrapper<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        public unsafe BufferWrapper CreateBufferWrapper<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
             Type type = typeof(T);
             var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
@@ -431,7 +441,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a buffer
         /// </summary>
-        public unsafe BufferWrapper CreateBufferWrapper(uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags = MemoryPropertyFlags.HostVisible)
+        public unsafe BufferWrapper CreateBufferWrapper(uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
             return new BufferWrapper(this, size, usageFlags, memoryPropertyFlags);
         }
@@ -653,6 +663,9 @@ namespace MiniEngine.Rendering.Vulkan
             //If no camera, nothing to render... in 3D
             if (Camera != null)
             {
+                commandBuffer.CmdBindVertexBuffer(0, _vertexBuffer, 0);
+                commandBuffer.CmdBindIndexBuffer(_indexBuffer, 0, IndexType.Uint32);
+
                 foreach (var meshRenderer in _meshRenderers)
                     meshRenderer.PopulateCommandBuffers(commandBuffer);
             }

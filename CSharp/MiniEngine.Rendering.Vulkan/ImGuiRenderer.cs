@@ -53,9 +53,9 @@ namespace MiniEngine.Rendering.Vulkan
             _renderer = renderer;
             _device = _renderer.Device;
 
-            _vertexBuffer = _renderer.CreateBufferWrapper(10000, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst);
-            _indexBuffer = _renderer.CreateBufferWrapper(2000, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst);
-            _projMatrixBuffer = _renderer.CreateBufferWrapper((uint)Marshal.SizeOf<Matrix4>(), BufferUsageFlags.UniformBuffer | BufferUsageFlags.TransferDst);
+            _vertexBuffer = _renderer.CreateBufferWrapper(10000, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
+            _indexBuffer = _renderer.CreateBufferWrapper(2000, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
+            _projMatrixBuffer = _renderer.CreateBufferWrapper((uint)Marshal.SizeOf<Matrix4>(), BufferUsageFlags.UniformBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
 
             CreateShader();
 
