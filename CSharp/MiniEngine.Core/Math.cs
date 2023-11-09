@@ -159,7 +159,7 @@ namespace MiniEngine
         /// </summary>
         public static int RoundUp(int value, int multipleOf)
         {
-            int size_difference = multipleOf - (value % 4);
+            int size_difference = multipleOf - (value % multipleOf);
 
             return value + size_difference;
         }

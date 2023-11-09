@@ -537,6 +537,18 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 case SpvOp.SpvOpTypeStruct:
                     binding.Name = uniform_type.name;
+
+                    if (uniform_type.members != null && uniform_type.members.Count > 0)
+                    {
+                        Id member = ids[uniform_type.members[0].id_index];
+                        if (member.op == SpvOp.SpvOpTypeRuntimeArray)
+                        {
+                            //it's an array...
+                            binding.DescriptorType = DescriptorType.StorageBuffer;
+                            binding.DescriptorCount = 1;
+                            break;
+                        }
+                    }
                     binding.DescriptorType = DescriptorType.UniformBuffer;
                     binding.DescriptorCount = 1;
                     break;

@@ -60,8 +60,8 @@ namespace MiniEngine.Rendering.Vulkan
             if (!_descriptorSetsPerName.TryGetValue(name, out var descriptorData))
                 throw new InvalidOperationException($"Descriptor name not found '{name}'");
 
-            if (descriptorData.DescriptorType != DescriptorType.UniformBuffer)
-                throw new InvalidOperationException($"Wrong DescryptorName, expected '{DescriptorType.UniformBuffer}', current type: {descriptorData.DescriptorType}");
+            if (descriptorData.DescriptorType != DescriptorType.UniformBuffer && descriptorData.DescriptorType != DescriptorType.StorageBuffer)
+                throw new InvalidOperationException($"Wrong DescryptorName, expected '{DescriptorType.UniformBuffer}' or '{DescriptorType.StorageBuffer}', current type: {descriptorData.DescriptorType}");
 
             if (arrayElementIndex > 0 && !descriptorData.IsArray)
                 throw new InvalidOperationException($"Cannot set an {nameof(arrayElementIndex)} != 0 for a non array descriptor.");
@@ -76,7 +76,7 @@ namespace MiniEngine.Rendering.Vulkan
             using (WriteDescriptorSet writeSet = new WriteDescriptorSet
             {
                 DstSet = descriptorData.DescriptorSet,
-                DescriptorType = DescriptorType.UniformBuffer,
+                DescriptorType = descriptorData.DescriptorType,
                 BufferInfo = new DescriptorBufferInfo[] { uniformBufferInfo },
                 DstBinding = descriptorData.Binding,
                 DstArrayElement = arrayElementIndex

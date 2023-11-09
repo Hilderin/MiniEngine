@@ -26,16 +26,30 @@ namespace MiniEngine.Labs.Renderer
 //push constants block
 layout( push_constant ) uniform constants
 {
-	mat4 _matrix_mvp;
+	mat4 _matrix_vp;
 };
 
+struct object_data
+{
+    vec3 location;
+    vec3 rotation;
+    vec3 scale;
+    uint textureIndex; 
+};
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec2 inTexCoord;
 
+//layout(binding = 2) uniform object_data _objects[];
+layout(std430, binding = 2) readonly buffer object_data_array {
+    object_data objects[];
+};
+
+
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
+layout(location = 2) flat out uint textureIndex;
 
 float offsets[] = {
     -0.75f,  0.75f,  1.0f, 0.0f, 0.0f,
@@ -48,30 +62,30 @@ float offsets[] = {
 };  
 
 void main() {
-    gl_Position = _matrix_mvp * vec4(inPosition, 1.0);
-    gl_Position.x += offsets[gl_InstanceIndex];
+    gl_Position = _matrix_vp * vec4(inPosition, 1.0);
+    gl_Position.x += objects[gl_InstanceIndex].location.x;
     
     fragColor = inColor;
     fragTexCoord = inTexCoord;
+    textureIndex = objects[gl_InstanceIndex].textureIndex;
 }",
                 FragmentCode = @"#version 450
 #extension GL_EXT_nonuniform_qualifier : enable
-
-layout(push_constant) uniform constants {
-    layout(offset = 64) int _mat_diffuse_index;
-};
 
 layout(binding = 1) uniform sampler2D _sampler_diffuse[];
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTexCoord;
+layout(location = 2) in flat uint textureIndex;
 
 layout(location = 0) out vec4 outColor;
 
 
+
+
 void main() {
     //outColor = vec4(fragColor, 1.0);
-    outColor = texture(_sampler_diffuse[_mat_diffuse_index], fragTexCoord);
+    outColor = texture(_sampler_diffuse[textureIndex], fragTexCoord);
 }"
 ,
                 VariableDefinitions = new()
@@ -86,11 +100,11 @@ void main() {
                 Shader = shader
             });
 
-            //var matAqua = Context.Renderer.CreateMaterial(new()
-            //{
-            //    DiffuseTexture = BaseTextures.Aqua,
-            //    Shader = shader
-            //});
+            var matAqua = Context.Renderer.CreateMaterial(new()
+            {
+                DiffuseTexture = BaseTextures.Aqua,
+                Shader = shader
+            });
 
 
             Scene.Add(PrimitiveObjects.CreateTriangleMeshObject()
@@ -99,8 +113,8 @@ void main() {
                      );
 
             Scene.Add(PrimitiveObjects.CreateCubeMeshObject()
-                                           .MoveTo(new Vector3(0f, 1f, 0f))
-                                           .SetMaterial(matWhite, 0)
+                                           .MoveTo(new Vector3(4f, 5f, 6f))
+                                           .SetMaterial(matAqua, 0)
                      );
 
             //Scene.Add(PrimitiveObjects.CreateCubeMeshObject()

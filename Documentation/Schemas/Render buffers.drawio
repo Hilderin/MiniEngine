@@ -1,0 +1,49 @@
+<mxfile host="Electron" modified="2023-11-09T01:47:19.328Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.5 Chrome/114.0.5735.243 Electron/25.3.1 Safari/537.36" etag="IxUujx-Xh6kuEJbgBq-h" version="21.6.5" type="device">
+  <diagram name="Page-1" id="bnPGZ-oyGEnnqc4M-u_H">
+    <mxGraphModel dx="1098" dy="818" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-1" value="Pos, Color, TexCoord" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="120" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-2" value="VertexBuffer" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="135" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-3" value="VertexIndex" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="200" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-4" value="IndexBuffer" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="215" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-5" value="Location, Rotation, Scale" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="290" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-6" value="ObjectBuffer" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="305" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-7" value="ObjectIndex, MaterialIndex" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="500" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-8" value="InstanceBuffer" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="515" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-9" value="Materials" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="120" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-10" value="TextureBuffer" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="425" y="135" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-11" value="One per texture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="490" y="80" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-12" value="Global" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="180" y="80" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="UbY2RRRtpmi2X5jbhk5y-13" value="Per shader" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="180" y="440" width="160" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

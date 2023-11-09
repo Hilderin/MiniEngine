@@ -12,7 +12,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Current model, view, projection matrix.
         /// </summary>
-        public const string MatrixMVP = "_matrix_mvp";
+        public const string MatrixVP = "_matrix_vp";
 
 
         /// <summary>

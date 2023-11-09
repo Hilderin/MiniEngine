@@ -17,7 +17,8 @@ namespace MiniEngine.Rendering.Vulkan
     {
         private VkRenderer _renderer;
         private Device _device;
-        private uint _position;
+        private uint _length;
+        private int _alignmentLength = 1;
 
         public uint Size { get; private set; }
         public BufferUsageFlags UsageFlags { get; private set; }
@@ -32,6 +33,9 @@ namespace MiniEngine.Rendering.Vulkan
         public BufferWrapper(VkRenderer renderer, uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
             ValidateBufferFlags(usageFlags, memoryPropertyFlags);
+
+            CalculateAlignment(usageFlags);
+
 
             _renderer = renderer;
             _device = renderer.Device;
@@ -48,8 +52,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public static BufferWrapper Create<T>(VkRenderer renderer, T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
-            ValidateBufferFlags(usageFlags, memoryPropertyFlags);
-
+            
             Type type = typeof(T);
             var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
 
@@ -103,13 +106,14 @@ namespace MiniEngine.Rendering.Vulkan
                 _device.UnmapMemory(DeviceMemory);
             }
 
-            _position = destOffset + size;
+            if(_length < destOffset + size)
+                _length = destOffset + size;
         }
 
         /// <summary>
         /// Copy data to a buffer from values
         /// </summary>
-        public unsafe void Update<T>(T[] values)
+        public unsafe void Update<T>(T[] values, uint offset = 0)
         {
             Type type = typeof(T);
             var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
@@ -118,32 +122,42 @@ namespace MiniEngine.Rendering.Vulkan
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
             fixed (T* ptr = &values[0])
             {
-                Update((void*)ptr, (uint)size);
+                Update((void*)ptr, offset, (uint)size);
             }
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-            //values.AsSpan().CopyTo(new Span<T>((void*)memPtr, values.Length));
-
-            _position = (uint)size;
+            
         }
+
 
         /// <summary>
         /// Copy data to a buffer from value
         /// </summary>
-        public unsafe void Update<T>(ref T value)
+        public unsafe void Update<T>(ref T value, uint offset = 0)
         {
-            if (IsOnGPU)
-                throw new NotSupportedException("Update of one value on device local buffer (to GPU) is not supported");
-
             int size = Unsafe.SizeOf<T>();
 
-            IntPtr dataPtr = _device.MapMemory(DeviceMemory, 0, size);
+            if (IsOnGPU)
+            {
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-            *((T*)dataPtr) = value;
+                fixed (T* ptr = &value)
+                {
+                    CopyValuesToGPU(ptr, offset, (uint)size);
+                }
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-            //new Span<T>((void*)dataPtr, 1)[0] = value;
-            _device.UnmapMemory(DeviceMemory);
+            }
+            else
+            {
+                IntPtr dataPtr = _device.MapMemory(DeviceMemory, offset, size);
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+                *((T*)dataPtr) = value;
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+                //new Span<T>((void*)dataPtr, 1)[0] = value;
+                _device.UnmapMemory(DeviceMemory);
 
-            _position = (uint)size;
+            }
+
+            if (_length < offset + (uint)size)
+                _length = offset + (uint)size;
 
         }
 
@@ -158,17 +172,38 @@ namespace MiniEngine.Rendering.Vulkan
             uint startIndex;
             lock (this)
             {
-                startIndex = _position;
-                _position += (uint)size;
+                startIndex = _length;
+                if(_alignmentLength > 1)
+                    _length = (uint)Math.RoundUp((int)_length + size, _alignmentLength);
+                else
+                    _length += (uint)size;
             }
 
-            //Copy to the memPtr location...
-#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-            fixed (T* ptr = &values[0])
+            Update(values, startIndex);
+
+            return startIndex;
+
+        }
+
+
+        /// <summary>
+        /// Append data to the buffer and return the start index
+        /// </summary>
+        public unsafe uint Append<T>(ref T value)
+        {
+            int size = Unsafe.SizeOf<T>();
+
+            uint startIndex;
+            lock (this)
             {
-                Update(ptr, startIndex, (uint)size);
+                startIndex = _length;
+                if (_alignmentLength > 1)
+                    _length = (uint)Math.RoundUp((int)_length + size, _alignmentLength);
+                else
+                    _length += (uint)size;
             }
-#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+
+            Update(ref value, startIndex);
 
             return startIndex;
 
@@ -274,12 +309,23 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Validate buffer flags
         /// </summary>
-        private static void ValidateBufferFlags(BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
+        private void ValidateBufferFlags(BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
             if (memoryPropertyFlags.HasFlag(MemoryPropertyFlags.DeviceLocal) && !usageFlags.HasFlag(BufferUsageFlags.TransferDst))
                 throw new InvalidOperationException("Impossible to create a buffer DeviceLocal (on GPU) without the usageFlags TransferDst. The buffer needs to be TransferDst to transfert data from Host memory to Device Memory.");
         }
 
+        /// <summary>
+        /// Calculate the alignment of bytes when we append to the buffer.
+        /// Uniform buffer and Storage buffer has a 16 bytes alignment which means each "row" must have a length dividable by 16
+        /// </summary>
+        private void CalculateAlignment(BufferUsageFlags usageFlags)
+        {
+            if (usageFlags.HasFlag(BufferUsageFlags.UniformBuffer) || usageFlags.HasFlag(BufferUsageFlags.StorageBuffer))
+                _alignmentLength = 16;
+            else
+                _alignmentLength = 1;
+        }
 
         /// <summary>
         /// Implicit conversion to a Buffer

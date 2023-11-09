@@ -403,6 +403,14 @@ namespace MiniEngine
         }
 
 
+        /// <summary>
+        /// Implicit conversion from a rotator3 to a vector3
+        /// </summary>
+        public static implicit operator Vector3(Rotator3 rotator)
+        {
+            return new Vector3(rotator.Pitch, rotator.Yaw, rotator.Roll);
+        }
+
         #endregion
 
     }

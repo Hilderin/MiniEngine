@@ -4,6 +4,7 @@ using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace MiniEngine.Rendering.Vulkan
 {
@@ -17,7 +18,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Current ViewProjectionMatrix
         /// </summary>
-        internal Matrix4 ViewProjectionMVPMatrix;
+        internal Matrix4 MatrixViewProjection;
 
         /// <summary>
         /// Default sampler
@@ -46,12 +47,14 @@ namespace MiniEngine.Rendering.Vulkan
         public VkResourceFactory ResourceFactory => _resourceFactory;
         public BufferWrapper VertexBuffer => _vertexBuffer;
         public BufferWrapper IndexBuffer => _indexBuffer;
+        public BufferWrapper ObjectsBuffer => _objectsBuffer;
+        //public BufferWrapper IndirectDrawBuffer => _indirectDrawBuffer;
 
         #endregion
 
         #region Private members
 
-        private List<VkInstance> _meshInstances = new List<VkInstance>();
+        private List<VkMeshInstance> _meshInstances = new List<VkMeshInstance>();
         private List<VkMeshRenderer> _meshRenderers = new List<VkMeshRenderer>();
         private IWindow _window;
         private string _applicationName;
@@ -62,6 +65,7 @@ namespace MiniEngine.Rendering.Vulkan
         private ImGuiRenderer _imGui;
         private IntPtr _windowsHandle = IntPtr.Zero;
         private Dictionary<VkShader, PipelineWrapper> _cachePipeline = new Dictionary<VkShader, PipelineWrapper>();
+        private Dictionary<VkShader, VkMeshRenderer> _cacheMeshRenderer = new Dictionary<VkShader, VkMeshRenderer>();
         private Dictionary<int, ShaderModule> _cacheShaderModule = new Dictionary<int, ShaderModule>();
         private bool _isDisposing;
 
@@ -78,6 +82,9 @@ namespace MiniEngine.Rendering.Vulkan
 
         private BufferWrapper _vertexBuffer;
         private BufferWrapper _indexBuffer;
+        private BufferWrapper _objectsBuffer;
+        private BufferWrapper _instancesMeshDataBuffer;
+        //private BufferWrapper _indirectDrawBuffer;        
 
         private uint _graphicsQueueIndex;
         private QueueWrapper _graphicsQueue;
@@ -192,6 +199,9 @@ namespace MiniEngine.Rendering.Vulkan
             //TODO: Dynamiccaly calculate best size
             _vertexBuffer = new BufferWrapper(this, 100 * 1024 * 1024, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _indexBuffer = new BufferWrapper(this, 100 * 1024 * 1024, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _objectsBuffer = new BufferWrapper(this, 1024 * 1024, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
+            _instancesMeshDataBuffer = new BufferWrapper(this, 1024 * 1024, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            //_indirectDrawBuffer = new BufferWrapper(this, (uint)(Marshal.SizeOf<DrawIndexedIndirectCommand>() * 100), BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
             _initialized = true;
         }
@@ -266,9 +276,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public IRenderHandle AddMesh(Mesh mesh, List<Material> materials, WorldTransform transform)
         {
-            VkMeshRenderer meshRenderer = new VkMeshRenderer(mesh, materials, transform, this);
-            _meshRenderers.Add(meshRenderer);
-            return meshRenderer;
+            VkMeshInstance meshInstance = new VkMeshInstance((VkMesh)mesh, materials, transform, this);
+            _meshInstances.Add(meshInstance);
+            return meshInstance;
         }
 
         /// <summary>
@@ -276,12 +286,12 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void RemoveMesh(IRenderHandle handle)
         {
-            VkMeshRenderer meshRenderer = handle as VkMeshRenderer;
+            VkMeshInstance meshInstance = handle as VkMeshInstance;
 
-            if (meshRenderer != null)
+            if (meshInstance != null)
             {
-                meshRenderer.Dispose();
-                _meshRenderers.Remove(meshRenderer);
+                meshInstance.Dispose();
+                _meshInstances.Remove(meshInstance);
             }
 
         }
@@ -351,6 +361,24 @@ namespace MiniEngine.Rendering.Vulkan
             return _resourceFactory.CreateShader(shaderDef);
         }
 
+
+        /// <summary>
+        /// Get the mesh renderer for a shader
+        /// </summary>
+        public VkMeshRenderer GetMeshRenderer(VkShader shader)
+        {
+            if (!_cacheMeshRenderer.TryGetValue(shader, out var meshRenderer))
+            {
+                meshRenderer = new VkMeshRenderer(shader, this);
+
+                _cacheMeshRenderer.Add(shader, meshRenderer);
+
+                _meshRenderers.Add(meshRenderer);
+
+            }
+
+            return meshRenderer;
+        }
 
         /// <summary>
         /// Get a pipeline for mesh rendering
@@ -473,6 +501,10 @@ namespace MiniEngine.Rendering.Vulkan
             _imGui?.Dispose();
             _resourceFactory?.Dispose();
 
+            ////Disposing mesh instances...
+            //foreach (VkMeshInstance vkMeshInstances in _meshInstances)
+            //    vkMeshInstances.Dispose();
+
             //Disposing mesh renderer...
             foreach (VkMeshRenderer vkMeshRenderer in _meshRenderers)
                 vkMeshRenderer.Dispose();
@@ -481,7 +513,9 @@ namespace MiniEngine.Rendering.Vulkan
             foreach (PipelineWrapper pipeline in _cachePipeline.Values)
                 pipeline.Dispose();
 
-
+            _objectsBuffer?.Dispose();
+            _vertexBuffer?.Dispose();
+            _indexBuffer?.Dispose();
             _swapchain?.Dispose();
 
             if (_surface != null)
@@ -646,7 +680,7 @@ namespace MiniEngine.Rendering.Vulkan
             Matrix4 viewMat2 = Camera.GetViewMatrix();
             Matrix4 projMat = Camera.GetProjectionMatrixVulkan((int)_currentExtent.Width, (int)_currentExtent.Height);
 
-            this.ViewProjectionMVPMatrix = projMat * viewMat2;
+            this.MatrixViewProjection = projMat * viewMat2;
 
         }
 

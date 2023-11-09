@@ -213,7 +213,7 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveTo(Vector3 location)
         {
-            _location = location;
+            Location = location;
             return this;
         }
 
@@ -222,7 +222,7 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveForward(float distance)
         {
-            _location += this.Forward * -distance;
+            Location += this.Forward * -distance;
             return this;
         }
 
@@ -237,12 +237,17 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveInDirections(float distance, Vector3 directions)
         {
+            Vector3 movement = Vector3.Zero;
             if (!Math.IsZero(directions.Z))
-                _location += this.Forward * directions.Z * distance;
+                movement += this.Forward * directions.Z * distance;
             if (!Math.IsZero(directions.X))
-                _location += this.Left * directions.X * -distance;
+                movement += this.Left * directions.X * -distance;
             if (!Math.IsZero(directions.Y))
-                _location += this.Up * directions.Y * distance;
+                movement += this.Up * directions.Y * distance;
+
+            if (movement != Vector3.Zero)
+                Location += movement;
+
             return this;
         }
 
@@ -251,7 +256,7 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveBackward(float distance)
         {
-            _location += this.Forward * distance;
+            Location += this.Forward * distance;
             return this;
         }
 
@@ -260,7 +265,7 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveLeft(float distance)
         {
-            _location += this.Left * -distance;
+            Location += this.Left * -distance;
             return this;
         }
 
@@ -269,7 +274,7 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveRight(float distance)
         {
-            _location += this.Left * distance;
+            Location += this.Left * distance;
             return this;
         }
 
@@ -278,7 +283,7 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveUp(float distance)
         {
-            _location += this.Up * distance;
+            Location += this.Up * distance;
             return this;
         }
 
@@ -287,7 +292,7 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveDown(float distance)
         {
-            _location += this.Down * -distance;
+            Location += this.Down * -distance;
             return this;
         }
 
