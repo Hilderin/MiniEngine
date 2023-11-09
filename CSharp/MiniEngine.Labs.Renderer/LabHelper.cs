@@ -5,6 +5,8 @@ namespace MiniEngine.Labs.Renderer
     public static class LabHelper
     {
 
+        private const float MOVEMENT_DISTANCE_PER_SEC = 3f;
+
         /// <summary>
         /// Process inputs for testing
         /// </summary>
@@ -13,24 +15,24 @@ namespace MiniEngine.Labs.Renderer
             //Scene scene = SceneManager.Current.CurrentScene;
             Camera camera = MiniEngine.Renderer.Current.Camera;
 
-            camera.Transform.MoveInDirections(0.1f, context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
+            camera.Transform.MoveInDirections(MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime, context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
 
             //if (context.Input.IsKeyDown(Keys.NumpadAdd))
             //    scene.AmbientLight.Intensity += 0.01f;
             //if (context.Input.IsKeyDown(Keys.NumpadSubtract))
             //    scene.AmbientLight.Intensity -= 0.01f;
             if (context.Input.IsKeyDown(Keys.Z))
-                camera.Transform.RotateYaw(-0.1f);
+                camera.Transform.RotateYaw(-MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.X))
-                camera.Transform.RotateYaw(0.1f);
+                camera.Transform.RotateYaw(MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.C))
-                camera.Transform.RotatePitch(-0.1f);
+                camera.Transform.RotatePitch(-MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.V))
-                camera.Transform.RotatePitch(0.1f);
+                camera.Transform.RotatePitch(MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.R))
-                camera.Transform.RotateRoll(-0.1f);
+                camera.Transform.RotateRoll(-MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.F))
-                camera.Transform.RotateRoll(0.1f);
+                camera.Transform.RotateRoll(MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
 
             if (context.Input.IsJustMouseDown(MouseButton.Right))
             {
@@ -62,7 +64,7 @@ namespace MiniEngine.Labs.Renderer
                 camera.Transform.RotateYaw(mouseMovement.X * 10f * Time.DeltaTime);
                 camera.Transform.RotatePitch(mouseMovement.Y * -10f * Time.DeltaTime);
                 //Camera.RotateYaw(mouseMovement.X * 0.1f);
-                //Debug.Info((mouseMovement.X * 1f * Time.DeltaTime).ToString());
+                //Debug.Info(context.Input.MousePosition.ToString());
 
                 //context.ShowCursor();
                 //context.LockCursor();

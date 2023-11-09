@@ -27,6 +27,12 @@ namespace MiniEngine.Labs.Renderer
             //    Application.Run(form);
             //}
 
+            bool enableDebug = false;
+
+#if DEBUG
+            enableDebug = true;
+#endif
+
             try
             {
 
@@ -39,7 +45,7 @@ namespace MiniEngine.Labs.Renderer
                     {
 
                         context.SetRenderer(render)
-                               .EnableDebug()
+                               .EnableDebug(enableDebug)
                                .SetWindow(window)
                                .Init(() =>
                                {

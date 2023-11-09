@@ -172,8 +172,8 @@ namespace MiniEngine
                     //Calculate the diff and the deplacement vector...
                     //Debug.Print("Old position: " + MousePosition + ", new: " + position.ToString());
                     movement = (position - MousePosition);
-                    movement.X /= (_context.Window.ClientSize.X / 2);
-                    movement.Y /= (_context.Window.ClientSize.Y / 2);
+                    movement.X = movement.X * 100f / _context.Window.ClientSize.X;
+                    movement.Y = movement.Y * 100f / _context.Window.ClientSize.Y;
 
                     MouseMovement = movement;
                 }

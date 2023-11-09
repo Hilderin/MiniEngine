@@ -1,4 +1,5 @@
-﻿using MiniEngine.Rendering.Vulkan;
+﻿using ImGuiNET;
+using MiniEngine.Rendering.Vulkan;
 using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace MiniEngine.Labs.Renderer
 
         public void Init()
         {
-            //Context.SetMaxFramerate(60);
+            //Context.SetMaxFramerate(-1);
             Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -3f);
 
             var shader = Context.Renderer.CreateShader(new()
@@ -133,6 +134,13 @@ void main() {
             //_currentMesh.RotateY(0.01f);
 
             System.Threading.Thread.Sleep(3);
+
+            //var windowSize = Context.Window.ClientSize;
+
+            //ImGui.Begin("FPSCount", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoInputs);
+            //ImGui.SetWindowPos(new System.Numerics.Vector2(windowSize.X - 100, 10));
+            //ImGui.Text(Time.FramePerSeconds.ToString());
+            //ImGui.End();
 
         }
 

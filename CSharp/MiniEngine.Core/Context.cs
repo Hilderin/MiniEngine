@@ -107,18 +107,21 @@ namespace MiniEngine
         /// <summary>
         /// Enable debug
         /// </summary>
-        public Context EnableDebug(DebugCallback callback = null)
+        public Context EnableDebug(bool enabled = true, DebugCallback callback = null)
         {
-            _debugCallback = callback;
+            if (enabled)
+            {
+                _debugCallback = callback;
 
-            _renderer?.EnableDebug(RendererDebugCallback);
+                _renderer?.EnableDebug(RendererDebugCallback);
 
-            DebugEnabled = true;
+                DebugEnabled = true;
 
-            //Replacing de defaults DebugTrace...
-            System.Diagnostics.Trace.Listeners.Clear();
-            System.Diagnostics.Trace.Listeners.Add(new DebugTraceListener());
+                //Replacing de defaults DebugTrace...
+                System.Diagnostics.Trace.Listeners.Clear();
+                System.Diagnostics.Trace.Listeners.Add(new DebugTraceListener());
 
+            }
 
             return this;
         }
