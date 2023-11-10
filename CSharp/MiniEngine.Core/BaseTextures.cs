@@ -40,7 +40,7 @@ namespace MiniEngine
         {
             get
             {
-                _white ??= CreateTexture2D(Resources.PixelWhite, "White");
+                _white ??= CreateTexture2D(ResourceUtils.GetBytes("PixelWhite.bmp"), "White");
 
                 return _white;
             }
@@ -54,7 +54,7 @@ namespace MiniEngine
         {
             get
             {
-                _magenta ??= CreateTexture2D(Resources.PixelMagenta, "Magenta");
+                _magenta ??= CreateTexture2D(ResourceUtils.GetBytes("PixelMagenta.bmp"), "Magenta");
 
                 return _magenta;
             }
@@ -67,7 +67,7 @@ namespace MiniEngine
         {
             get
             {
-                _aqua ??= CreateTexture2D(Resources.PixelAqua, "Aqua");
+                _aqua ??= CreateTexture2D(ResourceUtils.GetBytes("PixelAqua.bmp"), "Aqua");
 
                 return _aqua;
             }

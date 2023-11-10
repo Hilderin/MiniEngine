@@ -130,6 +130,8 @@ namespace MiniEngine
             private static long _totalTickforLastFrames = 0;
             private static int _nbFrames = 0;
             private static long _previousTicks = 0;
+            private static long _lastFrameUpdateFPS = 0;
+            private static long _nbTicksBetweenFPSUpdates = (long)(10000000D * 0.1);        //0.1 sec
 
             /// <summary>
             /// Add a frame
@@ -154,11 +156,15 @@ namespace MiniEngine
                 if (_nbFrames < NB_FRAMES_FPS)
                     _nbFrames++;
 
-                double nbSecondsTotal = _totalTickforLastFrames / 10000000D;
-                if (nbSecondsTotal > 0)
-                    Time.FramePerSeconds = Math.RoundInt(_nbFrames / nbSecondsTotal);
-                else
-                    Time.FramePerSeconds = 0;
+                if (totalElapsedTicks - _lastFrameUpdateFPS > _nbTicksBetweenFPSUpdates)
+                {
+                    double nbSecondsTotal = _totalTickforLastFrames / 10000000D;
+                    if (nbSecondsTotal > 0)
+                        Time.FramePerSeconds = Math.RoundInt(_nbFrames / nbSecondsTotal);
+                    else
+                        Time.FramePerSeconds = 0;
+                    _lastFrameUpdateFPS = totalElapsedTicks;
+                }
 
                 //Debug.Print(frameTicks.ToString() + " => " + _averageFps.ToString() + " (" + _nbFrames + " / " + nbSecondsTotal + ")");
             }

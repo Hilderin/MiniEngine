@@ -51,12 +51,20 @@ namespace MiniEngine.Drivers.Glfw
         {
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), LIBRARY + ".dll");
 
-            if (!File.Exists(path)
-                || new FileInfo(path).Length != Resources.glfw3.Length
-                || BytesHelper.AreEquals(File.ReadAllBytes(path), Resources.glfw3)
-               )
+            byte[] glfw3Dll;
+            var assembly = typeof(GLFW).Assembly;
+            using (Stream resource = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.Resources.{LIBRARY}.dll"))
             {
-                File.WriteAllBytes(path, Resources.glfw3);
+                glfw3Dll = new byte[resource.Length];
+                resource.Read(glfw3Dll, 0, (int)resource.Length);
+            }
+
+            if (!File.Exists(path)
+                || new FileInfo(path).Length != glfw3Dll.Length
+                || !BytesHelper.AreEquals(File.ReadAllBytes(path), glfw3Dll)
+                )
+            {
+                File.WriteAllBytes(path, glfw3Dll);
             }
         }
 

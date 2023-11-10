@@ -46,7 +46,7 @@ namespace MiniEngine.Drivers.Vulkan
             try
             {
                 //Writing the code on disk...
-                File.WriteAllText(tempFileCode, code);
+                File.WriteAllText(tempFileCode, code, System.Text.Encoding.GetEncoding("iso-8859-1"));      //UTF-8 without BOM
 
                 using (Process p = new Process())
                 {

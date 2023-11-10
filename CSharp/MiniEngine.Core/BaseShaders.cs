@@ -30,7 +30,7 @@ namespace MiniEngine
         {
             get
             {
-                _unlit ??= CreateShader(Resources.UnlitVert, Resources.UnlitFrag);
+                _unlit ??= CreateShader(ResourceUtils.GetString("Shaders.Unlit.vert"), ResourceUtils.GetString("Shaders.Unlit.frag"));
 
                 return _unlit;
             }

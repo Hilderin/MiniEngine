@@ -1,4 +1,4 @@
-﻿#version 450
+#version 450
 
 //push constants block
 layout( push_constant ) uniform constants

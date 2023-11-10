@@ -227,13 +227,13 @@ namespace MiniEngine.Presentations.Glfw
             get => (CursorMode)GLFW.GetInputMode(_glfwWindow, InputMode.Cursor);
             set
             {
-                if (GLFW.RawMouseMotionSupported())
-                {
-                    if (value == CursorMode.Disabled)
-                        GLFW.SetInputMode(_glfwWindow, InputMode.RawMouseMotion, (int)Constants.True);
-                    else
-                        GLFW.SetInputMode(_glfwWindow, InputMode.RawMouseMotion, (int)Constants.False);
-                }
+                //if (GLFW.RawMouseMotionSupported())
+                //{
+                //    if (value == CursorMode.Disabled)
+                //        GLFW.SetInputMode(_glfwWindow, InputMode.RawMouseMotion, (int)Constants.True);
+                //    else
+                //        GLFW.SetInputMode(_glfwWindow, InputMode.RawMouseMotion, (int)Constants.False);
+                //}
 
                 GLFW.SetInputMode(_glfwWindow, InputMode.Cursor, (int)value);
 
