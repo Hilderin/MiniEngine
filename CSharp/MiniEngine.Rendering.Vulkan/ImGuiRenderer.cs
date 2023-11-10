@@ -287,7 +287,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CreateShader()
         {
-            _shader = new ShaderWrapper(_renderer,
+            _shader = new ShaderWrapper(_renderer)
+.SetVariable("in_color", new() { Format = Format.R8G8B8A8Unorm })
+.SetCode(ShaderStageFlags.Vertex,
 @"#version 450
 
 #extension GL_ARB_separate_shader_objects : enable
@@ -318,6 +320,8 @@ void main()
 }
 
 "
+)
+.SetCode(ShaderStageFlags.Fragment
 , @"#version 450
 
 #extension GL_ARB_separate_shader_objects : enable
@@ -336,11 +340,7 @@ void main()
     outputColor = color * texture(sampler2D(FontTexture, FontSampler), texCoord);
     //outputColor = color;
 }
-"
-, new Dictionary<string, SpirvVariableDefinition>()
-{
-    { "in_color", new() { Format = Format.R8G8B8A8Unorm } }
-});
+");
 
         }
 

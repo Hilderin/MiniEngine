@@ -17,7 +17,7 @@ namespace MiniEngine.Drivers.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkInstance(string applicationName, VkVersion applicationVersion, DebugReportCallback debugCallback = null)
+        public VkInstance(string applicationName, VkVersion applicationVersion, string[] extensions, DebugReportCallback debugCallback = null)
         {
 
             var layerProperties = VkCommands.EnumerateInstanceLayerProperties();
@@ -33,7 +33,7 @@ namespace MiniEngine.Drivers.Vulkan
 
             using (var createInfo = new InstanceCreateInfo
             {
-                EnabledExtensionNames = new string[] { "VK_KHR_surface", "VK_KHR_win32_surface", "VK_EXT_debug_report" },
+                EnabledExtensionNames = extensions,
                 EnabledLayerNames = layersToEnable,
                 ApplicationInfo = new ApplicationInfo
                 {

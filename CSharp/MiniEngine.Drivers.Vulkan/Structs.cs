@@ -3188,7 +3188,13 @@ namespace MiniEngine.Drivers.Vulkan
 			set { m->Flags = value; }
 		}
 
-		public ShaderStageFlags Stage {
+        public IntPtr Next
+        {
+            get { return m->Next; }
+            set { m->Next = value; }
+        }
+
+        public ShaderStageFlags Stage {
 			get { return m->Stage; }
 			set { m->Stage = value; }
 		}

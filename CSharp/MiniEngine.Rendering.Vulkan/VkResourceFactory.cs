@@ -95,8 +95,21 @@ namespace MiniEngine.Rendering.Vulkan
 
             }
 
+            var shader = new ShaderWrapper(_renderer);
 
-            return new VkShader(new ShaderWrapper(_renderer, shaderDef.VertexCode, shaderDef.FragmentCode, variableDefinitions));
+            if (variableDefinitions != null)
+                shader.SetVariableDefinitions(variableDefinitions);
+
+            if (!String.IsNullOrEmpty(shaderDef.VertexCode))
+                shader.SetCode(ShaderStageFlags.Vertex, shaderDef.VertexCode);
+
+            if (!String.IsNullOrEmpty(shaderDef.FragmentCode))
+                shader.SetCode(ShaderStageFlags.Fragment, shaderDef.FragmentCode);
+
+            if (!String.IsNullOrEmpty(shaderDef.ComputeCode))
+                shader.SetCode(ShaderStageFlags.Compute, shaderDef.ComputeCode);
+
+            return new VkShader(shader);
 
         }
 

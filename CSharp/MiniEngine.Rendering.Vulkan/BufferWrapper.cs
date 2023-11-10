@@ -52,7 +52,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public static BufferWrapper Create<T>(VkRenderer renderer, T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
-            
+
             Type type = typeof(T);
             var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
 
@@ -106,7 +106,7 @@ namespace MiniEngine.Rendering.Vulkan
                 _device.UnmapMemory(DeviceMemory);
             }
 
-            if(_length < destOffset + size)
+            if (_length < destOffset + size)
                 _length = destOffset + size;
         }
 
@@ -125,7 +125,7 @@ namespace MiniEngine.Rendering.Vulkan
                 Update((void*)ptr, offset, (uint)size);
             }
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-            
+
         }
 
 
@@ -173,7 +173,7 @@ namespace MiniEngine.Rendering.Vulkan
             lock (this)
             {
                 startIndex = _length;
-                if(_alignmentLength > 1)
+                if (_alignmentLength > 1)
                     _length = (uint)Math.RoundUp((int)_length + size, _alignmentLength);
                 else
                     _length += (uint)size;
@@ -206,6 +206,45 @@ namespace MiniEngine.Rendering.Vulkan
             Update(ref value, startIndex);
 
             return startIndex;
+
+        }
+
+        /// <summary>
+        /// Copy the buffer to an array
+        /// </summary>
+        public unsafe void CopyTo<T>(T[] values, uint srcOffset = 0)
+        {
+            Type type = typeof(T);
+            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
+
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+            fixed (T* destPtr = &values[0])
+            {
+                CopyTo(destPtr, srcOffset, (uint)size);
+            }
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+            
+        }
+
+        /// <summary>
+        /// Copy the buffer to local memory
+        /// </summary>
+        public unsafe void CopyTo(void* destPtr, uint srcOffset, uint size)
+        {
+            if (IsOnGPU)
+            {
+                //We must copy from GPU...
+                CopyValuesFromGPU(destPtr, srcOffset, size);
+            }
+            else
+            {
+                //Copy directly from memory...
+                var memPtr = _device.MapMemory(DeviceMemory, srcOffset, size, 0);
+
+                System.Buffer.MemoryCopy((void*)memPtr, (void*)destPtr, size, size);
+
+                _device.UnmapMemory(DeviceMemory);
+            }
 
         }
 
@@ -264,6 +303,35 @@ namespace MiniEngine.Rendering.Vulkan
 
                 });
 
+            }
+        }
+
+
+        /// <summary>
+        /// Create data from the GPU to local memory
+        /// </summary>
+        private unsafe void CopyValuesFromGPU(void* destPtr, uint srcOffset, uint size)
+        {
+            //Create a stating buffer available from the CPU... so we can copy values into it...
+            using (BufferWrapper stagingBuffer = new BufferWrapper(_renderer, size, BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible | MemoryPropertyFlags.HostCoherent))
+            {
+                _renderer.MemoryManager.ExecuteOnTransferQueue(commandBuffer =>
+                {
+
+                    BufferCopy copyRegion = new()
+                    {
+                        SrcOffset = 0,
+                        DstOffset = srcOffset,
+                        Size = stagingBuffer.Size,
+                    };
+
+                    //Copy from GPU buffer to staging buffer...
+                    commandBuffer.CmdCopyBuffer(this.Buffer, stagingBuffer.Buffer, copyRegion);
+
+                });
+
+                //Copy from host to local...
+                stagingBuffer.CopyTo(destPtr, 0, size);
             }
         }
 

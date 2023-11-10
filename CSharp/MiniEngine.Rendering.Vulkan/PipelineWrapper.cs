@@ -1,9 +1,11 @@
 ﻿using MiniEngine.Drivers.Vulkan;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace MiniEngine.Rendering.Vulkan
 {
@@ -19,18 +21,19 @@ namespace MiniEngine.Rendering.Vulkan
         private SwapchainWrapper _swapchain;
 
         private bool _bindless;
+        private bool _depthTest;
+
         private PipelineDescriptorSet _bindlessDescriptorSet;
         private DescriptorSetLayout[] descriptorSetLayouts;
         private PipelineLayout _pipelineLayout;
         private Pipeline _pipeline;
-        private PipelineShaderStageCreateInfo[] pipelineShaderStages;
+        private PipelineShaderStageCreateInfo[] _pipelineShaderStages;
 
         private CullModeFlags _cullMode = CullModeFlags.None;
         private DynamicState[] _dynamicStates = Array.Empty<DynamicState>();
         private Dictionary<int, uint> _imageSamplerBindlessIndex = new Dictionary<int, uint>();
-        private Dictionary<int, uint> _vertexBindlessIndex = new Dictionary<int, uint>();
+        private Dictionary<string, object> _specializationValues = new Dictionary<string, object>();
 
-        private bool _depthTest;
 
         #endregion
 
@@ -54,11 +57,10 @@ namespace MiniEngine.Rendering.Vulkan
             _shader = shader;
             _swapchain = swapchain;
 
+
             //Create layaout only once, anyway, that will never change because we cannot change the shader
             CreateLayouts();
 
-            //Same for the shaders
-            CreateShaders();
         }
 
         /// <summary>
@@ -113,6 +115,24 @@ namespace MiniEngine.Rendering.Vulkan
             return this;
         }
 
+
+
+        /// <summary>
+        /// Set a value for a specialization
+        /// </summary>
+        public PipelineWrapper SetSpecializationValue(string specConstantName, object value)
+        {
+            if (!_shader.SpecializationConstants.Any(c => c.Name == specConstantName))
+                throw new InvalidOperationException($"Specialization constant not found '{specConstantName}'");
+
+            if (value == null)
+                _specializationValues.Remove(specConstantName);
+            else
+                _specializationValues[specConstantName] = value;
+
+            return this;
+        }
+
         /// <summary>
         /// Build the pipeline
         /// </summary>
@@ -120,6 +140,10 @@ namespace MiniEngine.Rendering.Vulkan
         {
             if (_pipeline != null)
                 throw new InvalidOperationException("Pipeline already built. Use Rebuild method.");
+
+
+            //Same for the shaders
+            CreateShaderStages();
 
             CreatePipeline();
 
@@ -218,7 +242,6 @@ namespace MiniEngine.Rendering.Vulkan
             return new PipelineDescriptorSet(_device, this, setIndex);
         }
 
-
         /// <summary>
         /// Create DescriptorSetLayout and PipelineLayout
         /// </summary>
@@ -273,121 +296,233 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
-        /// Create the shaders
+        /// Create the shader stages
         /// </summary>
-        private void CreateShaders()
+        private void CreateShaderStages()
         {
-            pipelineShaderStages = new[] {
-                new PipelineShaderStageCreateInfo {
-                    Stage = ShaderStageFlags.Vertex,
-                    Module = _shader.VertexShaderModule,
-                    Name = _shader.VertexEntryPoint
-                },
-                new PipelineShaderStageCreateInfo {
-                    Stage = ShaderStageFlags.Fragment,
-                    Module = _shader.FragmentShaderModule,
-                    Name = _shader.FragmentEntryPoint
+            List<PipelineShaderStageCreateInfo> stages = new List<PipelineShaderStageCreateInfo>();
+
+            foreach (var shaderStageModule in _shader.StageModules)
+            {
+                var stageCreateInfo = new PipelineShaderStageCreateInfo
+                {
+                    Stage = shaderStageModule.Stage,
+                    Module = shaderStageModule.Module,
+                    Name = shaderStageModule.Entrypoint
+                };
+
+                //Check for specialization constants...
+                if (_specializationValues.Count > 0 && _shader.SpecializationConstants.Length > 0)
+                {
+                    stageCreateInfo.SpecializationInfo = CreateSpecializationInfo(shaderStageModule);
                 }
-            };
+
+                stages.Add(stageCreateInfo);
+            }
+
+            _pipelineShaderStages = stages.ToArray();
+        }
+
+        /// <summary>
+        /// Create the specialization data
+        /// </summary>
+        private SpecializationInfo CreateSpecializationInfo(ShaderStageModule shaderStageModule)
+        {
+            SpecializationInfo specializationInfo = null;
+
+            uint dataLength = 0;
+            bool redefinedFound = false;
+            int nbEntry = 0;
+            for (int i = 0; i < _shader.SpecializationConstants.Length; i++)
+            {
+                if (_shader.SpecializationConstants[i].Stage == shaderStageModule.Stage)
+                {
+                    dataLength += _shader.SpecializationConstants[i].Size;
+                    nbEntry++;
+
+                    if (_specializationValues.ContainsKey(_shader.SpecializationConstants[i].Name))
+                        redefinedFound = true;
+                }
+            }
+
+            if (redefinedFound)
+            {
+                //We must copy the data into memory...
+                //byte[] data = new byte[dataLength];
+                NativeReference data = new NativeReference((int)dataLength);
+
+                SpecializationMapEntry[] entries = new SpecializationMapEntry[nbEntry];
+
+                int entryIndex = 0;
+                int offset = 0;
+                for (int i = 0; i < _shader.SpecializationConstants.Length; i++)
+                {
+                    if (_shader.SpecializationConstants[i].Stage == shaderStageModule.Stage)
+                    {
+                        object value;
+
+                        if (!_specializationValues.TryGetValue(_shader.SpecializationConstants[i].Name, out value))
+                            value = _shader.SpecializationConstants[i].DefaultValue;
+
+                        uint size = (uint)Marshal.SizeOf(value);
+                        SpecializationMapEntry mapEntry = new SpecializationMapEntry()
+                        {
+                            ConstantId = _shader.SpecializationConstants[i].ConstantId,
+                            Offset = (uint)offset,
+                            Size = size
+                        };
+                        offset += (int)size;
+                        entries[entryIndex] = mapEntry;
+                        entryIndex++;
+
+                        Type valueType = value.GetType();
+                        if (valueType == typeof(int))
+                        {
+                            IntPtrHelper.Write((int)value, data.Handle, offset);
+                        }
+                        else if (valueType == typeof(uint))
+                        {
+                            IntPtrHelper.Write((uint)value, data.Handle, offset);
+                        }
+                        else if (valueType == typeof(float))
+                        {
+                            IntPtrHelper.Write((float)value, data.Handle, offset);
+                        }
+                        else
+                            throw new NotSupportedException($"CreateSpecializationInfo unsupported datatype: {valueType.Name}");
+
+                    }
+
+                }
+
+                specializationInfo = new SpecializationInfo()
+                {
+                    MapEntries = entries,
+                    Data = data.Handle,
+                    DataSize = dataLength
+                };
+            }
+
+            return specializationInfo;
         }
 
         /// <summary>
         /// Create the pipeline
         /// </summary>
         private void CreatePipeline()
-        {            
-            var viewport = new Viewport
-            {
-                MinDepth = 0,
-                MaxDepth = 1.0f,
-                Width = _swapchain.CurrentExtent.Width,
-                Height = -_swapchain.CurrentExtent.Height,      //Inverting Y axis so the coord will be 
-                Y = _swapchain.CurrentExtent.Height
-            };
-            var scissor = new Rect2D { Extent = _swapchain.CurrentExtent };
-            var viewportCreateInfo = new PipelineViewportStateCreateInfo
-            {
-                Viewports = new Viewport[] { viewport },
-                Scissors = new Rect2D[] { scissor }
-            };
+        {
 
-            var multisampleCreateInfo = new PipelineMultisampleStateCreateInfo
+            if (_shader.IsComputeOnly)
             {
-                RasterizationSamples = SampleCountFlags.Count1
-            };
-            var colorBlendAttachmentState = new PipelineColorBlendAttachmentState
-            {
-                ColorWriteMask = ColorComponentFlags.R | ColorComponentFlags.G | ColorComponentFlags.B | ColorComponentFlags.A,
-                //TODO: Parameter that... see: C:\Projects\veldrid\src\Veldrid\BlendAttachmentDescription.cs
-                BlendEnable = true,
-                SrcColorBlendFactor = BlendFactor.SrcAlpha,
-                DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
-                ColorBlendOp = BlendOp.Add,
-                SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-                DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
-                AlphaBlendOp = BlendOp.Add
-            };
-            var colorBlendStateCreatInfo = new PipelineColorBlendStateCreateInfo
-            {
-                LogicOp = LogicOp.Copy,
-                Attachments = new PipelineColorBlendAttachmentState[] { colorBlendAttachmentState }
-            };
-            var rasterizationStateCreateInfo = new PipelineRasterizationStateCreateInfo
-            {
-                PolygonMode = PolygonMode.Fill,
-                //CullMode = CullModeFlags.Front,
-                CullMode = _cullMode,
-                //CullMode = CullModeFlags.None,
-                FrontFace = FrontFace.Clockwise,
-                LineWidth = 1.0f
-            };
-            var inputAssemblyStateCreateInfo = new PipelineInputAssemblyStateCreateInfo
-            {
-                Topology = PrimitiveTopology.TriangleList
-            };
+                //Compute only...
+                var pipelineCreateInfo = new ComputePipelineCreateInfo
+                {
+                    Layout = _pipelineLayout,
+                    Stage = _pipelineShaderStages[0]
+                };
 
-            var vertexInputStateCreateInfo = new PipelineVertexInputStateCreateInfo
+                //var pipelines = _device.CreateGraphicsPipelines(_device.CreatePipelineCache(new PipelineCacheCreateInfo()), new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
+                var pipelines = _device.CreateComputePipelines(null, new ComputePipelineCreateInfo[] { pipelineCreateInfo });
+                _pipeline = pipelines[0];
+            }
+            else
             {
-                VertexBindingDescriptions = _shader.VertexBindings.ToArray(),
-                VertexAttributeDescriptions = _shader.VertexInputAttributes.ToArray()
-            };
+                //Graphics....
 
-            
-            var dynamicStateCreateInfo = new PipelineDynamicStateCreateInfo
-            {
-                DynamicStates = _dynamicStates
-            };
+                var viewport = new Viewport
+                {
+                    MinDepth = 0,
+                    MaxDepth = 1.0f,
+                    Width = _swapchain.CurrentExtent.Width,
+                    Height = -_swapchain.CurrentExtent.Height,      //Inverting Y axis so the coord will be 
+                    Y = _swapchain.CurrentExtent.Height
+                };
+                var scissor = new Rect2D { Extent = _swapchain.CurrentExtent };
+                var viewportCreateInfo = new PipelineViewportStateCreateInfo
+                {
+                    Viewports = new Viewport[] { viewport },
+                    Scissors = new Rect2D[] { scissor }
+                };
 
-            PipelineDepthStencilStateCreateInfo pipelineDepthStencil = new PipelineDepthStencilStateCreateInfo()
-            {
-                DepthTestEnable = _depthTest,
-                DepthWriteEnable = _depthTest,
-                DepthCompareOp = CompareOp.Less,
-                DepthBoundsTestEnable = false,
-                MinDepthBounds = 0f,
-                MaxDepthBounds = 1f,
-                StencilTestEnable = false
-            };
+                var multisampleCreateInfo = new PipelineMultisampleStateCreateInfo
+                {
+                    RasterizationSamples = SampleCountFlags.Count1
+                };
+                var colorBlendAttachmentState = new PipelineColorBlendAttachmentState
+                {
+                    ColorWriteMask = ColorComponentFlags.R | ColorComponentFlags.G | ColorComponentFlags.B | ColorComponentFlags.A,
+                    //TODO: Parameter that... see: C:\Projects\veldrid\src\Veldrid\BlendAttachmentDescription.cs
+                    BlendEnable = true,
+                    SrcColorBlendFactor = BlendFactor.SrcAlpha,
+                    DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
+                    ColorBlendOp = BlendOp.Add,
+                    SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
+                    DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
+                    AlphaBlendOp = BlendOp.Add
+                };
+                var colorBlendStateCreatInfo = new PipelineColorBlendStateCreateInfo
+                {
+                    LogicOp = LogicOp.Copy,
+                    Attachments = new PipelineColorBlendAttachmentState[] { colorBlendAttachmentState }
+                };
+                var rasterizationStateCreateInfo = new PipelineRasterizationStateCreateInfo
+                {
+                    PolygonMode = PolygonMode.Fill,
+                    //CullMode = CullModeFlags.Front,
+                    CullMode = _cullMode,
+                    //CullMode = CullModeFlags.None,
+                    FrontFace = FrontFace.Clockwise,
+                    LineWidth = 1.0f
+                };
+                var inputAssemblyStateCreateInfo = new PipelineInputAssemblyStateCreateInfo
+                {
+                    Topology = PrimitiveTopology.TriangleList
+                };
 
-            var pipelineCreateInfo = new GraphicsPipelineCreateInfo
-            {
-                Layout = _pipelineLayout,
-                ViewportState = viewportCreateInfo,
-                Stages = pipelineShaderStages,
-                MultisampleState = multisampleCreateInfo,
-                ColorBlendState = colorBlendStateCreatInfo,
-                RasterizationState = rasterizationStateCreateInfo,
-                InputAssemblyState = inputAssemblyStateCreateInfo,
-                VertexInputState = vertexInputStateCreateInfo,
-                RenderPass = _swapchain.RenderPass,
-                DynamicState = dynamicStateCreateInfo,
-                DepthStencilState = pipelineDepthStencil
-            };
+                var vertexInputStateCreateInfo = new PipelineVertexInputStateCreateInfo
+                {
+                    VertexBindingDescriptions = _shader.VertexBindings.ToArray(),
+                    VertexAttributeDescriptions = _shader.VertexInputAttributes.ToArray()
+                };
 
-            //var pipelines = _device.CreateGraphicsPipelines(_device.CreatePipelineCache(new PipelineCacheCreateInfo()), new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
-            var pipelines = _device.CreateGraphicsPipelines(null, new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
 
-            _pipeline = pipelines[0];
+                var dynamicStateCreateInfo = new PipelineDynamicStateCreateInfo
+                {
+                    DynamicStates = _dynamicStates
+                };
+
+                PipelineDepthStencilStateCreateInfo pipelineDepthStencil = new PipelineDepthStencilStateCreateInfo()
+                {
+                    DepthTestEnable = _depthTest,
+                    DepthWriteEnable = _depthTest,
+                    DepthCompareOp = CompareOp.Less,
+                    DepthBoundsTestEnable = false,
+                    MinDepthBounds = 0f,
+                    MaxDepthBounds = 1f,
+                    StencilTestEnable = false
+                };
+
+                var pipelineCreateInfo = new GraphicsPipelineCreateInfo
+                {
+                    Layout = _pipelineLayout,
+                    ViewportState = viewportCreateInfo,
+                    Stages = _pipelineShaderStages,
+                    MultisampleState = multisampleCreateInfo,
+                    ColorBlendState = colorBlendStateCreatInfo,
+                    RasterizationState = rasterizationStateCreateInfo,
+                    InputAssemblyState = inputAssemblyStateCreateInfo,
+                    VertexInputState = vertexInputStateCreateInfo,
+                    RenderPass = _swapchain.RenderPass,
+                    DynamicState = dynamicStateCreateInfo,
+                    DepthStencilState = pipelineDepthStencil
+                };
+
+                //var pipelines = _device.CreateGraphicsPipelines(_device.CreatePipelineCache(new PipelineCacheCreateInfo()), new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
+                var pipelines = _device.CreateGraphicsPipelines(null, new GraphicsPipelineCreateInfo[] { pipelineCreateInfo });
+
+                _pipeline = pipelines[0];
+
+            }
 
         }
 
@@ -405,10 +540,15 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
 
-        ///// <summary>
-        ///// Implicit conversion to a Pipeline
-        ///// </summary>
-        //public static implicit operator Pipeline(PipelineWrapper pipeline) { return pipeline._pipeline; }
+        /// <summary>
+        /// Implicit conversion to a Pipeline
+        /// </summary>
+        public static implicit operator Pipeline(PipelineWrapper pipeline) { return pipeline._pipeline; }
+
+        /// <summary>
+        /// Implicit conversion to a Pipeline layout
+        /// </summary>
+        public static implicit operator PipelineLayout(PipelineWrapper pipeline) { return pipeline._pipelineLayout; }
 
     }
 

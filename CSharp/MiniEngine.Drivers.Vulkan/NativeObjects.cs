@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 namespace MiniEngine.Drivers.Vulkan
 {
 
-    internal class NativeReference : IDisposable
+    public class NativeReference : IDisposable
     {
-        internal IntPtr Handle { get; private set; }
+        public IntPtr Handle { get; private set; }
 
-        internal NativeReference(int size, bool zero = false)
+        public NativeReference(int size, bool zero = false)
         {
             Handle = Marshal.AllocHGlobal(size);
             if (NativeMemoryDebug.Enabled)

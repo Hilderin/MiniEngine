@@ -15,7 +15,8 @@ namespace MiniEngine.Tests.Drivers.Vulkan
         public void SpirvParserImGuiTest()
         {
 
-            var shader = new ShaderWrapper(null, 
+            var shader = new ShaderWrapper(null)
+.SetCode(ShaderStageFlags.Vertex,
 @"#version 450
 
 #extension GL_ARB_separate_shader_objects : enable
@@ -60,8 +61,9 @@ void main()
         gl_Position.y = -gl_Position.y;
     }
 }
-"
-, @"#version 450
+")
+.SetCode(ShaderStageFlags.Fragment
+,@"#version 450
 
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable

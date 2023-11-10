@@ -22,6 +22,11 @@ namespace MiniEngine.ResourceDefinitions
         public string FragmentCode { get; set; }
 
         /// <summary>
+        /// Compute code
+        /// </summary>
+        public string ComputeCode { get; set; }
+
+        /// <summary>
         /// Information on the variables in the shader
         /// </summary>
         public Dictionary<string, ShaderVariableDefinition> VariableDefinitions = new Dictionary<string, ShaderVariableDefinition>();

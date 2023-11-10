@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="TeximpNet" Version="1.4.3" />
+    <PackageReference Include="Veldrid.RenderDoc" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup>

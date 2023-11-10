@@ -20,20 +20,20 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private static readonly string[] BINDLESS_VARIABLE_NAMES = new string[] { ShaderVariableNames.SamplerDiffuse };
 
-        /// <summary>
-        /// Parse dthe spirv codes
-        /// </summary>
-        public static void ParseUpdateShader(ShaderWrapper shader, Dictionary<string, SpirvVariableDefinition> variableDefinitions = null)
-        {
-            ParseBytes(shader.VertexSpirv, shader, variableDefinitions);
-            ParseBytes(shader.FragmentSpirv, shader, variableDefinitions);
+        ///// <summary>
+        ///// Parse dthe spirv codes
+        ///// </summary>
+        //public static void ParseUpdateShader(ShaderWrapper shader, Dictionary<string, SpirvVariableDefinition> variableDefinitions = null)
+        //{
+        //    ParseBytes(shader.VertexSpirv, shader, variableDefinitions);
+        //    ParseBytes(shader.FragmentSpirv, shader, variableDefinitions);
 
-        }
+        //}
 
         /// <summary>
         /// Parse the byte codes for a shader
         /// </summary>
-        private unsafe static void ParseBytes(byte[] dataBytes, ShaderWrapper shader, Dictionary<string, SpirvVariableDefinition> variableDefinitions)
+        public unsafe static void ParseBytes(ShaderStageFlags stage, byte[] dataBytes, ShaderWrapper shader, Dictionary<string, SpirvVariableDefinition> variableDefinitions)
         {
             if (dataBytes.Length % 4 != 0)
                 throw new ArgumentException("Invalid spirv, length % 4 != 0");
@@ -59,7 +59,7 @@ namespace MiniEngine.Rendering.Vulkan
                 ids[i] = new Id();
             }
 
-            ShaderStageFlags stage = 0;
+            //ShaderStageFlags stage = 0;
             uint id_index;
             Id id;
             SpvDecoration decoration;
@@ -84,22 +84,21 @@ namespace MiniEngine.Rendering.Vulkan
                         string entrypoint_name = GetStringFromData(dataBytes, (word_index + 3) * 4);
 
                         SpvExecutionModel model = (SpvExecutionModel)data[word_index + 1];
+                        ShaderStageFlags entrypointStage;
                         switch (model)
                         {
                             case SpvExecutionModel.SpvExecutionModelVertex:
-                                stage = ShaderStageFlags.Vertex;
-                                shader.VertexEntryPoint = entrypoint_name;
+                                entrypointStage = ShaderStageFlags.Vertex;
                                 break;
                             case SpvExecutionModel.SpvExecutionModelGeometry:
-                                stage = ShaderStageFlags.Geometry;
+                                entrypointStage = ShaderStageFlags.Geometry;
                                 break;
                             case SpvExecutionModel.SpvExecutionModelFragment:
-                                stage = ShaderStageFlags.Fragment;
-                                shader.FragmentEntryPoint = entrypoint_name;
+                                entrypointStage = ShaderStageFlags.Fragment;
                                 break;
                             case SpvExecutionModel.SpvExecutionModelKernel:
                             case SpvExecutionModel.SpvExecutionModelGLCompute:
-                                stage = ShaderStageFlags.Compute;
+                                entrypointStage = ShaderStageFlags.Compute;
                                 break;
                             //case SpvExecutionModel.SpvExecutionModelMeshNV:
                             //    stage = ShaderStageFlags.VK_SHADER_STAGE_MESH_BIT_NV;
@@ -128,6 +127,11 @@ namespace MiniEngine.Rendering.Vulkan
                                 throw new InvalidOperationException($"SpvOpEntryPoint: Invalid SpvExecutionModel '{model}'");
                         }
 
+
+                        if (stage != entrypointStage)
+                            throw new InvalidOperationException($"Trying to set a shader for the wrong stage. Spirv stage: {entrypointStage}, current stage {stage}.");
+
+                        shader[stage].Entrypoint = entrypoint_name;
 
                         //When take the entrypoints variables only for vertex shaders...
                         if (stage == ShaderStageFlags.Vertex)
@@ -165,10 +169,13 @@ namespace MiniEngine.Rendering.Vulkan
                             case SpvDecoration.SpvDecorationDescriptorSet:
                                 id.set = data[word_index + 3];
                                 break;
+
+                            case SpvDecoration.SpvDecorationSpecId:
+                                id.specid = data[word_index + 3];
+                                break;
                         }
 
                         break;
-
 
                     case SpvOp.SpvOpMemberDecorate:
 
@@ -361,9 +368,31 @@ namespace MiniEngine.Rendering.Vulkan
                         id_index = data[word_index + 1];
 
                         id = ids[id_index];
-                        id.op = op;
+
+                        //We received the SpvOpSpecConstant 2 times, one in the op SpvOpSpecConstant and one in SpvOpConstant
+                        //if we use the SpvOpConstant, we wil override important data from the SpvOpSpecConstant op.
+                        if (id.op != SpvOp.SpvOpSpecConstant && id.op != SpvOp.SpvOpSpecConstantTrue && id.op != SpvOp.SpvOpSpecConstantFalse && id.op != SpvOp.SpvOpSpecConstantComposite && id.op != SpvOp.SpvOpSpecConstantOp)
+                        {
+                            id.op = op;
+                            id.type_index = data[word_index + 2];
+                            id.value = data[word_index + 3]; // NOTE(marco: we assume all constants to have maximum 32bit width
+                        }
+
+                        break;
+
+                    case SpvOp.SpvOpSpecConstant:
+                    case SpvOp.SpvOpSpecConstantTrue:
+                    case SpvOp.SpvOpSpecConstantFalse:
+                    case SpvOp.SpvOpSpecConstantComposite:
+                    case SpvOp.SpvOpSpecConstantOp:
+                        //Spec constant:
+                        //Exemple: layout (constant_id = 0) const uint BUFFER_ELEMENTS = 32;
+                        id_index = data[word_index + 1];
+
+                        id = ids[id_index];
+                        id.op = op; 
                         id.type_index = data[word_index + 2];
-                        id.value = data[word_index + 3]; // NOTE(marco: we assume all constants to have maximum 32bit width
+                        id.value = data[word_index + 3]; // Default value
 
                         break;
 
@@ -400,7 +429,9 @@ namespace MiniEngine.Rendering.Vulkan
             List<VertexInputAttributeDescription> vertexInputAttributes = new List<VertexInputAttributeDescription>();
             if (shader.VertexInputAttributes != null)
                 vertexInputAttributes.AddRange(shader.VertexInputAttributes);
-
+            List<SpecializationConstant> specConstants = new List<SpecializationConstant>();
+            if (shader.SpecializationConstants != null)
+                specConstants.AddRange(shader.SpecializationConstants);
 
             //--------------------------------------
             //Vertex buffer...
@@ -414,100 +445,126 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 id = ids[id_index];
 
-                if (id.op == SpvOp.SpvOpVariable)
+                switch (id.op)
                 {
-                    switch (id.storage_class)
-                    {
-                        case SpvStorageClass.SpvStorageClassUniform:
-                        case SpvStorageClass.SpvStorageClassUniformConstant:
+                    // Parse specialization constants
+                    case SpvOp.SpvOpSpecConstant:
+                    case SpvOp.SpvOpSpecConstantTrue:
+                    case SpvOp.SpvOpSpecConstantFalse:
+                    case SpvOp.SpvOpSpecConstantComposite:
+                    case SpvOp.SpvOpSpecConstantOp:
 
-                            //if (id.set == 1 && (id.binding == k_bindless_texture_binding || id.binding == (k_bindless_texture_binding + 1)))
-                            //{
-                            //    //these are managed by the GPU device
-                            //    continue;
-                            //}
+                        Id id_spec_binding = ids[id.type_index];
+                        
+                        //uint specOffset = 0;
+                        //if (specConstants.Count > 0)
+                        //    specOffset = specConstants[specConstants.Count - 1].Offset + specConstants[specConstants.Count - 1].Size;
 
-                            Id uniform_type = ids[ids[id.type_index].type_index];
+                        SpecializationConstant specConstant = new SpecializationConstant()
+                        {
+                            Stage = stage,
+                            Name = id_spec_binding.name,
+                            ConstantId = id_spec_binding.specid,
+                            //Offset = specOffset,
+                            Size = id.width,
+                            DefaultValue = id.value
+                        };
+                        specConstants.Add(specConstant);
 
-                            while (bindingSets.Count <= id.set)
-                                bindingSets.Add(new List<DescriptorSetLayoutBinding>());
-
-                            var bindings = bindingSets[(int)id.set];
+                        break;
 
 
-                            var binding = bindings.FirstOrDefault(b => b.Binding == id.binding);
-                            if (binding == null)
+
+                    case SpvOp.SpvOpVariable:
+                        {
+                            switch (id.storage_class)
                             {
-                                binding = new DescriptorSetLayoutBinding();
-                                binding.Binding = id.binding;
-                                binding.Name = id.name;
-                                binding.Size = uniform_type.width;
+                                case SpvStorageClass.SpvStorageClassUniform:
+                                case SpvStorageClass.SpvStorageClassUniformConstant:
 
-                                UpdateBindingDescriptorType(binding, uniform_type, ids);
+                                    Id uniform_type = ids[ids[id.type_index].type_index];
 
-                                if (binding.IsArray)
-                                {
-                                    if (variableDefinitions != null && variableDefinitions.TryGetValue(id.name, out var varDef))
+                                    while (bindingSets.Count <= id.set)
+                                        bindingSets.Add(new List<DescriptorSetLayoutBinding>());
+
+                                    var bindings = bindingSets[(int)id.set];
+
+
+                                    var binding = bindings.FirstOrDefault(b => b.Binding == id.binding);
+                                    if (binding == null)
                                     {
-                                        binding.DescriptorCount = (uint)varDef.Count;
-                                        binding.Bindless = varDef.Bindless;
+                                        binding = new DescriptorSetLayoutBinding();
+                                        binding.Binding = id.binding;
+                                        binding.Name = id.name;
+                                        binding.Size = uniform_type.width;
+
+                                        UpdateBindingDescriptorType(binding, uniform_type, ids);
+
+                                        if (binding.IsArray)
+                                        {
+                                            if (variableDefinitions != null && variableDefinitions.TryGetValue(id.name, out var varDef))
+                                            {
+                                                binding.DescriptorCount = (uint)varDef.Count;
+                                                binding.Bindless = varDef.Bindless;
+                                            }
+                                            else if (BINDLESS_VARIABLE_NAMES.Contains(binding.Name))
+                                            {
+                                                //Default bindless...
+                                                binding.DescriptorCount = DEFAULT_BINDLESS_COUNT;
+                                                binding.Bindless = true;
+                                            }
+                                        }
+
+                                        bindings.Add(binding);
                                     }
-                                    else if (BINDLESS_VARIABLE_NAMES.Contains(binding.Name))
+
+
+                                    binding.StageFlags |= stage;
+
+
+
+                                    break;
+
+
+                                case SpvStorageClass.SpvStorageClassPushConstant:
+
+                                    Id push_constants_type = ids[ids[id.type_index].type_index];
+
+                                    for (int i = 0; i < push_constants_type.members.Count; i++)
                                     {
-                                        //Default bindless...
-                                        binding.DescriptorCount = DEFAULT_BINDLESS_COUNT;
-                                        binding.Bindless = true;
+                                        Member mc = push_constants_type.members[i];
+                                        if (mc == null)
+                                            continue;
+
+                                        Id member_id = ids[mc.id_index];
+
+                                        PushConstantRange pushConstant = constants.FirstOrDefault(c => c.Offset == mc.offset);
+                                        if (pushConstant == null)
+                                        {
+                                            pushConstant = new PushConstantRange();
+                                            pushConstant.Name = mc.name;
+                                            pushConstant.Size = member_id.width;
+                                            pushConstant.Offset = mc.offset;
+
+
+                                            constants.Add(pushConstant);
+                                        }
+                                        else if (mc.name != pushConstant.Name)
+                                        {
+                                            //Multiple constants with different name at the same offset...
+                                            throw new InvalidOperationException($"Multiple constants with different name at the same offset {mc.offset}, constant '{pushConstant.Name}' and '{mc.name}'");
+                                        }
+
+
+                                        pushConstant.StageFlags |= stage;
+
+
+
                                     }
-                                }
-
-                                bindings.Add(binding);
+                                    break;
                             }
-
-
-                            binding.StageFlags |= stage;
-
-
-
-                            break;
-
-
-                        case SpvStorageClass.SpvStorageClassPushConstant:
-
-                            Id push_constants_type = ids[ids[id.type_index].type_index];
-
-                            for (int i = 0; i < push_constants_type.members.Count; i++)
-                            {
-                                Member mc = push_constants_type.members[i];
-                                if (mc == null)
-                                    continue;
-
-                                Id member_id = ids[mc.id_index];
-
-                                PushConstantRange pushConstant = constants.FirstOrDefault(c => c.Offset == mc.offset);
-                                if (pushConstant == null)
-                                {
-                                    pushConstant = new PushConstantRange();
-                                    pushConstant.Name = mc.name;
-                                    pushConstant.Size = member_id.width;
-                                    pushConstant.Offset = mc.offset;
-
-
-                                    constants.Add(pushConstant);
-                                }
-                                else if (mc.name != pushConstant.Name)
-                                {
-                                    //Multiple constants with different name at the same offset...
-                                    throw new InvalidOperationException($"Multiple constants with different name at the same offset {mc.offset}, constant '{pushConstant.Name}' and '{mc.name}'");
-                                }
-
-
-                                pushConstant.StageFlags |= stage;
-
-
-
-                            }
-                            break;
-                    }
+                        }
+                        break;
                 }
 
 
@@ -524,6 +581,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 shader.BindingSets[iSet] = bindingSets[iSet].ToArray();
             }
+            shader.SpecializationConstants = specConstants.ToArray();
 
 
         }
@@ -623,8 +681,8 @@ namespace MiniEngine.Rendering.Vulkan
                         Format = GetMemberFormat(typeid),
                         Size = GetMemberWidth(typeid, ids)
                     };
-                    
-                    if(variableDefinitions != null && variableDefinitions.TryGetValue(id.name, out var varDef) && varDef.Format != Format.Undefined)
+
+                    if (variableDefinitions != null && variableDefinitions.TryGetValue(id.name, out var varDef) && varDef.Format != Format.Undefined)
                     {
                         new_entry.Format = varDef.Format;
                         new_entry.Size = (uint)(FormatHelper.GetFormatSizeBits(varDef.Format) / 8);
@@ -685,6 +743,7 @@ namespace MiniEngine.Rendering.Vulkan
                 case SpvOp.SpvOpTypeInt:
                 case SpvOp.SpvOpConstant:
                 case SpvOp.SpvOpTypeFloat:
+                case SpvOp.SpvOpSpecConstant:
                     return id.width;
 
                 case SpvOp.SpvOpTypeArray:
@@ -714,6 +773,7 @@ namespace MiniEngine.Rendering.Vulkan
                     return Format.R32Sint;
                 case SpvOp.SpvOpTypeFloat:
                 case SpvOp.SpvOpConstant:
+                case SpvOp.SpvOpSpecConstant:
                     switch (id.width)
                     {
                         case 4: return Format.R32Sfloat;
@@ -807,6 +867,7 @@ namespace MiniEngine.Rendering.Vulkan
             public uint set;
             public uint binding;
             public uint location;
+            public uint specid;
 
             // For integers and floats
             public byte width;

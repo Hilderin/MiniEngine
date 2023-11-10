@@ -425,11 +425,6 @@ namespace MiniEngine
             {
                 Debug.Info(message);
             }
-
-
-
-
-
         }
 
         /// <summary>

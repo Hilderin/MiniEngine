@@ -41,6 +41,7 @@ namespace MiniEngine.Rendering.Vulkan
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
         public QueueWrapper GraphicsQueue => _graphicsQueue;
         public uint TransferQueueIndex => _transferQueueIndex;
+        public uint ComputeQueueIndex => _computeQueueIndex;
         public Extent2D CurrentExtent => _currentExtent;
         public SurfaceCapabilitiesKhr SurfaceCapabilities => _surfaceCapabilities;
         public MemoryManager MemoryManager => _memoryManager;
@@ -57,6 +58,7 @@ namespace MiniEngine.Rendering.Vulkan
         private List<VkMeshInstance> _meshInstances = new List<VkMeshInstance>();
         private List<VkMeshRenderer> _meshRenderers = new List<VkMeshRenderer>();
         private IWindow _window;
+        private bool _headless;
         private string _applicationName;
         private VkVersion _applicationVersion;
         private DebugCallback _debugCallback;
@@ -89,6 +91,7 @@ namespace MiniEngine.Rendering.Vulkan
         private uint _graphicsQueueIndex;
         private QueueWrapper _graphicsQueue;
         private uint _transferQueueIndex;
+        private uint _computeQueueIndex;
         //private Queue _transferQueue;
 
 
@@ -115,14 +118,17 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         void IRenderer.EnableDebug(DebugCallback debugCallback)
         {
-            _debugCallback = debugCallback;
+            EnableDebug(debugCallback);
         }
 
         /// <summary>
         /// Enable debugging
         /// </summary>
-        public VkRenderer EnableDebug(DebugCallback debugCallback)
+        public VkRenderer EnableDebug(DebugCallback debugCallback = null)
         {
+            if (debugCallback == null)
+                debugCallback = DefaultDebugCallback;
+
             _debugCallback = debugCallback;
             return this;
         }
@@ -152,27 +158,46 @@ namespace MiniEngine.Rendering.Vulkan
             _imGui.UpdateImGuiInput(input);
         }
 
+        /// <summary>
+        /// Init the renderer
+        /// </summary>
+        void IRenderer.Init()
+        {
+            Init();
+        }
 
         /// <summary>
         /// Init the renderer
         /// </summary>
-        public void Init()
+        public VkRenderer Init()
         {
             if (_initialized)
                 throw new Exception("Already initialized.");
 
             Renderer.Current = this;
 
-            //If we have enabled the debug mode...
-            DebugReportCallback callback = null;
-            if (_debugCallback != null)
-                callback = DebugReportCallback;
+            List<string> extensions = new List<string>();
 
-            _vi = new VkInstance(_applicationName, _applicationVersion, callback);
+            if (!_headless)
+            {
+                extensions.Add("VK_KHR_surface");
+                extensions.Add("VK_KHR_win32_surface");
+            }
+
+            //If we have enabled the debug mode...
+            DebugReportCallback debugCallback = null;
+            if (_debugCallback != null)
+            {
+                debugCallback = DebugReportCallback;
+                extensions.Add("VK_EXT_debug_report");
+            }
+
+            _vi = new VkInstance(_applicationName, _applicationVersion, extensions.ToArray(), debugCallback);
 
 
             //Surface creation...
-            _surface = CreateSurfaceCallback();
+            if(!_headless)
+                _surface = CreateSurfaceCallback();
 
             //Physical device...
             _physicalDevice = PickPhysicalDevice();
@@ -181,6 +206,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             _graphicsQueueIndex = GetGraphicsQueueFamilyIndex(_surface);
             _transferQueueIndex = GetTransferQueueFamilyIndex();
+            _computeQueueIndex = GetComputeQueueFamilyIndex();
 
             _device = CreateDevice();
 
@@ -190,7 +216,9 @@ namespace MiniEngine.Rendering.Vulkan
 
             _memoryManager = new MemoryManager(this);
 
-            _swapchain = new SwapchainWrapper(this, new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox, true);
+            //No swapchain in headless mode...
+            if(!_headless)
+                _swapchain = new SwapchainWrapper(this, new Format[] { Format.B8G8R8A8Srgb }, new ColorSpaceKhr[] { ColorSpaceKhr.SrgbNonlinear }, PresentModeKhr.Mailbox, true);
 
             _resourceFactory = new VkResourceFactory(this);
 
@@ -204,6 +232,8 @@ namespace MiniEngine.Rendering.Vulkan
             //_indirectDrawBuffer = new BufferWrapper(this, (uint)(Marshal.SizeOf<DrawIndexedIndirectCommand>() * 100), BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
             _initialized = true;
+
+            return this;
         }
 
 
@@ -229,7 +259,11 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public PipelineWrapper CreatePipelineWrapper(VkShader shader)
         {
-            return _swapchain.CreatePipelineWrapper(shader.ShaderData);
+            if(_headless)
+                //No swapchain to track the pipelines... and anyway, there will be not rebuilding pipeline because of no resizing of the screen... no screen at all!
+                return new PipelineWrapper(_device, null, shader.ShaderData);
+            else
+                return _swapchain.CreatePipelineWrapper(shader.ShaderData);
         }
 
 
@@ -247,6 +281,15 @@ namespace MiniEngine.Rendering.Vulkan
         void IRenderer.SetWindow32Handle(IntPtr handle)
         {
             SetWindow32Handle(handle);
+        }
+
+        /// <summary>
+        /// Enable headless
+        /// </summary>
+        public VkRenderer EnableHeadless()
+        {
+            _headless = true;
+            return this;
         }
 
         /// <summary>
@@ -332,15 +375,31 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a new mesh
         /// </summary>
-        public Mesh CreateMesh()
+        Mesh IRenderer.CreateMesh()
         {
             return _resourceFactory.CreateMesh();
         }
 
         /// <summary>
+        /// Create a new mesh
+        /// </summary>
+        public Mesh CreateMesh()
+        {
+            return _resourceFactory.CreateMesh();
+        }
+        
+        /// <summary>
         /// Create a Texture2D
         /// </summary>
-        public Texture2D CreateTexture2D(Texture2DDefinition texDef)
+        Texture2D IRenderer.CreateTexture2D(Texture2DDefinition texDef)
+        {
+            return _resourceFactory.CreateTexture2D(texDef);
+        }
+
+        /// <summary>
+        /// Create a Texture2D
+        /// </summary>
+        public VkTexture2D CreateTexture2D(Texture2DDefinition texDef)
         {
             return _resourceFactory.CreateTexture2D(texDef);
         }
@@ -348,7 +407,15 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a Material
         /// </summary>
-        public Material CreateMaterial(MaterialDefinition matDef)
+        Material IRenderer.CreateMaterial(MaterialDefinition matDef)
+        {
+            return _resourceFactory.CreateMaterial(matDef);
+        }
+
+        /// <summary>
+        /// Create a Material
+        /// </summary>
+        public VkMaterial CreateMaterial(MaterialDefinition matDef)
         {
             return _resourceFactory.CreateMaterial(matDef);
         }
@@ -356,7 +423,15 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a shader
         /// </summary>
-        public Shader CreateShader(ShaderDefinition shaderDef)
+        Shader IRenderer.CreateShader(ShaderDefinition shaderDef)
+        {
+            return _resourceFactory.CreateShader(shaderDef);
+        }
+
+        /// <summary>
+        /// Create a shader
+        /// </summary>
+        public VkShader CreateShader(ShaderDefinition shaderDef)
         {
             return _resourceFactory.CreateShader(shaderDef);
         }
@@ -432,6 +507,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void UpdateSurfaceCapabilities()
         {
+            if (_surface == null)
+                return;
+
             _surfaceCapabilities = _physicalDevice.GetSurfaceCapabilitiesKHR(_surface);
 
             _currentExtent = _surfaceCapabilities.CurrentExtent;
@@ -583,12 +661,25 @@ namespace MiniEngine.Rendering.Vulkan
                 {
                     QueuePriorities = new float[] { 1.0f },
                     QueueFamilyIndex = _transferQueueIndex,
+                },
+
+                //Compute queue... 
+                new DeviceQueueCreateInfo
+                {
+                    QueuePriorities = new float[] { 1.0f },
+                    QueueFamilyIndex = _computeQueueIndex,
                 }
             };
 
+            List<string> extensions = new List<string>();
+
+            //No swapshain in headless...
+            if (!_headless)
+                extensions.Add("VK_KHR_swapchain");
+
             using (var deviceInfo = new DeviceCreateInfo
             {
-                EnabledExtensionNames = new string[] { "VK_KHR_swapchain" },
+                EnabledExtensionNames = extensions.ToArray(),
                 QueueCreateInfos = queueCreateInfos.ToArray(),
                 Next = pFeatures.Handle
             })
@@ -601,64 +692,6 @@ namespace MiniEngine.Rendering.Vulkan
 
 
         }
-
-
-
-        ///// <summary>
-        ///// Create the device with it's queues
-        ///// </summary>
-        //public unsafe Device CreateDevice(SurfaceKhr surface, uint[] queueFamilityIndexes, IntPtr nextFeature2 = 0)
-        //{
-
-        //    var pFeatures = new PhysicalDeviceFeatures2();
-
-        //    var indexingFeatures = new PhysicalDeviceDescriptorIndexingFeatures()
-        //    {
-        //        SType = StructureType.PhysicalDeviceDescriptorIndexingFeatures
-        //    };
-        //    pFeatures.Next = (IntPtr)(&indexingFeatures);
-
-        //    Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
-
-        //    List<DeviceQueueCreateInfo> queueCreateInfos = new List<DeviceQueueCreateInfo>();
-
-        //    foreach (uint queueIndex in queueFamilityIndexes)
-        //    {
-        //        queueCreateInfos.Add(new DeviceQueueCreateInfo
-        //        {
-        //            QueuePriorities = new float[] { 1.0f },
-        //            QueueFamilyIndex = queueIndex,
-        //        });
-        //    }
-
-        //    using (var deviceInfo = new DeviceCreateInfo
-        //    {
-        //        EnabledExtensionNames = new string[] { "VK_KHR_swapchain" },
-        //        QueueCreateInfos = queueCreateInfos.ToArray(),
-        //        //EnabledFeatures = new()
-        //        //{
-        //        //    SamplerAnisotropy = true            //Enable Anisotrophy
-        //        //}
-        //    })
-        //    {
-        //        unsafe
-        //        {
-        //            if (nextFeature2 > 0)
-        //            {
-        //                Interop.PhysicalDeviceFeatures2 physical_features2 = new Interop.PhysicalDeviceFeatures2();
-        //                physical_features2.SType = StructureType.PhysicalDeviceFeatures2;
-        //                Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, &physical_features2);
-
-        //                physical_features2.Next = (IntPtr)(&indexingFeatures);
-
-        //                deviceInfo.Next = (IntPtr)(pFeatures.m);
-        //            }
-
-        //            return CreateDevice(deviceInfo, surface, null);
-        //        }
-        //    }
-
-        //}
 
         /// <summary>
         /// Get the right Physical device
@@ -740,7 +773,8 @@ namespace MiniEngine.Rendering.Vulkan
                 }
             }
             else
-                throw new Exception("Impossible to create the surface. No window and no window handle exists.");
+                //Headless...
+                throw new Exception("Impossible to create the surface. No window and no window handle exists. If you want to execute headless, enable Headless mode with EnableHeadless.");
 
         }
 
@@ -792,6 +826,30 @@ namespace MiniEngine.Rendering.Vulkan
                 return Int32.MaxValue;
         }
 
+        /// <summary>
+        /// Get the best queue index for compute data
+        /// </summary>
+        private int GetQueueFamilyPriorityForCompute(QueueFamilyProperties queueFamProp)
+        {
+            if (queueFamProp.QueueFlags.HasFlag(QueueFlags.Compute))
+            {
+                //Important...
+                if (!queueFamProp.QueueFlags.HasFlag(QueueFlags.Graphics) && !queueFamProp.QueueFlags.HasFlag(QueueFlags.Transfer))
+                    //Perfect, a queue specific to compute...
+                    return 0;
+
+                if (!queueFamProp.QueueFlags.HasFlag(QueueFlags.Graphics))
+                    //Perfect, a queue almost specific to compute...
+                    return 1;
+
+                return 3;
+
+            }
+            else
+                //Not good...
+                return Int32.MaxValue;
+        }
+
 
         /// <summary>
         /// Get the graphic queue family index
@@ -802,9 +860,13 @@ namespace MiniEngine.Rendering.Vulkan
 
             for (uint graphicsQueueIndex = 0; graphicsQueueIndex < queueFamilyProperties.Length; ++graphicsQueueIndex)
             {
-                if (!_physicalDevice.GetSurfaceSupportKHR(graphicsQueueIndex, surface))
-                    //This queue does not support SurfaceKHR...
-                    continue;
+                //Support for headless...
+                if (surface != null)
+                {
+                    if (!_physicalDevice.GetSurfaceSupportKHR(graphicsQueueIndex, surface))
+                        //This queue does not support SurfaceKHR...
+                        continue;
+                }
 
                 if (queueFamilyProperties[graphicsQueueIndex].QueueFlags.HasFlag(QueueFlags.Graphics))
                     //Found it! Should be good
@@ -815,7 +877,7 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
-        /// Get the transferer queue famility index
+        /// Get the transfer queue family index
         /// </summary>
         public uint GetTransferQueueFamilyIndex()
         {
@@ -842,6 +904,53 @@ namespace MiniEngine.Rendering.Vulkan
                 throw new Exception("Not device found for transfer queue.");
 
             return transfersQueueIndex;
+        }
+
+
+        /// <summary>
+        /// Get the comptue queue family index
+        /// </summary>
+        public uint GetComputeQueueFamilyIndex()
+        {
+            bool found = false;
+            uint computeQueueIndex = 0;
+            int bestPriority = Int32.MaxValue;
+            var queueFamProps = _physicalDevice.GetQueueFamilyProperties();
+            for (int i = 0; i < queueFamProps.Length; i++)
+            {
+                if (queueFamProps[i].QueueFlags.HasFlag(QueueFlags.Compute))
+                {
+                    int priority = GetQueueFamilyPriorityForCompute(queueFamProps[i]);
+                    if (priority < bestPriority)
+                    {
+                        //This one is better...
+                        computeQueueIndex = (uint)i;
+                        bestPriority = priority;
+                        found = true;
+                    }
+                }
+            }
+
+            if (!found)
+                throw new Exception("Not device found for compute queue.");
+
+            return computeQueueIndex;
+        }
+
+
+        /// <summary>
+        /// Default callback in debug mode
+        /// </summary>
+        private void DefaultDebugCallback(DebugLevel level, int messageCode, string message)
+        {
+            if (level == DebugLevel.Error)
+            {
+                throw new Exception($"Renderer error: {message}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.Print($"{level}: {message}");
+            }
         }
 
         #endregion

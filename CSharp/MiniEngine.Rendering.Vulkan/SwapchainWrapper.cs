@@ -46,7 +46,7 @@ namespace MiniEngine.Rendering.Vulkan
         public bool DepthTest => _depthTest;
 
         public int IndexNextImage => _indexNextImage;
-
+        
 
         /// <summary>
         /// Create a swapchain

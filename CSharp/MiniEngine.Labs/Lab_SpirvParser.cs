@@ -13,7 +13,9 @@ namespace MiniEngine.Labs
         public void Test()
         {
 
-            ShaderWrapper shader = new ShaderWrapper(null, @"#version 450
+            ShaderWrapper shader = new ShaderWrapper(null)
+.SetCode(ShaderStageFlags.Vertex
+,@"#version 450
 
 layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
@@ -44,6 +46,8 @@ void main() {
     fragTexCoord = inTexCoord;
 }
 "
+)
+.SetCode(ShaderStageFlags.Fragment
 ,@"#version 450
 
 layout(location = 0) in vec3 fragColor;
@@ -56,7 +60,7 @@ void main() {
 }
 ");
 
-            Console.WriteLine(shader.FragmentEntryPoint);
+            Console.WriteLine(shader[ShaderStageFlags.Fragment].Entrypoint);
 
 
 

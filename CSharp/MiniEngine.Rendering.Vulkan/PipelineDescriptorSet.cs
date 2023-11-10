@@ -289,6 +289,12 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
 
+        /// <summary>
+        /// Implicit conversion to a DescriptorSet[]
+        /// </summary>
+        public static implicit operator DescriptorSet[](PipelineDescriptorSet pipelineDescriptorSet) { return pipelineDescriptorSet.DescriptorSets; }
+
+
         private class DescriptorSetData
         {
             public DescriptorSet DescriptorSet;
