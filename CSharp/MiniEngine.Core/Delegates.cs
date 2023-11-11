@@ -3,19 +3,9 @@ namespace MiniEngine
 {
 
     /// <summary>
-    /// Handler when the tranform moved
+    /// Handler when the tranform moved, rotate or scale
     /// </summary>
-    public delegate void OnLocationChangedHandler(Vector3 oldLocation, Vector3 newLocation);
-
-    /// <summary>
-    /// Handler when the rotation changed
-    /// </summary>
-    public delegate void OnRotationChangedHandler(Rotator3 oldRotation, Rotator3 newRotation);
-
-    /// <summary>
-    /// Handler when the scale changed
-    /// </summary>
-    public delegate void OnScaleChangedHandler(Vector3 oldScale, Vector3 newScale);
+    public delegate void OnTransformChangedHandler();
 
 
     /// <summary>

@@ -23,7 +23,7 @@ namespace MiniEngine.Drivers.Vulkan
 
             if(!Directory.Exists(rootSDK))
                 throw new Exception($"Vulkan SDK not found, path not found: {rootSDK} (from VULKAN_SDK environment variable)");
-
+            
             string pathglslcexe = Path.Combine(rootSDK, "bin\\glslc.exe");
             if (!File.Exists(pathglslcexe))
                 throw new Exception($"Vulkan glslc.exe not found in: {pathglslcexe}");
@@ -46,7 +46,7 @@ namespace MiniEngine.Drivers.Vulkan
             try
             {
                 //Writing the code on disk...
-                File.WriteAllText(tempFileCode, code, System.Text.Encoding.GetEncoding("iso-8859-1"));      //UTF-8 without BOM
+                File.WriteAllText(tempFileCode, code);
 
                 using (Process p = new Process())
                 {

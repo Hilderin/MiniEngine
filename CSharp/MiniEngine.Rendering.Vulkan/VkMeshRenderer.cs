@@ -10,15 +10,20 @@ namespace MiniEngine.Rendering.Vulkan
     /// </summary>
     public unsafe class VkMeshRenderer : IDisposable, IRenderHandle
     {
+        private const int NB_MESHLET_MAX = 1024 * 1024;
+
         private VkRenderer _renderer;
         private VkShader _shader;
 
+        private BufferWrapper _meshLetInstancesBuffer;
         private BufferWrapper _indirectDrawBuffer;
 
         private PipelineWrapper _pipeline;
-        private Dictionary<uint, IndirectCommand> _commandsPerMesh = new Dictionary<uint, IndirectCommand>();
-        private PipelineDescriptorSet _objectDataDescriptorSet;
+        private PipelineDescriptorSet _descriptorSet;
         private uint _drawCount = 0;
+
+        private Dictionary<int, uint> _imageSamplerBindlessIndex = new Dictionary<int, uint>();
+        private List<MeshLetInstance> _meshLetInstances = new List<MeshLetInstance>();
 
         /// <summary>
         /// Constructor
@@ -30,45 +35,46 @@ namespace MiniEngine.Rendering.Vulkan
             _shader = shader;
 
             //TODO: To allocate base on some graphic memory
-            _indirectDrawBuffer = _renderer.CreateBufferWrapper((uint)(sizeof(DrawIndexedIndirectCommand) * 100), BufferUsageFlags.IndirectBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _indirectDrawBuffer = _renderer.CreateBufferWrapper<DrawIndexedIndirectCommand>(NB_MESHLET_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _meshLetInstancesBuffer = _renderer.CreateBufferWrapper<MeshletData>(NB_MESHLET_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
             _pipeline = _renderer.GetPipeline(_shader);
 
-            _objectDataDescriptorSet = _pipeline.GetBindlessDescriptorSet();
-            _objectDataDescriptorSet.Set("object_data_array", _renderer.ObjectsBuffer);
+            _descriptorSet = _pipeline.CreateDescriptorSet();
+            _descriptorSet.Set("_objects", _renderer.ObjectsBuffer);
+            //_descriptorSet.Set("_meshlets", _renderer.MeshLetsBuffer);
+            _descriptorSet.Set("_meshlet_instances", _meshLetInstancesBuffer);
         }
 
         /// <summary>
-        /// Add a mesh to render
+        /// Add a meshlet to render
         /// </summary>
-        public void AddMesh(uint objectIndex, VkMaterial mat, ref VulkanMeshData meshData)
+        public void AddMeshLetInstance(uint objectIndex, VkMaterial mat, ref Meshlet meshLet)
         {
+
+            MeshLetInstance meshLetInstance = new MeshLetInstance();
+
+            meshLetInstance.InstanceData.ObjectIndex = objectIndex;
+            meshLetInstance.InstanceData.MeshLetIndex = meshLet.MeshLetIndex;
+            meshLetInstance.InstanceData.TextureIndex = GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
+            meshLetInstance.MeshLetIndex = _meshLetInstancesBuffer.Append(ref meshLetInstance.InstanceData) / _meshLetInstancesBuffer.SizeOf<MeshLetInstanceData>();
+
+            _meshLetInstances.Add(meshLetInstance);
+
+
             //New command...
             var indirectCommand = new IndirectCommand();
-            indirectCommand.Command.IndexCount = (uint)meshData.NbIndices;
+            indirectCommand.Command.IndexCount = (uint)meshLet.NbIndices;
             indirectCommand.Command.InstanceCount = 1;
-            indirectCommand.Command.FirstIndex = (uint)meshData.IndexBufferIndex;
-            indirectCommand.Command.VertexOffset = (int)meshData.VertexBufferIndex;
-            indirectCommand.Command.FirstInstance = objectIndex;
+            indirectCommand.Command.FirstIndex = (uint)meshLet.IndexBufferIndex;
+            indirectCommand.Command.VertexOffset = (int)meshLet.VertexBufferIndex;
+            indirectCommand.Command.FirstInstance = meshLetInstance.MeshLetIndex;           //Important so the gl_InstanceIndex will correspond to index in _meshlet_instances buffer
 
-            indirectCommand.InstanceData.ObjectIndex = objectIndex;
-            indirectCommand.InstanceData.BindlessDiffuseTextureIndex = _pipeline.GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
+            indirectCommand.MeshLetInstance = meshLetInstance;
 
             indirectCommand.BufferOffset = _indirectDrawBuffer.Append(ref indirectCommand.Command);
 
             _drawCount++;
-
-            //uint key = BytesHelper.CombineHash(instanceIndex, instanceMeshDataIndex);
-            //if (!_commandsPerMesh.TryGetValue(instanceIndex, out var indirectCommand))
-            //{
-
-            //}
-            //else
-            //{
-            //    //Update the instance count...
-            //    indirectCommand.Command.InstanceCount++;
-            //    _indirectDrawBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
-            //}
 
 
         }
@@ -84,7 +90,7 @@ namespace MiniEngine.Rendering.Vulkan
             commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
 
             //commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _pipeline.GetBindlessDescriptorSet().DescriptorSets, null);
-            commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _objectDataDescriptorSet.DescriptorSets, null);
+            commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _descriptorSet.DescriptorSets, null);
 
 
             //Matrix4 matrixVP = _renderer.MatrixViewProjection; // * _transform.GetMatrix();
@@ -119,7 +125,29 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
 
-            commandBuffer.CmdDrawIndexedIndirect(_indirectDrawBuffer.Buffer, 0, _drawCount, (uint)Marshal.SizeOf<DrawIndexedIndirectCommand>());
+            commandBuffer.CmdDrawIndexedIndirect(_indirectDrawBuffer.Buffer, 0, _drawCount, _indirectDrawBuffer.SizeOf<DrawIndexedIndirectCommand>());
+        }
+
+
+
+        /// <summary>
+        /// Get or Add an bindless index for an image and a sampler
+        /// </summary>
+        private uint GetOrAddBindlessIndex(ImageView imageView, Sampler sampler)
+        {
+            int key = BytesHelper.CombineHash(imageView.GetHashCode(), sampler.GetHashCode());
+
+            lock (_imageSamplerBindlessIndex)
+            {
+                if (!_imageSamplerBindlessIndex.TryGetValue(key, out uint index))
+                {
+                    index = (uint)_imageSamplerBindlessIndex.Count;
+                    _imageSamplerBindlessIndex.Add(key, index);
+
+                    _descriptorSet.Set(ShaderVariableNames.SamplerDiffuse, imageView, sampler, index);
+                }
+                return index;
+            }
         }
 
         /// <summary>
@@ -136,13 +164,13 @@ namespace MiniEngine.Rendering.Vulkan
         {
             public DrawIndexedIndirectCommand Command;
             public uint BufferOffset;
-            public InstanceData InstanceData;
+            public MeshLetInstance MeshLetInstance;
         }
 
-        private struct InstanceData
+        private class MeshLetInstance
         {
-            public uint ObjectIndex;
-            public uint BindlessDiffuseTextureIndex;
+            public uint MeshLetIndex;
+            public MeshLetInstanceData InstanceData;
         }
 
     }

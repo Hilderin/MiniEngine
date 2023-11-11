@@ -27,6 +27,11 @@ namespace MiniEngine.Rendering.Vulkan
         private ConcurrentQueue<Action> _actionsQueue = new ConcurrentQueue<Action>();
         private Thread _mainThread;
 
+        private static EventWaitHandle _mainWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+        [ThreadStatic]
+        private static EventWaitHandle _waitHandleEachTread;
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -155,16 +160,26 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void InvokeOnMainThread(Action<CommandBuffer> commandActions)
         {
-            var waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+            if (_waitHandleEachTread == null)
+                _waitHandleEachTread = new EventWaitHandle(false, EventResetMode.ManualReset);
+            else
+                _waitHandleEachTread.Reset();
 
-            _actionsQueue.Enqueue(() =>
+            EventWaitHandle waitHandle = _waitHandleEachTread;
+            lock (_actionsQueue)
             {
-                ExecuteAndWait(commandActions);
+                _actionsQueue.Enqueue(() =>
+                {
+                    ExecuteAndWait(commandActions);
 
-                waitHandle.Set();
-            });
+                    waitHandle.Set();
+                });
 
-            waitHandle.WaitOne();
+
+                _mainWaitHandle.Set();
+            }
+
+            _waitHandleEachTread.WaitOne();
 
         }
 
@@ -220,7 +235,15 @@ namespace MiniEngine.Rendering.Vulkan
                         }
                     }
                     else
-                        Thread.Sleep(1);
+                    {
+                        lock (_actionsQueue)
+                        {
+                            if (_actionsQueue.Count == 0)
+                                _mainWaitHandle.Reset();
+                        }
+
+                        _mainWaitHandle.WaitOne();
+                    }
                 }
             }
             catch (ThreadAbortException)

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace MiniEngine
+namespace MiniEngine.Labs.Renderer
 {
     /// <summary>
     /// Class to access embedded resources
@@ -30,14 +30,12 @@ namespace MiniEngine
         {
             string resourceName = $"{_namespace}.{name}";
             using (Stream resource = _assembly.GetManifestResourceStream(resourceName))
+            using (StreamReader sr = new StreamReader(resource))
             {
                 if (resource == null)
                     throw new FileNotFoundException($"Resource '{resourceName}' not found. Available resources: {String.Join(", ", _assembly.GetManifestResourceNames())}");
 
-                using (StreamReader sr = new StreamReader(resource))
-                {
-                    return sr.ReadToEnd();
-                }
+                return sr.ReadToEnd();
             }
         }
 

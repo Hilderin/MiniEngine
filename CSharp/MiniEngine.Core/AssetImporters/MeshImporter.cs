@@ -274,7 +274,7 @@ namespace MiniEngine.AssetImporters
             Vector3[] positions = new Vector3[mesh.Vertices.Count];
             Vector3[] normals = new Vector3[mesh.Vertices.Count];
             Vector2[] texCoords = new Vector2[mesh.Vertices.Count];
-            int[] indices = new int[mesh.FaceCount * 3];
+            uint[] indices = new uint[mesh.FaceCount * 3];
 
             for (int i = 0; i < mesh.Vertices.Count; i++)
             {
@@ -297,9 +297,9 @@ namespace MiniEngine.AssetImporters
             int indexIndice = 0;
             for (int i = 0; i < mesh.FaceCount; i++)
             {
-                indices[indexIndice++] = mesh.Faces[i].Indices[0];
-                indices[indexIndice++] = mesh.Faces[i].Indices[1];
-                indices[indexIndice++] = mesh.Faces[i].Indices[2];
+                indices[indexIndice++] = (uint)mesh.Faces[i].Indices[0];
+                indices[indexIndice++] = (uint)mesh.Faces[i].Indices[1];
+                indices[indexIndice++] = (uint)mesh.Faces[i].Indices[2];
             }
 
             //if (!matIndexes.ContainsKey(mesh.MaterialIndex))
@@ -311,7 +311,7 @@ namespace MiniEngine.AssetImporters
                 Indices = indices,
                 TexCoords = texCoords,
                 Normals = normals,
-                MaterialIndex = mesh.MaterialIndex
+                MaterialIndex = (uint)mesh.MaterialIndex
             });
 
         }

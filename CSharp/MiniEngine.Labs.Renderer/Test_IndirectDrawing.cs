@@ -4,16 +4,18 @@ using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace MiniEngine.Labs.Renderer
 {
     internal class Test_IndirectDrawing
     {
-       
-        private MeshObject _currentMesh;
+
+        private MeshObject _cube;
 
         private Context Context = Context.Current;
         private Scene Scene = new Scene();
+        private List<MeshObject> _cubes = new List<MeshObject>();
 
         public void Init()
         {
@@ -22,77 +24,12 @@ namespace MiniEngine.Labs.Renderer
 
             var shader = Context.Renderer.CreateShader(new()
             {
-                VertexCode = @"#version 450
-
-//push constants block
-layout( push_constant ) uniform constants
-{
-	mat4 _matrix_vp;
-};
-
-struct object_data
-{
-    vec3 location;
-    vec3 rotation;
-    vec3 scale;
-    uint textureIndex; 
-};
-
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
-layout(location = 2) in vec2 inTexCoord;
-
-//layout(binding = 2) uniform object_data _objects[];
-layout(std430, binding = 2) readonly buffer object_data_array {
-    object_data objects[];
-};
-
-
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec2 fragTexCoord;
-layout(location = 2) flat out uint textureIndex;
-
-float offsets[] = {
-    -0.75f,  0.75f,  1.0f, 0.0f, 0.0f,
-     0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
-    -0.05f, -0.05f,  0.0f, 0.0f, 1.0f,
-
-    -0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
-     0.05f, -0.05f,  0.0f, 1.0f, 0.0f,   
-     0.05f,  0.05f,  0.0f, 1.0f, 1.0f		    		
-};  
-
-void main() {
-    gl_Position = _matrix_vp * vec4(inPosition, 1.0);
-    gl_Position.x += objects[gl_InstanceIndex].location.x;
-    
-    fragColor = inColor;
-    fragTexCoord = inTexCoord;
-    textureIndex = objects[gl_InstanceIndex].textureIndex;
-}",
-                FragmentCode = @"#version 450
-#extension GL_EXT_nonuniform_qualifier : enable
-
-layout(binding = 1) uniform sampler2D _sampler_diffuse[];
-
-layout(location = 0) in vec3 fragColor;
-layout(location = 1) in vec2 fragTexCoord;
-layout(location = 2) in flat uint textureIndex;
-
-layout(location = 0) out vec4 outColor;
-
-
-
-
-void main() {
-    //outColor = vec4(fragColor, 1.0);
-    outColor = texture(_sampler_diffuse[textureIndex], fragTexCoord);
-}"
-,
-                VariableDefinitions = new()
-                                        {
-                                            { "_sampler_diffuse", new() { Count = 10, Bindless = true } }
-                                        }
+                VertexCode = ResourceUtils.GetString("Shaders.Test_IndirectDrawing.vert"),
+                FragmentCode = ResourceUtils.GetString("Shaders.Test_IndirectDrawing.frag"),
+                //VariableDefinitions = new()
+                //                        {
+                //                            { "_sampler_diffuse", new() { Count = 10, Bindless = true } }
+                //                        }
             });
 
             var matWhite = Context.Renderer.CreateMaterial(new()
@@ -113,25 +50,68 @@ void main() {
                                            .SetMaterial(matWhite, 0)
                      );
 
-            Scene.Add(PrimitiveObjects.CreateCubeMeshObject()
-                                           .MoveTo(new Vector3(4f, 5f, 6f))
-                                           .SetMaterial(matAqua, 0)
+            Mesh cubeMesh = Primitives.CreateCubeMesh();
+
+
+            _cube = Scene.Add(new MeshObject() { Mesh = cubeMesh }
+                                                .MoveTo(new Vector3(1f, 0f, 0f))
+                                               //.SetScale(new Vector3(7f, 8f, 9f))
+                                               //.RotatePitch(10f)
+                                               //.RotateYaw(11f)
+                                               //.RotateRoll(12f)
+                                               .SetMaterial(matAqua, 0)
                      );
+
+            for (int i = 0; i < 10000; i++)
+            {
+                _cubes.Add(Scene.Add(new MeshObject() { Mesh = cubeMesh }
+                                                .MoveTo(new Vector3(Math.RandomFloat(-50, 50), Math.RandomFloat(-50, 50), Math.RandomFloat(-50, 50)))
+                                               //.SetScale(new Vector3(7f, 8f, 9f))
+                                               //.RotatePitch(10f)
+                                               //.RotateYaw(11f)
+                                               //.RotateRoll(12f)
+                                               .SetMaterial(matAqua, 0)
+                     ));
+            }
 
             //Scene.Add(PrimitiveObjects.CreateCubeMeshObject()
             //                               .MoveTo(new Vector3(2f, 0f, 0f))
             //                               .SetMaterial(matAqua, 0)
             //         );
 
+            ThreadPool.QueueUserWorkItem(a => RotateCubes());
         }
 
+        private void RotateCubes()
+        {
+            while (true)
+            {
+                for (int i = 0; i < _cubes.Count; i++)
+                {
+                    if (i % 2 == 0)
+                        _cubes[i].RotatePitch(((i % 10) + 1) );
+                    else
+                        _cubes[i].RotateYaw(((i % 10) + 1) );
+                }
+
+                System.Threading.Thread.Sleep(1);
+            }
+        }
 
         public void Update()
         {
             LabHelper.ProcessInputsTest(Context);
 
 
-            //_currentMesh.RotateY(0.01f);
+            _cube.RotateYaw(1f * Time.DeltaTime);
+
+            //for (int i = 0; i < _cubes.Count; i++)
+            //{
+            //    if(i % 2 == 0)
+            //        _cubes[i].RotatePitch(((i % 10) + 1) * Time.DeltaTime);
+            //    else
+            //        _cubes[i].RotateYaw(((i % 10) + 1) * Time.DeltaTime);
+            //}
 
             //System.Threading.Thread.Sleep(3);
 

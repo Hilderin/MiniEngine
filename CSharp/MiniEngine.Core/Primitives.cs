@@ -40,7 +40,7 @@ namespace MiniEngine
             texCoords[1] = t10;                             // Bottom right
             texCoords[2] = t00;                             // Bottom left
 
-            int[] indices = new int[] {
+            uint[] indices = new uint[] {
                               0, 1, 2,                      // TopCenter, Bottom right, Bottom left
             };
 
@@ -93,7 +93,7 @@ namespace MiniEngine
             texCoords[3] = new Vector2(0.5f, 1.0f);
 
             //Indices...
-            int[] indices = new int[] {
+            uint[] indices = new uint[] {
                               0, 3, 1,
                               1, 3, 2,
                               2, 3, 0,
@@ -157,7 +157,7 @@ namespace MiniEngine
             texCoords[2] = t10;                             // Bottom right
             texCoords[3] = t00;                             // Bottom left
 
-            int[] indices = new int[] {
+            uint[] indices = new uint[] {
                               3, 1, 0,                      // Bottom left, Top left, Top right
                               3, 0, 2                       // Bottom left, Top right, Bottom right
             };
@@ -230,7 +230,7 @@ namespace MiniEngine
             texCoords[6] = t01;
             texCoords[7] = t11;
 
-            int[] indices = new int[] {
+            uint[] indices = new uint[] {
                               0, 1, 2,
                               1, 3, 4,
                               5, 6, 3,
@@ -280,7 +280,7 @@ namespace MiniEngine
             {
                 Positions = new Vector3[0],
                 //Colors = new Vector3[0],
-                Indices = new int[0],
+                Indices = new uint[0],
                 TexCoords = new Vector2[0]
             });
 

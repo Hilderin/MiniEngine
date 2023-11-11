@@ -20,7 +20,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         private uint _offsetIndex;
         private uint _objectIndex;
-        private VkInstanceStruct _objectData;
+        private ObjectInstanceData _objectData;
         private RenderData[] _renderDatas;
 
         private bool _updateTransformNextFrame = false;
@@ -38,21 +38,22 @@ namespace MiniEngine.Rendering.Vulkan
             _renderer = renderer;
 
             CopyObjectData();
-
+            
             _offsetIndex = _renderer.ObjectsBuffer.Append(ref _objectData);
-            _objectIndex = _offsetIndex / (uint)Marshal.SizeOf<VkInstanceStruct>();
-            _renderer.AddActionsBeforeNextFrame(Init);
+            _objectIndex = _offsetIndex / _renderer.ObjectsBuffer.SizeOf<ObjectInstanceData>();
+            _renderer.AddActionsBeforeNextFrameAsync(Init);
 
-            _transform.OnLocationChanged += _transform_OnLocationChanged;
+            _transform.OnChanged += Transform_OnChanged;
 
         }
 
-        private void _transform_OnLocationChanged(Vector3 oldLocation, Vector3 newLocation)
+        private void Transform_OnChanged()
         {
             if (!_updateTransformNextFrame)
             {
                 _updateTransformNextFrame = true;
-                _renderer.AddActionsBeforeNextFrame(UpdateTransform);
+                UpdateTransform();
+                //_renderer.AddActionsBeforeNextFrame(UpdateTransform);
             }
         }
 
@@ -67,21 +68,21 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 //Pipeline creation...
                 if (_renderDatas == null)
-                    _renderDatas = new RenderData[_mesh.MeshDatas.Length];
+                    _renderDatas = new RenderData[_mesh.MeshLets.Length];
 
-                for (int i = 0; i < _mesh.MeshDatas.Length; i++)
+                for (int i = 0; i < _mesh.MeshLets.Length; i++)
                 {
                     if (_renderDatas[i].MeshRenderer == null)
                     {
-                        if (_mesh.MeshDatas[i].MaterialIndex >= 0)
+                        if (_mesh.MeshLets[i].MaterialIndex >= 0)
                         {
                             VkMaterial mat;
 
-                            if (_materials.Count > _mesh.MeshDatas[i].MaterialIndex && _materials[_mesh.MeshDatas[i].MaterialIndex] != null)
-                                mat = (VkMaterial)_materials[_mesh.MeshDatas[i].MaterialIndex];
+                            if (_materials.Count > _mesh.MeshLets[i].MaterialIndex && _materials[(int)_mesh.MeshLets[i].MaterialIndex] != null)
+                                mat = (VkMaterial)_materials[(int)_mesh.MeshLets[i].MaterialIndex];
                             //Default mat?
-                            else if (_mesh.Materials != null && _mesh.Materials.Length > _mesh.MeshDatas[i].MaterialIndex && _mesh.Materials[_mesh.MeshDatas[i].MaterialIndex] != null)
-                                mat = (VkMaterial)_mesh.Materials[_mesh.MeshDatas[i].MaterialIndex];
+                            else if (_mesh.Materials != null && _mesh.Materials.Length > _mesh.MeshLets[i].MaterialIndex && _mesh.Materials[_mesh.MeshLets[i].MaterialIndex] != null)
+                                mat = (VkMaterial)_mesh.Materials[_mesh.MeshLets[i].MaterialIndex];
                             else
                                 //Material not found...
                                 mat = (VkMaterial)BaseMaterials.Magenta;
@@ -89,7 +90,7 @@ namespace MiniEngine.Rendering.Vulkan
                             if (mat.VkDiffuseTexture.IsLoaded)
                             {
                                 _renderDatas[i].MeshRenderer = _renderer.GetMeshRenderer(mat.Shader);
-                                _renderDatas[i].MeshRenderer.AddMesh(_objectIndex, mat, ref _mesh.MeshDatas[i]);
+                                _renderDatas[i].MeshRenderer.AddMeshLetInstance(_objectIndex, mat, ref _mesh.MeshLets[i]);
                             }
                             else
                             {
@@ -106,7 +107,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             if(!allLoaded)
                 //Trying again next frame...
-                _renderer.AddActionsBeforeNextFrame(Init);
+                _renderer.AddActionsBeforeNextFrameAsync(Init);
         }
 
         /// <summary>
@@ -118,7 +119,7 @@ namespace MiniEngine.Rendering.Vulkan
             _objectData.Location = _transform.Location;
             _objectData.Rotation = _transform.Rotation;
             _objectData.Scale = _transform.Scale;
-
+            _objectData.TransformMatrix = _transform.GetMatrix();
             
 
         }

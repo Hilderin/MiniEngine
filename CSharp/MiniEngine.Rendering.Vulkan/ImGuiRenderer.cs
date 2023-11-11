@@ -60,9 +60,9 @@ namespace MiniEngine.Rendering.Vulkan
             CreateShader();
 
             _pipeline = _renderer.Swapchain.CreatePipelineWrapper(_shader)
-                                        .AddDynamicState(DynamicState.Scissor)
-                                        .SetDepthTest(false)
-                                        .Build();
+                                                .AddDynamicState(DynamicState.Scissor)
+                                                .SetDepthTest(false)
+                                                .Build();
 
 
             _mainSet = _pipeline.CreateDescriptorSet(0).Set("FontSampler", _renderer.DefaultSampler)

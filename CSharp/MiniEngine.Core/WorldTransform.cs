@@ -12,19 +12,9 @@ namespace MiniEngine
     public class WorldTransform
     {
         /// <summary>
-        /// Event when the transform moved
+        /// Event when the transform moved, rotate or scale
         /// </summary>
-        public event OnLocationChangedHandler OnLocationChanged;
-
-        /// <summary>
-        /// Event when the rotation changed
-        /// </summary>
-        public event OnRotationChangedHandler OnRotationChanged;
-
-        /// <summary>
-        /// Event when the scale changed
-        /// </summary>
-        public event OnScaleChangedHandler OnScaleChanged;
+        public event OnTransformChangedHandler OnChanged;
 
 
         private Vector3 _location;
@@ -43,16 +33,8 @@ namespace MiniEngine
             {
                 if (_location != value)
                 {
-                    if (OnLocationChanged != null)
-                    {
-                        Vector3 oldLocation = _location;
-                        _location = value;
-                        OnLocationChanged(oldLocation, _location);
-                    }
-                    else
-                    {
-                        _location = value;
-                    }
+                    _location = value;
+                    OnChanged?.Invoke();
                 }
             }
         }
@@ -67,16 +49,8 @@ namespace MiniEngine
             {
                 if (_scale != value)
                 {
-                    if (OnScaleChanged != null)
-                    {
-                        Vector3 oldScale = _scale;
-                        _scale = value;
-                        OnScaleChanged(oldScale, _scale);
-                    }
-                    else
-                    {
-                        _scale = value;
-                    }
+                    _scale = value;
+                    OnChanged?.Invoke();
                 }
             }
         }
@@ -91,16 +65,8 @@ namespace MiniEngine
             {
                 if (_rotation != value)
                 {
-                    if (OnRotationChanged != null)
-                    {
-                        Rotator3 oldRotation = _rotation;
-                        _rotation = value;
-                        OnRotationChanged(oldRotation, _rotation);
-                    }
-                    else
-                    {
-                        _rotation = value;
-                    }
+                    _rotation = value;
+                    OnChanged?.Invoke();
                 }
             }
         }
@@ -172,6 +138,7 @@ namespace MiniEngine
             else
             {
                 _rotation.Pitch += angleRad;
+                OnChanged?.Invoke();
             }
             return this;
         }
@@ -188,6 +155,7 @@ namespace MiniEngine
             else
             {
                 _rotation.Yaw += angleRad;
+                OnChanged?.Invoke();
             }
             return this;
         }
@@ -204,6 +172,7 @@ namespace MiniEngine
             else
             {
                 _rotation.Roll += angleRad;
+                OnChanged?.Invoke();
             }
             return this;
         }
@@ -213,7 +182,8 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveTo(Vector3 location)
         {
-            Location = location;
+            _location = location;
+            OnChanged?.Invoke();
             return this;
         }
 
@@ -222,7 +192,8 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveForward(float distance)
         {
-            Location += this.Forward * -distance;
+            _location += this.Forward * -distance;
+            OnChanged?.Invoke();
             return this;
         }
 
@@ -246,7 +217,10 @@ namespace MiniEngine
                 movement += this.Up * directions.Y * distance;
 
             if (movement != Vector3.Zero)
-                Location += movement;
+            {
+                _location += movement;
+                OnChanged?.Invoke();
+            }
 
             return this;
         }
@@ -265,7 +239,8 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveLeft(float distance)
         {
-            Location += this.Left * -distance;
+            _location += this.Left * -distance;
+            OnChanged?.Invoke();
             return this;
         }
 
@@ -274,7 +249,8 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveRight(float distance)
         {
-            Location += this.Left * distance;
+            _location += this.Left * distance;
+            OnChanged?.Invoke();
             return this;
         }
 
@@ -283,7 +259,8 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveUp(float distance)
         {
-            Location += this.Up * distance;
+            _location += this.Up * distance;
+            OnChanged?.Invoke();
             return this;
         }
 
@@ -292,7 +269,8 @@ namespace MiniEngine
         /// </summary>
         public WorldTransform MoveDown(float distance)
         {
-            Location += this.Down * -distance;
+            _location += this.Down * -distance;
+            OnChanged?.Invoke();
             return this;
         }
 
@@ -304,6 +282,7 @@ namespace MiniEngine
             _scale.X += scale;
             _scale.Y += scale;
             _scale.Z += scale;
+            OnChanged?.Invoke();
             return this;
         }
 
@@ -315,6 +294,29 @@ namespace MiniEngine
             _scale.X = scale;
             _scale.Y = scale;
             _scale.Z = scale;
+            OnChanged?.Invoke();
+            return this;
+        }
+
+        /// <summary>
+        /// Set scale
+        /// </summary>
+        public WorldTransform SetScale(float scaleX, float scaleY, float scaleZ)
+        {
+            _scale.X = scaleX;
+            _scale.Y = scaleY;
+            _scale.Z = scaleZ;
+            OnChanged?.Invoke();
+            return this;
+        }
+
+        /// <summary>
+        /// Set scale
+        /// </summary>
+        public WorldTransform SetScale(Vector3 scale)
+        {
+            _scale = scale;
+            OnChanged?.Invoke();
             return this;
         }
 

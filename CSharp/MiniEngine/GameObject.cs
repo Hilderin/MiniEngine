@@ -15,29 +15,10 @@ namespace MiniEngine
         /// <summary>
         /// OnLocationChanged
         /// </summary>
-        public event OnLocationChangedHandler OnLocationChanged
+        public event OnTransformChangedHandler OnChanged
         {
-            add { Transform.OnLocationChanged += value; }
-            remove { Transform.OnLocationChanged -= value; }
-        }
-
-        /// <summary>
-        /// OnRotationChanged
-        /// </summary>
-        public event OnRotationChangedHandler OnRotationChanged
-        {
-            add { Transform.OnRotationChanged += value; }
-            remove { Transform.OnRotationChanged -= value; }
-        }
-
-
-        /// <summary>
-        /// OnScaleChanged
-        /// </summary>
-        public event OnScaleChangedHandler OnScaleChanged
-        {
-            add { Transform.OnScaleChanged += value; }
-            remove { Transform.OnScaleChanged -= value; }
+            add { Transform.OnChanged += value; }
+            remove { Transform.OnChanged -= value; }
         }
 
         /// <summary>

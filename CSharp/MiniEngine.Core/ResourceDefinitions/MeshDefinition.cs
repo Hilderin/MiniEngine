@@ -32,7 +32,7 @@ namespace MiniEngine.ResourceDefinitions
         public Vector3[] Positions;
         public Vector2[] TexCoords;
         public Vector3[] Normals;
-        public int[] Indices;
-        public int MaterialIndex;
+        public uint[] Indices;
+        public uint MaterialIndex;
     }
 }

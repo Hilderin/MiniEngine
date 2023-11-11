@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Buffer = MiniEngine.Drivers.Vulkan.Buffer;
@@ -18,8 +20,7 @@ namespace MiniEngine.Rendering.Vulkan
         private VkRenderer _renderer;
         private Device _device;
         private uint _length;
-        private int _alignmentLength = 1;
-
+        
         public uint Size { get; private set; }
         public BufferUsageFlags UsageFlags { get; private set; }
         public MemoryPropertyFlags MemoryPropertyFlags { get; private set; }
@@ -33,9 +34,6 @@ namespace MiniEngine.Rendering.Vulkan
         public BufferWrapper(VkRenderer renderer, uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
             ValidateBufferFlags(usageFlags, memoryPropertyFlags);
-
-            CalculateAlignment(usageFlags);
-
 
             _renderer = renderer;
             _device = renderer.Device;
@@ -52,13 +50,24 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public static BufferWrapper Create<T>(VkRenderer renderer, T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
+            uint size = VkSizeOfHelper.SizeOf<T>(1) * (uint)values.Length;
 
-            Type type = typeof(T);
-            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
-
-            BufferWrapper buffer = new BufferWrapper(renderer, (uint)size, usageFlags, memoryPropertyFlags);
+            BufferWrapper buffer = new BufferWrapper(renderer, size, usageFlags, memoryPropertyFlags);
 
             buffer.Update(values);
+
+            return buffer;
+        }
+
+
+        /// <summary>
+        /// Create a buffer with data
+        /// </summary>
+        public static BufferWrapper Create<T>(VkRenderer renderer, int count, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
+        {
+            uint size = VkSizeOfHelper.SizeOf<T>() * (uint)count;
+
+            BufferWrapper buffer = new BufferWrapper(renderer, size, usageFlags, memoryPropertyFlags);
 
             return buffer;
         }
@@ -116,7 +125,7 @@ namespace MiniEngine.Rendering.Vulkan
         public unsafe void Update<T>(T[] values, uint offset = 0)
         {
             Type type = typeof(T);
-            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
+            var size = SizeOf<T>() * values.Length;
 
             //Copy to the memPtr location...
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
@@ -134,25 +143,28 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public unsafe void Update<T>(ref T value, uint offset = 0)
         {
-            int size = Unsafe.SizeOf<T>();
+            uint size = SizeOf<T>();
 
             if (IsOnGPU)
             {
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
                 fixed (T* ptr = &value)
                 {
-                    CopyValuesToGPU(ptr, offset, (uint)size);
+                    CopyValuesToGPU(ptr, offset, size);
                 }
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
             }
             else
             {
-                IntPtr dataPtr = _device.MapMemory(DeviceMemory, offset, size);
+                lock (DeviceMemory)
+                {
+                    IntPtr dataPtr = _device.MapMemory(DeviceMemory, offset, size);
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-                *((T*)dataPtr) = value;
+                    *((T*)dataPtr) = value;
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-                //new Span<T>((void*)dataPtr, 1)[0] = value;
-                _device.UnmapMemory(DeviceMemory);
+                    //new Span<T>((void*)dataPtr, 1)[0] = value;
+                    _device.UnmapMemory(DeviceMemory);
+                }
 
             }
 
@@ -166,17 +178,13 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public unsafe uint Append<T>(T[] values)
         {
-            Type type = typeof(T);
-            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
+            uint size = SizeOf<T>() * (uint)values.Length;
 
             uint startIndex;
             lock (this)
             {
                 startIndex = _length;
-                if (_alignmentLength > 1)
-                    _length = (uint)Math.RoundUp((int)_length + size, _alignmentLength);
-                else
-                    _length += (uint)size;
+                _length += size;
             }
 
             Update(values, startIndex);
@@ -191,16 +199,13 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public unsafe uint Append<T>(ref T value)
         {
-            int size = Unsafe.SizeOf<T>();
+            uint size = SizeOf<T>();
 
             uint startIndex;
             lock (this)
             {
                 startIndex = _length;
-                if (_alignmentLength > 1)
-                    _length = (uint)Math.RoundUp((int)_length + size, _alignmentLength);
-                else
-                    _length += (uint)size;
+                _length += size;
             }
 
             Update(ref value, startIndex);
@@ -210,17 +215,25 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Type the size of a value aligned in the buffer
+        /// </summary>
+        public uint SizeOf<T>()
+        {
+            return VkSizeOfHelper.SizeOf<T>();
+        }
+
+
+        /// <summary>
         /// Copy the buffer to an array
         /// </summary>
         public unsafe void CopyTo<T>(T[] values, uint srcOffset = 0)
         {
-            Type type = typeof(T);
-            var size = System.Runtime.InteropServices.Marshal.SizeOf(type) * values.Length;
+            uint size = SizeOf<T>() * (uint)values.Length;
 
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
             fixed (T* destPtr = &values[0])
             {
-                CopyTo(destPtr, srcOffset, (uint)size);
+                CopyTo(destPtr, srcOffset, size);
             }
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
             
@@ -239,11 +252,14 @@ namespace MiniEngine.Rendering.Vulkan
             else
             {
                 //Copy directly from memory...
-                var memPtr = _device.MapMemory(DeviceMemory, srcOffset, size, 0);
+                lock (DeviceMemory)
+                {
+                    var memPtr = _device.MapMemory(DeviceMemory, srcOffset, size, 0);
 
-                System.Buffer.MemoryCopy((void*)memPtr, (void*)destPtr, size, size);
+                    System.Buffer.MemoryCopy((void*)memPtr, (void*)destPtr, size, size);
 
-                _device.UnmapMemory(DeviceMemory);
+                    _device.UnmapMemory(DeviceMemory);
+                }
             }
 
         }
@@ -387,12 +403,12 @@ namespace MiniEngine.Rendering.Vulkan
         /// Calculate the alignment of bytes when we append to the buffer.
         /// Uniform buffer and Storage buffer has a 16 bytes alignment which means each "row" must have a length dividable by 16
         /// </summary>
-        private void CalculateAlignment(BufferUsageFlags usageFlags)
+        private static uint GetAlignment(BufferUsageFlags usageFlags)
         {
-            if (usageFlags.HasFlag(BufferUsageFlags.UniformBuffer) || usageFlags.HasFlag(BufferUsageFlags.StorageBuffer))
-                _alignmentLength = 16;
-            else
-                _alignmentLength = 1;
+            //if (usageFlags.HasFlag(BufferUsageFlags.UniformBuffer) || usageFlags.HasFlag(BufferUsageFlags.StorageBuffer))
+            //    return 16;
+            //else
+                return 1;
         }
 
         /// <summary>

@@ -23,7 +23,7 @@ namespace MiniEngine.Rendering.Vulkan
         private bool _bindless;
         private bool _depthTest;
 
-        private PipelineDescriptorSet _bindlessDescriptorSet;
+        
         private DescriptorSetLayout[] descriptorSetLayouts;
         private PipelineLayout _pipelineLayout;
         private Pipeline _pipeline;
@@ -31,7 +31,6 @@ namespace MiniEngine.Rendering.Vulkan
 
         private CullModeFlags _cullMode = CullModeFlags.None;
         private DynamicState[] _dynamicStates = Array.Empty<DynamicState>();
-        private Dictionary<int, uint> _imageSamplerBindlessIndex = new Dictionary<int, uint>();
         private Dictionary<string, object> _specializationValues = new Dictionary<string, object>();
 
 
@@ -191,43 +190,10 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
-        /// Get or Add an bindless index for an image and a sampler
-        /// </summary>
-        public uint GetOrAddBindlessIndex(ImageView imageView, Sampler sampler)
-        {
-            int key = BytesHelper.CombineHash(imageView.GetHashCode(), sampler.GetHashCode());
-            if (!_imageSamplerBindlessIndex.TryGetValue(key, out uint index))
-            {
-                index = (uint)_imageSamplerBindlessIndex.Count;
-                _imageSamplerBindlessIndex.Add(key, index);
-
-                GetBindlessDescriptorSet().Set(ShaderVariableNames.SamplerDiffuse, imageView, sampler, index);
-            }
-            return index;
-        }
-
-
-        /// <summary>
-        /// Create a descriptor set
-        /// </summary>
-        public PipelineDescriptorSet GetBindlessDescriptorSet()
-        {
-            if (!_bindless)
-                throw new InvalidOperationException("Cannot use GetBindlessDescriptorSet for a bindless pipeline. Must use CreateDescriptorSet.");
-
-            _bindlessDescriptorSet ??= new PipelineDescriptorSet(_device, this);
-
-            return _bindlessDescriptorSet;
-        }
-
-        /// <summary>
         /// Create a descriptor set
         /// </summary>
         public PipelineDescriptorSet CreateDescriptorSet()
         {
-            if (_bindless)
-                throw new InvalidOperationException("Cannot create new DescriptorSet for bindless pipeline. You must use GetBindlessDescriptorSet.");
-
             return new PipelineDescriptorSet(_device, this);
         }
 
@@ -364,7 +330,7 @@ namespace MiniEngine.Rendering.Vulkan
                         if (!_specializationValues.TryGetValue(_shader.SpecializationConstants[i].Name, out value))
                             value = _shader.SpecializationConstants[i].DefaultValue;
 
-                        uint size = (uint)Marshal.SizeOf(value);
+                        uint size = VkSizeOfHelper.SizeOf(value.GetType(), 4);
                         SpecializationMapEntry mapEntry = new SpecializationMapEntry()
                         {
                             ConstantId = _shader.SpecializationConstants[i].ConstantId,

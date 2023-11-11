@@ -159,7 +159,17 @@ namespace MiniEngine
         /// </summary>
         public static int RoundUp(int value, int multipleOf)
         {
-            int size_difference = multipleOf - (value % multipleOf);
+            int size_difference = multipleOf - (((value - 1) % multipleOf) + 1);
+
+            return value + size_difference;
+        }
+
+        /// <summary>
+        /// Permet d'arroundir à la valeur supérieur en int dans un multiple de X
+        /// </summary>
+        public static uint RoundUp(uint value, uint multipleOf)
+        {
+            uint size_difference = multipleOf - (((value - 1) % multipleOf) + 1);
 
             return value + size_difference;
         }

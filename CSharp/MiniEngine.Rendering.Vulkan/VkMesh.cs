@@ -19,7 +19,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         public bool IsLoaded { get; private set; }
 
-        public VulkanMeshData[] MeshDatas;
+        public Meshlet[] MeshLets;
 
         /// <summary>
         /// Constructor
@@ -40,18 +40,18 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public override Mesh Load(MeshDefinition meshDef)
         {
-            List<VulkanMeshData> oldMeshDatas = null;
+            List<Meshlet> oldmeshLets = null;
             
-            if(MeshDatas != null)
-                oldMeshDatas = new List<VulkanMeshData>(MeshDatas);
+            if(MeshLets != null)
+                oldmeshLets = new List<Meshlet>(MeshLets);
 
             Init(meshDef);
 
-            if (oldMeshDatas != null)
+            if (oldmeshLets != null)
             {
-                foreach (var oldMeshData in oldMeshDatas)
+                foreach (var oldmeshLet in oldmeshLets)
                 {
-                    _renderer.AddActionsBeforeNextFrame(() => DisposeVulkanMeshData(oldMeshData));
+                    _renderer.AddActionsBeforeNextFrameAsync(() => DisposeMeshLet(oldmeshLet));
                 }
             }
 
@@ -63,11 +63,11 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         protected override void Destroy()
         {
-            if (MeshDatas != null)
+            if (MeshLets != null)
             {
-                foreach (var subMeshData in MeshDatas)
+                foreach (var submeshLet in MeshLets)
                 {
-                    DisposeVulkanMeshData(subMeshData);
+                    DisposeMeshLet(submeshLet);
                 }
             }
 
@@ -79,11 +79,11 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Dispose mesh data
         /// </summary>
-        private void DisposeVulkanMeshData(VulkanMeshData meshData)
+        private void DisposeMeshLet(Meshlet meshLet)
         {
             //TODO: release memory from GPU buffer
-            //meshData.VertexBuffer?.Dispose();
-            //meshData.IndexBuffer?.Dispose();
+            //meshLet.VertexBuffer?.Dispose();
+            //meshLet.IndexBuffer?.Dispose();
         }
 
 
@@ -95,18 +95,24 @@ namespace MiniEngine.Rendering.Vulkan
         {
             List<SubMeshDefinition> subMeshes = meshDef.SubMeshes;
 
-            VulkanMeshData[] newMeshDatas = new VulkanMeshData[subMeshes.Count];
+            Meshlet[] newmeshLets = new Meshlet[subMeshes.Count];
 
             for (int i = 0; i < subMeshes.Count; i++)
             {
-                CreateVertexBuffer(subMeshes[i], ref newMeshDatas[i]);
-                CreateIndexBuffer(subMeshes[i], ref newMeshDatas[i]);
+                Meshlet meshlet = new Meshlet();
 
-                newMeshDatas[i].MaterialIndex = subMeshes[i].MaterialIndex;
+                CreateVertexBuffer(subMeshes[i], ref meshlet.MeshLetData);
+                CreateIndexBuffer(subMeshes[i], ref meshlet.MeshLetData);
+
+                meshlet.MaterialIndex = subMeshes[i].MaterialIndex;
+
+                meshlet.MeshLetIndex = _renderer.MeshLetsBuffer.Append(ref meshlet.MeshLetData) / _renderer.MeshLetsBuffer.SizeOf<MeshletData>();
+
+                newmeshLets[i] = meshlet;
             }
 
             //All good, we can switch it now...
-            MeshDatas = newMeshDatas;
+            MeshLets = newmeshLets;
 
             //Create default materials slots
             Materials = meshDef.Materials.ToArray();
@@ -119,47 +125,60 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create the vertex buffer
         /// </summary>
-        private void CreateVertexBuffer(SubMeshDefinition subMeshData, ref VulkanMeshData vulkanMeshData)
+        private void CreateVertexBuffer(SubMeshDefinition submeshLet, ref MeshletData meshLet)
         {
-            Vertex[] vertices = new Vertex[subMeshData.Positions.Length];
+            Vertex[] vertices = new Vertex[submeshLet.Positions.Length];
 
             for (int i = 0; i < vertices.Length; i++)
             {
                 vertices[i] = new Vertex()
                 {
-                    Pos = new Vector3(subMeshData.Positions[i].X, subMeshData.Positions[i].Y, subMeshData.Positions[i].Z),
-                    //Color = subMeshData.Colors[i],
-                    TexCoord = subMeshData.TexCoords[i]
+                    Pos = new Vector3(submeshLet.Positions[i].X, submeshLet.Positions[i].Y, submeshLet.Positions[i].Z),
+                    //Color = submeshLet.Colors[i],
+                    TexCoord = submeshLet.TexCoords[i]
                 };
             }
 
-            //vulkanMeshData.vertexBuffer = _vi.Device.CreateBuffer(vertices, BufferUsageFlags.VertexBuffer);
-            vulkanMeshData.VertexBufferIndex = _renderer.VertexBuffer.Append(vertices) / (uint)Marshal.SizeOf<Vertex>();
-            //vulkanMeshData.VertexBuffer = _renderer.CreateBufferWrapper(vertices, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            //meshLet.vertexBuffer = _vi.Device.CreateBuffer(vertices, BufferUsageFlags.VertexBuffer);
+            meshLet.VertexBufferIndex = _renderer.VerticesBuffer.Append(vertices) / _renderer.VerticesBuffer.SizeOf<Vertex>();
+            //meshLet.VertexBuffer = _renderer.CreateBufferWrapper(vertices, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
         }
 
         /// <summary>
         /// Create the index buffer
         /// </summary>
-        private void CreateIndexBuffer(SubMeshDefinition subMeshData, ref VulkanMeshData vulkanMeshData)
+        private void CreateIndexBuffer(SubMeshDefinition submeshLet, ref MeshletData meshLet)
         {
-            vulkanMeshData.NbIndices = subMeshData.Indices.Length;
-            //vulkanMeshData.IndexBuffer = _renderer.CreateBufferWrapper(subMeshData.Indices, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-            vulkanMeshData.IndexBufferIndex = _renderer.IndexBuffer.Append(subMeshData.Indices) / sizeof(uint);
+            meshLet.NbIndices = (uint)submeshLet.Indices.Length;
+            meshLet.IndexBufferIndex = _renderer.IndicesBuffer.Append(submeshLet.Indices) / sizeof(uint);
 
         }
 
     }
 
-
-
-    public struct VulkanMeshData
+    /// <summary>
+    /// Information on MeshLet
+    /// </summary>
+    public class Meshlet
     {
-        //public BufferWrapper VertexBuffer;
-        public uint VertexBufferIndex;
-        public uint IndexBufferIndex;
-        public int NbIndices;
-        public int MaterialIndex;
+        public uint MeshLetIndex;
+        public MeshletData MeshLetData;
+        public uint MaterialIndex;
+
+        public uint VertexBufferIndex
+        {
+            get { return this.MeshLetData.VertexBufferIndex; }
+        }
+
+        public uint IndexBufferIndex
+        {
+            get { return this.MeshLetData.IndexBufferIndex; }
+        }
+
+        public uint NbIndices
+        {
+            get { return this.MeshLetData.NbIndices; }
+        }
     }
 }
