@@ -30,24 +30,30 @@ namespace MiniEngine.Labs.Renderer
             //Scene scene = SceneManager.Current.CurrentScene;
             Camera camera = MiniEngine.Renderer.Current.Camera;
 
-            camera.Transform.MoveInDirections(MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime, context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
+
+            float speed = MOVEMENT_DISTANCE_PER_SEC;
+            if (context.Input.IsKeyDown(Keys.ShiftLeft))
+                speed *= 5f;
+
+
+            camera.Transform.MoveInDirections(speed * Time.DeltaTime, context.Input.GetMovementVector(Keys.W, Keys.S, Keys.A, Keys.D, Keys.Q, Keys.E));
 
             //if (context.Input.IsKeyDown(Keys.NumpadAdd))
             //    scene.AmbientLight.Intensity += 0.01f;
             //if (context.Input.IsKeyDown(Keys.NumpadSubtract))
             //    scene.AmbientLight.Intensity -= 0.01f;
             if (context.Input.IsKeyDown(Keys.Z))
-                camera.Transform.RotateYaw(-MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
+                camera.Transform.RotateYaw(-speed * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.X))
-                camera.Transform.RotateYaw(MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
+                camera.Transform.RotateYaw(speed * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.C))
-                camera.Transform.RotatePitch(-MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
+                camera.Transform.RotatePitch(-speed * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.V))
-                camera.Transform.RotatePitch(MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
+                camera.Transform.RotatePitch(speed * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.R))
-                camera.Transform.RotateRoll(-MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
+                camera.Transform.RotateRoll(-speed * Time.DeltaTime);
             if (context.Input.IsKeyDown(Keys.F))
-                camera.Transform.RotateRoll(MOVEMENT_DISTANCE_PER_SEC * Time.DeltaTime);
+                camera.Transform.RotateRoll(speed * Time.DeltaTime);
 
             if (context.Input.IsJustMouseDown(MouseButton.Right))
             {

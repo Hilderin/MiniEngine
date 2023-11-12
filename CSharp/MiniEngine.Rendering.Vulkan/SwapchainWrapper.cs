@@ -96,7 +96,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public PipelineWrapper CreatePipelineWrapper(ShaderWrapper shader)
         {
-            PipelineWrapper pipelineWrapper = new PipelineWrapper(_device, this, shader);
+            PipelineWrapper pipelineWrapper = new PipelineWrapper(_renderer, this, shader);
 
             _pipelines.Add(pipelineWrapper);
 

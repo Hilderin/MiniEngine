@@ -10,13 +10,12 @@ namespace MiniEngine.Rendering.Vulkan
     /// </summary>
     public unsafe class VkMeshRenderer : IDisposable, IRenderHandle
     {
-        private const int NB_MESHLET_MAX = 1024 * 1024;
-
         private VkRenderer _renderer;
         private VkShader _shader;
+        private uint _drawCallsBufferIndex;
 
-        private BufferWrapper _meshLetInstancesBuffer;
-        private BufferWrapper _indirectDrawBuffer;
+        
+        private BufferWrapper<DrawIndexedIndirectCommand> _drawCallsBuffer;
 
         private PipelineWrapper _pipeline;
         private PipelineDescriptorSet _descriptorSet;
@@ -24,6 +23,10 @@ namespace MiniEngine.Rendering.Vulkan
 
         private Dictionary<int, uint> _imageSamplerBindlessIndex = new Dictionary<int, uint>();
         private List<MeshLetInstance> _meshLetInstances = new List<MeshLetInstance>();
+
+
+        public BufferWrapper DrawCallsBuffer => _drawCallsBuffer;
+
 
         /// <summary>
         /// Constructor
@@ -35,16 +38,17 @@ namespace MiniEngine.Rendering.Vulkan
             _shader = shader;
 
             //TODO: To allocate base on some graphic memory
-            _indirectDrawBuffer = _renderer.CreateBufferWrapper<DrawIndexedIndirectCommand>(NB_MESHLET_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-            _meshLetInstancesBuffer = _renderer.CreateBufferWrapper<MeshletData>(NB_MESHLET_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(out _drawCallsBufferIndex);
+
+
 
             _pipeline = _renderer.GetPipeline(_shader);
 
             _descriptorSet = _pipeline.CreateDescriptorSet();
-            _descriptorSet.Set("_objects", _renderer.ObjectsBuffer);
-            //_descriptorSet.Set("_meshlets", _renderer.MeshLetsBuffer);
-            _descriptorSet.Set("_meshlet_instances", _meshLetInstancesBuffer);
+
+            InitDescriptorSet();
         }
+
 
         /// <summary>
         /// Add a meshlet to render
@@ -56,8 +60,11 @@ namespace MiniEngine.Rendering.Vulkan
 
             meshLetInstance.InstanceData.ObjectIndex = objectIndex;
             meshLetInstance.InstanceData.MeshLetIndex = meshLet.MeshLetIndex;
+            meshLetInstance.InstanceData.DrawCallsBufferIndex = _drawCallsBufferIndex;
             meshLetInstance.InstanceData.TextureIndex = GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
-            meshLetInstance.MeshLetIndex = _meshLetInstancesBuffer.Append(ref meshLetInstance.InstanceData) / _meshLetInstancesBuffer.SizeOf<MeshLetInstanceData>();
+
+            //Reserve the space for the MeshLetInstanceData...
+            uint meshLetInstanceBufferOffset = _renderer.MeshLetInstancesBuffer.Reserve(out meshLetInstance.MeshLetIndex);
 
             _meshLetInstances.Add(meshLetInstance);
 
@@ -72,7 +79,11 @@ namespace MiniEngine.Rendering.Vulkan
 
             indirectCommand.MeshLetInstance = meshLetInstance;
 
-            indirectCommand.BufferOffset = _indirectDrawBuffer.Append(ref indirectCommand.Command);
+            //Updating the meshlet instance data with the draw call index at the same time...
+            indirectCommand.BufferOffset = _drawCallsBuffer.Append(ref indirectCommand.Command, out meshLetInstance.InstanceData.DrawCallIndex);
+
+            //And now that all the informations on MeshLetInstance are calculated, we can upload to the GPU...
+            _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstanceBufferOffset);
 
             _drawCount++;
 
@@ -95,37 +106,21 @@ namespace MiniEngine.Rendering.Vulkan
 
             //Matrix4 matrixVP = _renderer.MatrixViewProjection; // * _transform.GetMatrix();
 
-
-
-
-
             //Constants...
-            for (int iConst = 0; iConst < _shader.ShaderData.Constants.Length; iConst++)
-            {
-                var pushContant = _shader.ShaderData.Constants[iConst];
-
-                switch (pushContant.Name)
-                {
-                    case ShaderVariableNames.MatrixVP:
-                        commandBuffer.CmdPushConstants(_pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref _renderer.MatrixViewProjection);
-                        break;
-
-                    //case ShaderVariableNames.VertexBufferIndex:
-                    //    commandBuffer.CmdPushConstants(pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref renderData.BindlessVertexBufferIndex);
-                    //    break;
-
-                    //case ShaderVariableNames.MaterialDiffuseIndex:
-                    //    commandBuffer.CmdPushConstants(_pipeline.PipelineLayout, pushContant.StageFlags, pushContant.Offset, ref renderData.BindlessDiffuseTextureIndex);
-                    //    break;
-
-                    default:
-                        Debug.Warning($"Constant not found: {pushContant.Name}");
-                        break;
-                }
-            }
+            _pipeline.UpdatePushConstants(commandBuffer);
 
 
-            commandBuffer.CmdDrawIndexedIndirect(_indirectDrawBuffer.Buffer, 0, _drawCount, _indirectDrawBuffer.SizeOf<DrawIndexedIndirectCommand>());
+            commandBuffer.CmdDrawIndexedIndirect(_drawCallsBuffer.Buffer, 0, _drawCount, _drawCallsBuffer.ElementSize);
+        }
+
+        /// <summary>
+        /// Disposing of the mesh
+        /// </summary>
+        public void Dispose()
+        {
+            //We will not dispose pipelines because they can be used by another meshrenderer...
+            _pipeline?.Dispose();
+            _pipeline = null;
         }
 
 
@@ -150,15 +145,33 @@ namespace MiniEngine.Rendering.Vulkan
             }
         }
 
+
         /// <summary>
-        /// Disposing of the mesh
+        /// Init descriptor set...
         /// </summary>
-        public void Dispose()
+        private void InitDescriptorSet()
         {
-            //We will not dispose pipelines because they can be used by another meshrenderer...
-            _pipeline?.Dispose();
-            _pipeline = null;
+            foreach (string name in _descriptorSet.GetNames())
+            {
+                switch (name)
+                {
+
+                    case ShaderVariableNames.Objects:
+                        _descriptorSet.Set(ShaderVariableNames.Objects, _renderer.ObjectsBuffer);
+                        break;
+                    case ShaderVariableNames.MeshletInstances:
+                        _descriptorSet.Set(ShaderVariableNames.MeshletInstances, _renderer.MeshLetInstancesBuffer);
+                        break;
+                    case ShaderVariableNames.SamplerDiffuse:
+                        //Bindless... nothing to do here
+                        break;
+                    default:
+                        Debug.Warning($"Descriptor name not supported in shader: {name}");
+                        break;
+                }
+            }
         }
+
 
         private class IndirectCommand
         {

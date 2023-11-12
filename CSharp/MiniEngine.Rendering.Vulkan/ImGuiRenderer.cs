@@ -21,7 +21,7 @@ namespace MiniEngine.Rendering.Vulkan
         private Device _device;
         private BufferWrapper _vertexBuffer;
         private BufferWrapper _indexBuffer;
-        private BufferWrapper _projMatrixBuffer;
+        private BufferWrapper<Matrix4> _projMatrixBuffer;
         private ShaderWrapper _shader;
         private PipelineWrapper _pipeline;
         private IntPtr _fontAtlasID = (IntPtr)1;
@@ -55,7 +55,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             _vertexBuffer = _renderer.CreateBufferWrapper(10000, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
             _indexBuffer = _renderer.CreateBufferWrapper(2000, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
-            _projMatrixBuffer = _renderer.CreateBufferWrapper((uint)Marshal.SizeOf<Matrix4>(), BufferUsageFlags.UniformBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
+            _projMatrixBuffer = _renderer.CreateBufferWrapper<Matrix4>(1, BufferUsageFlags.UniformBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
 
             CreateShader();
 

@@ -15,14 +15,36 @@ namespace MiniEngine.Rendering.Vulkan
         public const string MatrixVP = "_matrix_vp";
 
         /// <summary>
+        /// Current camera location
+        /// </summary>
+        public const string CameraLocation = "_camera_location";
+
+        /// <summary>
+        /// Number of meshlet instance
+        /// </summary>
+        public const string MeshLetInstanceCount = "_meshlet_instance_count";
+        
+
+        /// <summary>
         /// Current diffuse texture sampler.
         /// </summary>
         public const string SamplerDiffuse = "_sampler_diffuse";
-                
+
         /// <summary>
-        /// Index of the vertex buffer index
+        /// Buffer of objects
         /// </summary>
-        public const string VertexBufferIndex = "_vertex_buffer_index";
+        public const string Objects = "_objects";
+
+        /// <summary>
+        /// Buffer of meshlet instances
+        /// </summary>
+        public const string MeshletInstances = "_meshlet_instances";
+
+
+        /// <summary>
+        /// Buffer of draw calls buffers
+        /// </summary>
+        public const string DrawCallsBuffers = "_draw_calls_buffers";
 
 
     }

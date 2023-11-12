@@ -106,7 +106,7 @@ namespace MiniEngine.Rendering.Vulkan
 
                 meshlet.MaterialIndex = subMeshes[i].MaterialIndex;
 
-                meshlet.MeshLetIndex = _renderer.MeshLetsBuffer.Append(ref meshlet.MeshLetData) / _renderer.MeshLetsBuffer.SizeOf<MeshletData>();
+                _renderer.MeshLetsBuffer.Append(ref meshlet.MeshLetData, out meshlet.MeshLetIndex);
 
                 newmeshLets[i] = meshlet;
             }
@@ -140,7 +140,7 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
             //meshLet.vertexBuffer = _vi.Device.CreateBuffer(vertices, BufferUsageFlags.VertexBuffer);
-            meshLet.VertexBufferIndex = _renderer.VerticesBuffer.Append(vertices) / _renderer.VerticesBuffer.SizeOf<Vertex>();
+            _renderer.VerticesBuffer.Append(vertices, out meshLet.VertexBufferIndex);
             //meshLet.VertexBuffer = _renderer.CreateBufferWrapper(vertices, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
         }

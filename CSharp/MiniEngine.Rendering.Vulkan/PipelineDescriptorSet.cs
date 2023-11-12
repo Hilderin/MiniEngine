@@ -53,6 +53,22 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Return true if the descriptorset contains a variable
+        /// </summary>
+        public bool Contains(string name)
+        {
+            return _descriptorSetsPerName.ContainsKey(name);
+        }
+
+        /// <summary>
+        /// Get all the descriptor names
+        /// </summary>
+        public IEnumerable<string> GetNames()
+        {
+            return _descriptorSetsPerName.Keys;
+        }
+
+        /// <summary>
         /// Set a uniform buffer
         /// </summary>
         public PipelineDescriptorSet Set(string name, BufferWrapper uniformBuffer, uint arrayElementIndex = 0)

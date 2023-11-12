@@ -28,7 +28,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constants
         /// </summary>
-        public PushConstantRange[] Constants;
+        public Constant[] Constants;
 
         /// <summary>
         /// Bindings
@@ -190,6 +190,17 @@ namespace MiniEngine.Rendering.Vulkan
         public byte[] Spirv;
         public ShaderModule Module;
         public string Entrypoint;
+    }
+
+    /// <summary>
+    /// Wrapper for Constant
+    /// </summary>
+    public class Constant
+    {
+        public ShaderStageFlags Stage;
+        public string Name;
+        public uint Offset;
+        public uint Size;
     }
 
     /// <summary>

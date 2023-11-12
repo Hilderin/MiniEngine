@@ -9,11 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Shaders\Test_FrustumCulling.comp" />
     <None Remove="Shaders\Test_IndirectDrawing.frag" />
     <None Remove="Shaders\Test_IndirectDrawing.vert" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Shaders\Test_FrustumCulling.comp" />
     <EmbeddedResource Include="Shaders\Test_IndirectDrawing.frag" />
     <EmbeddedResource Include="Shaders\Test_IndirectDrawing.vert" />
   </ItemGroup>

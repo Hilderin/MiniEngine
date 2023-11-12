@@ -18,7 +18,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Variable names that are always bindless
         /// </summary>
-        private static readonly string[] BINDLESS_VARIABLE_NAMES = new string[] { ShaderVariableNames.SamplerDiffuse };
+        private static readonly string[] BINDLESS_VARIABLE_NAMES = new string[] { ShaderVariableNames.SamplerDiffuse, ShaderVariableNames.DrawCallsBuffers };
 
         ///// <summary>
         ///// Parse dthe spirv codes
@@ -414,7 +414,7 @@ namespace MiniEngine.Rendering.Vulkan
 
 
             //=======================================================================
-            List<PushConstantRange> constants = new List<PushConstantRange>();
+            List<Constant> constants = new List<Constant>();
             if (shader.Constants != null)
                 constants.AddRange(shader.Constants);
             List<List<DescriptorSetLayoutBinding>> bindingSets = new List<List<DescriptorSetLayoutBinding>>();
@@ -502,7 +502,7 @@ namespace MiniEngine.Rendering.Vulkan
 
                                         if (binding.IsArray)
                                         {
-                                            if (variableDefinitions != null && variableDefinitions.TryGetValue(id.name, out var varDef))
+                                            if (variableDefinitions != null && variableDefinitions.TryGetValue(binding.Name, out var varDef))
                                             {
                                                 binding.DescriptorCount = (uint)varDef.Count;
                                                 binding.Bindless = varDef.Bindless;
@@ -538,10 +538,10 @@ namespace MiniEngine.Rendering.Vulkan
 
                                         Id member_id = ids[mc.id_index];
 
-                                        PushConstantRange pushConstant = constants.FirstOrDefault(c => c.Offset == mc.offset);
+                                        Constant pushConstant = constants.FirstOrDefault(c => c.Offset == mc.offset);
                                         if (pushConstant == null)
                                         {
-                                            pushConstant = new PushConstantRange();
+                                            pushConstant = new Constant();
                                             pushConstant.Name = mc.name;
                                             pushConstant.Size = member_id.width;
                                             pushConstant.Offset = mc.offset;
@@ -556,7 +556,7 @@ namespace MiniEngine.Rendering.Vulkan
                                         }
 
 
-                                        pushConstant.StageFlags |= stage;
+                                        pushConstant.Stage |= stage;
 
 
 
@@ -627,6 +627,7 @@ namespace MiniEngine.Rendering.Vulkan
                     break;
 
                 case SpvOp.SpvOpTypeRuntimeArray:
+                case SpvOp.SpvOpTypeArray:
 
                     Id array_type = ids[uniform_type.type_index];
 

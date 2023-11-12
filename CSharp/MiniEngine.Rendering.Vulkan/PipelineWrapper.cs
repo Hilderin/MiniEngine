@@ -16,6 +16,7 @@ namespace MiniEngine.Rendering.Vulkan
     {
         #region Privates members
 
+        private VkRenderer _renderer;
         private Device _device;
         private ShaderWrapper _shader;
         private SwapchainWrapper _swapchain;
@@ -50,9 +51,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        internal PipelineWrapper(Device device, SwapchainWrapper swapchain, ShaderWrapper shader)
+        internal PipelineWrapper(VkRenderer renderer, SwapchainWrapper swapchain, ShaderWrapper shader)
         {
-            _device = device;
+            _renderer = renderer;
+            _device = renderer.Device;
             _shader = shader;
             _swapchain = swapchain;
 
@@ -255,10 +257,67 @@ namespace MiniEngine.Rendering.Vulkan
                 }
             }
 
-            PushConstantRange[] constantRanges = _shader.Constants;
+
+            //Calculate push constant ranges....
+            List<PushConstantRange> constantRanges = new List<PushConstantRange>();
+            foreach (var stage in _shader.Constants.Select(c => c.Stage).Distinct())
+            {
+                uint minOffset = uint.MaxValue;
+                uint maxSize = 0;
+
+                foreach (var constant in _shader.Constants.Where(c => c.Stage == stage))
+                {
+                    if (minOffset > constant.Offset)
+                        minOffset = constant.Offset;
+                    if (maxSize < constant.Offset + constant.Size)
+                        maxSize = constant.Offset + constant.Size;
+                }
+
+                constantRanges.Add(new PushConstantRange()
+                {
+                    StageFlags = stage,
+                    Offset = minOffset,
+                    Size = maxSize
+                });
+            }
 
             //Pipeline layout creation...
-            _pipelineLayout = _device.CreatePipelineLayout(descriptorSetLayouts, constantRanges);
+            _pipelineLayout = _device.CreatePipelineLayout(descriptorSetLayouts, constantRanges.ToArray());
+        }
+
+
+
+        /// <summary>
+        /// Update push constants
+        /// </summary>
+        public void UpdatePushConstants(CommandBuffer commandBuffer)
+        {
+            //Constants...
+            for (int iConst = 0; iConst < _shader.Constants.Length; iConst++)
+            {
+                var pushContant = _shader.Constants[iConst];
+
+                switch (pushContant.Name)
+                {
+                    case ShaderVariableNames.MatrixVP:
+                        commandBuffer.CmdPushConstants(_pipelineLayout, pushContant.Stage, pushContant.Offset, ref _renderer.MatrixViewProjection);
+                        break;
+
+                    case ShaderVariableNames.CameraLocation:
+                        Vector3 cameraLocation = _renderer.Camera.Transform.Location;
+                        commandBuffer.CmdPushConstants(_pipelineLayout, pushContant.Stage, pushContant.Offset, ref cameraLocation);
+                        break;
+
+                    case ShaderVariableNames.MeshLetInstanceCount:
+                        uint count = _renderer.MeshLetInstancesBuffer.Count;
+                        commandBuffer.CmdPushConstants(_pipelineLayout, pushContant.Stage, pushContant.Offset, ref count);
+                        break;
+
+                    default:
+                        Debug.Warning($"Constant not found: {pushContant.Name}");
+                        break;
+                }
+            }
         }
 
         /// <summary>

@@ -4310,8 +4310,6 @@ namespace MiniEngine.Drivers.Vulkan
 
 	unsafe public partial class PushConstantRange
     {
-		public string Name;
-
         internal Interop.PushConstantRange m;
 
         public ShaderStageFlags StageFlags

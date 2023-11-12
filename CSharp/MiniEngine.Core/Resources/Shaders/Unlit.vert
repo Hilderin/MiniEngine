@@ -19,7 +19,11 @@ struct meshlet_instance_data
     uint object_index;
     uint meshlet_index;
     uint texture_index;
+    uint draw_calls_buffer_index;
+    uint draw_call_index;
+    uint visible;
 };
+
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec2 tex_coord;

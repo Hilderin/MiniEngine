@@ -39,8 +39,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             CopyObjectData();
             
-            _offsetIndex = _renderer.ObjectsBuffer.Append(ref _objectData);
-            _objectIndex = _offsetIndex / _renderer.ObjectsBuffer.SizeOf<ObjectInstanceData>();
+            _offsetIndex = _renderer.ObjectsBuffer.Append(ref _objectData, out _objectIndex);
             _renderer.AddActionsBeforeNextFrameAsync(Init);
 
             _transform.OnChanged += Transform_OnChanged;

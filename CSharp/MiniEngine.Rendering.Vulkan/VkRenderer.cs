@@ -14,23 +14,39 @@ namespace MiniEngine.Rendering.Vulkan
     /// </summary>
     public class VkRenderer : IRenderer, IDisposable
     {
-        #region Internal members
+        /// <summary>
+        /// Max number of vertices max
+        /// </summary>
+        private const int NB_VERTICES_MAX = 1024 * 1024;
+
+        /// <summary>
+        /// Max number of meshlets
+        /// </summary>
+        private const int NB_MESHLET_MAX = 10000;
+
+        /// <summary>
+        /// Max number of objects
+        /// </summary>
+        private const int NB_OBJECTS_MAX = 1024 * 512;
+
+        /// <summary>
+        /// Max number of meshlets instances
+        /// </summary>
+        private const int NB_MESHLET_INSTANCES_MAX = 1024 * 1024;
+
+
+        #region Public members
 
         /// <summary>
         /// Current ViewProjectionMatrix
         /// </summary>
-        internal Matrix4 MatrixViewProjection;
+        public Matrix4 MatrixViewProjection;
 
         /// <summary>
         /// Default sampler
         /// </summary>
-        internal Sampler DefaultSampler;
-
-        #endregion
-
-        #region Public members
-
-
+        public Sampler DefaultSampler;
+        
         /// <summary>
         /// Get or set the current camera
         /// </summary>
@@ -48,10 +64,14 @@ namespace MiniEngine.Rendering.Vulkan
         public SurfaceCapabilitiesKhr SurfaceCapabilities => _surfaceCapabilities;
         public MemoryManager MemoryManager => _memoryManager;
         public VkResourceFactory ResourceFactory => _resourceFactory;
-        public BufferWrapper VerticesBuffer => _verticesBuffer;
-        public BufferWrapper IndicesBuffer => _indicesBuffer;
-        public BufferWrapper MeshLetsBuffer => _meshLetsBuffer;
-        public BufferWrapper ObjectsBuffer => _objectsBuffer;
+        public BufferWrapper<Vertex> VerticesBuffer => _verticesBuffer;
+        public BufferWrapper<uint> IndicesBuffer => _indicesBuffer;
+        public BufferWrapper<MeshletData> MeshLetsBuffer => _meshLetsBuffer;
+        public BufferWrapper<ObjectInstanceData> ObjectsBuffer => _objectsBuffer;
+        public BufferWrapper<MeshLetInstanceData> MeshLetInstancesBuffer => _meshLetInstancesBuffer;
+        public List<VkMeshRenderer> MeshRenderers => _meshRenderers;
+        public List<BufferWrapper> DrawCallsBuffers => _drawCallsBuffers;
+
         //public BufferWrapper IndirectDrawBuffer => _indirectDrawBuffer;
 
         #endregion
@@ -60,6 +80,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         private List<VkMeshInstance> _meshInstances = new List<VkMeshInstance>();
         private List<VkMeshRenderer> _meshRenderers = new List<VkMeshRenderer>();
+        private List<BufferWrapper> _drawCallsBuffers = new List<BufferWrapper>();
         private IWindow _window;
         private bool _headless;
         private string _applicationName;
@@ -84,15 +105,15 @@ namespace MiniEngine.Rendering.Vulkan
         private SurfaceCapabilitiesKhr _surfaceCapabilities;
         private MemoryManager _memoryManager;
 
+        private List<Action> _actionsBeforeEachFrame = new List<Action>();
         private ConcurrentQueue<Action> _actionsBeforeNextFrame = new ConcurrentQueue<Action>();
         private ConcurrentQueue<Action> _actionsBeforeNextFrameAsync = new ConcurrentQueue<Action>();
 
-        private BufferWrapper _verticesBuffer;
-        private BufferWrapper _indicesBuffer;
-        private BufferWrapper _meshLetsBuffer;
-        private BufferWrapper _objectsBuffer;
-        private BufferWrapper _instancesmeshLetBuffer;
-        //private BufferWrapper _indirectDrawBuffer;        
+        private BufferWrapper<Vertex> _verticesBuffer;
+        private BufferWrapper<uint> _indicesBuffer;
+        private BufferWrapper<MeshletData> _meshLetsBuffer;
+        private BufferWrapper<ObjectInstanceData> _objectsBuffer;
+        private BufferWrapper<MeshLetInstanceData> _meshLetInstancesBuffer;
 
         private uint _graphicsQueueIndex;
         private QueueWrapper _graphicsQueue;
@@ -231,12 +252,11 @@ namespace MiniEngine.Rendering.Vulkan
             DefaultSampler = SamplerHelper.CreateMaxAnisotropy(_device);
 
             //TODO: Dynamiccaly calculate best size
-            _verticesBuffer = CreateBufferWrapper<Vertex>(1024 * 1024, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-            _indicesBuffer = CreateBufferWrapper<int>(1024 * 1024, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-            _meshLetsBuffer = CreateBufferWrapper<MeshletData>((1024 * 1024) / 126, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-            _objectsBuffer = CreateBufferWrapper<ObjectInstanceData>(1024 * 1024, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
-            _instancesmeshLetBuffer = CreateBufferWrapper<MeshLetInstanceData>(1024 * 1024, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-            //_indirectDrawBuffer = new BufferWrapper(this, (uint)(Marshal.SizeOf<DrawIndexedIndirectCommand>() * 100), BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _verticesBuffer = CreateBufferWrapper<Vertex>(NB_VERTICES_MAX, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _indicesBuffer = CreateBufferWrapper<uint>(NB_VERTICES_MAX, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _meshLetsBuffer = CreateBufferWrapper<MeshletData>(NB_MESHLET_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _objectsBuffer = CreateBufferWrapper<ObjectInstanceData>(NB_OBJECTS_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
+            _meshLetInstancesBuffer = CreateBufferWrapper<MeshLetInstanceData>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
             _initialized = true;
 
@@ -268,7 +288,7 @@ namespace MiniEngine.Rendering.Vulkan
         {
             if(_headless)
                 //No swapchain to track the pipelines... and anyway, there will be not rebuilding pipeline because of no resizing of the screen... no screen at all!
-                return new PipelineWrapper(_device, null, shader.ShaderData);
+                return new PipelineWrapper(this, null, shader.ShaderData);
             else
                 return _swapchain.CreatePipelineWrapper(shader.ShaderData);
         }
@@ -361,12 +381,17 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
 
+            //Action before each frame...
+            for (int i = 0; i < _actionsBeforeEachFrame.Count; i++)
+                _actionsBeforeEachFrame[i]?.Invoke();
+
             //Transfert the images that was loaded in the transfer queue...
             int cpt = 0;
             while (_actionsBeforeNextFrameAsync.TryDequeue(out var action))
             {
                 ThreadPool.QueueUserWorkItem(a => action());
 
+                cpt++;
                 if (cpt == 10)
                     break;
             }
@@ -531,6 +556,24 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Create a draw call buffer
+        /// </summary>
+        public BufferWrapper<DrawIndexedIndirectCommand> CreateDrawCallsBuffer(out uint drawCallIndex)
+        {
+            //TODO: To allocate base on some graphic memory
+            var buffer = CreateBufferWrapper<DrawIndexedIndirectCommand>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.TransferDst | BufferUsageFlags.StorageBuffer, MemoryPropertyFlags.DeviceLocal);
+
+            lock (_drawCallsBuffers)
+            {
+                drawCallIndex = (uint)_drawCallsBuffers.Count;
+                _drawCallsBuffers.Add(buffer);
+            }
+
+            return buffer;
+
+        }
+
+        /// <summary>
         /// Update the current surface capabilities
         /// </summary>
         public void UpdateSurfaceCapabilities()
@@ -560,17 +603,17 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a buffer
         /// </summary>
-        public unsafe BufferWrapper CreateBufferWrapper<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
+        public unsafe BufferWrapper<T> CreateBufferWrapper<T>(T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
-            return BufferWrapper.Create(this, values, usageFlags, memoryPropertyFlags);
+            return BufferWrapper<T>.Create(this, values, usageFlags, memoryPropertyFlags);
         }
 
         /// <summary>
         /// Create a buffer
         /// </summary>
-        public unsafe BufferWrapper CreateBufferWrapper<T>(int count, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
+        public unsafe BufferWrapper<T> CreateBufferWrapper<T>(int count, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
-            return BufferWrapper.Create<T>(this, count, usageFlags, memoryPropertyFlags);
+            return BufferWrapper<T>.Create(this, count, usageFlags, memoryPropertyFlags);
         }
 
         /// <summary>
@@ -579,6 +622,15 @@ namespace MiniEngine.Rendering.Vulkan
         public unsafe BufferWrapper CreateBufferWrapper(uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
             return new BufferWrapper(this, size, usageFlags, memoryPropertyFlags);
+        }
+
+        /// <summary>
+        /// Register an action to execute before each frame
+        /// </summary>
+        public void AddActionsBeforeEachFrame(Action updateAction)
+        {
+            lock(_actionsBeforeEachFrame)
+                _actionsBeforeEachFrame.Add(updateAction);
         }
 
         /// <summary>
@@ -628,7 +680,13 @@ namespace MiniEngine.Rendering.Vulkan
             foreach (PipelineWrapper pipeline in _cachePipeline.Values)
                 pipeline.Dispose();
 
+            //Disposing drawcall buffers...
+            foreach (BufferWrapper drawCallsBuffer in _drawCallsBuffers)
+                drawCallsBuffer.Dispose();
+                        
+
             _objectsBuffer?.Dispose();
+            _meshLetInstancesBuffer?.Dispose();
             _verticesBuffer?.Dispose();
             _indicesBuffer?.Dispose();
             _meshLetsBuffer?.Dispose();
