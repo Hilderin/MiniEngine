@@ -14,4 +14,8 @@
     <ProjectReference Include="..\..\MiniEngine\MiniEngine.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Assets\Shaders\" />
+  </ItemGroup>
+
 </Project>

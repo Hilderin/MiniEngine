@@ -65,6 +65,7 @@ namespace MiniEngine.Rendering.Vulkan
         private string _applicationName;
         private VkVersion _applicationVersion;
         private DebugCallback _debugCallback;
+        private bool _printDebug = true;
         private bool _initialized = false;
         private VkResourceFactory _resourceFactory;
         private ImGuiRenderer _imGui;
@@ -675,7 +676,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private unsafe Device CreateDevice()
         {
-
+            
             //Get the PhysicalDeviceDescriptorIndexingFeatures feature....
             var pFeatures = _physicalDevice.GetFeatures2Indexing(out var indexingFeatures);
 
@@ -721,8 +722,16 @@ namespace MiniEngine.Rendering.Vulkan
                 Next = pFeatures.Handle
             })
             {
-
-                return _physicalDevice.CreateDevice(deviceInfo, _surface, null);
+                try
+                {
+                    //I'm tired of the debug text from vulkan when i start the application...
+                    _printDebug = false;
+                    return _physicalDevice.CreateDevice(deviceInfo, _surface, null);
+                }
+                finally
+                {
+                    _printDebug = true;
+                }
 
             }
             
@@ -834,7 +843,8 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private bool DebugReportCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, int messageCode, string message)
         {
-            _debugCallback((DebugLevel)flags, messageCode, message);
+            if(_printDebug)
+                _debugCallback((DebugLevel)flags, messageCode, message);
             return true;
         }
 
