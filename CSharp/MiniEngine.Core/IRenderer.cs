@@ -18,6 +18,11 @@ namespace MiniEngine
         Camera Camera { get; set; }
 
         /// <summary>
+        /// Get if the renderer is disposing or disposed
+        /// </summary>
+        bool IsDisposing { get; }
+
+        /// <summary>
         /// Initialize the rendering engine
         /// </summary>
         void Init();

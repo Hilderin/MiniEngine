@@ -39,6 +39,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         public Device Device => _device;
         public SwapchainWrapper Swapchain => _swapchain;
+        public bool IsDisposing => _isDisposing;
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
         public QueueWrapper GraphicsQueue => _graphicsQueue;
         public uint TransferQueueIndex => _transferQueueIndex;

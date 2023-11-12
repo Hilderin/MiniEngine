@@ -44,6 +44,16 @@ namespace MiniEngine.Labs.Renderer
                 Shader = shader
             });
 
+            var matMagenta = Context.Renderer.CreateMaterial(new()
+            {
+                DiffuseTexture = BaseTextures.Magenta,
+                Shader = shader
+            });
+
+            List<Material> mats = new List<Material>();
+            mats.Add(matWhite);
+            mats.Add(matAqua);
+            mats.Add(matMagenta);
 
             Scene.Add(PrimitiveObjects.CreateTriangleMeshObject()
                                            .MoveTo(new Vector3(0f, 0f, 0f))
@@ -62,15 +72,16 @@ namespace MiniEngine.Labs.Renderer
                                                .SetMaterial(matAqua, 0)
                      );
 
-            for (int i = 0; i < 10000; i++)
+            int spread = 10;
+            for (int i = 0; i < 100; i++)
             {
                 _cubes.Add(Scene.Add(new MeshObject() { Mesh = cubeMesh }
-                                                .MoveTo(new Vector3(Math.RandomFloat(-50, 50), Math.RandomFloat(-50, 50), Math.RandomFloat(-50, 50)))
-                                               //.SetScale(new Vector3(7f, 8f, 9f))
+                                                .MoveTo(new Vector3(Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread)))
+                                                .SetScale(new Vector3(Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f)))
                                                //.RotatePitch(10f)
                                                //.RotateYaw(11f)
                                                //.RotateRoll(12f)
-                                               .SetMaterial(matAqua, 0)
+                                               .SetMaterial(mats[Math.RandomInt(0, mats.Count)], 0)
                      ));
             }
 
@@ -84,7 +95,7 @@ namespace MiniEngine.Labs.Renderer
 
         private void RotateCubes()
         {
-            while (true)
+            while (!Context.Renderer.IsDisposing)
             {
                 for (int i = 0; i < _cubes.Count; i++)
                 {
