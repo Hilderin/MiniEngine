@@ -843,7 +843,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private bool DebugReportCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, int messageCode, string message)
         {
-            if(_printDebug)
+            if(_printDebug || flags != DebugReportFlagsExt.Information)
                 _debugCallback((DebugLevel)flags, messageCode, message);
             return true;
         }
