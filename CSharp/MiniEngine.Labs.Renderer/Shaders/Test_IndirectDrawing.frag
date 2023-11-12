@@ -3,16 +3,14 @@
 
 layout(binding = 1) uniform sampler2D _sampler_diffuse[];
 
-layout(location = 0) in vec3 fragColor;
-layout(location = 1) in vec2 fragTexCoord;
-layout(location = 2) in flat uint textureIndex;
+layout(location = 0) in vec2 frag_tex_coord;
+layout(location = 1) in flat uint texture_index;
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) out vec4 out_color;
 
 
 
 
 void main() {
-    //outColor = vec4(fragColor, 1.0);
-    outColor = texture(_sampler_diffuse[textureIndex], fragTexCoord);
+    out_color = texture(_sampler_diffuse[texture_index], frag_tex_coord);
 }

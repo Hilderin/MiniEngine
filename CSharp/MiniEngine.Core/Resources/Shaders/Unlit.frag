@@ -1,28 +1,16 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(push_constant) uniform constants
-{
-    layout(offset = 64) int _mat_diffuse_index;
-};
-
 layout(binding = 1) uniform sampler2D _sampler_diffuse[];
 
-layout(location = 0) in vec3 fragColor;
-layout(location = 1) in vec2 fragTexCoord;
+layout(location = 0) in vec2 frag_tex_coord;
+layout(location = 1) in flat uint texture_index;
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) out vec4 out_color;
 
 
 
 
 void main() {
-    outColor = texture(_sampler_diffuse[_mat_diffuse_index], fragTexCoord);
-    outColor = vec4(1, 1, 0, 1);
-
+    out_color = texture(_sampler_diffuse[texture_index], frag_tex_coord);
 }
-
-
-
-
-

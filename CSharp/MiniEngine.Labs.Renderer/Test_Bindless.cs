@@ -98,7 +98,7 @@ void main() {
         public void Update()
         {
             LabHelper.ProcessInputsTest(Context);
-
+            LabHelper.ShowStats();
 
             //_currentMesh.RotateY(0.01f);
 

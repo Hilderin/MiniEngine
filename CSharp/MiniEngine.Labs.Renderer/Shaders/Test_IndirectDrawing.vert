@@ -21,9 +21,8 @@ struct meshlet_instance_data
     uint texture_index;
 };
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
-layout(location = 2) in vec2 inTexCoord;
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec2 tex_coord;
 
 layout(std430, binding = 2) readonly buffer _objects {
     object_instance_data objects[];
@@ -34,17 +33,15 @@ layout(std430, binding = 3) readonly buffer _meshlet_instances {
 
 
 
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec2 fragTexCoord;
-layout(location = 2) flat out uint textureIndex;
+layout(location = 0) out vec2 frag_tex_coord;
+layout(location = 1) flat out uint texture_index;
 
 
 void main() {
     uint object_index = meshlet_instances[gl_InstanceIndex].object_index;
 
-    gl_Position = _matrix_vp * objects[object_index].transform_matrix * vec4(inPosition, 1.0);
+    gl_Position = _matrix_vp * objects[object_index].transform_matrix * vec4(position, 1.0);
     
-    fragColor = inColor;
-    fragTexCoord = inTexCoord;
-    textureIndex = meshlet_instances[gl_InstanceIndex].texture_index;
+    frag_tex_coord = tex_coord;
+    texture_index = meshlet_instances[gl_InstanceIndex].texture_index;
 }

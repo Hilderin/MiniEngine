@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ImGuiNET;
+using System;
 
 namespace MiniEngine.Labs.Renderer
 {
@@ -6,6 +7,20 @@ namespace MiniEngine.Labs.Renderer
     {
 
         private const float MOVEMENT_DISTANCE_PER_SEC = 3f;
+
+        /// <summary>
+        /// Display stats on the screen
+        /// </summary>
+        public static void ShowStats()
+        {
+            var windowSize = Context.Current.Window.ClientSize;
+
+            ImGui.Begin("FPSCount", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoInputs);
+            ImGui.SetWindowPos(new System.Numerics.Vector2(windowSize.X - 400, 10));
+            ImGui.Text($"FPS: {Time.FramePerSeconds}, FrameGenTime: {Time.LastFrameGenerationTime.TotalMilliseconds.ToString("0.00")}ms, DeltaTime: {Time.DeltaTime.ToString("0.000000")}sec.");
+            ImGui.End();
+
+        }
 
         /// <summary>
         /// Process inputs for testing
@@ -60,16 +75,11 @@ namespace MiniEngine.Labs.Renderer
             if (context.Input.IsJustMouseMoved && context.Input.IsMouseDown(MouseButton.Right))
             {
                 Vector2 mouseMovement = context.Input.MouseMovement;
-                //mouseMovement.Normalize();
-                camera.Transform.RotateYaw(mouseMovement.X * 10f * Time.DeltaTime);
-                camera.Transform.RotatePitch(mouseMovement.Y * -10f * Time.DeltaTime);
-                //Camera.RotateYaw(mouseMovement.X * 0.1f);
-                //Debug.Info(context.Input.MousePosition.ToString());
+                camera.Transform.RotateYaw(mouseMovement.X * 0.1f);
+                camera.Transform.RotatePitch(mouseMovement.Y * -0.1f);
+                //Debug.Info(context.Input.MousePosition.X.ToString() + " -> "+ mouseMovement.X.ToString() + " -> " + (mouseMovement.X * 10f * Time.DeltaTime).ToString());
 
-                //context.ShowCursor();
-                //context.LockCursor();
             }
-//            Debug.Info(context.Input.MouseMovement.ToString());
         }
 
     }

@@ -25,11 +25,7 @@ namespace MiniEngine.Labs.Renderer
             var shader = Context.Renderer.CreateShader(new()
             {
                 VertexCode = ResourceUtils.GetString("Shaders.Test_IndirectDrawing.vert"),
-                FragmentCode = ResourceUtils.GetString("Shaders.Test_IndirectDrawing.frag"),
-                //VariableDefinitions = new()
-                //                        {
-                //                            { "_sampler_diffuse", new() { Count = 10, Bindless = true } }
-                //                        }
+                FragmentCode = ResourceUtils.GetString("Shaders.Test_IndirectDrawing.frag")
             });
 
             var matWhite = Context.Renderer.CreateMaterial(new()
@@ -112,7 +108,7 @@ namespace MiniEngine.Labs.Renderer
         public void Update()
         {
             LabHelper.ProcessInputsTest(Context);
-
+            LabHelper.ShowStats();
 
             _cube.RotateYaw(1f * Time.DeltaTime);
 
@@ -126,12 +122,6 @@ namespace MiniEngine.Labs.Renderer
 
             //System.Threading.Thread.Sleep(3);
 
-            var windowSize = Context.Window.ClientSize;
-
-            ImGui.Begin("FPSCount", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoInputs);
-            ImGui.SetWindowPos(new System.Numerics.Vector2(windowSize.X - 100, 10));
-            ImGui.Text(Time.FramePerSeconds.ToString());
-            ImGui.End();
 
         }
 

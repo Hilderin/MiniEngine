@@ -35,6 +35,7 @@ namespace MiniEngine.Labs.Renderer
         public void Update()
         {
             LabHelper.ProcessInputsTest(Context);
+            LabHelper.ShowStats();
 
             System.Threading.Thread.Sleep(3);
 

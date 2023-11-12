@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ImGuiNET;
+using System;
 using System.Diagnostics;
 
 namespace MiniEngine.Labs.Renderer
@@ -14,7 +15,7 @@ namespace MiniEngine.Labs.Renderer
         public void Init()
         {
             //Context.SetMaxFramerate(60);
-            Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -1f);
+            Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -3f);
 
             _currentMesh = PrimitiveObjects.CreateCubeMeshObject()
                                            .MoveTo(new Vector3(0f, 0f, 0f));
@@ -33,11 +34,9 @@ namespace MiniEngine.Labs.Renderer
         public void Update()
         {
             LabHelper.ProcessInputsTest(Context);
+            LabHelper.ShowStats();
 
-
-            //_currentMesh.RotateY(0.01f);
-
-            System.Threading.Thread.Sleep(3);
+            //System.Threading.Thread.Sleep(3);
 
         }
 

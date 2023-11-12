@@ -14,17 +14,11 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public const string MatrixVP = "_matrix_vp";
 
-
         /// <summary>
         /// Current diffuse texture sampler.
         /// </summary>
         public const string SamplerDiffuse = "_sampler_diffuse";
                 
-        /// <summary>
-        /// Index of the diffuse material in the _sampler_diffuse when _sampler_diffuse is an array.
-        /// </summary>
-        public const string MaterialDiffuseIndex = "_mat_diffuse_index";
-
         /// <summary>
         /// Index of the vertex buffer index
         /// </summary>
