@@ -12,10 +12,13 @@ namespace MiniEngine.Rendering.Vulkan
     /// </summary>
     public class PipelineDescriptorSet : IDisposable
     {
-        private DescriptorSetLayoutBinding[][] _bindingSets;
-        private DescriptorSetLayout[] _descriptorSetLayouts;
+        private VkRenderer _renderer;
         private Device _device;
 
+
+        private DescriptorSetLayoutBinding[][] _bindingSets;
+        private DescriptorSetLayout[] _descriptorSetLayouts;
+        
         public DescriptorSet[] DescriptorSets;
         public DescriptorPool DescriptorPool;
 
@@ -25,9 +28,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Constructor
         /// </summary>
-        public PipelineDescriptorSet(Device device, PipelineWrapper pipeline, int setIndex = -1)
+        public PipelineDescriptorSet(VkRenderer renderer, PipelineWrapper pipeline, int setIndex = -1)
         {
-            _device = device;
+            _renderer = renderer;
+            _device = renderer.Device;
             //_shader = pipeline.Shader;
 
             if (setIndex == -1)
@@ -66,6 +70,38 @@ namespace MiniEngine.Rendering.Vulkan
         public IEnumerable<string> GetNames()
         {
             return _descriptorSetsPerName.Keys;
+        }
+
+
+        /// <summary>
+        /// Set the default buffers from the renderer
+        /// </summary>
+        public void SetRendererBuffers()
+        {
+            foreach (string name in GetNames())
+            {
+                switch (name)
+                {
+                    case ShaderVariableNames.Scene:
+                        Set(ShaderVariableNames.Scene, _renderer.SceneBuffer);
+                        break;
+                    case ShaderVariableNames.Objects:
+                        Set(ShaderVariableNames.Objects, _renderer.ObjectsBuffer);
+                        break;
+                    case ShaderVariableNames.MeshletInstances:
+                        Set(ShaderVariableNames.MeshletInstances, _renderer.MeshLetInstancesBuffer);
+                        break;
+                    case ShaderVariableNames.SamplerDiffuse:
+                        //Bindless... nothing to do here
+                        break;
+                    case ShaderVariableNames.DrawCallsBuffers:
+                        //This buffer will be bind later when drawcallsbuffers are created
+                        break;
+                    default:
+                        Debug.Warning($"Descriptor name not supported in shader: {name}");
+                        break;
+                }
+            }
         }
 
         /// <summary>

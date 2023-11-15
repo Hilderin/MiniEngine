@@ -10,6 +10,11 @@ namespace MiniEngine
     public static class BaseMaterials
     {
         /// <summary>
+        /// Lock object
+        /// </summary>
+        private static object _lockObj = new object();
+
+        /// <summary>
         /// White
         /// </summary>
         private static Material _white;
@@ -36,7 +41,13 @@ namespace MiniEngine
         {
             get
             {
-                _white ??= CreateUnlitMaterial(BaseTextures.Default);
+                if (_white == null)
+                {
+                    lock (_lockObj)
+                    {
+                        _white ??= CreateUnlitMaterial(BaseTextures.Default);
+                    }
+                }
 
                 return _white;
             }
@@ -49,7 +60,13 @@ namespace MiniEngine
         {
             get
             {
-                _magenta ??= CreateUnlitMaterial(BaseTextures.Magenta);
+                if (_magenta == null)
+                {
+                    lock (_lockObj)
+                    {
+                        _magenta ??= CreateUnlitMaterial(BaseTextures.Magenta);
+                    }
+                }
 
                 return _magenta;
             }
@@ -62,7 +79,13 @@ namespace MiniEngine
         {
             get
             {
-                _aqua ??= CreateUnlitMaterial(BaseTextures.Aqua);
+                if (_aqua == null)
+                {
+                    lock (_lockObj)
+                    {
+                        _aqua ??= CreateUnlitMaterial(BaseTextures.Aqua);
+                    }
+                }
 
                 return _aqua;
             }

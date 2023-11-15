@@ -9,30 +9,18 @@ namespace MiniEngine
     /// <summary>
     /// Class to access embedded resources
     /// </summary>
-    internal static class ResourceUtils
+    public static class ResourceUtils
     {
-        private static Assembly _assembly;
-        private static string _namespace;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        static ResourceUtils()
-        {
-            _assembly = typeof(ResourceUtils).Assembly;
-            _namespace = typeof(ResourceUtils).Namespace;
-        }
 
         /// <summary>
         /// Get string data from resource
         /// </summary>
         public static string GetString(string name)
         {
-            string resourceName = $"{_namespace}.{name}";
-            using (Stream resource = _assembly.GetManifestResourceStream(resourceName))
+            using (Stream resource = GetResourceStream(name))
             {
                 if (resource == null)
-                    throw new FileNotFoundException($"Resource '{resourceName}' not found. Available resources: {String.Join(", ", _assembly.GetManifestResourceNames())}");
+                    throw new FileNotFoundException($"Resource '{name}' not found.");
 
                 using (StreamReader sr = new StreamReader(resource))
                 {
@@ -48,16 +36,59 @@ namespace MiniEngine
         public static byte[] GetBytes(string name)
         {
             byte[] data;
-            string resourceName = $"{_namespace}.{name}";
-            using (Stream resource = _assembly.GetManifestResourceStream(resourceName))
+            using (Stream resource = GetResourceStream(name))
             {
                 if (resource == null)
-                    throw new FileNotFoundException($"Resource '{resourceName}' not found. Available resources: {String.Join(", ", _assembly.GetManifestResourceNames())}");
+                    throw new FileNotFoundException($"Resource '{name}' not found.");
 
                 data = new byte[resource.Length];
                 resource.Read(data, 0, (int)resource.Length);
             }
             return data;
+        }
+
+        /// <summary>
+        /// Check if a resource exists
+        /// </summary>
+        public static bool IsResourceExists(string name)
+        {
+            using (Stream resource = GetResourceStream(name))
+            {
+                if (resource == null)
+                    return false;
+                else
+                    return true;
+            }
+        }
+
+        /// <summary>
+        /// Check if an assembly could be used for resources
+        /// </summary>
+        public static bool IsAssemblyUsable(Assembly assembly)
+        {
+            if (assembly.FullName.StartsWith("System.") || assembly.FullName.StartsWith("Microsoft.") || assembly.FullName.StartsWith("netstandard,"))
+                return false;
+            else
+                return true;
+        }
+
+        /// <summary>
+        /// Get the stream for a resource in all referenced assemblies
+        /// </summary>
+        private static Stream GetResourceStream(string name)
+        {
+
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (!IsAssemblyUsable(assembly))
+                    continue;
+
+                Stream resource = assembly.GetManifestResourceStream(name);
+                if (resource != null)
+                    return resource;
+            }
+
+            return null;
         }
 
     }

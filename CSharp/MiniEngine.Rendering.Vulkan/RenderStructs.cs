@@ -8,6 +8,16 @@ using System.Threading.Tasks;
 namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
+    /// Information on the scene
+    /// </summary>
+    public struct SceneData
+    {
+        public Matrix4 ViewProjectionMatrix;
+        public Vector3 CameraLocation;
+
+    }
+
+    /// <summary>
     /// Information on an instance on the GPU buffer
     /// </summary>
     //The explicit is very important because of alignment in struct in vulkan (ref: https://registry.khronos.org/vulkan/specs/1.0-wsi_extensions/html/vkspec.html#interfaces-resources-layout)

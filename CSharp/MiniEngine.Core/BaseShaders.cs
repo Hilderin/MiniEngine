@@ -13,6 +13,11 @@ namespace MiniEngine
     public class BaseShaders
     {
         /// <summary>
+        /// Lock object
+        /// </summary>
+        private static object _lockObj = new object();
+
+        /// <summary>
         /// Unlit shader
         /// </summary>
         public static Shader _unlit;
@@ -30,7 +35,19 @@ namespace MiniEngine
         {
             get
             {
-                _unlit ??= CreateShader(ResourceUtils.GetString("Resources.Shaders.Unlit.vert"), ResourceUtils.GetString("Resources.Shaders.Unlit.frag"));
+                if (_unlit == null)
+                {
+                    lock (_lockObj)
+                    {
+                        if (_unlit == null)
+                        {
+                            string vertexCode = GlslHelper.Expand(ResourceUtils.GetString("MiniEngine.Resources.Shaders.unlit.vert"), String.Empty);
+                            string fragmentCode = GlslHelper.Expand(ResourceUtils.GetString("MiniEngine.Resources.Shaders.unlit.frag"), String.Empty);
+
+                            _unlit = CreateShader(vertexCode, fragmentCode);
+                        }
+                    }
+                }
 
                 return _unlit;
             }

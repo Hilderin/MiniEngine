@@ -38,9 +38,9 @@ namespace MiniEngine.Rendering.Vulkan
         #region Public members
 
         /// <summary>
-        /// Current ViewProjectionMatrix
+        /// Data in the scene buffer
         /// </summary>
-        public Matrix4 MatrixViewProjection;
+        public SceneData SceneData;
 
         /// <summary>
         /// Default sampler
@@ -64,6 +64,7 @@ namespace MiniEngine.Rendering.Vulkan
         public SurfaceCapabilitiesKhr SurfaceCapabilities => _surfaceCapabilities;
         public MemoryManager MemoryManager => _memoryManager;
         public VkResourceFactory ResourceFactory => _resourceFactory;
+        public BufferWrapper<SceneData> SceneBuffer => _sceneBuffer;
         public BufferWrapper<Vertex> VerticesBuffer => _verticesBuffer;
         public BufferWrapper<uint> IndicesBuffer => _indicesBuffer;
         public BufferWrapper<MeshletData> MeshLetsBuffer => _meshLetsBuffer;
@@ -109,6 +110,7 @@ namespace MiniEngine.Rendering.Vulkan
         private ConcurrentQueue<Action> _actionsBeforeNextFrame = new ConcurrentQueue<Action>();
         private ConcurrentQueue<Action> _actionsBeforeNextFrameAsync = new ConcurrentQueue<Action>();
 
+        private BufferWrapper<SceneData> _sceneBuffer;
         private BufferWrapper<Vertex> _verticesBuffer;
         private BufferWrapper<uint> _indicesBuffer;
         private BufferWrapper<MeshletData> _meshLetsBuffer;
@@ -252,6 +254,7 @@ namespace MiniEngine.Rendering.Vulkan
             DefaultSampler = SamplerHelper.CreateMaxAnisotropy(_device);
 
             //TODO: Dynamiccaly calculate best size
+            _sceneBuffer = CreateBufferWrapper<SceneData>(1, BufferUsageFlags.UniformBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
             _verticesBuffer = CreateBufferWrapper<Vertex>(NB_VERTICES_MAX, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _indicesBuffer = CreateBufferWrapper<uint>(NB_VERTICES_MAX, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _meshLetsBuffer = CreateBufferWrapper<MeshletData>(NB_MESHLET_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
@@ -377,7 +380,7 @@ namespace MiniEngine.Rendering.Vulkan
             //If no camera... nothing to render...
             if (Camera != null)
             {
-                RecalculateProjectionMatrix();
+                UpdateSceneData();
             }
 
 
@@ -683,8 +686,8 @@ namespace MiniEngine.Rendering.Vulkan
             //Disposing drawcall buffers...
             foreach (BufferWrapper drawCallsBuffer in _drawCallsBuffers)
                 drawCallsBuffer.Dispose();
-                        
 
+            _sceneBuffer?.Dispose();
             _objectsBuffer?.Dispose();
             _meshLetInstancesBuffer?.Dispose();
             _verticesBuffer?.Dispose();
@@ -807,17 +810,24 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
-        /// Recalculate the projection matrix
+        /// Recalculate the scene data
         /// </summary>
-        private void RecalculateProjectionMatrix()
+        private void UpdateSceneData()
         {
-
 
             //Update MVP Matrix...
             Matrix4 viewMat2 = Camera.GetViewMatrix();
             Matrix4 projMat = Camera.GetProjectionMatrixVulkan((int)_currentExtent.Width, (int)_currentExtent.Height);
 
-            this.MatrixViewProjection = projMat * viewMat2;
+            SceneData.ViewProjectionMatrix = projMat * viewMat2;
+
+
+            //Update the buffer so the GPU can access it...
+            _sceneBuffer.Update(ref SceneData);
+
+
+
+
 
         }
 

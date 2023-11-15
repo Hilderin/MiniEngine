@@ -196,7 +196,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public PipelineDescriptorSet CreateDescriptorSet()
         {
-            return new PipelineDescriptorSet(_device, this);
+            return new PipelineDescriptorSet(_renderer, this);
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace MiniEngine.Rendering.Vulkan
             if (_bindless)
                 throw new InvalidOperationException("Cannot create new DescriptorSet for bindless pipeline. You must use GetBindlessDescriptorSet.");
 
-            return new PipelineDescriptorSet(_device, this, setIndex);
+            return new PipelineDescriptorSet(_renderer, this, setIndex);
         }
 
         /// <summary>
@@ -286,7 +286,6 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
 
-
         /// <summary>
         /// Update push constants
         /// </summary>
@@ -300,7 +299,7 @@ namespace MiniEngine.Rendering.Vulkan
                 switch (pushContant.Name)
                 {
                     case ShaderVariableNames.MatrixVP:
-                        commandBuffer.CmdPushConstants(_pipelineLayout, pushContant.Stage, pushContant.Offset, ref _renderer.MatrixViewProjection);
+                        commandBuffer.CmdPushConstants(_pipelineLayout, pushContant.Stage, pushContant.Offset, ref _renderer.SceneData.ViewProjectionMatrix);
                         break;
 
                     case ShaderVariableNames.CameraLocation:

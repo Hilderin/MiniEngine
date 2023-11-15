@@ -46,7 +46,8 @@ namespace MiniEngine.Rendering.Vulkan
 
             _descriptorSet = _pipeline.CreateDescriptorSet();
 
-            InitDescriptorSet();
+            _descriptorSet.SetRendererBuffers();
+
         }
 
 
@@ -146,31 +147,7 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
 
-        /// <summary>
-        /// Init descriptor set...
-        /// </summary>
-        private void InitDescriptorSet()
-        {
-            foreach (string name in _descriptorSet.GetNames())
-            {
-                switch (name)
-                {
-
-                    case ShaderVariableNames.Objects:
-                        _descriptorSet.Set(ShaderVariableNames.Objects, _renderer.ObjectsBuffer);
-                        break;
-                    case ShaderVariableNames.MeshletInstances:
-                        _descriptorSet.Set(ShaderVariableNames.MeshletInstances, _renderer.MeshLetInstancesBuffer);
-                        break;
-                    case ShaderVariableNames.SamplerDiffuse:
-                        //Bindless... nothing to do here
-                        break;
-                    default:
-                        Debug.Warning($"Descriptor name not supported in shader: {name}");
-                        break;
-                }
-            }
-        }
+        
 
 
         private class IndirectCommand

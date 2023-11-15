@@ -73,7 +73,7 @@ namespace MiniEngine.Labs.Renderer
 
             var cullingShader = _renderer.CreateShader(new()
             {
-                ComputeCode = ResourceUtils.GetString("Shaders.Test_FrustumCulling.comp")
+                ComputeCode = ResourceUtils.GetString("MiniEngine.Labs.Renderer.Shaders.Test_FrustumCulling.comp")
             });
             _cullingPipeline = _renderer.CreatePipelineWrapper(cullingShader)
                                             .Build();
@@ -82,10 +82,9 @@ namespace MiniEngine.Labs.Renderer
 
 
             _cullingDescriptorSet = _cullingPipeline.CreateDescriptorSet();
-            _cullingDescriptorSet.Set(ShaderVariableNames.Objects, _renderer.ObjectsBuffer);
-            _cullingDescriptorSet.Set(ShaderVariableNames.MeshletInstances, _renderer.MeshLetInstancesBuffer);
+            _cullingDescriptorSet.SetRendererBuffers();
 
-            
+
 
             _renderer.AddActionsBeforeEachFrame(Culling);
         }

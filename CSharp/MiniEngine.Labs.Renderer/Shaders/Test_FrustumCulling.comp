@@ -1,11 +1,12 @@
 ﻿#version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout( push_constant ) uniform constants
+//-----------------------
+//Structs
+struct scene_data
 {
-    vec3 _camera_location;
-	mat4 _matrix_vp;
-    uint _meshlet_instance_count;
+    mat4 matrix_vp;
+    vec3 camera_location;
 };
 
 struct object_instance_data
@@ -35,22 +36,31 @@ struct draw_call
     uint first_instance;
 };
 
-layout(binding = 1) buffer _draw_calls_buffers {
+
+//-----------------------
+//Bindings
+layout(binding = 1) readonly uniform _scene {
+    scene_data scene;
+};
+layout(binding = 2) buffer _draw_calls_buffers {
     draw_call calls[]; 
 } draw_calls[];
 
-layout(std430, binding = 2) readonly buffer _objects {
+layout(std430, binding = 3) readonly buffer _objects {
     object_instance_data objects[];
 };
-layout(std430, binding = 3) buffer _meshlet_instances {
+layout(std430, binding = 4) buffer _meshlet_instances {
     meshlet_instance_data meshlet_instances[];
 };
 
 
+//-----------------------
+//Compute config
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 
-
+//-----------------------
+//Main
 void main()
 {
 	uint meshlet_instance_index = gl_GlobalInvocationID.x;
@@ -60,7 +70,7 @@ void main()
 
     uint visible = 1;
 
-    if(_camera_location.x < 0)
+    if(scene.camera_location.x < 0)
     {
         if(objects[object_index].location.x > 0)
         {
