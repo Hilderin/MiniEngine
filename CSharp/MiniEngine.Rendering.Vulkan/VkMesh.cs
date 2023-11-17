@@ -144,7 +144,7 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
             //meshLet.vertexBuffer = _vi.Device.CreateBuffer(vertices, BufferUsageFlags.VertexBuffer);
-            _renderer.VerticesBuffer.Append(vertices, out meshLet.VertexBufferIndex);
+            _renderer.VerticesBuffer.Append(vertices, out meshLet.VerticesBufferIndex);
             //meshLet.VertexBuffer = _renderer.CreateBufferWrapper(vertices, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
         }
@@ -155,7 +155,7 @@ namespace MiniEngine.Rendering.Vulkan
         private void CreateIndexBuffer(SubMeshDefinition submeshLet, ref MeshletData meshLet)
         {
             meshLet.NbIndices = (uint)submeshLet.Indices.Length;
-            meshLet.IndexBufferIndex = _renderer.IndicesBuffer.Append(submeshLet.Indices) / sizeof(uint);
+            meshLet.IndicesBufferIndex = _renderer.IndicesBuffer.Append(submeshLet.Indices) / sizeof(uint);
 
         }
 
@@ -172,12 +172,12 @@ namespace MiniEngine.Rendering.Vulkan
 
         public uint VertexBufferIndex
         {
-            get { return this.MeshLetData.VertexBufferIndex; }
+            get { return this.MeshLetData.VerticesBufferIndex; }
         }
 
         public uint IndexBufferIndex
         {
-            get { return this.MeshLetData.IndexBufferIndex; }
+            get { return this.MeshLetData.IndicesBufferIndex; }
         }
 
         public uint NbIndices

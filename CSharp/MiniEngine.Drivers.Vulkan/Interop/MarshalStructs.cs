@@ -1208,6 +1208,59 @@ namespace MiniEngine.Drivers.Vulkan.Interop
         public Bool32 RuntimeDescriptorArray;
     }
 
+    internal partial struct PhysicalDeviceVulkan12Features
+    {
+        public StructureType SType;
+        public IntPtr Next;
+        public Bool32 SamplerMirrorClampToEdge;
+        public Bool32 DrawIndirectCount;
+        public Bool32 StorageBuffer8BitAccess;
+        public Bool32 UniformAndStorageBuffer8BitAccess;
+        public Bool32 StoragePushConstant8;
+        public Bool32 ShaderBufferInt64Atomics;
+        public Bool32 ShaderSharedInt64Atomics;
+        public Bool32 ShaderFloat16;
+        public Bool32 ShaderInt8;
+        public Bool32 DescriptorIndexing;
+        public Bool32 ShaderInputAttachmentArrayDynamicIndexing;
+        public Bool32 ShaderUniformTexelBufferArrayDynamicIndexing;
+        public Bool32 ShaderStorageTexelBufferArrayDynamicIndexing;
+        public Bool32 ShaderUniformBufferArrayNonUniformIndexing;
+        public Bool32 ShaderSampledImageArrayNonUniformIndexing;
+        public Bool32 ShaderStorageBufferArrayNonUniformIndexing;
+        public Bool32 ShaderStorageImageArrayNonUniformIndexing;
+        public Bool32 ShaderInputAttachmentArrayNonUniformIndexing;
+        public Bool32 ShaderUniformTexelBufferArrayNonUniformIndexing;
+        public Bool32 ShaderStorageTexelBufferArrayNonUniformIndexing;
+        public Bool32 DescriptorBindingUniformBufferUpdateAfterBind;
+        public Bool32 DescriptorBindingSampledImageUpdateAfterBind;
+        public Bool32 DescriptorBindingStorageImageUpdateAfterBind;
+        public Bool32 DescriptorBindingStorageBufferUpdateAfterBind;
+        public Bool32 DescriptorBindingUniformTexelBufferUpdateAfterBind;
+        public Bool32 DescriptorBindingStorageTexelBufferUpdateAfterBind;
+        public Bool32 DescriptorBindingUpdateUnusedWhilePending;
+        public Bool32 DescriptorBindingPartiallyBound;
+        public Bool32 DescriptorBindingVariableDescriptorCount;
+        public Bool32 RuntimeDescriptorArray;
+        public Bool32 SamplerFilterMinmax;
+        public Bool32 ScalarBlockLayout;
+        public Bool32 ImagelessFramebuffer;
+        public Bool32 UniformBufferStandardLayout;
+        public Bool32 ShaderSubgroupExtendedTypes;
+        public Bool32 SeparateDepthStencilLayouts;
+        public Bool32 HostQueryReset;
+        public Bool32 TimelineSemaphore;
+        public Bool32 BufferDeviceAddress;
+        public Bool32 BufferDeviceAddressCaptureReplay;
+        public Bool32 BufferDeviceAddressMultiDevice;
+        public Bool32 VulkanMemoryModel;
+        public Bool32 VulkanMemoryModelDeviceScope;
+        public Bool32 VulkanMemoryModelAvailabilityVisibilityChains;
+        public Bool32 ShaderOutputViewportIndex;
+        public Bool32 ShaderOutputLayer;
+        public Bool32 SubgroupBroadcastDynamicId;
+    }
+
     internal partial struct PhysicalDeviceProperties2Khr
     {
         internal StructureType SType;

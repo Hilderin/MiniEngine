@@ -347,7 +347,10 @@ namespace MiniEngine.Drivers.Vulkan.Interop
 		[DllImport (VulkanLibrary, CallingConvention = CallingConvention.Winapi)]
 		internal static unsafe extern void vkCmdDrawIndexedIndirect (IntPtr commandBuffer, UInt64 buffer, DeviceSize offset, UInt32 drawCount, UInt32 stride);
 
-		[DllImport (VulkanLibrary, CallingConvention = CallingConvention.Winapi)]
+        [DllImport(VulkanLibrary, CallingConvention = CallingConvention.Winapi)]
+        internal static unsafe extern void vkCmdDrawIndexedIndirectCount(IntPtr commandBuffer, UInt64 buffer, DeviceSize offset, UInt64 countBuffer, DeviceSize countBufferOffset, UInt32 maxDrawCount, UInt32 stride);
+
+        [DllImport (VulkanLibrary, CallingConvention = CallingConvention.Winapi)]
 		internal static unsafe extern void vkCmdDispatch (IntPtr commandBuffer, UInt32 groupCountX, UInt32 groupCountY, UInt32 groupCountZ);
 
 		[DllImport (VulkanLibrary, CallingConvention = CallingConvention.Winapi)]

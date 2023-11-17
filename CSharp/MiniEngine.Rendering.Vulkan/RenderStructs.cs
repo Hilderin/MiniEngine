@@ -42,9 +42,8 @@ namespace MiniEngine.Rendering.Vulkan
     /// </summary>
     public struct MeshletData
     {
-        public uint MeshLetIndex;
-        public uint VertexBufferIndex;
-        public uint IndexBufferIndex;
+        public uint VerticesBufferIndex;
+        public uint IndicesBufferIndex;
         public uint NbIndices;
     }
 

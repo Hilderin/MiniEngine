@@ -14,10 +14,11 @@ namespace MiniEngine.Rendering.Vulkan
         private VkRenderer _renderer;
         private VkShader _shader;
         private uint _drawCallsBufferIndex;
-
+        private uint _drawCallsCountsOffset;
+        private uint _maxDrawCall;
         
         private BufferWrapper<DrawIndexedIndirectCommand> _drawCallsBuffer;
-
+        
         private PipelineWrapper _pipeline;
         private PipelineDescriptorSet _descriptorSet;
         private uint _drawCount = 0;
@@ -41,8 +42,8 @@ namespace MiniEngine.Rendering.Vulkan
             _shader = shader;
 
             //TODO: To allocate base on some graphic memory
-            _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(out _drawCallsBufferIndex);
-
+            _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(out _drawCallsBufferIndex, out _drawCallsCountsOffset);
+            _maxDrawCall = _drawCallsBuffer.Size / _drawCallsBuffer.ElementSize;
 
 
             _pipeline = _renderer.GetPipeline(_shader);
@@ -108,6 +109,7 @@ namespace MiniEngine.Rendering.Vulkan
             _drawCallsPerMeshLetInstance.TryAdd(meshLetInstance.MeshLetInstanceIndex, indirectCommand);
 
             _drawCount++;
+            _renderer.DrawCallsCountsBuffer.Update(ref _drawCount, _drawCallsCountsOffset);
 
             return meshLetInstance.MeshLetInstanceIndex;
 
@@ -185,7 +187,8 @@ namespace MiniEngine.Rendering.Vulkan
             _pipeline.UpdatePushConstants(commandBuffer);
 
 
-            commandBuffer.CmdDrawIndexedIndirect(_drawCallsBuffer.Buffer, 0, _drawCount, _drawCallsBuffer.ElementSize);
+            //commandBuffer.CmdDrawIndexedIndirect(_drawCallsBuffer.Buffer, 0, _drawCount, _drawCallsBuffer.ElementSize);
+            commandBuffer.CmdDrawIndexedIndirectCount(_drawCallsBuffer.Buffer, 0, _renderer.DrawCallsCountsBuffer, _drawCallsCountsOffset, _maxDrawCall, _drawCallsBuffer.ElementSize);
         }
 
         /// <summary>

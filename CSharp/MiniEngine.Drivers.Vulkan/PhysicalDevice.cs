@@ -585,6 +585,24 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
+        public PhysicalDeviceFeatures2 GetFeatures2Vulkan12(out PhysicalDeviceVulkan12Features vulkan12Features)
+        {
+            PhysicalDeviceFeatures2 pFeatures;
+            unsafe
+            {
+
+                pFeatures = new PhysicalDeviceFeatures2();
+                vulkan12Features = new PhysicalDeviceVulkan12Features();
+
+                pFeatures.Next = vulkan12Features.Handle;
+
+                Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
+
+                return pFeatures;
+
+            }
+        }
+
 
         public PhysicalDeviceProperties2Khr GetProperties2KHR()
         {

@@ -306,6 +306,14 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
+        public void CmdDrawIndexedIndirectCount(Buffer buffer, DeviceSize offset, Buffer countBuffer, DeviceSize countBufferOffset, UInt32 maxDrawCount, UInt32 stride)
+        {
+            unsafe
+            {
+                Interop.NativeMethods.vkCmdDrawIndexedIndirectCount(this.m, buffer != null ? buffer.m : default(UInt64), offset, countBuffer != null ? countBuffer.m : default(UInt64), countBufferOffset, maxDrawCount, stride);
+            }
+        }
+
         public void CmdDispatch(UInt32 groupCountX, UInt32 groupCountY, UInt32 groupCountZ)
         {
             unsafe

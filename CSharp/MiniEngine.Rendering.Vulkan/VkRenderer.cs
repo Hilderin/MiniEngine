@@ -72,6 +72,7 @@ namespace MiniEngine.Rendering.Vulkan
         public BufferWrapper<MeshLetInstanceData> MeshLetInstancesBuffer => _meshLetInstancesBuffer;
         public List<VkMeshRenderer> MeshRenderers => _meshRenderers;
         public List<BufferWrapper> DrawCallsBuffers => _drawCallsBuffers;
+        public BufferWrapper<uint> DrawCallsCountsBuffer => _drawCallsCountsBuffer;
 
         //public BufferWrapper IndirectDrawBuffer => _indirectDrawBuffer;
 
@@ -116,6 +117,8 @@ namespace MiniEngine.Rendering.Vulkan
         private BufferWrapper<MeshletData> _meshLetsBuffer;
         private BufferWrapper<ObjectInstanceData> _objectsBuffer;
         private BufferWrapper<MeshLetInstanceData> _meshLetInstancesBuffer;
+        private BufferWrapper<uint> _drawCallsCountsBuffer;
+        
 
         private uint _graphicsQueueIndex;
         private QueueWrapper _graphicsQueue;
@@ -260,7 +263,7 @@ namespace MiniEngine.Rendering.Vulkan
             _meshLetsBuffer = CreateBufferWrapper<MeshletData>(NB_MESHLET_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _objectsBuffer = CreateBufferWrapper<ObjectInstanceData>(NB_OBJECTS_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
             _meshLetInstancesBuffer = CreateBufferWrapper<MeshLetInstanceData>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-
+            _drawCallsCountsBuffer = CreateBufferWrapper<uint>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _initialized = true;
 
             return this;
@@ -571,7 +574,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a draw call buffer
         /// </summary>
-        public BufferWrapper<DrawIndexedIndirectCommand> CreateDrawCallsBuffer(out uint drawCallIndex)
+        public BufferWrapper<DrawIndexedIndirectCommand> CreateDrawCallsBuffer(out uint drawCallIndex, out uint drawCallsCountsOffset)
         {
             //TODO: To allocate base on some graphic memory
             var buffer = CreateBufferWrapper<DrawIndexedIndirectCommand>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.TransferDst | BufferUsageFlags.StorageBuffer, MemoryPropertyFlags.DeviceLocal);
@@ -580,6 +583,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 drawCallIndex = (uint)_drawCallsBuffers.Count;
                 _drawCallsBuffers.Add(buffer);
+                drawCallsCountsOffset = _drawCallsCountsBuffer.Reserve(out _);
             }
 
             return buffer;
@@ -703,6 +707,7 @@ namespace MiniEngine.Rendering.Vulkan
             _verticesBuffer?.Dispose();
             _indicesBuffer?.Dispose();
             _meshLetsBuffer?.Dispose();
+            _drawCallsCountsBuffer?.Dispose();
             _swapchain?.Dispose();
 
             if (_surface != null)
@@ -747,14 +752,20 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private unsafe Device CreateDevice()
         {
-            
+            var features12 = _physicalDevice.GetFeatures2Vulkan12(out var vulkan12Features);
+
             //Get the PhysicalDeviceDescriptorIndexingFeatures feature....
-            var pFeatures = _physicalDevice.GetFeatures2Indexing(out var indexingFeatures);
+            //var featuresIndexing = _physicalDevice.GetFeatures2Indexing(out var indexingFeatures);
 
             //Check if the graphic card is compatible with bindless rendering...
-            if (!indexingFeatures.DescriptorBindingPartiallyBound || !indexingFeatures.RuntimeDescriptorArray)
-                throw new NotSupportedException("Your graphic card does not support Bindless rendering.");
+            if (!vulkan12Features.DescriptorBindingPartiallyBound)
+                throw new NotSupportedException("Your graphic card does not support DescriptorBindingPartiallyBound.");
+            if (!vulkan12Features.RuntimeDescriptorArray)
+                throw new NotSupportedException("Your graphic card does not support RuntimeDescriptorArray.");
 
+            //Check if the graphic card is compatible with bindless rendering...
+            if (!vulkan12Features.DrawIndirectCount)
+                throw new NotSupportedException("Your graphic card does not support DrawIndirectCount.");
 
             List<DeviceQueueCreateInfo> queueCreateInfos = new List<DeviceQueueCreateInfo>
             {
@@ -790,7 +801,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 EnabledExtensionNames = extensions.ToArray(),
                 QueueCreateInfos = queueCreateInfos.ToArray(),
-                Next = pFeatures.Handle
+                Next = features12.Handle
             })
             {
                 try

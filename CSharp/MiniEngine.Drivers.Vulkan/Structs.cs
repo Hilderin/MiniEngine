@@ -8519,6 +8519,92 @@ namespace MiniEngine.Drivers.Vulkan
 
     }
 
+    unsafe public partial class PhysicalDeviceVulkan12Features : MarshalledObject
+    {
+
+        public IntPtr Next
+        {
+            get { return m->Next; }
+            set { m->Next = value; }
+        }
+
+        public Bool32 SamplerMirrorClampToEdge { get { return m->SamplerMirrorClampToEdge; } }
+        public Bool32 DrawIndirectCount { get { return m->DrawIndirectCount; } }
+        public Bool32 StorageBuffer8BitAccess { get { return m->StorageBuffer8BitAccess; } }
+        public Bool32 UniformAndStorageBuffer8BitAccess { get { return m->UniformAndStorageBuffer8BitAccess; } }
+        public Bool32 StoragePushConstant8 { get { return m->StoragePushConstant8; } }
+        public Bool32 ShaderBufferInt64Atomics { get { return m->ShaderBufferInt64Atomics; } }
+        public Bool32 ShaderSharedInt64Atomics { get { return m->ShaderSharedInt64Atomics; } }
+        public Bool32 ShaderFloat16 { get { return m->ShaderFloat16; } }
+        public Bool32 ShaderInt8 { get { return m->ShaderInt8; } }
+        public Bool32 DescriptorIndexing { get { return m->DescriptorIndexing; } }
+        public Bool32 ShaderInputAttachmentArrayDynamicIndexing { get { return m->ShaderInputAttachmentArrayDynamicIndexing; } }
+        public Bool32 ShaderUniformTexelBufferArrayDynamicIndexing { get { return m->ShaderUniformTexelBufferArrayDynamicIndexing; } }
+        public Bool32 ShaderStorageTexelBufferArrayDynamicIndexing { get { return m->ShaderStorageTexelBufferArrayDynamicIndexing; } }
+        public Bool32 ShaderUniformBufferArrayNonUniformIndexing { get { return m->ShaderUniformBufferArrayNonUniformIndexing; } }
+        public Bool32 ShaderSampledImageArrayNonUniformIndexing { get { return m->ShaderSampledImageArrayNonUniformIndexing; } }
+        public Bool32 ShaderStorageBufferArrayNonUniformIndexing { get { return m->ShaderStorageBufferArrayNonUniformIndexing; } }
+        public Bool32 ShaderStorageImageArrayNonUniformIndexing { get { return m->ShaderStorageImageArrayNonUniformIndexing; } }
+        public Bool32 ShaderInputAttachmentArrayNonUniformIndexing { get { return m->ShaderInputAttachmentArrayNonUniformIndexing; } }
+        public Bool32 ShaderUniformTexelBufferArrayNonUniformIndexing { get { return m->ShaderUniformTexelBufferArrayNonUniformIndexing; } }
+        public Bool32 ShaderStorageTexelBufferArrayNonUniformIndexing { get { return m->ShaderStorageTexelBufferArrayNonUniformIndexing; } }
+        public Bool32 DescriptorBindingUniformBufferUpdateAfterBind { get { return m->DescriptorBindingUniformBufferUpdateAfterBind; } }
+        public Bool32 DescriptorBindingSampledImageUpdateAfterBind { get { return m->DescriptorBindingSampledImageUpdateAfterBind; } }
+        public Bool32 DescriptorBindingStorageImageUpdateAfterBind { get { return m->DescriptorBindingStorageImageUpdateAfterBind; } }
+        public Bool32 DescriptorBindingStorageBufferUpdateAfterBind { get { return m->DescriptorBindingStorageBufferUpdateAfterBind; } }
+        public Bool32 DescriptorBindingUniformTexelBufferUpdateAfterBind { get { return m->DescriptorBindingUniformTexelBufferUpdateAfterBind; } }
+        public Bool32 DescriptorBindingStorageTexelBufferUpdateAfterBind { get { return m->DescriptorBindingStorageTexelBufferUpdateAfterBind; } }
+        public Bool32 DescriptorBindingUpdateUnusedWhilePending { get { return m->DescriptorBindingUpdateUnusedWhilePending; } }
+        public Bool32 DescriptorBindingPartiallyBound { get { return m->DescriptorBindingPartiallyBound; } }
+        public Bool32 DescriptorBindingVariableDescriptorCount { get { return m->DescriptorBindingVariableDescriptorCount; } }
+        public Bool32 RuntimeDescriptorArray { get { return m->RuntimeDescriptorArray; } }
+        public Bool32 SamplerFilterMinmax { get { return m->SamplerFilterMinmax; } }
+        public Bool32 ScalarBlockLayout { get { return m->ScalarBlockLayout; } }
+        public Bool32 ImagelessFramebuffer { get { return m->ImagelessFramebuffer; } }
+        public Bool32 UniformBufferStandardLayout { get { return m->UniformBufferStandardLayout; } }
+        public Bool32 ShaderSubgroupExtendedTypes { get { return m->ShaderSubgroupExtendedTypes; } }
+        public Bool32 SeparateDepthStencilLayouts { get { return m->SeparateDepthStencilLayouts; } }
+        public Bool32 HostQueryReset { get { return m->HostQueryReset; } }
+        public Bool32 TimelineSemaphore { get { return m->TimelineSemaphore; } }
+        public Bool32 BufferDeviceAddress { get { return m->BufferDeviceAddress; } }
+        public Bool32 BufferDeviceAddressCaptureReplay { get { return m->BufferDeviceAddressCaptureReplay; } }
+        public Bool32 BufferDeviceAddressMultiDevice { get { return m->BufferDeviceAddressMultiDevice; } }
+        public Bool32 VulkanMemoryModel { get { return m->VulkanMemoryModel; } }
+        public Bool32 VulkanMemoryModelDeviceScope { get { return m->VulkanMemoryModelDeviceScope; } }
+        public Bool32 VulkanMemoryModelAvailabilityVisibilityChains { get { return m->VulkanMemoryModelAvailabilityVisibilityChains; } }
+        public Bool32 ShaderOutputViewportIndex { get { return m->ShaderOutputViewportIndex; } }
+        public Bool32 ShaderOutputLayer { get { return m->ShaderOutputLayer; } }
+        public Bool32 SubgroupBroadcastDynamicId { get { return m->SubgroupBroadcastDynamicId; } }
+
+        internal Interop.PhysicalDeviceVulkan12Features* m
+        {
+
+            get
+            {
+                return (Interop.PhysicalDeviceVulkan12Features*)native.Handle;
+            }
+        }
+
+        public PhysicalDeviceVulkan12Features()
+        {
+            native = Interop.Structure.Allocate(typeof(Interop.PhysicalDeviceVulkan12Features));
+            Initialize();
+        }
+
+        internal PhysicalDeviceVulkan12Features(NativePointer pointer)
+        {
+            native = pointer;
+            Initialize();
+        }
+
+
+        internal void Initialize()
+        {
+            m->SType = StructureType.PhysicalDeviceVulkan12Features;
+        }
+
+    }
+
     unsafe public partial class PhysicalDeviceProperties2Khr : MarshalledObject
 	{
 		PhysicalDeviceProperties lProperties;

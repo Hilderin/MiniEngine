@@ -44,10 +44,10 @@ namespace MiniEngine.Labs.Renderer
                                                 .SetMaterial(BaseMaterials.Aqua, 0)
                      );
 
-            //_cube2 = Scene.Add(new MeshObject() { Mesh = mesh }
-            //                                    .MoveTo(new Vector3(-1.5f, 0f, 0f))
-            //                                    .SetMaterial(BaseMaterials.White, 0)
-            //         );
+            _cube2 = Scene.Add(new MeshObject() { Mesh = mesh }
+                                                .MoveTo(new Vector3(-1.5f, 0f, 0f))
+                                                .SetMaterial(BaseMaterials.White, 0)
+                     );
 
             //int spread = 10;
             //for (int i = 0; i < 10000; i++)

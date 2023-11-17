@@ -47,6 +47,11 @@ namespace MiniEngine.Rendering.Vulkan
         public const string DrawCallsBuffers = "_draw_calls_buffers";
 
         /// <summary>
+        /// Buffer of draw call counts
+        /// </summary>
+        public const string DrawCallCounts = "_draw_calls_counts";
+
+        /// <summary>
         /// SceneData
         /// </summary>
         public const string Scene = "_scene";
