@@ -16,6 +16,8 @@ namespace MiniEngine.Rendering.Vulkan
         private uint _drawCallsBufferIndex;
         private uint _drawCallsCountsOffset;
         private uint _maxDrawCall;
+
+        private bool _drawCallsBufferUpdatedByCompute = false;
         
         private BufferWrapper<DrawIndexedIndirectCommand> _drawCallsBuffer;
         
@@ -29,7 +31,6 @@ namespace MiniEngine.Rendering.Vulkan
         private ConcurrentQueue<MeshLetInstance> _availableMeshLetInstances = new ConcurrentQueue<MeshLetInstance>();
         private ConcurrentQueue<IndirectCommand> _availableDrawCalls = new ConcurrentQueue<IndirectCommand>();
 
-        public BufferWrapper DrawCallsBuffer => _drawCallsBuffer;
 
 
         /// <summary>
@@ -96,9 +97,14 @@ namespace MiniEngine.Rendering.Vulkan
 
             //Updating the meshlet instance data with the draw call index at the same time...
             if (indirectCommand.BufferOffset == uint.MaxValue)
+            {
                 //new draw call...
-                indirectCommand.BufferOffset = _drawCallsBuffer.Append(ref indirectCommand.Command, out indirectCommand.DrawCallIndex);
-            else
+                if (_drawCallsBufferUpdatedByCompute)
+                    indirectCommand.BufferOffset = _drawCallsBuffer.Reserve(out indirectCommand.DrawCallIndex);
+                else
+                    indirectCommand.BufferOffset = _drawCallsBuffer.Append(ref indirectCommand.Command, out indirectCommand.DrawCallIndex);
+            }
+            else if(!_drawCallsBufferUpdatedByCompute)
                 //update...
                 _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
 
@@ -128,12 +134,15 @@ namespace MiniEngine.Rendering.Vulkan
             meshLetInstance.InstanceData.TextureIndex = GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
             _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstance.BufferOffset);
 
-            //Update the draw call...
-            indirectCommand.Command.IndexCount = (uint)meshLet.NbIndices;
-            indirectCommand.Command.InstanceCount = 1;
-            indirectCommand.Command.FirstIndex = (uint)meshLet.IndexBufferIndex;
-            indirectCommand.Command.VertexOffset = (int)meshLet.VertexBufferIndex;
-            _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
+            if (!_drawCallsBufferUpdatedByCompute)
+            {
+                //Update the draw call...
+                indirectCommand.Command.IndexCount = (uint)meshLet.NbIndices;
+                indirectCommand.Command.InstanceCount = 1;
+                indirectCommand.Command.FirstIndex = (uint)meshLet.IndexBufferIndex;
+                indirectCommand.Command.VertexOffset = (int)meshLet.VertexBufferIndex;
+                _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
+            }
 
         }
 
@@ -152,12 +161,15 @@ namespace MiniEngine.Rendering.Vulkan
             meshLetInstance.InstanceData.TextureIndex = uint.MaxValue;
             _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstance.BufferOffset);
 
-            //Update drawcall...
-            indirectCommand.Command.InstanceCount = 0;
-            indirectCommand.Command.InstanceCount = 0;
-            indirectCommand.Command.FirstIndex = 0;
-            indirectCommand.Command.VertexOffset = 0;
-            _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
+            if (!_drawCallsBufferUpdatedByCompute)
+            {
+                //Update drawcall...
+                indirectCommand.Command.InstanceCount = 0;
+                indirectCommand.Command.InstanceCount = 0;
+                indirectCommand.Command.FirstIndex = 0;
+                indirectCommand.Command.VertexOffset = 0;
+                _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
+            }
 
 
             _meshLetInstances.TryRemove(meshLetInstanceIndex, out _);

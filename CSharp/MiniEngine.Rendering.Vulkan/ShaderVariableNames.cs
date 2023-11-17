@@ -36,6 +36,11 @@ namespace MiniEngine.Rendering.Vulkan
         public const string Objects = "_objects";
 
         /// <summary>
+        /// Buffer of meshlet
+        /// </summary>
+        public const string Meshlets = "_meshlets";
+
+        /// <summary>
         /// Buffer of meshlet instances
         /// </summary>
         public const string MeshletInstances = "_meshlet_instances";

@@ -75,6 +75,9 @@ namespace MiniEngine.Rendering.Vulkan
                     case ShaderVariableNames.Objects:
                         Set(ShaderVariableNames.Objects, _renderer.ObjectsBuffer);
                         break;
+                    case ShaderVariableNames.Meshlets:
+                        Set(ShaderVariableNames.Meshlets, _renderer.MeshLetsBuffer);
+                        break;
                     case ShaderVariableNames.MeshletInstances:
                         Set(ShaderVariableNames.MeshletInstances, _renderer.MeshLetInstancesBuffer);
                         break;
@@ -83,6 +86,9 @@ namespace MiniEngine.Rendering.Vulkan
                         break;
                     case ShaderVariableNames.DrawCallsBuffers:
                         //This buffer will be bind later when drawcallsbuffers are created
+                        break;
+                    case ShaderVariableNames.DrawCallCounts:
+                        Set(ShaderVariableNames.DrawCallCounts, _renderer.DrawCallsCountsBuffer);
                         break;
                     default:
                         Debug.Warning($"Descriptor name not supported in shader: {name}");

@@ -6,6 +6,7 @@ struct scene_data
 {
     mat4 matrix_vp;
     vec3 camera_location;
+    uint nb_meshlet_instances;
 };
 
 // Information on an instance on the GPU buffer
@@ -32,7 +33,7 @@ struct meshlet_instance_data
 struct meshlet_data
 {
     uint vertices_buffer_index;
-    uint indices_bufer_index;
+    uint indices_buffer_index;
     uint nb_indices;
 };
 
@@ -42,12 +43,6 @@ struct draw_call
     uint index_count;
     uint instance_count;
     uint first_index;
-    uint vertex_offsset;
+    uint vertex_offset;
     uint first_instance;
-};
-
-// Indirect draw call count
-struct draw_call_count
-{
-    uint draw_count;
 };

@@ -1,5 +1,6 @@
 ﻿#version 450
 #extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_KHR_shader_subgroup_ballot: enable
 
 #include "../../MiniEngine.Core/Resources/Shaders/render_structs.glsl"
 
@@ -18,17 +19,23 @@ layout(binding = 2) buffer _draw_calls_buffers {
     draw_call calls[]; 
 } draw_calls[];
 
-layout(std430, binding = 3) readonly buffer _objects {
+layout(binding = 3) readonly buffer _objects {
     object_instance_data objects[];
 };
-layout(std430, binding = 4) buffer _meshlet_instances {
+layout(binding = 4) buffer _meshlet_instances {
     meshlet_instance_data meshlet_instances[];
+};
+layout(binding = 5) buffer _meshlets {
+    meshlet_data meshlets[];
+};
+layout(binding = 6) buffer _draw_calls_counts {
+    uint draw_calls_counts[];
 };
 
 
 //-----------------------
 //Compute config
-layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
 
 //-----------------------
@@ -36,9 +43,15 @@ layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
 	uint meshlet_instance_index = gl_GlobalInvocationID.x;
+    
+
+    if(meshlet_instance_index >= scene.nb_meshlet_instances)
+        return;
+
+    
 	uint object_index = meshlet_instances[meshlet_instance_index].object_index;
     uint draw_buffer_index = meshlet_instances[meshlet_instance_index].draw_calls_buffer_index;
-    uint draw_call_index = meshlet_instances[meshlet_instance_index].draw_call_index;
+    uint meshlet_index = meshlet_instances[meshlet_instance_index].meshlet_index;
 
     uint visible = 1;
 
@@ -57,9 +70,21 @@ void main()
         }
     }
 
-    visible = 1;
+    //visible = 1;
 
-    draw_calls[draw_buffer_index].calls[draw_call_index].instance_count = visible;
     meshlet_instances[meshlet_instance_index].visible = visible;
+    draw_calls[draw_buffer_index].calls[meshlet_instances[meshlet_instance_index].draw_call_index].instance_count = visible;
+
+//    draw_calls_counts[draw_buffer_index]++;
+//    uint draw_call_index = draw_calls_counts[draw_buffer_index];
+//
+//    draw_calls[draw_buffer_index].calls[draw_call_index].index_count = meshlets[meshlet_index].nb_indices;
+//    draw_calls[draw_buffer_index].calls[draw_call_index].instance_count = 1;
+//    draw_calls[draw_buffer_index].calls[draw_call_index].first_index = meshlets[meshlet_index].indices_buffer_index;
+//    draw_calls[draw_buffer_index].calls[draw_call_index].vertex_offset = meshlets[meshlet_index].vertices_buffer_index;
+//    draw_calls[draw_buffer_index].calls[draw_call_index].first_instance = meshlet_instance_index;
+//
+//    //draw_call_index++;
+//    draw_calls_counts[draw_buffer_index] = draw_call_index;
 
 }

@@ -841,6 +841,8 @@ namespace MiniEngine.Rendering.Vulkan
             Matrix4 projMat = Camera.GetProjectionMatrixVulkan((int)_currentExtent.Width, (int)_currentExtent.Height);
 
             SceneData.ViewProjectionMatrix = projMat * viewMat2;
+            SceneData.CameraLocation = Camera.Transform.Location;
+            SceneData.NbMeshletInstances = _meshLetInstancesBuffer.Count;
 
 
             //Update the buffer so the GPU can access it...

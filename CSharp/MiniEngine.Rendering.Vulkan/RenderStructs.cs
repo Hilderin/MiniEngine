@@ -14,6 +14,7 @@ namespace MiniEngine.Rendering.Vulkan
     {
         public Matrix4 ViewProjectionMatrix;
         public Vector3 CameraLocation;
+        public uint NbMeshletInstances;
 
     }
 

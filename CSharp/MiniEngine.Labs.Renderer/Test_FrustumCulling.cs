@@ -49,22 +49,40 @@ namespace MiniEngine.Labs.Renderer
                                                 .SetMaterial(BaseMaterials.White, 0)
                      );
 
-            //int spread = 10;
-            //for (int i = 0; i < 10000; i++)
-            //{
-            //    _cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }
-            //                                    .MoveTo(new Vector3(Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread)))
-            //                                    //.SetScale(new Vector3(Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f)))
-            //                                    .SetMaterial(BaseMaterials.Aqua, 0)
-            //         //.RotatePitch(10f)
-            //         //.RotateYaw(11f)
-            //         //.RotateRoll(12f)
-            //         //.SetMaterial(mats[Math.RandomInt(0, mats.Count)], 0)
-            //         ));
-            //}
+            int spread = 10;
+            for (int i = 0; i < 10000; i++)
+            {
+                _cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }
+                                                .MoveTo(new Vector3(Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread)))
+                                                //.SetScale(new Vector3(Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f)))
+                                                .SetMaterial(BaseMaterials.Aqua, 0)
+                     //.RotatePitch(10f)
+                     //.RotateYaw(11f)
+                     //.RotateRoll(12f)
+                     //.SetMaterial(mats[Math.RandomInt(0, mats.Count)], 0)
+                     ));
+            }
 
             InitCullingCompute();
 
+            ThreadPool.QueueUserWorkItem(a => RotateCubes());
+
+        }
+
+        private void RotateCubes()
+        {
+            while (!Context.Renderer.IsDisposing)
+            {
+                for (int i = 0; i < _cubes.Count; i++)
+                {
+                    //if (i % 2 == 0)
+                    //    _cubes[i].RotatePitch(((i % 10) + 1));
+                    //else
+                        _cubes[i].RotateYaw(((i % 10) + 1));
+                }
+
+                System.Threading.Thread.Sleep(1);
+            }
         }
 
         private void InitCullingCompute()
@@ -90,20 +108,25 @@ namespace MiniEngine.Labs.Renderer
         }
 
         private void Culling()
-        {
+        { 
             if (_lastDrawCallsBuffersCount < _renderer.DrawCallsBuffers.Count)
             {
+                bool ok = true;
                 for (int i = _lastDrawCallsBuffersCount; i < _renderer.DrawCallsBuffers.Count; i++)
                 {
                     var drawCallsBuffer = _renderer.DrawCallsBuffers[i];
-                    _cullingDescriptorSet.Set(ShaderVariableNames.DrawCallsBuffers, drawCallsBuffer, (uint)i);
+                    if (drawCallsBuffer != null)
+                        _cullingDescriptorSet.Set(ShaderVariableNames.DrawCallsBuffers, drawCallsBuffer, (uint)i);
+                    else
+                        ok = false;
                 }
-                _lastDrawCallsBuffersCount = _renderer.MeshRenderers.Count;
+                if(ok)
+                    _lastDrawCallsBuffersCount = _renderer.MeshRenderers.Count;
             }
 
             if (_lastDrawCallsBuffersCount > 0)
             {
-                uint nbGroupX = _renderer.MeshLetInstancesBuffer.Count;  // (uint)_lastDrawCallsBuffersCount;
+                uint nbGroupX = (_renderer.MeshLetInstancesBuffer.Count / 256) + 1;  // (uint)_lastDrawCallsBuffersCount;
                 //uint nbGroupY = 2;
 
                 _computeQueue.ExecuteAndWait(cb =>
