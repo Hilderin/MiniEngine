@@ -17,7 +17,7 @@ namespace MiniEngine
         /// </summary>
         public static string GetString(string name)
         {
-            using (Stream resource = GetResourceStream(name))
+            using (Stream resource = GetStream(name))
             {
                 if (resource == null)
                     throw new FileNotFoundException($"Resource '{name}' not found.");
@@ -36,7 +36,7 @@ namespace MiniEngine
         public static byte[] GetBytes(string name)
         {
             byte[] data;
-            using (Stream resource = GetResourceStream(name))
+            using (Stream resource = GetStream(name))
             {
                 if (resource == null)
                     throw new FileNotFoundException($"Resource '{name}' not found.");
@@ -47,20 +47,7 @@ namespace MiniEngine
             return data;
         }
 
-        /// <summary>
-        /// Check if a resource exists
-        /// </summary>
-        public static bool IsResourceExists(string name)
-        {
-            using (Stream resource = GetResourceStream(name))
-            {
-                if (resource == null)
-                    return false;
-                else
-                    return true;
-            }
-        }
-
+        
         /// <summary>
         /// Check if an assembly could be used for resources
         /// </summary>
@@ -75,7 +62,7 @@ namespace MiniEngine
         /// <summary>
         /// Get the stream for a resource in all referenced assemblies
         /// </summary>
-        private static Stream GetResourceStream(string name)
+        public static Stream GetStream(string name)
         {
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())

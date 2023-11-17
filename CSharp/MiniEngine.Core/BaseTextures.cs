@@ -40,7 +40,7 @@ namespace MiniEngine
         {
             get
             {
-                _white ??= CreateTexture2D(ResourceUtils.GetBytes("MiniEngine.Resources.PixelWhite.bmp"), "White");
+                _white ??= AssetManager.Current.Get<Texture2D>("Resources/PixelWhite.bmp");
 
                 return _white;
             }
@@ -54,7 +54,7 @@ namespace MiniEngine
         {
             get
             {
-                _magenta ??= CreateTexture2D(ResourceUtils.GetBytes("MiniEngine.Resources.PixelMagenta.bmp"), "Magenta");
+                _magenta ??= AssetManager.Current.Get<Texture2D>("Resources/PixelMagenta.bmp");
 
                 return _magenta;
             }
@@ -67,26 +67,11 @@ namespace MiniEngine
         {
             get
             {
-                _aqua ??= CreateTexture2D(ResourceUtils.GetBytes("MiniEngine.Resources.PixelAqua.bmp"), "Aqua");
+                _aqua ??= AssetManager.Current.Get<Texture2D>("Resources/PixelAqua.bmp");
 
                 return _aqua;
             }
         }
 
-        /// <summary>
-        /// Create a Texture2D from pixelData
-        /// </summary>
-        private static Texture2D CreateTexture2D(byte[] pixelData, string name)
-        {
-            if (Renderer.Current == null)
-                throw new InvalidOperationException("No current renderer.");
-
-            Texture2D texture = Renderer.Current.CreateTexture2D(new Texture2DDefinition()
-            {
-                Data = pixelData
-            });
-            texture.Name = name;
-            return texture;
-        }
     }
 }

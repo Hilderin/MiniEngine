@@ -76,70 +76,19 @@ namespace MiniEngine
         /// </summary>
         private static string GetIncludeCode(string includeName, string workingFolder, HashSet<string> includedFiles)
         {
-            
-            string includeCode;
+            if (!AssetManager.Current.TryFindAssetUri(includeName, workingFolder, out string includeAssetUri))
+                throw new FileNotFoundException($"GLSL include file not found: {includeName}");
 
-            string includeFileName = Path.GetFullPath(Path.Combine(workingFolder, includeName));
-            if (!File.Exists(includeFileName))
-            {
-                //We will try in the resource...
-                string resouceName = null;
-                bool found = false;
-                string ajustedName = includeName.Replace("\\", ".").Replace("/", ".");
-
-                foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (!ResourceUtils.IsAssemblyUsable(assembly))
-                        continue;
-
-                    string namespaceResouce = assembly.GetName().Name;
-                    if (namespaceResouce.Equals("MiniEngine.Core", StringComparison.OrdinalIgnoreCase))
-                        namespaceResouce = "MiniEngine";
-
-                    
-
-                    resouceName = namespaceResouce + "." + ajustedName;
-                    if (ResourceUtils.IsResourceExists(resouceName))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    resouceName = namespaceResouce + ".Resources." + ajustedName;
-                    if (ResourceUtils.IsResourceExists(resouceName))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    resouceName = namespaceResouce + ".Resources.Shaders." + ajustedName;
-                    if (ResourceUtils.IsResourceExists(resouceName))
-                    {
-                        found = true;
-                        break;
-                    }
+            string includeCode = AssetManager.Current.GetString(includeAssetUri);
 
 
-                }
-
-                if(!found)
-                    throw new FileNotFoundException("Include file not found: {includeFileName}");
-
-                includeCode = ResourceUtils­.GetString(resouceName);
-            }
-            else
-            {
-                //Directly from file...
-                includeCode = File.ReadAllText(includeFileName);
-            }
-
-            if (includedFiles.Contains(includeFileName))
+            if (includedFiles.Contains(includeAssetUri))
             {
                 return includeCode;
             }
-            includedFiles.Add(includeFileName);
+            includedFiles.Add(includeAssetUri);
 
-            return ExpandCode(includeCode, Path.GetDirectoryName(includeFileName), includedFiles: includedFiles);
+            return ExpandCode(includeCode, Path.GetDirectoryName(includeAssetUri), includedFiles: includedFiles);
             
         }
 

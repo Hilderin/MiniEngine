@@ -97,7 +97,7 @@ namespace MiniEngine
 
             Input = new InputManager(this);
 
-            Asset = new AssetManager(this);
+            Asset = AssetManager.Current;
 
             Asset.StartWatchUpdateContent();
 

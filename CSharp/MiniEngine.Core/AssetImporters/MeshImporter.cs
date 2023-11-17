@@ -52,7 +52,7 @@ namespace MiniEngine.AssetImporters
 
                     mesh = CreateMesh(assetMeshDef);
 
-                    _assetManager.AssetPathToWatch(_assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE), () => ReloadMesh(mesh, name));
+                    //_assetManager.AssetPathToWatch(_assetManager.GetAssetUri(name, AssetManager.ASSET_EXTENSION_FILE), () => ReloadMesh(mesh, name));
                     _assetManager.AssetPathToWatch(assetMeshDef.MeshFullPath, () => ReloadMesh(mesh, name));
 
                 }
@@ -83,22 +83,24 @@ namespace MiniEngine.AssetImporters
         private MeshAssetDefinition GetMeshAssetDefinition(string name)
         {
             string meshPath;
-            string assetDefPath;
             MeshAssetDefinition assetMeshDef = null;
 
 
             try
             {
-                assetDefPath = _assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE);
+                if (!_assetManager.TryFindAssetUri(name, String.Empty, out meshPath))
+                    throw new FileNotFoundException($"Mesh not found: {name}");
 
-                if (File.Exists(assetDefPath))
+                string extension = Path.GetExtension(meshPath).ToLower();
+
+                if (extension == AssetManager.ASSET_EXTENSION_FILE)
                 {
                     //We have a definition file...
-                    assetMeshDef = _assetManager.DeserializeFile<MeshAssetDefinition>(assetDefPath);
-                    assetMeshDef.MeshFullPath = Path.Combine(Path.GetDirectoryName(assetDefPath), assetMeshDef.MeshPath);
+                    assetMeshDef = _assetManager.DeserializeAsset<MeshAssetDefinition>(meshPath);
+                    assetMeshDef.MeshFullPath = AssetManager.CombineUri(AssetManager.GetDirectoryName(meshPath), assetMeshDef.MeshPath);
 
                     if (String.IsNullOrEmpty(assetMeshDef.MeshPath))
-                        throw new FormatException($"MeshPath not set in '{assetDefPath}'");
+                        throw new FormatException($"MeshPath not set in '{meshPath}'");
 
                     if (!File.Exists(assetMeshDef.MeshFullPath))
                         throw new FileNotFoundException($"Mesh file not found: {assetMeshDef.MeshFullPath}");
@@ -107,15 +109,12 @@ namespace MiniEngine.AssetImporters
                 else
                 {
                     //Search directly with the extensions...
-                    if (!_assetManager.TryFindAssetPath(name, SUPPORTED_EXTENSIONS, out meshPath))
-                        throw new FileNotFoundException($"Mesh not found: {name} for supported extensions: {String.Join(", ", SUPPORTED_EXTENSIONS)}");
-
-                    assetDefPath = meshPath + AssetManager.ASSET_EXTENSION_FILE;
+                    //assetDefPath = meshPath + AssetManager.ASSET_EXTENSION_FILE;
                     assetMeshDef = new MeshAssetDefinition();
                     assetMeshDef.MeshPath = Path.GetFileName(meshPath);
                     assetMeshDef.MeshFullPath = meshPath;
 
-                    _assetManager.SerializeFile(assetMeshDef, assetDefPath);
+                    //_assetManager.SerializeFile(assetMeshDef, assetDefPath);
 
                 }
 
@@ -163,7 +162,7 @@ namespace MiniEngine.AssetImporters
                 return Primitives.CreateEmptyMesh();
 
 
-            Mesh mesh = _assetManager.Context.Renderer.CreateMesh();
+            Mesh mesh = Renderer.Current.CreateMesh();
 
             ThreadPool.QueueUserWorkItem((arg) =>
             {
@@ -182,7 +181,7 @@ namespace MiniEngine.AssetImporters
         {
             MeshDefinition meshDef = new MeshDefinition();
 
-            string workingDirectory = Path.GetDirectoryName(meshAssetDef.MeshFullPath);
+            string workingDirectory = AssetManager.GetDirectoryName(meshAssetDef.MeshFullPath);
             //Matrix3 transformMatrix = Matrix3.FromEulerAnglesXYZ(Math.DegToRad(90), 0f, 0f);
             Matrix4x4 transformMatrix = Matrix4x4.Identity;
             //MeshDefinition meshDef = new MeshDefinition();
@@ -231,7 +230,8 @@ namespace MiniEngine.AssetImporters
                 context.YAxisRotation = meshAssetDef.RotationY;
                 context.ZAxisRotation = meshAssetDef.RotationZ;
 
-                Assimp.Scene scene = context.ImportFile(meshAssetDef.MeshFullPath, postProcessSteps);
+                //Assimp.Scene scene = context.ImportFileFromStream(_assetManager.GetStream(meshAssetDef.MeshFullPath), postProcessSteps);
+                Assimp.Scene scene = context.ImportFile(AssetManager.RemovePrefix(meshAssetDef.MeshFullPath), postProcessSteps);
 
                 if (scene.Metadata.TryGetValue("OriginalUpAxis", out var originalUpAxis) && scene.Metadata.TryGetValue("UpAxis", out var upAxis))
                 {
@@ -449,7 +449,7 @@ namespace MiniEngine.AssetImporters
                     string assetDefPath = assTexture.FilePath;
                     if (Path.IsPathRooted(assetDefPath))
                         assetDefPath = Path.GetFileName(assetDefPath);
-                    return _assetManager.Get<Material>(Path.Combine(workingDirectory, assetDefPath));
+                    return _assetManager.Get<Material>(AssetManager.CombineUri(workingDirectory, assetDefPath));
                 }
             }
 

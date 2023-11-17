@@ -40,30 +40,16 @@ namespace MiniEngine.AssetImporters
             {
                 try
                 {
-                    string assetPath = _assetManager.GetAssetPath(name, AssetManager.ASSET_EXTENSION_FILE);
+                    string assetPath;
 
-                    if (!File.Exists(assetPath))
+                    if (!_assetManager.TryFindAssetUri(name, String.Empty, out assetPath))
+                        throw new FileNotFoundException($"Material asset file not found '{name}'");
+
+                    string extension = Path.GetExtension(assetPath).ToLower();
+
+                    if (extension == AssetManager.ASSET_EXTENSION_FILE)
                     {
-                        //Check directly with a texture...
-                        if(_assetManager.TryFindAssetPath(name, Texture2DImporter.SUPPORTED_EXTENSIONS, out assetPath))
-                        {
-                            var texture = _assetManager.Get<Texture2D>(name);
-
-                            mat = _assetManager.Context.Renderer.CreateMaterial(new()
-                            {
-                                DiffuseTexture = texture,
-                                Shader = BaseShaders.Default,
-                            });
-
-                        }
-                        else
-                            //Asset not found...
-                            throw new FileNotFoundException($"Material asset file not found '{name}.amat'");
-                    }
-
-                    if (mat == null)
-                    {
-                        var assetInfo = _assetManager.DeserializeFile<MaterialAssetDefinition>(assetPath);
+                        var assetInfo = _assetManager.DeserializeAsset<MaterialAssetDefinition>(assetPath);
 
                         if (String.IsNullOrEmpty(assetInfo.DiffuseTexture))
                             throw new FormatException($"DiffuseTexture not set in '{assetPath}'");
@@ -71,11 +57,26 @@ namespace MiniEngine.AssetImporters
                             throw new FormatException($"Shader not set in '{assetPath}'");
 
 
-                        mat = _assetManager.Context.Renderer.CreateMaterial(new()
+                        mat = Renderer.Current.CreateMaterial(new()
                         {
                             DiffuseTexture = _assetManager.Get<Texture2D>(assetInfo.DiffuseTexture),
                             Shader = _assetManager.Get<Shader>(assetInfo.Shader),
                         });
+                    }
+                    else if (Texture2DImporter.SUPPORTED_EXTENSIONS.Contains(extension))
+                    {
+                        //It's only a texture ...
+                        var texture = _assetManager.Get<Texture2D>(name);
+
+                        mat = Renderer.Current.CreateMaterial(new()
+                        {
+                            DiffuseTexture = texture,
+                            Shader = BaseShaders.Default
+                        });
+                    }
+                    else
+                    {
+                        throw new NotSupportedException($"Material asset file extension not supported: '{extension}'");
                     }
 
                     mat.Name = Path.GetFileName(name);

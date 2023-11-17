@@ -41,10 +41,11 @@ namespace MiniEngine
                     {
                         if (_unlit == null)
                         {
-                            string vertexCode = GlslHelper.Expand(ResourceUtils.GetString("MiniEngine.Resources.Shaders.unlit.vert"), String.Empty);
-                            string fragmentCode = GlslHelper.Expand(ResourceUtils.GetString("MiniEngine.Resources.Shaders.unlit.frag"), String.Empty);
+                            _unlit = AssetManager.Current.Get<Shader>("Resources/Shaders/unlit.vert");
+                            //string vertexCode = GlslHelper.Expand(ResourceUtils.GetString("MiniEngine.Resources.Shaders.unlit.vert"), String.Empty);
+                            //string fragmentCode = GlslHelper.Expand(ResourceUtils.GetString("MiniEngine.Resources.Shaders.unlit.frag"), String.Empty);
 
-                            _unlit = CreateShader(vertexCode, fragmentCode);
+                            //_unlit = CreateShader(vertexCode, fragmentCode);
                         }
                     }
                 }
@@ -53,22 +54,22 @@ namespace MiniEngine
             }
         }
 
-        /// <summary>
-        /// Create a shader
-        /// </summary>
-        private static Shader CreateShader(string vertexCode, string fragmentCode)
-        {
-            if (Renderer.Current == null)
-                throw new InvalidOperationException("No current renderer.");
+        ///// <summary>
+        ///// Create a shader
+        ///// </summary>
+        //private static Shader CreateShader(string vertexCode, string fragmentCode)
+        //{
+        //    if (Renderer.Current == null)
+        //        throw new InvalidOperationException("No current renderer.");
 
-            ShaderDefinition shaderDef = new ShaderDefinition()
-            {
-                VertexCode = vertexCode,
-                FragmentCode = fragmentCode
-            };
+        //    ShaderDefinition shaderDef = new ShaderDefinition()
+        //    {
+        //        VertexCode = vertexCode,
+        //        FragmentCode = fragmentCode
+        //    };
 
-            return Renderer.Current.CreateShader(shaderDef);
-        }
+        //    return Renderer.Current.CreateShader(shaderDef);
+        //}
 
     }
 }

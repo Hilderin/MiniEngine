@@ -49,13 +49,13 @@ namespace MiniEngine.AssetImporters
 
                 try
                 {
-                    if(!_assetManager.TryFindAssetPath(name, SUPPORTED_EXTENSIONS, out assetPath))
-                        throw new FileNotFoundException($"Texture not found '{name}' for supported extensions: {String.Join(", ", SUPPORTED_EXTENSIONS)}");
+                    if(!_assetManager.TryFindAssetUri(name, String.Empty, out assetPath))
+                        throw new FileNotFoundException($"Texture not found '{name}'.");
 
 
-                    texture = _assetManager.Context.Renderer.CreateTexture2D(new()
+                    texture = Renderer.Current.CreateTexture2D(new()
                     {
-                        Data = File.ReadAllBytes(assetPath),
+                        Data = _assetManager.GetBytes(assetPath),
                         Type = TextureType.RGBA
                     });
 
