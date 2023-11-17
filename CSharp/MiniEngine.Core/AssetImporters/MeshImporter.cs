@@ -117,6 +117,8 @@ namespace MiniEngine.AssetImporters
 
                 if (extension == AssetManager.ASSET_EXTENSION_FILE)
                 {
+                    _assetManager.AssetUriToWatch(meshAssetPath, () => LoadMeshAsync(name, mesh));
+
                     //We have a definition file...
                     assetMeshDef = _assetManager.DeserializeAsset<MeshAssetDefinition>(meshAssetPath);
 
@@ -129,7 +131,6 @@ namespace MiniEngine.AssetImporters
 
                     assetMeshDef.ModelAssetUri = modelAssetUri;
 
-                    _assetManager.AssetUriToWatch(meshAssetPath, () => LoadMeshAsync(name, mesh));
                     _assetManager.AssetUriToWatch(assetMeshDef.ModelAssetUri, () => LoadMeshAsync(name, mesh));
                 }
                 else
