@@ -329,7 +329,11 @@ namespace MiniEngine
             else if (assetUri.StartsWith(PREFIX_URI_RESOURCE))
                 return ResourceUtils.GetString(assetUri.Substring(PREFIX_URI_RESOURCE.Length));
             else
-                return File.ReadAllText(assetUri);
+            {
+                if (!TryFindAssetUri(assetUri, String.Empty, out string newAssetUri))
+                    throw new FileNotFoundException($"Asset not found: {assetUri}");
+                return GetString(newAssetUri);
+            }
 
         }
 
@@ -343,7 +347,11 @@ namespace MiniEngine
             else if (assetUri.StartsWith(PREFIX_URI_RESOURCE))
                 return ResourceUtils.GetBytes(assetUri.Substring(PREFIX_URI_RESOURCE.Length));
             else
-                return File.ReadAllBytes(assetUri);
+            {
+                if (!TryFindAssetUri(assetUri, String.Empty, out string newAssetUri))
+                    throw new FileNotFoundException($"Asset not found: {assetUri}");
+                return GetBytes(newAssetUri);
+            }
 
         }
 
@@ -357,8 +365,11 @@ namespace MiniEngine
             else if (assetUri.StartsWith(PREFIX_URI_RESOURCE))
                 return ResourceUtils.GetStream(assetUri.Substring(PREFIX_URI_RESOURCE.Length));
             else
-                return File.OpenRead(assetUri);
-
+            {
+                if (!TryFindAssetUri(assetUri, String.Empty, out string newAssetUri))
+                    throw new FileNotFoundException($"Asset not found: {assetUri}");
+                return GetStream(newAssetUri);
+            }
         }
 
         ///// <summary>
@@ -442,7 +453,7 @@ namespace MiniEngine
 
             string rootPath = GetRootPathCurrentProject();
 
-            while(rootPath.Length > 4)
+            while (rootPath.Length > 4)
             {
                 string corePath = Path.GetFullPath(Path.Combine(rootPath, "..\\MiniEngine.Core"));
                 if (Directory.Exists(corePath))
@@ -573,7 +584,7 @@ namespace MiniEngine
         /// <summary>
         /// Check if a resource exists
         /// </summary>
-        public bool TryFindResource(string name, out string resName)
+        private bool TryFindResource(string name, out string resName)
         {
             //Not found... check in resources...
             string nameReplaced = name.Replace('\\', '.').Replace('/', '.');

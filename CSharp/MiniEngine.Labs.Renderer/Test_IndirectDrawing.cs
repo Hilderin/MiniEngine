@@ -22,11 +22,7 @@ namespace MiniEngine.Labs.Renderer
             //Context.SetMaxFramerate(-1);
             Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -3f);
 
-            var shader = Context.Renderer.CreateShader(new()
-            {
-                VertexCode = ResourceUtils.GetString("Shaders.Test_IndirectDrawing.vert"),
-                FragmentCode = ResourceUtils.GetString("Shaders.Test_IndirectDrawing.frag")
-            });
+            var shader = Context.Asset.Get<Shader>("Shaders/Test_IndirectDrawing.vert");
 
             var matWhite = Context.Renderer.CreateMaterial(new()
             {

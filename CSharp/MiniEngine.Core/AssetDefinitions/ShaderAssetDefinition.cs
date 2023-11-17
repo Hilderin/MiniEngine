@@ -23,6 +23,11 @@ namespace MiniEngine.AssetDefinitions
         public string FragmentCodePath { get; set; }
 
         /// <summary>
+        /// ComputeCodePath
+        /// </summary>
+        public string ComputeCodePath { get; set; }
+
+        /// <summary>
         /// Information on the variables in the shader
         /// </summary>
         public Dictionary<string, ShaderVariableDefinition> VariableDefinitions = new Dictionary<string, ShaderVariableDefinition>();

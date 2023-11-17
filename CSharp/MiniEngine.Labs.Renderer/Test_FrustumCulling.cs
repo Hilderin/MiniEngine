@@ -69,12 +69,12 @@ namespace MiniEngine.Labs.Renderer
 
         private void InitCullingCompute()
         {
-            
 
-            var cullingShader = _renderer.CreateShader(new()
-            {
-                ComputeCode = ResourceUtils.GetString("MiniEngine.Labs.Renderer.Shaders.Test_FrustumCulling.comp")
-            });
+            var cullingShader = (VkShader)AssetManager.Current.Get<Shader>("Shaders/Test_FrustumCulling.comp");
+            //var cullingShader = _renderer.CreateShader(new()
+            //{
+            //    ComputeCode = AssetManager.Current.GetString("Shaders/Test_FrustumCulling.comp")
+            //});
             _cullingPipeline = _renderer.CreatePipelineWrapper(cullingShader)
                                             .Build();
 
