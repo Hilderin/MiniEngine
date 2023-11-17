@@ -14,7 +14,8 @@ namespace MiniEngine.Rendering.Vulkan
     {
         private VkRenderer _renderer;
         private Device _device;
-
+        private PipelineWrapper _pipeline;
+        private int _setIndex;
 
         private DescriptorSetLayoutBinding[][] _bindingSets;
         private DescriptorSetLayout[] _descriptorSetLayouts;
@@ -23,6 +24,7 @@ namespace MiniEngine.Rendering.Vulkan
         public DescriptorPool DescriptorPool;
 
         private Dictionary<string, DescriptorSetData> _descriptorSetsPerName = new Dictionary<string, DescriptorSetData>();
+        private Dictionary<string, DescriptorWriteData> _writes = new Dictionary<string, DescriptorWriteData>();
 
 
         /// <summary>
@@ -32,27 +34,12 @@ namespace MiniEngine.Rendering.Vulkan
         {
             _renderer = renderer;
             _device = renderer.Device;
-            //_shader = pipeline.Shader;
+            _pipeline = pipeline;
+            _setIndex = setIndex;
 
-            if (setIndex == -1)
-            {
-                //We take all...
-                _bindingSets = pipeline.Shader.BindingSets;
-                _descriptorSetLayouts = pipeline.DescriptorSetLayouts;
-            }
-            else
-            {
-                //We take only one...
-                _bindingSets = new DescriptorSetLayoutBinding[1][];
-                _bindingSets[0] = pipeline.Shader.BindingSets[setIndex];
+            pipeline.OnReload += Pipeline_OnReload;
 
-                _descriptorSetLayouts = new DescriptorSetLayout[1];
-                _descriptorSetLayouts[0] = pipeline.DescriptorSetLayouts[setIndex];
-            }
-        
-            CreateDescriptorPool();
-
-            CreateDescriptorSets();
+            Create();
 
         }
 
@@ -137,6 +124,8 @@ namespace MiniEngine.Rendering.Vulkan
                 _device.UpdateDescriptorSets(writeSet);
             }
 
+            _writes[name] = new() { UniformBuffer = uniformBuffer, ArrayElementIndex = arrayElementIndex };
+
             return this;
         }
 
@@ -174,6 +163,8 @@ namespace MiniEngine.Rendering.Vulkan
                 _device.UpdateDescriptorSets(writeSet);
             }
 
+            _writes[name] = new() { ImageView = imageView, Sampler = sampler, ArrayElementIndex = arrayElementIndex };
+
             return this;
         }
 
@@ -209,6 +200,8 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 _device.UpdateDescriptorSets(writeSet);
             }
+
+            _writes[name] = new() { ImageView = imageView, ArrayElementIndex = arrayElementIndex };
 
             return this;
         }
@@ -246,6 +239,8 @@ namespace MiniEngine.Rendering.Vulkan
                 _device.UpdateDescriptorSets(writeSet);
             }
 
+            _writes[name] = new() { Sampler = sampler, ArrayElementIndex = arrayElementIndex };
+
             return this;
         }
 
@@ -263,6 +258,36 @@ namespace MiniEngine.Rendering.Vulkan
 
         }
 
+
+        /// <summary>
+        /// Create the internal objects
+        /// </summary>
+        private void Create()
+        {
+            if (_setIndex == -1)
+            {
+                //We take all...
+                _bindingSets = _pipeline.Shader.BindingSets;
+                _descriptorSetLayouts = _pipeline.DescriptorSetLayouts;
+            }
+            else
+            {
+                //We take only one...
+                _bindingSets = new DescriptorSetLayoutBinding[1][];
+                _bindingSets[0] = _pipeline.Shader.BindingSets[_setIndex];
+
+                _descriptorSetLayouts = new DescriptorSetLayout[1];
+                _descriptorSetLayouts[0] = _pipeline.DescriptorSetLayouts[_setIndex];
+            }
+
+            CreateDescriptorPool();
+
+            CreateDescriptorSets();
+        }
+
+        /// <summary>
+        /// Create descriptor pool
+        /// </summary>
         private void CreateDescriptorPool()
         {
             Dictionary<DescriptorType, uint> poolSizesDict = new Dictionary<DescriptorType, uint>();
@@ -342,6 +367,41 @@ namespace MiniEngine.Rendering.Vulkan
 
 
         /// <summary>
+        /// Reloading pipeline
+        /// </summary>
+        private void Pipeline_OnReload()
+        {
+            Dispose();
+
+            Create();
+
+            RebindWrites();
+        }
+
+        /// <summary>
+        /// Reexecute binds
+        /// </summary>
+        private void RebindWrites()
+        {
+            foreach (var write in _writes)
+            {
+                DescriptorWriteData data = write.Value;
+
+                if (data.UniformBuffer != null)
+                    Set(write.Key, data.UniformBuffer, data.ArrayElementIndex);
+                else if (data.ImageView != null && data.Sampler != null)
+                    Set(write.Key, data.ImageView, data.Sampler, data.ArrayElementIndex);
+                else if (data.ImageView != null)
+                    Set(write.Key, data.ImageView, data.ArrayElementIndex);
+                else if (data.Sampler != null)
+                    Set(write.Key, data.Sampler, data.ArrayElementIndex);
+                else
+                    throw new InvalidOperationException($"Impossible to rebind the descriptor set write: {write.Key}");
+            }
+        }
+
+
+        /// <summary>
         /// Implicit conversion to a DescriptorSet[]
         /// </summary>
         public static implicit operator DescriptorSet[](PipelineDescriptorSet pipelineDescriptorSet) { return pipelineDescriptorSet.DescriptorSets; }
@@ -356,6 +416,17 @@ namespace MiniEngine.Rendering.Vulkan
             //public ImageView ImageView;
             //public Sampler Sampler;
             public uint Binding;
+        }
+
+        /// <summary>
+        /// Keep track of all the sets that have been done
+        /// </summary>
+        private class DescriptorWriteData
+        {
+            public BufferWrapper UniformBuffer;
+            public ImageView ImageView;
+            public Sampler Sampler;
+            public uint ArrayElementIndex = 0;
         }
 
     }

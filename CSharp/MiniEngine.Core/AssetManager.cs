@@ -146,12 +146,17 @@ namespace MiniEngine
         }
 
         /// <summary>
-        /// Add a path to watch
+        /// Add a asset uri to watch
         /// </summary>
-        public void AssetPathToWatch(string path, Action reloadAction)
+        public void AssetUriToWatch(string assetUri, Action reloadAction)
         {
-            if (String.IsNullOrEmpty(path))
+            if (String.IsNullOrEmpty(assetUri))
                 return;
+
+            if (!assetUri.StartsWith(PREFIX_URI_FILE))
+                return;
+
+            string path = RemovePrefix(assetUri);
 
             if (!path.StartsWith(_rootPathCurrentProject, StringComparison.OrdinalIgnoreCase))
             {
@@ -176,7 +181,7 @@ namespace MiniEngine
 
 
 
-            _reloadableAssetsActions[path] = reloadAction;
+            _reloadableAssetsActions[path.Replace('/', Path.DirectorySeparatorChar)] = reloadAction;
         }
 
         /// <summary>

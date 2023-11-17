@@ -1,4 +1,5 @@
 ﻿using MiniEngine.Drivers.Vulkan;
+using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,16 @@ namespace MiniEngine.Rendering.Vulkan
         /// Variable definitions
         /// </summary>
         private Dictionary<string, SpirvVariableDefinition> _variableDefinitions;
+
+        /// <summary>
+        /// Already loaded?
+        /// </summary>
+        private bool _loaded = false;
+
+        /// <summary>
+        /// Action on reload of the shader
+        /// </summary>
+        public event Action OnReload;
 
         /// <summary>
         /// Constants
@@ -88,6 +99,19 @@ namespace MiniEngine.Rendering.Vulkan
         public IEnumerable<ShaderStageModule> StageModules
         {
             get { return _stageModules.Values; }
+        }
+
+        /// <summary>
+        /// Create a shader
+        /// </summary>
+        public void Load(ShaderDefinition shaderDef)
+        {
+            if (_loaded)
+                //Reloading on next frame...
+                _renderer.AddActionsBeforeNextFrame(() => LoadInternal(shaderDef));
+            else
+                LoadInternal(shaderDef);
+
         }
 
 
@@ -176,6 +200,64 @@ namespace MiniEngine.Rendering.Vulkan
         public bool TryGetStageModule(ShaderStageFlags stage, out ShaderStageModule stageModule)
         {
             return _stageModules.TryGetValue(stage, out stageModule);
+        }
+
+
+        /// <summary>
+        /// Create a shader
+        /// </summary>
+        private void LoadInternal(ShaderDefinition shaderDef)
+        {
+            //Reset...
+            Constants = null;
+            BindingSets = null;
+            VertexBindings = null;
+            Constants = null;
+            VertexInputAttributes = null;
+            SpecializationConstants = null;
+
+
+            Dictionary<string, SpirvVariableDefinition> variableDefinitions = null;
+
+            if (shaderDef.VariableDefinitions != null && shaderDef.VariableDefinitions.Count > 0)
+            {
+                variableDefinitions = new Dictionary<string, SpirvVariableDefinition>();
+
+                foreach (var kv in shaderDef.VariableDefinitions)
+                {
+                    SpirvVariableDefinition spirvDef = new SpirvVariableDefinition();
+
+                    var varDef = kv.Value;
+
+                    if (!String.IsNullOrEmpty(varDef.Format))
+                    {
+                        if (!Enum.TryParse<Format>(varDef.Format, true, out Format format))
+                            throw new FormatException($"Invalid format for variable {kv.Key}: {varDef.Format}");
+
+                        spirvDef.Format = format;
+                    }
+
+                    spirvDef.Count = varDef.Count;
+                    spirvDef.Bindless = varDef.Bindless;
+
+
+                    variableDefinitions.Add(kv.Key, spirvDef);
+                }
+
+            }
+
+            SetVariableDefinitions(variableDefinitions);
+
+            _stageModules.Clear();
+            foreach (var kv in shaderDef.StageCodes)
+            {
+                SetCode((ShaderStageFlags)kv.Key, kv.Value);
+            }
+
+            _loaded = true;
+
+            OnReload?.Invoke();
+
         }
 
     }

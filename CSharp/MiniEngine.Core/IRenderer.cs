@@ -65,7 +65,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a shader
         /// </summary>
-        Shader CreateShader(ShaderDefinition shaderDef);
+        Shader CreateShader();
 
         /// <summary>
         /// Enable debugging

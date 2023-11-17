@@ -35,6 +35,41 @@ namespace MiniEngine
             return ExpandCode(code, workingFolder, includedFiles);
         }
 
+        /// <summary>
+        /// Find the shader stage from file extension
+        /// </summary>
+        public static ShaderStage GetShaderStageFromPath(string path)
+        {
+            string extension = Path.GetExtension(path).ToLower();
+            switch (extension)
+            {
+                case ".vert": return ShaderStage.Vertex;
+                case ".frag": return ShaderStage.Fragment;
+                case ".comp": return ShaderStage.Compute;
+                case ".tesc": return ShaderStage.TessellationControl;
+                case ".tese": return ShaderStage.TessellationEvaluation;
+                case ".geom": return ShaderStage.Geometry;
+                default: throw new InvalidOperationException($"No shader stage corresponding to extension: {extension}");
+            }
+        }
+
+        /// <summary>
+        /// Get file extension for shader stage
+        /// </summary>
+        public static string GetFileExtensionShaderStage(ShaderStage stage)
+        {
+            switch (stage)
+            {
+                case ShaderStage.Vertex: return ".vert";
+                case ShaderStage.Fragment: return ".frag";
+                case ShaderStage.TessellationControl: return ".tesc";
+                case ShaderStage.TessellationEvaluation: return ".tese";
+                case ShaderStage.Geometry: return ".geom";
+                case ShaderStage.Compute: return ".comp";
+                default: throw new NotSupportedException($"Stage shader not supported: {stage}");
+            }
+        }
+
 
         /// <summary>
         /// Expand the shader code with includes and removing comments //!

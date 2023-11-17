@@ -57,6 +57,7 @@ void main()
         }
     }
 
+
     draw_calls[draw_buffer_index].calls[draw_call_index].instance_count = visible;
     meshlet_instances[meshlet_instance_index].visible = visible;
 

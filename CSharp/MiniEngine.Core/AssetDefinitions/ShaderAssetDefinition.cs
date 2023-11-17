@@ -13,19 +13,9 @@ namespace MiniEngine.AssetDefinitions
     public class ShaderAssetDefinition
     {
         /// <summary>
-        /// VertexCode
+        /// Paths for each stages
         /// </summary>
-        public string VertexCodePath { get; set; }
-
-        /// <summary>
-        /// FragmentCode
-        /// </summary>
-        public string FragmentCodePath { get; set; }
-
-        /// <summary>
-        /// ComputeCodePath
-        /// </summary>
-        public string ComputeCodePath { get; set; }
+        public Dictionary<ShaderStage, string> StagePaths { get; set; } = new Dictionary<ShaderStage, string>();
 
         /// <summary>
         /// Information on the variables in the shader

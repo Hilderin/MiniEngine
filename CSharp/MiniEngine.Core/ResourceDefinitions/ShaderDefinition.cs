@@ -12,19 +12,9 @@ namespace MiniEngine.ResourceDefinitions
     public class ShaderDefinition
     {
         /// <summary>
-        /// VertexCode
+        /// Code for each stages
         /// </summary>
-        public string VertexCode { get; set; }
-
-        /// <summary>
-        /// FragmentCode
-        /// </summary>
-        public string FragmentCode { get; set; }
-
-        /// <summary>
-        /// Compute code
-        /// </summary>
-        public string ComputeCode { get; set; }
+        public Dictionary<ShaderStage, string> StageCodes { get; set; } = new Dictionary<ShaderStage, string>();
 
         /// <summary>
         /// Information on the variables in the shader

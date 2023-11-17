@@ -15,6 +15,11 @@ namespace MiniEngine.AssetImporters
     /// </summary>
     public class ShaderImporter : IAssetImporter
     {
+        /// <summary>
+        /// Supported shader extensions
+        /// </summary>
+        private static readonly string[] SHADER_EXTENSIONS = new string[] { ".vert", ".frag", ".comp", ".tesc", ".tese", ".geom" };
+
         private AssetManager _assetManager;
 
         /// <summary>
@@ -48,89 +53,12 @@ namespace MiniEngine.AssetImporters
                     }
                     else
                     {
-                        //Shader on disk...
-                        if(!_assetManager.TryFindAssetUri(name, String.Empty, out string assetPath))
-                            throw new FormatException($"Shader not fould: '{name}'");
+                        
 
+                        shader = Renderer.Current.CreateShader();
 
-                        string vertPath = String.Empty;
-                        string fragPath = String.Empty;
-                        string computePath = String.Empty;
-                        Dictionary<string, ShaderVariableDefinition> variableDefinitions = null;
+                        LoadShader(name, shader);
 
-                        string extension = Path.GetExtension(assetPath).ToLower();
-
-                        if (extension == AssetManager.ASSET_EXTENSION_FILE)
-                        {
-                            //We have a definition file...
-                            var assetInfo = _assetManager.DeserializeAsset<ShaderAssetDefinition>(assetPath);
-
-                            //if (String.IsNullOrEmpty(assetInfo.VertexCodePath))
-                            //    throw new FormatException($"VertexCodePath undefined in asset definition file: '{assetPath}'");
-                            //if (String.IsNullOrEmpty(assetInfo.FragmentCodePath))
-                            //    throw new FormatException($"FragmentCodePath undefined in asset definition file: '{assetPath}'");
-
-
-                            if (!String.IsNullOrEmpty(assetInfo.VertexCodePath))
-                            {
-                                if(!_assetManager.TryFindAssetUri(assetInfo.VertexCodePath, AssetManager.GetDirectoryName(assetPath), out vertPath))
-                                    throw new FileNotFoundException($"Vertex file not found: {assetInfo.VertexCodePath}");
-                            }
-
-                            if (!String.IsNullOrEmpty(assetInfo.FragmentCodePath))
-                            {
-                                if (!_assetManager.TryFindAssetUri(assetInfo.FragmentCodePath, AssetManager.GetDirectoryName(assetPath), out fragPath))
-                                    throw new FileNotFoundException($"Fragment file not found: {assetInfo.FragmentCodePath}");
-                            }
-
-                            if (!String.IsNullOrEmpty(assetInfo.ComputeCodePath))
-                            {
-                                if (!_assetManager.TryFindAssetUri(assetInfo.ComputeCodePath, AssetManager.GetDirectoryName(assetPath), out computePath))
-                                    throw new FileNotFoundException($"Compute file not found: {assetInfo.ComputeCodePath}");
-                            }
-
-                            variableDefinitions = assetInfo.VariableDefinitions;
-                        }
-                        else
-                        {
-                            //File directly...
-                            foreach (string shaderExtension in new string[] { ".vert", ".frag", ".comp" })
-                            {
-                                string pathCheck = AssetManager.ChangeAssetUriExtension(assetPath, shaderExtension);
-                                if (_assetManager.TryFindAssetUri(pathCheck, AssetManager.GetDirectoryName(assetPath), out string codePath))
-                                {
-                                    switch (shaderExtension)
-                                    {
-                                        case ".vert":
-                                            vertPath = codePath;
-                                            break;
-                                        case ".frag":
-                                            fragPath = codePath;
-                                            break;
-                                        case ".comp":
-                                            computePath = codePath;
-                                            break;
-                                    }
-                                }
-
-                            }
-
-                        }
-
-
-
-                        ShaderDefinition shaderDefinition = new ShaderDefinition();
-
-                        if(!String.IsNullOrEmpty(vertPath))
-                            shaderDefinition.VertexCode = GlslHelper.Expand(_assetManager.GetString(vertPath), AssetManager.GetDirectoryName(vertPath));
-                        if (!String.IsNullOrEmpty(fragPath))
-                            shaderDefinition.FragmentCode = GlslHelper.Expand(_assetManager.GetString(fragPath), AssetManager.GetDirectoryName(fragPath));
-                        if (!String.IsNullOrEmpty(computePath))
-                            shaderDefinition.ComputeCode = GlslHelper.Expand(_assetManager.GetString(computePath), AssetManager.GetDirectoryName(computePath));
-
-                        shaderDefinition.VariableDefinitions = variableDefinitions;
-
-                        shader = Renderer.Current.CreateShader(shaderDefinition);
 
                     }
                 }
@@ -154,12 +82,84 @@ namespace MiniEngine.AssetImporters
         }
 
         /// <summary>
+        /// Load the shader
+        /// </summary>
+        private void LoadShader(string name, Shader shader)
+        {
+            //Shader on disk...
+            if (!_assetManager.TryFindAssetUri(name, String.Empty, out string assetPath))
+                throw new FormatException($"Shader not fould: '{name}'");
+
+
+            Dictionary<ShaderStage, string> stageUris = new Dictionary<ShaderStage, string>();
+            Dictionary<string, ShaderVariableDefinition> variableDefinitions = null;
+            List<string> urisToWatch = new List<string>();
+
+            string extension = Path.GetExtension(assetPath).ToLower();
+
+            if (extension == AssetManager.ASSET_EXTENSION_FILE)
+            {
+                //We have a definition file...
+                var assetInfo = _assetManager.DeserializeAsset<ShaderAssetDefinition>(assetPath);
+
+                if (assetInfo.StagePaths == null || assetInfo.StagePaths.Count == 0)
+                    throw new FormatException($"Invalid shader definition, no StagePaths found in: '{assetPath}'");
+
+                urisToWatch.Add(assetPath);
+
+                foreach (var kv in assetInfo.StagePaths)
+                {
+                    if (!_assetManager.TryFindAssetUri(kv.Value, AssetManager.GetDirectoryName(assetPath), out string shaderUri))
+                        throw new FileNotFoundException($"Shader file not found: {kv.Value}");
+
+                    stageUris.Add(kv.Key, shaderUri);
+                    urisToWatch.Add(shaderUri);
+                }
+
+                variableDefinitions = assetInfo.VariableDefinitions;
+            }
+            else
+            {
+                //File directly...
+                foreach (string shaderExtension in SHADER_EXTENSIONS)
+                {
+                    string pathCheck = AssetManager.ChangeAssetUriExtension(assetPath, shaderExtension);
+                    if (_assetManager.TryFindAssetUri(pathCheck, AssetManager.GetDirectoryName(assetPath), out string shaderUri))
+                    {
+                        stageUris.Add(GlslHelper.GetShaderStageFromPath(shaderUri), shaderUri);
+                        urisToWatch.Add(shaderUri);
+                    }
+                }
+
+            }
+
+
+
+            ShaderDefinition shaderDefinition = new ShaderDefinition();
+
+            foreach (var kv in stageUris)
+            {
+                string code = GlslHelper.Expand(_assetManager.GetString(kv.Value), AssetManager.GetDirectoryName(kv.Value));
+                shaderDefinition.StageCodes.Add(kv.Key, code);
+            }
+
+            shaderDefinition.VariableDefinitions = variableDefinitions;
+
+            shader.Load(shaderDefinition);
+
+            foreach (string uri in urisToWatch)
+                _assetManager.AssetUriToWatch(uri, () => LoadShader(name, shader));
+
+        }
+
+        /// <summary>
         /// Reset the cache
         /// </summary>
         public void ResetCache()
         {
             _cache.Clear();
         }
+
 
     }
 }

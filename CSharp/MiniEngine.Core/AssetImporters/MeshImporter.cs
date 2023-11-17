@@ -48,12 +48,9 @@ namespace MiniEngine.AssetImporters
             {
                 try
                 {
-                    MeshAssetDefinition assetMeshDef = GetMeshAssetDefinition(name);
+                    mesh = Renderer.Current.CreateMesh();
 
-                    mesh = CreateMesh(assetMeshDef);
-
-                    //_assetManager.AssetPathToWatch(_assetManager.GetAssetUri(name, AssetManager.ASSET_EXTENSION_FILE), () => ReloadMesh(mesh, name));
-                    _assetManager.AssetPathToWatch(assetMeshDef.MeshFullPath, () => ReloadMesh(mesh, name));
+                    LoadMeshAsync(name, mesh);
 
                 }
                 catch (Exception ex)
@@ -78,10 +75,35 @@ namespace MiniEngine.AssetImporters
         }
 
         /// <summary>
+        /// Load the mesh async
+        /// </summary>
+        private void LoadMeshAsync(string name, Mesh mesh)
+        {
+
+
+            ThreadPool.QueueUserWorkItem((arg) =>
+            {
+                try
+                {
+                    MeshAssetDefinition meshAssetDef = GetMeshAssetDefinition(name, mesh);
+                    MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
+                    mesh.Load(meshDef);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Error(ex);
+                }
+            });
+
+
+        }
+
+        /// <summary>
         /// Load the mesh asset definition from disk
         /// </summary>
-        private MeshAssetDefinition GetMeshAssetDefinition(string name)
+        private MeshAssetDefinition GetMeshAssetDefinition(string name, Mesh mesh)
         {
+
             string meshPath;
             MeshAssetDefinition assetMeshDef = null;
 
@@ -105,6 +127,8 @@ namespace MiniEngine.AssetImporters
                     if (!File.Exists(assetMeshDef.MeshFullPath))
                         throw new FileNotFoundException($"Mesh file not found: {assetMeshDef.MeshFullPath}");
 
+                    _assetManager.AssetUriToWatch(meshPath, () => LoadMeshAsync(name, mesh));
+                    _assetManager.AssetUriToWatch(assetMeshDef.MeshFullPath, () => LoadMeshAsync(name, mesh));
                 }
                 else
                 {
@@ -113,6 +137,8 @@ namespace MiniEngine.AssetImporters
                     assetMeshDef = new MeshAssetDefinition();
                     assetMeshDef.MeshPath = Path.GetFileName(meshPath);
                     assetMeshDef.MeshFullPath = meshPath;
+
+                    _assetManager.AssetUriToWatch(meshPath, () => LoadMeshAsync(name, mesh));
 
                     //_assetManager.SerializeFile(assetMeshDef, assetDefPath);
 
@@ -138,47 +164,17 @@ namespace MiniEngine.AssetImporters
             return assetMeshDef;
         }
 
-        /// <summary>
-        /// Reload a mesh
-        /// </summary>
-        private void ReloadMesh(Mesh mesh, string name)
-        {
-            MeshAssetDefinition meshAssetDef = GetMeshAssetDefinition(name);
-
-            ThreadPool.QueueUserWorkItem((arg) =>
-            {
-                MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
-                mesh.Load(meshDef);
-            });
-
-        }
-
-        /// <summary>
-        /// Import a mesh from file
-        /// </summary>
-        private Mesh CreateMesh(MeshAssetDefinition meshAssetDef)
-        {
-            if (String.IsNullOrEmpty(meshAssetDef.MeshFullPath))
-                return Primitives.CreateEmptyMesh();
-
-
-            Mesh mesh = Renderer.Current.CreateMesh();
-
-            ThreadPool.QueueUserWorkItem((arg) =>
-            {
-                MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
-                mesh.Load(meshDef);
-            });
-
-            return mesh;
-
-        }
 
         /// <summary>
         /// Load mesh definition
         /// </summary>
         private MeshDefinition CreateMeshDefinition(MeshAssetDefinition meshAssetDef)
         {
+    
+            if (String.IsNullOrEmpty(meshAssetDef.MeshFullPath))
+                return Primitives.CreateEmptyMeshDefinition();
+
+
             MeshDefinition meshDef = new MeshDefinition();
 
             string workingDirectory = AssetManager.GetDirectoryName(meshAssetDef.MeshFullPath);

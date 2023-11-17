@@ -63,9 +63,10 @@ void main()
 }
 ";
 
-                    var shader = renderer.CreateShader(new()
+                    var shader = renderer.CreateShader()
+                                         .Load(new()
                     {
-                        ComputeCode = shaderCode
+                        StageCodes = { { ShaderStage.Compute, shaderCode } }
                     });
 
                     int[] fibonacci = new int[32];

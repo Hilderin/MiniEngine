@@ -64,52 +64,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a shader
         /// </summary>
-        public VkShader CreateShader(ShaderDefinition shaderDef)
+        public VkShader CreateShader()
         {
-            Dictionary<string, SpirvVariableDefinition> variableDefinitions = null;
-
-            if (shaderDef.VariableDefinitions != null && shaderDef.VariableDefinitions.Count > 0)
-            {
-                variableDefinitions = new Dictionary<string, SpirvVariableDefinition>();
-
-                foreach (var kv in shaderDef.VariableDefinitions)
-                {
-                    SpirvVariableDefinition spirvDef = new SpirvVariableDefinition();
-
-                    var varDef = kv.Value;
-
-                    if (!String.IsNullOrEmpty(varDef.Format))
-                    {
-                        if (!Enum.TryParse<Format>(varDef.Format, true, out Format format))
-                            throw new FormatException($"Invalid format for variable {kv.Key}: {varDef.Format}");
-
-                        spirvDef.Format = format;
-                    }
-
-                    spirvDef.Count = varDef.Count;
-                    spirvDef.Bindless = varDef.Bindless;
-                    
-
-                    variableDefinitions.Add(kv.Key, spirvDef);
-                }
-
-            }
-
-            var shader = new ShaderWrapper(_renderer);
-
-            if (variableDefinitions != null)
-                shader.SetVariableDefinitions(variableDefinitions);
-
-            if (!String.IsNullOrEmpty(shaderDef.VertexCode))
-                shader.SetCode(ShaderStageFlags.Vertex, shaderDef.VertexCode);
-
-            if (!String.IsNullOrEmpty(shaderDef.FragmentCode))
-                shader.SetCode(ShaderStageFlags.Fragment, shaderDef.FragmentCode);
-
-            if (!String.IsNullOrEmpty(shaderDef.ComputeCode))
-                shader.SetCode(ShaderStageFlags.Compute, shaderDef.ComputeCode);
-
-            return new VkShader(shader);
+            return new VkShader(new ShaderWrapper(_renderer));
 
         }
 

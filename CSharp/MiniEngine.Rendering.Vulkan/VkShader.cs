@@ -1,4 +1,5 @@
 ﻿using MiniEngine.Drivers.Vulkan;
+using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,14 +14,23 @@ namespace MiniEngine.Rendering.Vulkan
     public class VkShader: Shader
     {
 
-        public ShaderWrapper ShaderData;
+        public ShaderWrapper ShaderWrapper;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public VkShader(ShaderWrapper shaderData)
+        public VkShader(ShaderWrapper shaderWrapper)
         {
-            ShaderData = shaderData;
+            ShaderWrapper = shaderWrapper;
+        }
+
+        /// <summary>
+        /// Create a shader
+        /// </summary>
+        public override VkShader Load(ShaderDefinition shaderDef)
+        {
+            ShaderWrapper.Load(shaderDef);
+            return this;
         }
 
         /// <summary>
@@ -28,7 +38,6 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         protected override void Destroy()
         {
-            
         }
     }
 }

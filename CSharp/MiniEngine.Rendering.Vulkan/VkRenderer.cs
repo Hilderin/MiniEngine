@@ -291,9 +291,9 @@ namespace MiniEngine.Rendering.Vulkan
         {
             if(_headless)
                 //No swapchain to track the pipelines... and anyway, there will be not rebuilding pipeline because of no resizing of the screen... no screen at all!
-                return new PipelineWrapper(this, null, shader.ShaderData);
+                return new PipelineWrapper(this, null, shader.ShaderWrapper);
             else
-                return _swapchain.CreatePipelineWrapper(shader.ShaderData);
+                return _swapchain.CreatePipelineWrapper(shader.ShaderWrapper);
         }
 
 
@@ -392,7 +392,17 @@ namespace MiniEngine.Rendering.Vulkan
             int cpt = 0;
             while (_actionsBeforeNextFrameAsync.TryDequeue(out var action))
             {
-                ThreadPool.QueueUserWorkItem(a => action());
+                ThreadPool.QueueUserWorkItem(a =>
+                {
+                    try
+                    {
+                        action();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.Error(ex);
+                    }
+                });
 
                 cpt++;
                 if (cpt == 10)
@@ -469,17 +479,17 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a shader
         /// </summary>
-        Shader IRenderer.CreateShader(ShaderDefinition shaderDef)
+        Shader IRenderer.CreateShader()
         {
-            return _resourceFactory.CreateShader(shaderDef);
+            return _resourceFactory.CreateShader();
         }
 
         /// <summary>
         /// Create a shader
         /// </summary>
-        public VkShader CreateShader(ShaderDefinition shaderDef)
+        public VkShader CreateShader()
         {
-            return _resourceFactory.CreateShader(shaderDef);
+            return _resourceFactory.CreateShader();
         }
 
 

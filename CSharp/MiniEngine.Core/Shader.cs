@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniEngine.ResourceDefinitions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,11 @@ namespace MiniEngine
         /// Destruction of the Material
         /// </summary>
         protected abstract void Destroy();
+
+        /// <summary>
+        /// Load the shader
+        /// </summary>
+        public abstract Shader Load(ShaderDefinition shaderDef);
 
         /// <summary>
         /// Dispose

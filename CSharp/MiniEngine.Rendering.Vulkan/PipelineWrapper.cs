@@ -25,7 +25,7 @@ namespace MiniEngine.Rendering.Vulkan
         private bool _depthTest;
 
         
-        private DescriptorSetLayout[] descriptorSetLayouts;
+        private DescriptorSetLayout[] _descriptorSetLayouts;
         private PipelineLayout _pipelineLayout;
         private Pipeline _pipeline;
         private PipelineShaderStageCreateInfo[] _pipelineShaderStages;
@@ -40,10 +40,15 @@ namespace MiniEngine.Rendering.Vulkan
 
         #region Public properties
 
+        /// <summary>
+        /// Action on reload of the shader
+        /// </summary>
+        public event Action OnReload;
+
         public Pipeline Pipeline { get { return _pipeline; } }
         public PipelineLayout PipelineLayout { get { return _pipelineLayout; } }
         public ShaderWrapper Shader { get { return _shader; } }
-        public DescriptorSetLayout[] DescriptorSetLayouts { get { return descriptorSetLayouts; } }
+        public DescriptorSetLayout[] DescriptorSetLayouts { get { return _descriptorSetLayouts; } }
         public bool Bindless { get { return _bindless; } }
 
         #endregion
@@ -57,6 +62,8 @@ namespace MiniEngine.Rendering.Vulkan
             _device = renderer.Device;
             _shader = shader;
             _swapchain = swapchain;
+
+            _shader.OnReload += Shader_OnReload;
 
 
             //Create layaout only once, anyway, that will never change because we cannot change the shader
@@ -173,23 +180,16 @@ namespace MiniEngine.Rendering.Vulkan
         {
             DestroyPipeline();
 
-            if (_pipelineLayout != null)
-            {
-                _device.DestroyPipelineLayout(_pipelineLayout);
-                _pipelineLayout = null;
-            }
+            DestroyLayouts();
 
-            if (descriptorSetLayouts != null)
-            {
-                foreach (var descriptorSetLayout in descriptorSetLayouts)
-                    _device.DestroyDescriptorSetLayout(descriptorSetLayout);
-                descriptorSetLayouts = null;
-            }
+            if(_shader != null)
+                _shader.OnReload -= Shader_OnReload;
 
             _swapchain?.RemovePipelineWrapper(this);
             _swapchain = null;
 
         }
+
 
         /// <summary>
         /// Create a descriptor set
@@ -210,14 +210,37 @@ namespace MiniEngine.Rendering.Vulkan
             return new PipelineDescriptorSet(_renderer, this, setIndex);
         }
 
+
+
+        /// <summary>
+        /// Reloading shader
+        /// </summary>
+        private void Shader_OnReload()
+        {
+            _renderer.AddActionsBeforeNextFrame(Recreate);
+        }
+
+        /// <summary>
+        /// Create all the pipeline
+        /// </summary>
+        private void Recreate()
+        {
+            //We must destroy the layouts and recreate them from scratch...
+            DestroyLayouts();
+
+            CreateLayouts();
+
+            Rebuild();
+        }
+
         /// <summary>
         /// Create DescriptorSetLayout and PipelineLayout
         /// </summary>
         private void CreateLayouts()
         {
             //Descriptor set layout creation from shader...
-            descriptorSetLayouts = new DescriptorSetLayout[_shader.BindingSets.Length];
-            for (uint i = 0; i < descriptorSetLayouts.Length; i++)
+            _descriptorSetLayouts = new DescriptorSetLayout[_shader.BindingSets.Length];
+            for (uint i = 0; i < _descriptorSetLayouts.Length; i++)
             {
                 //Flag each set's bindings as partiallyBound and updateAfterBind features
                 bool atLeastOneBindless = false;
@@ -253,7 +276,7 @@ namespace MiniEngine.Rendering.Vulkan
                     Flags = layoutFlags
                 })
                 {
-                    descriptorSetLayouts[i] = _device.CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo);
+                    _descriptorSetLayouts[i] = _device.CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo);
                 }
             }
 
@@ -282,9 +305,28 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
             //Pipeline layout creation...
-            _pipelineLayout = _device.CreatePipelineLayout(descriptorSetLayouts, constantRanges.ToArray());
+            _pipelineLayout = _device.CreatePipelineLayout(_descriptorSetLayouts, constantRanges.ToArray());
         }
 
+
+        /// <summary>
+        /// Destroy layout
+        /// </summary>
+        private void DestroyLayouts()
+        {
+            if (_pipelineLayout != null)
+            {
+                _device.DestroyPipelineLayout(_pipelineLayout);
+                _pipelineLayout = null;
+            }
+
+            if (_descriptorSetLayouts != null)
+            {
+                foreach (var descriptorSetLayout in _descriptorSetLayouts)
+                    _device.DestroyDescriptorSetLayout(descriptorSetLayout);
+                _descriptorSetLayouts = null;
+            }
+        }
 
         /// <summary>
         /// Update push constants

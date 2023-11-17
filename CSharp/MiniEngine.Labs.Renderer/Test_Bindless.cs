@@ -8,7 +8,7 @@ namespace MiniEngine.Labs.Renderer
 {
     internal class Test_Bindless
     {
-       
+
         private MeshObject _currentMesh;
 
         private Context Context = Context.Current;
@@ -19,9 +19,14 @@ namespace MiniEngine.Labs.Renderer
             //Context.SetMaxFramerate(60);
             Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -1f);
 
-            var shader = Context.Renderer.CreateShader(new()
+            var shader = Context.Renderer.CreateShader()
+                                         .Load(new()
             {
-                VertexCode = @"#version 450
+                StageCodes = 
+                {
+                    {
+                        ShaderStage.Vertex, 
+@"#version 450
 
 //push constants block
 layout( push_constant ) uniform constants
@@ -42,8 +47,10 @@ void main() {
     
     fragColor = inColor;
     fragTexCoord = inTexCoord;
-}",
-                FragmentCode = @"#version 450
+}"                  },
+                    {
+                        ShaderStage.Fragment,  
+@"#version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
 layout(push_constant) uniform constants {
@@ -62,11 +69,12 @@ void main() {
     //outColor = vec4(fragColor, 1.0);
     outColor = texture(_sampler_diffuse[_mat_diffuse_index], fragTexCoord);
 }"
+                    }
+                }
 ,
-                VariableDefinitions = new()
-                                        {
+                VariableDefinitions = {
                                             { "_sampler_diffuse", new() { Count = 10, Bindless = true } }
-                                        }
+                                      }
             });
 
             var matWhite = Context.Renderer.CreateMaterial(new()
