@@ -49,7 +49,7 @@ namespace MiniEngine.AssetImporters
 
                 try
                 {
-                    if(!_assetManager.TryFindAssetUri(name, String.Empty, out assetPath))
+                    if(!_assetManager.TryFindAssetUri(name, String.Empty, false, out assetPath))
                         throw new FileNotFoundException($"Texture not found '{name}'.");
 
 

@@ -16,7 +16,7 @@ namespace MiniEngine.AssetDefinitions
         /// Full path of the mesh file
         /// </summary>
         [YamlIgnore]
-        public string MeshFullPath { get; set; }
+        public string ModelAssetUri { get; set; }
 
         /// <summary>
         /// Path of the mesh file

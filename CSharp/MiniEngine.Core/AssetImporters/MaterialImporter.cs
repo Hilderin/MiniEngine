@@ -42,7 +42,7 @@ namespace MiniEngine.AssetImporters
                 {
                     string assetPath;
 
-                    if (!_assetManager.TryFindAssetUri(name, String.Empty, out assetPath))
+                    if (!_assetManager.TryFindAssetUri(name, String.Empty, true, out assetPath))
                         throw new FileNotFoundException($"Material asset file not found '{name}'");
 
                     string extension = Path.GetExtension(assetPath).ToLower();

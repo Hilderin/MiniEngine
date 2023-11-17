@@ -256,6 +256,9 @@ namespace MiniEngine.Rendering.Vulkan
                 DescriptorPool = null;
             }
 
+            if (_pipeline != null)
+                _pipeline.OnReload -= Pipeline_OnReload;
+
         }
 
 

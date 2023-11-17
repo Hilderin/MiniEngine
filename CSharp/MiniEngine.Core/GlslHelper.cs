@@ -111,7 +111,7 @@ namespace MiniEngine
         /// </summary>
         private static string GetIncludeCode(string includeName, string workingFolder, HashSet<string> includedFiles)
         {
-            if (!AssetManager.Current.TryFindAssetUri(includeName, workingFolder, out string includeAssetUri))
+            if (!AssetManager.Current.TryFindAssetUri(includeName, workingFolder, false, out string includeAssetUri))
                 throw new FileNotFoundException($"GLSL include file not found: {includeName}");
 
             string includeCode = AssetManager.Current.GetString(includeAssetUri);

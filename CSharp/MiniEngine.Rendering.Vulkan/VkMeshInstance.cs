@@ -37,23 +37,17 @@ namespace MiniEngine.Rendering.Vulkan
 
             _renderer = renderer;
 
+            _mesh.OnReload += Mesh_OnReload;
+
             CopyObjectData();
             
             _offsetIndex = _renderer.ObjectsBuffer.Append(ref _objectData, out _objectIndex);
-            _renderer.AddActionsBeforeNextFrameAsync(Init);
+
+            //The Mesh_OnReload just do the trick...
+            //_renderer.AddActionsBeforeNextFrameAsync(Init);
 
             _transform.OnChanged += Transform_OnChanged;
 
-        }
-
-        private void Transform_OnChanged()
-        {
-            if (!_updateTransformNextFrame)
-            {
-                _updateTransformNextFrame = true;
-                UpdateTransform();
-                //_renderer.AddActionsBeforeNextFrame(UpdateTransform);
-            }
         }
 
         /// <summary>
@@ -69,9 +63,11 @@ namespace MiniEngine.Rendering.Vulkan
                 if (_renderDatas == null)
                     _renderDatas = new RenderData[_mesh.MeshLets.Length];
 
-                for (int i = 0; i < _mesh.MeshLets.Length; i++)
+                RenderData[] renderDatas = _renderDatas;
+
+                for (int i = 0; i < renderDatas.Length; i++)
                 {
-                    if (_renderDatas[i].MeshRenderer == null)
+                    if (renderDatas[i].MeshRenderer == null)
                     {
                         if (_mesh.MeshLets[i].MaterialIndex >= 0)
                         {
@@ -88,8 +84,8 @@ namespace MiniEngine.Rendering.Vulkan
 
                             if (mat.VkDiffuseTexture.IsLoaded)
                             {
-                                _renderDatas[i].MeshRenderer = _renderer.GetMeshRenderer(mat.Shader);
-                                _renderDatas[i].MeshRenderer.AddMeshLetInstance(_objectIndex, mat, ref _mesh.MeshLets[i]);
+                                renderDatas[i].MeshRenderer = _renderer.GetMeshRenderer(mat.Shader);
+                                renderDatas[i].MeshLetInstanceIndex = renderDatas[i].MeshRenderer.AddMeshLetInstance(_objectIndex, mat, ref _mesh.MeshLets[i]);
                             }
                             else
                             {
@@ -108,6 +104,51 @@ namespace MiniEngine.Rendering.Vulkan
                 //Trying again next frame...
                 _renderer.AddActionsBeforeNextFrameAsync(Init);
         }
+
+        /// <summary>
+        /// Reload the Meshinstance...
+        /// </summary>
+        private void Reload()
+        {
+            if (_renderDatas != null)
+            {
+                RenderData[] renderDatas = _renderDatas;
+
+                for (int i = 0; i < renderDatas.Length; i++)
+                {
+                    if (renderDatas[i].MeshRenderer != null)
+                    {
+                        renderDatas[i].MeshRenderer.RemoveMeshInstance(renderDatas[i].MeshLetInstanceIndex);
+                    }
+                }
+            }
+
+            _renderDatas = null;
+
+            Init();
+        }
+
+        /// <summary>
+        /// The mesh has changed
+        /// </summary>
+        private void Mesh_OnReload()
+        {
+            _renderer.AddActionsBeforeNextFrameAsync(Reload);
+        }
+
+        /// <summary>
+        /// The instance transform changed
+        /// </summary>
+        private void Transform_OnChanged()
+        {
+            if (!_updateTransformNextFrame)
+            {
+                _updateTransformNextFrame = true;
+                UpdateTransform();
+                //_renderer.AddActionsBeforeNextFrame(UpdateTransform);
+            }
+        }
+
 
         /// <summary>
         /// Update Instance Data from transformation
@@ -144,6 +185,9 @@ namespace MiniEngine.Rendering.Vulkan
         public void Dispose()
         {
             //TODO: To something to remove from the scene
+
+            if(_mesh != null)
+                _mesh.OnReload += Mesh_OnReload;
         }
 
         private struct RenderData
@@ -155,6 +199,7 @@ namespace MiniEngine.Rendering.Vulkan
             //public uint BindlessVertexBufferIndex;
             public uint BindlessDiffuseTextureIndex;
             public VkMeshRenderer MeshRenderer;
+            public uint MeshLetInstanceIndex;
         }
     }
 }

@@ -67,6 +67,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public unsafe void Update(T[] values, uint offset = 0)
         {
+            if (values.Length == 0)
+                return;
+
             Type type = typeof(T);
             var size = ElementSize * values.Length;
 

@@ -87,7 +87,7 @@ namespace MiniEngine.AssetImporters
         private void LoadShader(string name, Shader shader)
         {
             //Shader on disk...
-            if (!_assetManager.TryFindAssetUri(name, String.Empty, out string assetPath))
+            if (!_assetManager.TryFindAssetUri(name, String.Empty, true, out string assetPath))
                 throw new FormatException($"Shader not fould: '{name}'");
 
 
@@ -109,7 +109,7 @@ namespace MiniEngine.AssetImporters
 
                 foreach (var kv in assetInfo.StagePaths)
                 {
-                    if (!_assetManager.TryFindAssetUri(kv.Value, AssetManager.GetDirectoryName(assetPath), out string shaderUri))
+                    if (!_assetManager.TryFindAssetUri(kv.Value, AssetManager.GetDirectoryName(assetPath), false, out string shaderUri))
                         throw new FileNotFoundException($"Shader file not found: {kv.Value}");
 
                     stageUris.Add(kv.Key, shaderUri);
@@ -124,7 +124,7 @@ namespace MiniEngine.AssetImporters
                 foreach (string shaderExtension in SHADER_EXTENSIONS)
                 {
                     string pathCheck = AssetManager.ChangeAssetUriExtension(assetPath, shaderExtension);
-                    if (_assetManager.TryFindAssetUri(pathCheck, AssetManager.GetDirectoryName(assetPath), out string shaderUri))
+                    if (_assetManager.TryFindAssetUri(pathCheck, AssetManager.GetDirectoryName(assetPath), false, out string shaderUri))
                     {
                         stageUris.Add(GlslHelper.GetShaderStageFromPath(shaderUri), shaderUri);
                         urisToWatch.Add(shaderUri);

@@ -259,8 +259,20 @@ namespace MiniEngine
         /// <summary>
         /// Get the uri for an asset
         /// </summary>
-        public bool TryFindAssetUri(string name, string workingFolder, out string assetUri)
+        public bool TryFindAssetUri(string name, string workingFolder, bool checkAssetExtension, out string assetUri)
         {
+            if (checkAssetExtension)
+            {
+                string extension = Path.GetExtension(name).ToLower();
+                if (extension != AssetManager.ASSET_EXTENSION_FILE)
+                {
+                    if (TryFindAssetUri(name + AssetManager.ASSET_EXTENSION_FILE, workingFolder, false, out assetUri))
+                        //Found it with .asset... always priritize that file..
+                        return true;
+                }
+            }
+
+
             //Sometimes i pass names that are already with prefix, juste remove it to pass into the normal process...
             name = RemovePrefix(name);
             workingFolder = RemovePrefix(workingFolder);
@@ -335,7 +347,7 @@ namespace MiniEngine
                 return ResourceUtils.GetString(assetUri.Substring(PREFIX_URI_RESOURCE.Length));
             else
             {
-                if (!TryFindAssetUri(assetUri, String.Empty, out string newAssetUri))
+                if (!TryFindAssetUri(assetUri, String.Empty, false, out string newAssetUri))
                     throw new FileNotFoundException($"Asset not found: {assetUri}");
                 return GetString(newAssetUri);
             }
@@ -353,7 +365,7 @@ namespace MiniEngine
                 return ResourceUtils.GetBytes(assetUri.Substring(PREFIX_URI_RESOURCE.Length));
             else
             {
-                if (!TryFindAssetUri(assetUri, String.Empty, out string newAssetUri))
+                if (!TryFindAssetUri(assetUri, String.Empty, false, out string newAssetUri))
                     throw new FileNotFoundException($"Asset not found: {assetUri}");
                 return GetBytes(newAssetUri);
             }
@@ -371,7 +383,7 @@ namespace MiniEngine
                 return ResourceUtils.GetStream(assetUri.Substring(PREFIX_URI_RESOURCE.Length));
             else
             {
-                if (!TryFindAssetUri(assetUri, String.Empty, out string newAssetUri))
+                if (!TryFindAssetUri(assetUri, String.Empty, false, out string newAssetUri))
                     throw new FileNotFoundException($"Asset not found: {assetUri}");
                 return GetStream(newAssetUri);
             }

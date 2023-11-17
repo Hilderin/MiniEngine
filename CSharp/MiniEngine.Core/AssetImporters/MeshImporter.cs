@@ -104,43 +104,49 @@ namespace MiniEngine.AssetImporters
         private MeshAssetDefinition GetMeshAssetDefinition(string name, Mesh mesh)
         {
 
-            string meshPath;
+            string meshAssetPath;
             MeshAssetDefinition assetMeshDef = null;
 
 
             try
             {
-                if (!_assetManager.TryFindAssetUri(name, String.Empty, out meshPath))
+                if (!_assetManager.TryFindAssetUri(name, String.Empty, true, out meshAssetPath))
                     throw new FileNotFoundException($"Mesh not found: {name}");
 
-                string extension = Path.GetExtension(meshPath).ToLower();
+                string extension = Path.GetExtension(meshAssetPath).ToLower();
 
                 if (extension == AssetManager.ASSET_EXTENSION_FILE)
                 {
                     //We have a definition file...
-                    assetMeshDef = _assetManager.DeserializeAsset<MeshAssetDefinition>(meshPath);
-                    assetMeshDef.MeshFullPath = AssetManager.CombineUri(AssetManager.GetDirectoryName(meshPath), assetMeshDef.MeshPath);
+                    assetMeshDef = _assetManager.DeserializeAsset<MeshAssetDefinition>(meshAssetPath);
 
                     if (String.IsNullOrEmpty(assetMeshDef.MeshPath))
-                        throw new FormatException($"MeshPath not set in '{meshPath}'");
+                        throw new FormatException($"MeshPath not set in '{meshAssetPath}'");
 
-                    if (!File.Exists(assetMeshDef.MeshFullPath))
-                        throw new FileNotFoundException($"Mesh file not found: {assetMeshDef.MeshFullPath}");
+                    string modelAssetUri;
+                    if(!_assetManager.TryFindAssetUri(assetMeshDef.MeshPath, AssetManager.GetDirectoryName(meshAssetPath), false, out modelAssetUri))
+                        throw new FileNotFoundException($"Mesh file not found: {assetMeshDef.MeshPath}");
 
-                    _assetManager.AssetUriToWatch(meshPath, () => LoadMeshAsync(name, mesh));
-                    _assetManager.AssetUriToWatch(assetMeshDef.MeshFullPath, () => LoadMeshAsync(name, mesh));
+                    assetMeshDef.ModelAssetUri = modelAssetUri;
+
+                    _assetManager.AssetUriToWatch(meshAssetPath, () => LoadMeshAsync(name, mesh));
+                    _assetManager.AssetUriToWatch(assetMeshDef.ModelAssetUri, () => LoadMeshAsync(name, mesh));
                 }
                 else
                 {
-                    //Search directly with the extensions...
-                    //assetDefPath = meshPath + AssetManager.ASSET_EXTENSION_FILE;
+                    //Not a .asset file...                    
                     assetMeshDef = new MeshAssetDefinition();
-                    assetMeshDef.MeshPath = Path.GetFileName(meshPath);
-                    assetMeshDef.MeshFullPath = meshPath;
+                    assetMeshDef.MeshPath = Path.GetFileName(meshAssetPath);
+                    assetMeshDef.ModelAssetUri = meshAssetPath;
 
-                    _assetManager.AssetUriToWatch(meshPath, () => LoadMeshAsync(name, mesh));
+                    _assetManager.AssetUriToWatch(meshAssetPath, () => LoadMeshAsync(name, mesh));
 
-                    //_assetManager.SerializeFile(assetMeshDef, assetDefPath);
+                    //Create a .asset file..
+                    if (meshAssetPath.StartsWith(AssetManager.PREFIX_URI_FILE))
+                    {
+                        string assetDefPath = meshAssetPath + AssetManager.ASSET_EXTENSION_FILE;
+                        _assetManager.SerializeFile(assetMeshDef, assetDefPath);
+                    }
 
                 }
 
@@ -171,13 +177,13 @@ namespace MiniEngine.AssetImporters
         private MeshDefinition CreateMeshDefinition(MeshAssetDefinition meshAssetDef)
         {
     
-            if (String.IsNullOrEmpty(meshAssetDef.MeshFullPath))
+            if (String.IsNullOrEmpty(meshAssetDef.ModelAssetUri))
                 return Primitives.CreateEmptyMeshDefinition();
 
 
             MeshDefinition meshDef = new MeshDefinition();
 
-            string workingDirectory = AssetManager.GetDirectoryName(meshAssetDef.MeshFullPath);
+            string workingDirectory = AssetManager.GetDirectoryName(meshAssetDef.ModelAssetUri);
             //Matrix3 transformMatrix = Matrix3.FromEulerAnglesXYZ(Math.DegToRad(90), 0f, 0f);
             Matrix4x4 transformMatrix = Matrix4x4.Identity;
             //MeshDefinition meshDef = new MeshDefinition();
@@ -192,7 +198,7 @@ namespace MiniEngine.AssetImporters
                 //PostProcessSteps.MakeLeftHanded | 
 
                 //The base unit of fbx is centimeters...
-                if (Path.GetExtension(meshAssetDef.MeshFullPath).Equals(".fbx", StringComparison.OrdinalIgnoreCase))
+                if (Path.GetExtension(meshAssetDef.ModelAssetUri).Equals(".fbx", StringComparison.OrdinalIgnoreCase))
                     context.Scale = 0.01f;
 
                 //------------------
@@ -227,7 +233,7 @@ namespace MiniEngine.AssetImporters
                 context.ZAxisRotation = meshAssetDef.RotationZ;
 
                 //Assimp.Scene scene = context.ImportFileFromStream(_assetManager.GetStream(meshAssetDef.MeshFullPath), postProcessSteps);
-                Assimp.Scene scene = context.ImportFile(AssetManager.RemovePrefix(meshAssetDef.MeshFullPath), postProcessSteps);
+                Assimp.Scene scene = context.ImportFile(AssetManager.RemovePrefix(meshAssetDef.ModelAssetUri), postProcessSteps);
 
                 if (scene.Metadata.TryGetValue("OriginalUpAxis", out var originalUpAxis) && scene.Metadata.TryGetValue("UpAxis", out var upAxis))
                 {
@@ -235,7 +241,7 @@ namespace MiniEngine.AssetImporters
                     if (!originalUpAxis.Data.Equals(upAxis.Data))
                     {
                         postProcessSteps |= PostProcessSteps.FlipWindingOrder;
-                        scene = context.ImportFile(meshAssetDef.MeshFullPath, postProcessSteps);
+                        scene = context.ImportFile(meshAssetDef.ModelAssetUri, postProcessSteps);
                     }
                 }
 

@@ -1,5 +1,6 @@
 ﻿using MiniEngine.Drivers.Vulkan;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -22,8 +23,10 @@ namespace MiniEngine.Rendering.Vulkan
         private uint _drawCount = 0;
 
         private Dictionary<int, uint> _imageSamplerBindlessIndex = new Dictionary<int, uint>();
-        private List<MeshLetInstance> _meshLetInstances = new List<MeshLetInstance>();
-
+        private ConcurrentDictionary<uint, MeshLetInstance> _meshLetInstances = new ConcurrentDictionary<uint, MeshLetInstance>();
+        private ConcurrentDictionary<uint, IndirectCommand> _drawCallsPerMeshLetInstance = new ConcurrentDictionary<uint, IndirectCommand>();
+        private ConcurrentQueue<MeshLetInstance> _availableMeshLetInstances = new ConcurrentQueue<MeshLetInstance>();
+        private ConcurrentQueue<IndirectCommand> _availableDrawCalls = new ConcurrentQueue<IndirectCommand>();
 
         public BufferWrapper DrawCallsBuffer => _drawCallsBuffer;
 
@@ -52,12 +55,16 @@ namespace MiniEngine.Rendering.Vulkan
 
 
         /// <summary>
-        /// Add a meshlet to render
+        /// Add a meshlet to render and return the MeshLetInstanceIndex
         /// </summary>
-        public void AddMeshLetInstance(uint objectIndex, VkMaterial mat, ref Meshlet meshLet)
+        public uint AddMeshLetInstance(uint objectIndex, VkMaterial mat, ref Meshlet meshLet)
         {
 
-            MeshLetInstance meshLetInstance = new MeshLetInstance();
+            MeshLetInstance meshLetInstance;
+
+            //If we have an availale slot we will use it...
+            if (!_availableMeshLetInstances.TryDequeue(out meshLetInstance))
+                meshLetInstance = new MeshLetInstance();
 
             meshLetInstance.InstanceData.ObjectIndex = objectIndex;
             meshLetInstance.InstanceData.MeshLetIndex = meshLet.MeshLetIndex;
@@ -65,30 +72,97 @@ namespace MiniEngine.Rendering.Vulkan
             meshLetInstance.InstanceData.TextureIndex = GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
 
             //Reserve the space for the MeshLetInstanceData...
-            uint meshLetInstanceBufferOffset = _renderer.MeshLetInstancesBuffer.Reserve(out meshLetInstance.MeshLetIndex);
+            if(meshLetInstance.BufferOffset == uint.MaxValue)
+                //New instance...
+                meshLetInstance.BufferOffset = _renderer.MeshLetInstancesBuffer.Reserve(out meshLetInstance.MeshLetInstanceIndex);
+            
 
-            _meshLetInstances.Add(meshLetInstance);
+            _meshLetInstances.TryAdd(meshLetInstance.MeshLetInstanceIndex, meshLetInstance);
 
 
-            //New command...
-            var indirectCommand = new IndirectCommand();
+            //Draw call....
+            IndirectCommand indirectCommand;
+            if (!_availableDrawCalls.TryDequeue(out indirectCommand))
+                indirectCommand = new IndirectCommand();
+
             indirectCommand.Command.IndexCount = (uint)meshLet.NbIndices;
             indirectCommand.Command.InstanceCount = 1;
             indirectCommand.Command.FirstIndex = (uint)meshLet.IndexBufferIndex;
             indirectCommand.Command.VertexOffset = (int)meshLet.VertexBufferIndex;
-            indirectCommand.Command.FirstInstance = meshLetInstance.MeshLetIndex;           //Important so the gl_InstanceIndex will correspond to index in _meshlet_instances buffer
+            indirectCommand.Command.FirstInstance = meshLetInstance.MeshLetInstanceIndex;           //Important so the gl_InstanceIndex will correspond to index in _meshlet_instances buffer
 
             indirectCommand.MeshLetInstance = meshLetInstance;
 
             //Updating the meshlet instance data with the draw call index at the same time...
-            indirectCommand.BufferOffset = _drawCallsBuffer.Append(ref indirectCommand.Command, out meshLetInstance.InstanceData.DrawCallIndex);
+            if (indirectCommand.BufferOffset == uint.MaxValue)
+                //new draw call...
+                indirectCommand.BufferOffset = _drawCallsBuffer.Append(ref indirectCommand.Command, out indirectCommand.DrawCallIndex);
+            else
+                //update...
+                _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
 
             //And now that all the informations on MeshLetInstance are calculated, we can upload to the GPU...
-            _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstanceBufferOffset);
+            meshLetInstance.InstanceData.DrawCallIndex = indirectCommand.DrawCallIndex;
+            _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstance.BufferOffset);
+
+            _drawCallsPerMeshLetInstance.TryAdd(meshLetInstance.MeshLetInstanceIndex, indirectCommand);
 
             _drawCount++;
 
+            return meshLetInstance.MeshLetInstanceIndex;
 
+        }
+
+        /// <summary>
+        /// Remove a mesh instance from the scene
+        /// </summary>
+        public void UpdateMeshInstance(uint meshLetInstanceIndex, VkMaterial mat, ref Meshlet meshLet)
+        {
+            MeshLetInstance meshLetInstance = _meshLetInstances[meshLetInstanceIndex];
+            IndirectCommand indirectCommand = _drawCallsPerMeshLetInstance[meshLetInstanceIndex];
+
+            //Update the mesh instance...
+            meshLetInstance.InstanceData.MeshLetIndex = meshLet.MeshLetIndex;
+            meshLetInstance.InstanceData.TextureIndex = GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
+            _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstance.BufferOffset);
+
+            //Update the draw call...
+            indirectCommand.Command.IndexCount = (uint)meshLet.NbIndices;
+            indirectCommand.Command.InstanceCount = 1;
+            indirectCommand.Command.FirstIndex = (uint)meshLet.IndexBufferIndex;
+            indirectCommand.Command.VertexOffset = (int)meshLet.VertexBufferIndex;
+            _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
+
+        }
+
+        /// <summary>
+        /// Remove a mesh instance from the scene
+        /// </summary>
+        public void RemoveMeshInstance(uint meshLetInstanceIndex)
+        {
+            MeshLetInstance meshLetInstance = _meshLetInstances[meshLetInstanceIndex];
+            IndirectCommand indirectCommand = _drawCallsPerMeshLetInstance[meshLetInstanceIndex];
+
+            //Reset everything...
+            meshLetInstance.InstanceData.ObjectIndex = uint.MaxValue;
+            meshLetInstance.InstanceData.MeshLetIndex = uint.MaxValue;
+            meshLetInstance.InstanceData.DrawCallsBufferIndex = uint.MaxValue;
+            meshLetInstance.InstanceData.TextureIndex = uint.MaxValue;
+            _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstance.BufferOffset);
+
+            //Update drawcall...
+            indirectCommand.Command.InstanceCount = 0;
+            indirectCommand.Command.InstanceCount = 0;
+            indirectCommand.Command.FirstIndex = 0;
+            indirectCommand.Command.VertexOffset = 0;
+            _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
+
+
+            _meshLetInstances.TryRemove(meshLetInstanceIndex, out _);
+            _drawCallsPerMeshLetInstance.TryRemove(meshLetInstanceIndex, out _);
+
+            _availableMeshLetInstances.Enqueue(meshLetInstance);
+            _availableDrawCalls.Enqueue(indirectCommand);
         }
 
         /// <summary>
@@ -153,13 +227,15 @@ namespace MiniEngine.Rendering.Vulkan
         private class IndirectCommand
         {
             public DrawIndexedIndirectCommand Command;
-            public uint BufferOffset;
+            public uint DrawCallIndex = uint.MaxValue;
+            public uint BufferOffset = uint.MaxValue;
             public MeshLetInstance MeshLetInstance;
         }
 
         private class MeshLetInstance
         {
-            public uint MeshLetIndex;
+            public uint MeshLetInstanceIndex = uint.MaxValue;
+            public uint BufferOffset = uint.MaxValue;
             public MeshLetInstanceData InstanceData;
         }
 

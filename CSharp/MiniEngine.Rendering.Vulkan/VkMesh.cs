@@ -17,6 +17,8 @@ namespace MiniEngine.Rendering.Vulkan
         private VkResourceFactory _factory;
         private VkRenderer _renderer;
 
+        public event Action OnReload;
+
         public bool IsLoaded { get; private set; }
 
         public Meshlet[] MeshLets;
@@ -54,6 +56,8 @@ namespace MiniEngine.Rendering.Vulkan
                     _renderer.AddActionsBeforeNextFrameAsync(() => DisposeMeshLet(oldmeshLet));
                 }
             }
+
+            OnReload?.Invoke();
 
             return this;
         }
