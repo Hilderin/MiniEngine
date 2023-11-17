@@ -1,6 +1,12 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
+#include "render_structs.glsl"
+
+//-----------------------
+//Structs
+
+
 //-----------------------
 //Bindings
 layout(binding = 10) uniform sampler2D _sampler_diffuse[];
