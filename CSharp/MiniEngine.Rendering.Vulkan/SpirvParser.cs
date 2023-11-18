@@ -637,7 +637,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 shader.BindingSets[iSet] = bindingSets[iSet].ToArray();
             }
-            shader.SpecializationConstants = specConstants.ToArray();
+            shader.SpecializationConstants = specConstants.OrderBy(s => s.ConstantId).ToArray();
 
 
         }

@@ -127,7 +127,7 @@ void main()
             Assert.AreEqual(0, shader.BindingSets.Length);
             Assert.AreEqual(1, shader.SpecializationConstants.Length);
             Assert.AreEqual("gl_WorkgroupSize.x", shader.SpecializationConstants[0].Name);
-            Assert.AreEqual(4, shader.SpecializationConstants[0].Size);
+            Assert.AreEqual((uint)4, shader.SpecializationConstants[0].Size);
 
         }
 
@@ -238,5 +238,74 @@ void main()
 
         }
 
+
+        /// <summary>
+        /// Parse SpecializationConstant
+        /// </summary>
+        [TestMethod]
+        public void SpirvParserSpecializationConstantTest()
+        {
+
+            var shader = new ShaderWrapper(null)
+.SetCode(ShaderStageFlags.Vertex,
+@"#version 450
+
+
+layout (constant_id = 2) const float C1 = 0.1f;
+
+layout(location = 3) in vec3 position;
+
+//-----------------------
+//Main
+void main()
+{
+	gl_Position = C1 * vec4(position, 1.0);
+}
+");
+
+
+            Assert.AreEqual(1, shader.SpecializationConstants.Length);
+            Assert.AreEqual("C1", shader.SpecializationConstants[0].Name);
+            Assert.AreEqual((uint)4, shader.SpecializationConstants[0].Size);
+            Assert.AreEqual((uint)2, shader.SpecializationConstants[0].ConstantId);
+
+        }
+
+        /// <summary>
+        /// Parse SpecializationConstant2
+        /// </summary>
+        [TestMethod]
+        public void SpirvParserSpecializationConstant2Test()
+        {
+
+            var shader = new ShaderWrapper(null)
+.SetCode(ShaderStageFlags.Vertex,
+@"#version 450
+
+
+layout (constant_id = 0) const float C0 = 0.1f;
+layout (constant_id = 1) const float C1 = 0.1f;
+
+layout(location = 3) in vec3 position;
+
+//-----------------------
+//Main
+void main()
+{
+	gl_Position = C1 * vec4(position, 1.0);
+}
+");
+
+
+            Assert.AreEqual(2, shader.SpecializationConstants.Length);
+            Assert.AreEqual("C0", shader.SpecializationConstants[0].Name);
+            Assert.AreEqual((uint)4, shader.SpecializationConstants[0].Size);
+            Assert.AreEqual((uint)0, shader.SpecializationConstants[0].ConstantId);
+
+            Assert.AreEqual("C1", shader.SpecializationConstants[1].Name);
+            Assert.AreEqual((uint)4, shader.SpecializationConstants[1].Size);
+            Assert.AreEqual((uint)1, shader.SpecializationConstants[1].ConstantId);
+
+        }
     }
 }
