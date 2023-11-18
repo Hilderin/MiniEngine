@@ -25,6 +25,8 @@ namespace MiniEngine.Rendering.Vulkan
 
         private bool _updateTransformNextFrame = false;
 
+        public WorldTransform Transform => _transform;
+
         /// <summary>
         /// Constructor
         /// </summary>

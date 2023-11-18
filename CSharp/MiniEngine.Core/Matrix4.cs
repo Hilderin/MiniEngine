@@ -161,9 +161,181 @@ namespace MiniEngine
 
         #endregion
 
+        #region Public properties
+
+        /// <summary>
+        /// Gets or sets the value at the specific one-based row, column
+        /// index. E.g. i = 1, j = 2 gets the value in row 1, column 2 (MA2). Indices
+        /// out of range return a value of zero.
+        /// 
+        /// </summary>
+        /// <param name="i">One-based Row index</param>
+        /// <param name="j">One-based Column index</param>
+        /// <returns>Matrix value</returns>
+        public float this[int i, int j]
+        {
+            get
+            {
+                switch (i)
+                {
+                    case 1:
+                        switch (j)
+                        {
+                            case 1:
+                                return M11;
+                            case 2:
+                                return M12;
+                            case 3:
+                                return M13;
+                            case 4:
+                                return M14;
+                            default:
+                                return 0;
+                        }
+                    case 2:
+                        switch (j)
+                        {
+                            case 1:
+                                return M21;
+                            case 2:
+                                return M22;
+                            case 3:
+                                return M23;
+                            case 4:
+                                return M24;
+                            default:
+                                return 0;
+                        }
+                    case 3:
+                        switch (j)
+                        {
+                            case 1:
+                                return M31;
+                            case 2:
+                                return M32;
+                            case 3:
+                                return M33;
+                            case 4:
+                                return M34;
+                            default:
+                                return 0;
+                        }
+                    case 4:
+                        switch (j)
+                        {
+                            case 1:
+                                return M41;
+                            case 2:
+                                return M42;
+                            case 3:
+                                return M43;
+                            case 4:
+                                return M44;
+                            default:
+                                return 0;
+                        }
+                    default:
+                        return 0;
+                }
+            }
+            set
+            {
+                switch (i)
+                {
+                    case 1:
+                        switch (j)
+                        {
+                            case 1:
+                                M11 = value;
+                                break;
+                            case 2:
+                                M12 = value;
+                                break;
+                            case 3:
+                                M13 = value;
+                                break;
+                            case 4:
+                                M14 = value;
+                                break;
+                        }
+                        break;
+                    case 2:
+                        switch (j)
+                        {
+                            case 1:
+                                M21 = value;
+                                break;
+                            case 2:
+                                M22 = value;
+                                break;
+                            case 3:
+                                M23 = value;
+                                break;
+                            case 4:
+                                M24 = value;
+                                break;
+                        }
+                        break;
+                    case 3:
+                        switch (j)
+                        {
+                            case 1:
+                                M31 = value;
+                                break;
+                            case 2:
+                                M32 = value;
+                                break;
+                            case 3:
+                                M33 = value;
+                                break;
+                            case 4:
+                                M34 = value;
+                                break;
+                        }
+                        break;
+                    case 4:
+                        switch (j)
+                        {
+                            case 1:
+                                M41 = value;
+                                break;
+                            case 2:
+                                M42 = value;
+                                break;
+                            case 3:
+                                M43 = value;
+                                break;
+                            case 4:
+                                M44 = value;
+                                break;
+                        }
+                        break;
+                }
+            }
+        }
+
+        #endregion 
+
         #region Public methods
 
 
+        /// <summary>
+        /// Return a vector4 for a column in the matrix
+        /// </summary>
+        public Vector4 Column(int columnIndex)
+        {
+            columnIndex++;
+            return new Vector4(this[1, columnIndex], this[2, columnIndex], this[3, columnIndex], this[4, columnIndex]);
+        }
+
+        /// <summary>
+        /// Return a vector4 for a row in the matrix
+        /// </summary>
+        public Vector4 Row(int rowIndex)
+        {
+            rowIndex++;
+            return new Vector4(this[rowIndex, 1], this[rowIndex, 2], this[rowIndex, 3], this[rowIndex, 4]);
+        }
 
         /// <summary>
         /// ToString of the matrix
@@ -402,53 +574,6 @@ namespace MiniEngine
                 0f, 0f, A, B,
                 0f, 0f, 1f, 0f);
 
-            //return new Matrix4(
-            //    x, 0f, 0f, 0f,
-            //    0f, y, 0f, 0f,
-            //    0f, 0f, A, B,
-            //    0f, 0f, -1f, 0f);
-
-            //result.M11 = x;
-            //result.M12 = result.M13 = result.M14 = 0.0f;
-            //result.M22 = focalLength;
-            //result.M21 = result.M23 = result.M24 = 0.0f;
-
-            //result.M31 = result.M32 = 0.0f;
-            //float right = (result.M33 = (float.IsPositiveInfinity(far) ? -1f : (far / (near - far))));
-            //result.M34 = (-near * right);
-            //result.M41 = result.M42 = result.M44 = 0.0f;
-            //result.M43 = 1f;
-            //return result;
-
-            //Matrix4 result;
-            //result.M11 = x;
-            //result.M12 = result.M13 = result.M14 = 0.0f;
-            //result.M22 = focalLength;
-            //result.M21 = result.M23 = result.M24 = 0.0f;
-
-            //result.M31 = result.M32 = 0.0f;
-            //float right = (result.M33 = (float.IsPositiveInfinity(far) ? -1f : (far / (near - far))));
-            //result.M34 = (-near * right);
-            //result.M41 = result.M42 = result.M44 = 0.0f;
-            //result.M43 = 1f;
-            //return result;
-
-            //float aspectRatio = width / height;
-            //float val = 1f / (Math.Tan((fieldOfView / 2f)));
-            //float m = (val / aspectRatio);
-
-            //Matrix4 result;
-            //result.M11 = m;
-            //result.M12 = result.M13 = result.M14 = 0.0f;
-            //result.M22 = val;
-            //result.M21 = result.M23 = result.M24 = 0.0f;
-
-            //result.M31 = result.M32 = 0.0f;
-            //float right = (result.M33 = (float.IsPositiveInfinity(farPlaneDistance) ? -1f : (farPlaneDistance / (nearPlaneDistance - farPlaneDistance))));
-            //result.M34 = -1f;
-            //result.M41 = result.M42 = result.M44 = 0.0f;
-            //result.M43 = (nearPlaneDistance * right);
-            //return result;
         }
 
         ///<summary>

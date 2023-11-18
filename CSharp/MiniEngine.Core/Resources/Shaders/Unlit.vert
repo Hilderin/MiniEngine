@@ -36,7 +36,7 @@ void main() {
     uint object_index = meshlet_instances[gl_InstanceIndex].object_index;
 
     gl_Position = scene.matrix_vp * objects[object_index].transform_matrix * vec4(position, 1.0);
-    
+        
     frag_tex_coord = tex_coord;
     texture_index = meshlet_instances[gl_InstanceIndex].texture_index;
 }

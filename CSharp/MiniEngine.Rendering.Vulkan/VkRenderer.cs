@@ -845,10 +845,31 @@ namespace MiniEngine.Rendering.Vulkan
             SceneData.NbMeshletInstances = _meshLetInstancesBuffer.Count;
 
 
+            var frustumX = Vector4.NormalizePlane(SceneData.ViewProjectionMatrix.Row(3) + SceneData.ViewProjectionMatrix.Row(0)); // x + w < 0
+            var frustumY = Vector4.NormalizePlane(SceneData.ViewProjectionMatrix.Row(3) + SceneData.ViewProjectionMatrix.Row(1)); // y + w < 0
+
+            //Matrix4 projMatTransposed = Matrix4.Transpose(ref SceneData.ViewProjectionMatrix);
+            //var frustumX3 = Vector4.NormalizePlane(projMatTransposed.Column(3) + projMatTransposed.Column(0)); // x + w < 0
+            //var frustumY3 = Vector4.NormalizePlane(projMatTransposed.Column(3) + projMatTransposed.Column(1)); // y + w < 0
+
+            //cullData.P00 = projMat.M11;
+            //cullData.P11 = projMat.M22;
+            SceneData.NearZ = Camera.NearZ;
+            SceneData.FarZ = Camera.FarZ;
+            SceneData.FrustumLeft = frustumX.X;
+            SceneData.FrustumRight = frustumX.Z;
+            SceneData.FrustumTop = frustumY.Y;
+            SceneData.FrustumBottom = frustumY.Z;
+
             //Update the buffer so the GPU can access it...
             _sceneBuffer.Update(ref SceneData);
 
-
+            //if (_meshInstances.Count > 0)
+            //{
+            //    var center4 = SceneData.ViewProjectionMatrix * new Vector4(_meshInstances[0].Transform.Location, 1);
+            //    var center = new Vector3(center4) / center4.W;
+            //    Debug.Info(Camera.Transform.Location + " => " + center.ToString());
+            //}
 
 
 

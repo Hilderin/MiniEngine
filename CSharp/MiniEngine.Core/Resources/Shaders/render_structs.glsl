@@ -7,6 +7,12 @@ struct scene_data
     mat4 matrix_vp;
     vec3 camera_location;
     uint nb_meshlet_instances;
+    float znear;
+    float zfar;
+	float frustum_left;
+    float frustum_right;
+    float frustum_top;
+    float frustum_bottom;
 };
 
 // Information on an instance on the GPU buffer

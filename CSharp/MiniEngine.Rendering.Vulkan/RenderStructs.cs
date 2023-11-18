@@ -15,6 +15,12 @@ namespace MiniEngine.Rendering.Vulkan
         public Matrix4 ViewProjectionMatrix;
         public Vector3 CameraLocation;
         public uint NbMeshletInstances;
+        public float NearZ;
+        public float FarZ;
+        public float FrustumLeft;
+        public float FrustumRight;
+        public float FrustumTop;
+        public float FrustumBottom;
 
     }
 

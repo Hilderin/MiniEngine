@@ -663,6 +663,18 @@ namespace MiniEngine
         }
 
         /// <summary>
+        /// Creates a new <see cref="Vector4"/> that contains the specified vector plane normalized
+        /// </summary>
+        /// <param name="value">Source <see cref="Vector4"/>.</param>
+        /// <returns>The result of the vector plane normalization.</returns>
+        public static Vector4 NormalizePlane(Vector4 value)
+        {
+            float len = (new Vector3(value.X, value.Y, value.Z)).Length();
+
+            return value / len;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="Vector4"/> that contains cubic interpolation of the specified vectors.
         /// </summary>
         /// <param name="value1">Source <see cref="Vector4"/>.</param>

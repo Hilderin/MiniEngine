@@ -27,7 +27,7 @@ namespace MiniEngine.Labs.Renderer
         public void Init()
         {
             //Context.SetMaxFramerate(-1);
-            Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, -3f);
+            Context.Renderer.Camera.Transform.Location = new Vector3(0.0f, 0.0f, 0f);
 
             _renderer = (VkRenderer)Context.Renderer;
 
@@ -40,7 +40,7 @@ namespace MiniEngine.Labs.Renderer
 
 
             _cube = Scene.Add(new MeshObject() { Mesh = mesh }
-                                                .MoveTo(new Vector3(1.5f, 0f, 0f))
+                                                //.MoveTo(new Vector3(1.5f, 0f, 0f))
                                                 .SetMaterial(BaseMaterials.Aqua, 0)
                      );
 
@@ -49,8 +49,10 @@ namespace MiniEngine.Labs.Renderer
                                                 .SetMaterial(BaseMaterials.White, 0)
                      );
 
+            //_cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }));
+
             int spread = 10;
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 _cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }
                                                 .MoveTo(new Vector3(Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread)))

@@ -45,7 +45,6 @@ namespace MiniEngine
         /// </summary>
         public Matrix4 GetProjectionMatrixOpenGL(int clientSizeX, int clientSizeY)
         {
-            //Vector2 clientSize = Context.Current.ClientSize;
             return Matrix4.CreateProjectionOpenGL(FOV, clientSizeX, clientSizeY, NearZ, FarZ);
         }
 
@@ -54,7 +53,6 @@ namespace MiniEngine
         /// </summary>
         public Matrix4 GetProjectionMatrixVulkan(int clientSizeX, int clientSizeY)
         {
-            //Vector2 clientSize = Context.Current.ClientSize;
             return Matrix4.CreatePerspectiveVulkan(FOV, clientSizeX, clientSizeY, NearZ, FarZ);
         }
 
