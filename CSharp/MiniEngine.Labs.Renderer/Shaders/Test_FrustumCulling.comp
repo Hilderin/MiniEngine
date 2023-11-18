@@ -4,6 +4,7 @@
 
 #include "../../MiniEngine.Core/Resources/Shaders/render_structs.glsl"
 
+
 //-----------------------
 //Structs
 
@@ -35,7 +36,7 @@ layout(binding = 6) buffer _draw_calls_counts {
 
 //-----------------------
 //Compute config
-layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x_id = 0, local_size_y = 1, local_size_z = 1) in;
 
 
 uint is_visible(uint object_index)

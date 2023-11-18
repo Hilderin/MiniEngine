@@ -378,7 +378,7 @@ namespace MiniEngine.Rendering.Vulkan
                 };
 
                 //Check for specialization constants...
-                if (_specializationValues.Count > 0 && _shader.SpecializationConstants.Length > 0)
+                if (_shader.SpecializationConstants.Length > 0)
                 {
                     stageCreateInfo.SpecializationInfo = CreateSpecializationInfo(shaderStageModule);
                 }
@@ -394,10 +394,8 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private SpecializationInfo CreateSpecializationInfo(ShaderStageModule shaderStageModule)
         {
-            SpecializationInfo specializationInfo = null;
-
+            
             uint dataLength = 0;
-            bool redefinedFound = false;
             int nbEntry = 0;
             for (int i = 0; i < _shader.SpecializationConstants.Length; i++)
             {
@@ -406,70 +404,94 @@ namespace MiniEngine.Rendering.Vulkan
                     dataLength += _shader.SpecializationConstants[i].Size;
                     nbEntry++;
 
-                    if (_specializationValues.ContainsKey(_shader.SpecializationConstants[i].Name))
-                        redefinedFound = true;
+                    //if (_specializationValues.ContainsKey(_shader.SpecializationConstants[i].Name))
+                    //    redefinedFound = true;
                 }
             }
 
-            if (redefinedFound)
+            //We must copy the data into memory...
+            //byte[] data = new byte[dataLength];
+            NativeReference data = new NativeReference((int)dataLength);
+
+            SpecializationMapEntry[] entries = new SpecializationMapEntry[nbEntry];
+
+            int entryIndex = 0;
+            int offset = 0;
+            for (int i = 0; i < _shader.SpecializationConstants.Length; i++)
             {
-                //We must copy the data into memory...
-                //byte[] data = new byte[dataLength];
-                NativeReference data = new NativeReference((int)dataLength);
-
-                SpecializationMapEntry[] entries = new SpecializationMapEntry[nbEntry];
-
-                int entryIndex = 0;
-                int offset = 0;
-                for (int i = 0; i < _shader.SpecializationConstants.Length; i++)
+                if (_shader.SpecializationConstants[i].Stage == shaderStageModule.Stage)
                 {
-                    if (_shader.SpecializationConstants[i].Stage == shaderStageModule.Stage)
+                    object value = GetSpecializationConstantValue(_shader.SpecializationConstants[i]);
+
+                    uint size = VkSizeOfHelper.SizeOf(value.GetType(), 4);
+                    SpecializationMapEntry mapEntry = new SpecializationMapEntry()
                     {
-                        object value;
+                        ConstantId = _shader.SpecializationConstants[i].ConstantId,
+                        Offset = (uint)offset,
+                        Size = size
+                    };
+                       
 
-                        if (!_specializationValues.TryGetValue(_shader.SpecializationConstants[i].Name, out value))
-                            value = _shader.SpecializationConstants[i].DefaultValue;
-
-                        uint size = VkSizeOfHelper.SizeOf(value.GetType(), 4);
-                        SpecializationMapEntry mapEntry = new SpecializationMapEntry()
-                        {
-                            ConstantId = _shader.SpecializationConstants[i].ConstantId,
-                            Offset = (uint)offset,
-                            Size = size
-                        };
-                        offset += (int)size;
-                        entries[entryIndex] = mapEntry;
-                        entryIndex++;
-
-                        Type valueType = value.GetType();
-                        if (valueType == typeof(int))
-                        {
-                            IntPtrHelper.Write((int)value, data.Handle, offset);
-                        }
-                        else if (valueType == typeof(uint))
-                        {
-                            IntPtrHelper.Write((uint)value, data.Handle, offset);
-                        }
-                        else if (valueType == typeof(float))
-                        {
-                            IntPtrHelper.Write((float)value, data.Handle, offset);
-                        }
-                        else
-                            throw new NotSupportedException($"CreateSpecializationInfo unsupported datatype: {valueType.Name}");
-
+                    Type valueType = value.GetType();
+                    if (valueType == typeof(int))
+                    {
+                        IntPtrHelper.Write((int)value, data.Handle, offset);
                     }
+                    else if (valueType == typeof(uint))
+                    {
+                        IntPtrHelper.Write((uint)value, data.Handle, offset);
+                    }
+                    else if (valueType == typeof(float))
+                    {
+                        IntPtrHelper.Write((float)value, data.Handle, offset);
+                    }
+                    else
+                        throw new NotSupportedException($"CreateSpecializationInfo unsupported datatype: {valueType.Name}");
 
+
+                    offset += (int)size;
+                    entries[entryIndex] = mapEntry;
+                    entryIndex++;
                 }
 
-                specializationInfo = new SpecializationInfo()
-                {
-                    MapEntries = entries,
-                    Data = data.Handle,
-                    DataSize = dataLength
-                };
             }
+
+            var specializationInfo = new SpecializationInfo()
+            {
+                MapEntries = entries,
+                Data = data.Handle,
+                DataSize = dataLength
+            };
 
             return specializationInfo;
+        }
+
+        /// <summary>
+        /// Obtain spec constant value
+        /// </summary>
+        private object GetSpecializationConstantValue(SpecializationConstant specializationConstant)
+        {
+            object value;
+
+            if (_specializationValues.TryGetValue(specializationConstant.Name, out value))
+                return value;
+
+
+            switch (specializationConstant.Name)
+            {
+                case "gl_WorkgroupSize.x":
+                    return _renderer.MaxComputeWorkgroupSize[0];
+                case "gl_WorkgroupSize.y":
+                    return _renderer.MaxComputeWorkgroupSize[1];
+                case "gl_WorkgroupSize.z":
+                    return _renderer.MaxComputeWorkgroupSize[2];
+                default:
+                    //Default value...
+                    return specializationConstant.DefaultValue;
+            }
+
+
+            
         }
 
         /// <summary>

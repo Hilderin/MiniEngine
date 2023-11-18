@@ -14,7 +14,6 @@ namespace MiniEngine.Rendering.Vulkan
     public class ShaderWrapper
     {
         private VkRenderer _renderer;
-        private Device _device;
 
         /// <summary>
         /// Module per stage
@@ -78,7 +77,6 @@ namespace MiniEngine.Rendering.Vulkan
         public ShaderWrapper(VkRenderer renderer)
         {
             _renderer = renderer;
-            _device = renderer.Device;
         }
 
 
@@ -159,7 +157,8 @@ namespace MiniEngine.Rendering.Vulkan
             //Parsing and updating the shader bindings and config...
             SpirvParser.ParseBytes(stage, spirv, this, _variableDefinitions);
 
-            module.Module = _renderer.CreateShaderModule(spirv);
+            if(_renderer != null)
+                module.Module = _renderer.CreateShaderModule(spirv);
 
             return this;
 

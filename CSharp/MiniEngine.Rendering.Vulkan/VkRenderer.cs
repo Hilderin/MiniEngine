@@ -52,6 +52,12 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public Camera Camera { get; set; } = new Camera();
 
+        /// <summary>
+        /// Max compute wordgroupe size (index 0 = x, 1 = y, 2 = z).
+        /// 128 is the minimum for this maximum value
+        /// </summary>
+        public uint[] MaxComputeWorkgroupSize { get; private set; } = new uint[] { 128, 128, 128 };
+
 
         public Device Device => _device;
         public SwapchainWrapper Swapchain => _swapchain;
@@ -234,7 +240,7 @@ namespace MiniEngine.Rendering.Vulkan
             //Physical device...
             _physicalDevice = PickPhysicalDevice();
 
-            var deviceProp = _physicalDevice.GetProperties();
+            InitDeviceProperties();
 
             _graphicsQueueIndex = GetGraphicsQueueFamilyIndex(_surface);
             _transferQueueIndex = GetTransferQueueFamilyIndex();
@@ -1111,6 +1117,20 @@ namespace MiniEngine.Rendering.Vulkan
                 System.Diagnostics.Debug.Print($"{level}: {message}");
             }
         }
+
+        /// <summary>
+        /// Init device properties
+        /// </summary>
+        private void InitDeviceProperties()
+        {
+
+            var deviceProp = _physicalDevice.GetProperties();
+
+
+            MaxComputeWorkgroupSize = deviceProp.Limits.MaxComputeWorkGroupSize;
+
+        }
+
 
         #endregion
 

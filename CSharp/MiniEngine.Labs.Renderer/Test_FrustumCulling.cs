@@ -52,7 +52,7 @@ namespace MiniEngine.Labs.Renderer
             //_cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }));
 
             int spread = 10;
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 _cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }
                                                 .MoveTo(new Vector3(Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread)))
@@ -96,6 +96,7 @@ namespace MiniEngine.Labs.Renderer
             //    ComputeCode = AssetManager.Current.GetString("Shaders/Test_FrustumCulling.comp")
             //});
             _cullingPipeline = _renderer.CreatePipelineWrapper(cullingShader)
+                                            //.SetSpecializationValue("gl_WorkgroupSize.x", 1024)
                                             .Build();
 
             _computeQueue = new QueueWrapper(_renderer.Device, _renderer.ComputeQueueIndex, 0, false);
@@ -128,7 +129,7 @@ namespace MiniEngine.Labs.Renderer
 
             if (_lastDrawCallsBuffersCount > 0)
             {
-                uint nbGroupX = (_renderer.MeshLetInstancesBuffer.Count / 256) + 1;  // (uint)_lastDrawCallsBuffersCount;
+                uint nbGroupX = (_renderer.MeshLetInstancesBuffer.Count / 1024) + 1;  // (uint)_lastDrawCallsBuffersCount;
                 //uint nbGroupY = 2;
 
                 _computeQueue.ExecuteAndWait(cb =>

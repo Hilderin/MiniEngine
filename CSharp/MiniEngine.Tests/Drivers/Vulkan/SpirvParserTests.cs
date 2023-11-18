@@ -95,5 +95,148 @@ void main()
 
         }
 
+
+        /// <summary>
+        /// Parse ComputeDynamicWorkGroupSize
+        /// </summary>
+        [TestMethod]
+        public void SpirvParserComputeDynamicWorkGroupSizeTest()
+        {
+
+            var shader = new ShaderWrapper(null)
+.SetCode(ShaderStageFlags.Compute,
+@"#version 450
+
+
+
+//-----------------------
+//Compute config
+layout (local_size_x_id = 0, local_size_y = 1, local_size_z = 1) in;
+
+
+
+//-----------------------
+//Main
+void main()
+{
+	
+}
+");
+
+
+            Assert.AreEqual(0, shader.BindingSets.Length);
+            Assert.AreEqual(1, shader.SpecializationConstants.Length);
+            Assert.AreEqual("gl_WorkgroupSize.x", shader.SpecializationConstants[0].Name);
+            Assert.AreEqual(4, shader.SpecializationConstants[0].Size);
+
+        }
+
+
+        /// <summary>
+        /// Parse PushConstant
+        /// </summary>
+        [TestMethod]
+        public void SpirvParserPushConstantTest()
+        {
+
+            var shader = new ShaderWrapper(null)
+.SetCode(ShaderStageFlags.Vertex,
+@"#version 450
+
+
+layout( push_constant ) uniform constants
+{
+	mat4 _matrix_vp;
+};
+
+layout(location = 3) in vec3 position;
+
+//-----------------------
+//Main
+void main()
+{
+	gl_Position = _matrix_vp * vec4(position, 1.0);
+}
+");
+
+
+            Assert.AreEqual(0, shader.BindingSets.Length);
+            
+            Assert.AreEqual(1, shader.VertexBindings.Length);
+            Assert.AreEqual((uint)0, shader.VertexBindings[0].Binding);
+            Assert.AreEqual((uint)12, shader.VertexBindings[0].Stride);
+            
+            Assert.AreEqual(1, shader.VertexInputAttributes.Length);
+            Assert.AreEqual((uint)0, shader.VertexInputAttributes[0].Binding);
+            Assert.AreEqual((uint)3, shader.VertexInputAttributes[0].Location);
+            Assert.AreEqual(Format.R32G32B32Sfloat, shader.VertexInputAttributes[0].Format);
+
+
+            Assert.AreEqual(0, shader.SpecializationConstants.Length);
+
+            Assert.AreEqual(1, shader.Constants.Length);
+            Assert.AreEqual("_matrix_vp", shader.Constants[0].Name);
+            Assert.AreEqual((uint)0, shader.Constants[0].Offset);
+            Assert.AreEqual((uint)64, shader.Constants[0].Size);
+            Assert.AreEqual(ShaderStageFlags.Vertex, shader.Constants[0].Stage);
+
+        }
+
+        /// <summary>
+        /// Parse PushConstant
+        /// </summary>
+        [TestMethod]
+        public void SpirvParserPushConstant2Test()
+        {
+
+            var shader = new ShaderWrapper(null)
+.SetCode(ShaderStageFlags.Vertex,
+@"#version 450
+
+
+layout( push_constant ) uniform constants
+{
+	mat4 _matrix_vp;
+    layout(offset = 92) float _f1;
+};
+
+layout(location = 3) in vec3 position;
+
+//-----------------------
+//Main
+void main()
+{
+	gl_Position = _matrix_vp * vec4(position, 1.0);
+}
+");
+
+
+            Assert.AreEqual(0, shader.BindingSets.Length);
+
+            Assert.AreEqual(1, shader.VertexBindings.Length);
+            Assert.AreEqual((uint)0, shader.VertexBindings[0].Binding);
+            Assert.AreEqual((uint)12, shader.VertexBindings[0].Stride);
+
+            Assert.AreEqual(1, shader.VertexInputAttributes.Length);
+            Assert.AreEqual((uint)0, shader.VertexInputAttributes[0].Binding);
+            Assert.AreEqual((uint)3, shader.VertexInputAttributes[0].Location);
+            Assert.AreEqual(Format.R32G32B32Sfloat, shader.VertexInputAttributes[0].Format);
+
+
+            Assert.AreEqual(0, shader.SpecializationConstants.Length);
+
+            Assert.AreEqual(2, shader.Constants.Length);
+            Assert.AreEqual("_matrix_vp", shader.Constants[0].Name);
+            Assert.AreEqual((uint)0, shader.Constants[0].Offset);
+            Assert.AreEqual((uint)64, shader.Constants[0].Size);
+            Assert.AreEqual(ShaderStageFlags.Vertex, shader.Constants[0].Stage);
+
+            Assert.AreEqual("_f1", shader.Constants[1].Name);
+            Assert.AreEqual((uint)92, shader.Constants[1].Offset);
+            Assert.AreEqual((uint)4, shader.Constants[1].Size);
+            Assert.AreEqual(ShaderStageFlags.Vertex, shader.Constants[1].Stage);
+
+        }
+
     }
 }

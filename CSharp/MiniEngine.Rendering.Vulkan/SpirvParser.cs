@@ -154,6 +154,7 @@ namespace MiniEngine.Rendering.Vulkan
                         id_index = data[word_index + 1];
 
                         id = ids[id_index];
+                        id.op = op;
 
                         decoration = (SpvDecoration)data[word_index + 2];
                         switch (decoration)
@@ -173,6 +174,16 @@ namespace MiniEngine.Rendering.Vulkan
                             case SpvDecoration.SpvDecorationSpecId:
                                 id.specid = data[word_index + 3];
                                 break;
+
+                            case SpvDecoration.SpvDecorationBuiltIn:
+                                //Builtin variable
+                                id.builtin = (SpvBuiltin)data[word_index + 3];
+                                id.name = "gl_" + id.builtin.ToString();
+                                break;
+                            //default:
+                            //    //
+                            //    Debug.Info("Decorate not supported: " + decoration);
+                            //    break;
                         }
 
                         break;
@@ -364,36 +375,65 @@ namespace MiniEngine.Rendering.Vulkan
                         break;
 
                     case SpvOp.SpvOpConstant:
-
-                        id_index = data[word_index + 1];
+                        //returntype;returnid;value
+                        id_index = data[word_index + 2];
 
                         id = ids[id_index];
 
-                        //We received the SpvOpSpecConstant 2 times, one in the op SpvOpSpecConstant and one in SpvOpConstant
-                        //if we use the SpvOpConstant, we wil override important data from the SpvOpSpecConstant op.
-                        if (id.op != SpvOp.SpvOpSpecConstant && id.op != SpvOp.SpvOpSpecConstantTrue && id.op != SpvOp.SpvOpSpecConstantFalse && id.op != SpvOp.SpvOpSpecConstantComposite && id.op != SpvOp.SpvOpSpecConstantOp)
-                        {
-                            id.op = op;
-                            id.type_index = data[word_index + 2];
-                            id.value = data[word_index + 3]; // NOTE(marco: we assume all constants to have maximum 32bit width
-                        }
+                        ////We received the SpvOpSpecConstant 2 times, one in the op SpvOpSpecConstant and one in SpvOpConstant
+                        ////if we use the SpvOpConstant, we wil override important data from the SpvOpSpecConstant op.
+                        //if (id.op != SpvOp.SpvOpSpecConstant && id.op != SpvOp.SpvOpSpecConstantTrue && id.op != SpvOp.SpvOpSpecConstantFalse && id.op != SpvOp.SpvOpSpecConstantComposite && id.op != SpvOp.SpvOpSpecConstantOp)
+                        //{
+                        id.op = op;
+                        id.type_index = data[word_index + 1];
+                        id.value = data[word_index + 3]; // NOTE(marco: we assume all constants to have maximum 32bit width
+                        //}
 
                         break;
 
                     case SpvOp.SpvOpSpecConstant:
                     case SpvOp.SpvOpSpecConstantTrue:
                     case SpvOp.SpvOpSpecConstantFalse:
-                    case SpvOp.SpvOpSpecConstantComposite:
                     case SpvOp.SpvOpSpecConstantOp:
                         //Spec constant:
                         //Exemple: layout (constant_id = 0) const uint BUFFER_ELEMENTS = 32;
-                        id_index = data[word_index + 1];
+                        //returntype;returnid;value
+                        id_index = data[word_index + 2];
 
                         id = ids[id_index];
                         id.op = op; 
-                        id.type_index = data[word_index + 2];
+                        id.type_index = data[word_index + 1];
                         id.value = data[word_index + 3]; // Default value
 
+                        break;
+
+
+                    case SpvOp.SpvOpSpecConstantComposite:
+                        //Composite of multiple SpecConstant..
+
+                        //returntype;returnid;constituantsid...
+                        Id return_type = ids[data[word_index + 1]];
+                        id = ids[data[word_index + 2]];
+
+                        for (int i = 0; i < return_type.count; i++)
+                        {
+                            Id idconstituant = ids[data[word_index + 3 + i]];
+
+                            if (!String.IsNullOrEmpty(id.name))
+                            {
+                                if (return_type.op == SpvOp.SpvOpTypeVector && i == 0)
+                                    idconstituant.name = id.name + ".x";
+                                else if (return_type.op == SpvOp.SpvOpTypeVector && i == 1)
+                                    idconstituant.name = id.name + ".y";
+                                else if (return_type.op == SpvOp.SpvOpTypeVector && i == 2)
+                                    idconstituant.name = id.name + ".z";
+                                else if (i == 0)
+                                    idconstituant.name = id.name;
+                            }
+
+                        }
+
+                        
                         break;
 
                     case SpvOp.SpvOpVariable:
@@ -407,6 +447,20 @@ namespace MiniEngine.Rendering.Vulkan
 
                         break;
 
+                    //case SpvOp.SpvOpCapability:
+                    //case SpvOp.SpvOpExtInstImport:
+                    //case SpvOp.SpvOpMemoryModel:
+                    //case SpvOp.SpvOpExecutionMode:
+                    //case SpvOp.SpvOpSource:
+                    //case SpvOp.SpvOpSourceExtension:
+                    //case SpvOp.SpvOpTypeVoid:
+                    //case SpvOp.SpvOpTypeFunction:
+                    //    //Rien à faire!
+                    //    break;
+
+                    //default:
+                    //    Debug.Info("SpvOp not supported: " + op);
+                    //    break;
                 }
 
                 word_index += word_count;
@@ -451,25 +505,27 @@ namespace MiniEngine.Rendering.Vulkan
                     case SpvOp.SpvOpSpecConstant:
                     case SpvOp.SpvOpSpecConstantTrue:
                     case SpvOp.SpvOpSpecConstantFalse:
-                    case SpvOp.SpvOpSpecConstantComposite:
                     case SpvOp.SpvOpSpecConstantOp:
 
-                        Id id_spec_binding = ids[id.type_index];
-                        
+                        Id id_spec_type = ids[id.type_index];
+
                         //uint specOffset = 0;
                         //if (specConstants.Count > 0)
                         //    specOffset = specConstants[specConstants.Count - 1].Offset + specConstants[specConstants.Count - 1].Size;
 
-                        SpecializationConstant specConstant = new SpecializationConstant()
+                        if (!String.IsNullOrEmpty(id.name))
                         {
-                            Stage = stage,
-                            Name = id_spec_binding.name,
-                            ConstantId = id_spec_binding.specid,
-                            //Offset = specOffset,
-                            Size = id.width,
-                            DefaultValue = id.value
-                        };
-                        specConstants.Add(specConstant);
+                            SpecializationConstant specConstant = new SpecializationConstant()
+                            {
+                                Stage = stage,
+                                Name = id.name,
+                                ConstantId = id.specid,
+                                //Offset = specOffset,
+                                Size = id_spec_type.width,
+                                DefaultValue = id.value
+                            };
+                            specConstants.Add(specConstant);
+                        }
 
                         break;
 
@@ -741,15 +797,15 @@ namespace MiniEngine.Rendering.Vulkan
             switch (id.op)
             {
 
-                case SpvOp.SpvOpTypeInt:
-                case SpvOp.SpvOpConstant:
+                case SpvOp.SpvOpTypeInt:                
                 case SpvOp.SpvOpTypeFloat:
-                case SpvOp.SpvOpSpecConstant:
                     return id.width;
 
                 case SpvOp.SpvOpTypeArray:
                 case SpvOp.SpvOpTypeVector:
                 case SpvOp.SpvOpTypeMatrix:
+                case SpvOp.SpvOpConstant:
+                case SpvOp.SpvOpSpecConstant:
                     Id type_id = ids[id.type_index];
                     byte len = GetMemberWidth(type_id, ids);
                     return (byte)(len * id.count);
@@ -773,8 +829,6 @@ namespace MiniEngine.Rendering.Vulkan
                 case SpvOp.SpvOpTypeInt:
                     return Format.R32Sint;
                 case SpvOp.SpvOpTypeFloat:
-                case SpvOp.SpvOpConstant:
-                case SpvOp.SpvOpSpecConstant:
                     switch (id.width)
                     {
                         case 4: return Format.R32Sfloat;
@@ -869,6 +923,7 @@ namespace MiniEngine.Rendering.Vulkan
             public uint binding;
             public uint location;
             public uint specid;
+            public SpvBuiltin builtin = SpvBuiltin.None;
 
             // For integers and floats
             public byte width;
@@ -879,7 +934,7 @@ namespace MiniEngine.Rendering.Vulkan
             public uint count;
 
             // For variables
-            public SpvStorageClass storage_class;
+            public SpvStorageClass storage_class = SpvStorageClass.None;
 
             // For constants
             public uint value;
@@ -1685,7 +1740,8 @@ namespace MiniEngine.Rendering.Vulkan
             SpvStorageClassCodeSectionINTEL = 5605,
             SpvStorageClassDeviceOnlyINTEL = 5936,
             SpvStorageClassHostOnlyINTEL = 5937,
-            SpvStorageClassMax = 0x7fffffff,
+            //SpvStorageClassMax = 0x7fffffff,
+            None = uint.MaxValue
         }
 
 
@@ -1825,14 +1881,141 @@ namespace MiniEngine.Rendering.Vulkan
             SpvDecorationMax = 0x7fffffff,
         }
 
-        #endregion
+        private enum SpvBuiltin : uint
+        {
+            Position = 0,
+            PointSize = 1,
+            ClipDistance = 3,
+            CullDistance = 4,
+            VertexId = 5,
+            InstanceId = 6,
+            PrimitiveId = 7,
+            InvocationId = 8,
+            Layer = 9,
+            ViewportIndex = 10,
+            TessLevelOuter = 11,
+            TessLevelInner = 12,
+            TessCoord = 13,
+            PatchVertices = 14,
+            FragCoord = 15,
+            PointCoord = 16,
+            FrontFacing = 17,
+            SampleId = 18,
+            SamplePosition = 19,
+            SampleMask = 20,
+            FragDepth = 22,
+            HelperInvocation = 23,
+            NumWorkgroups = 24,
+            WorkgroupSize = 25,
+            WorkgroupId = 26,
+            LocalInvocationId = 27,
+            GlobalInvocationId = 28,
+            LocalInvocationIndex = 29,
+            WorkDim = 30,
+            GlobalSize = 31,
+            EnqueuedWorkgroupSize = 32,
+            GlobalOffset = 33,
+            GlobalLinearId = 34,
+            SubgroupSize = 36,
+            SubgroupMaxSize = 37,
+            NumSubgroups = 38,
+            NumEnqueuedSubgroups = 39,
+            SubgroupId = 40,
+            SubgroupLocalInvocationId = 41,
+            VertexIndex = 42,
+            InstanceIndex = 43,
+            SubgroupEqMask = 4416,
+            SubgroupEqMaskKHR = 4416,
+            SubgroupGeMask = 4417,
+            SubgroupGeMaskKHR = 4417,
+            SubgroupGtMask = 4418,
+            SubgroupGtMaskKHR = 4418,
+            SubgroupLeMask = 4419,
+            SubgroupLeMaskKHR = 4419,
+            SubgroupLtMask = 4420,
+            SubgroupLtMaskKHR = 4420,
+            BaseVertex = 4424,
+            BaseInstance = 4425,
+            DrawIndex = 4426,
+            PrimitiveShadingRateKHR = 4432,
+            DeviceIndex = 4438,
+            ViewIndex = 4440,
+            ShadingRateKHR = 4444,
+            BaryCoordNoPerspAMD = 4992,
+            BaryCoordNoPerspCentroidAMD = 4993,
+            BaryCoordNoPerspSampleAMD = 4994,
+            BaryCoordSmoothAMD = 4995,
+            BaryCoordSmoothCentroidAMD = 4996,
+            BaryCoordSmoothSampleAMD = 4997,
+            BaryCoordPullModelAMD = 4998,
+            FragStencilRefEXT = 5014,
+            ViewportMaskNV = 5253,
+            SecondaryPositionNV = 5257,
+            SecondaryViewportMaskNV = 5258,
+            PositionPerViewNV = 5261,
+            ViewportMaskPerViewNV = 5262,
+            FullyCoveredEXT = 5264,
+            TaskCountNV = 5274,
+            PrimitiveCountNV = 5275,
+            PrimitiveIndicesNV = 5276,
+            ClipDistancePerViewNV = 5277,
+            CullDistancePerViewNV = 5278,
+            LayerPerViewNV = 5279,
+            MeshViewCountNV = 5280,
+            MeshViewIndicesNV = 5281,
+            BaryCoordKHR = 5286,
+            BaryCoordNV = 5286,
+            BaryCoordNoPerspKHR = 5287,
+            BaryCoordNoPerspNV = 5287,
+            FragSizeEXT = 5292,
+            FragmentSizeNV = 5292,
+            FragInvocationCountEXT = 5293,
+            InvocationsPerPixelNV = 5293,
+            LaunchIdNV = 5319,
+            LaunchIdKHR = 5319,
+            LaunchSizeNV = 5320,
+            LaunchSizeKHR = 5320,
+            WorldRayOriginNV = 5321,
+            WorldRayOriginKHR = 5321,
+            WorldRayDirectionNV = 5322,
+            WorldRayDirectionKHR = 5322,
+            ObjectRayOriginNV = 5323,
+            ObjectRayOriginKHR = 5323,
+            ObjectRayDirectionNV = 5324,
+            ObjectRayDirectionKHR = 5324,
+            RayTminNV = 5325,
+            RayTminKHR = 5325,
+            RayTmaxNV = 5326,
+            RayTmaxKHR = 5326,
+            InstanceCustomIndexNV = 5327,
+            InstanceCustomIndexKHR = 5327,
+            ObjectToWorldNV = 5330,
+            ObjectToWorldKHR = 5330,
+            WorldToObjectNV = 5331,
+            WorldToObjectKHR = 5331,
+            HitTNV = 5332,
+            HitKindNV = 5333,
+            HitKindKHR = 5333,
+            CurrentRayTimeNV = 5334,
+            IncomingRayFlagsNV = 5351,
+            IncomingRayFlagsKHR = 5351,
+            RayGeometryIndexKHR = 5352,
+            WarpsPerSMNV = 5374,
+            SMCountNV = 5375,
+            WarpIDNV = 5376,
+            SMIDNV = 5377,
+            CullMaskKHR = 6021,
+            None = uint.MaxValue
+        }
 
-    }
+            #endregion
 
-    /// <summary>
-    /// Information on a variable to help parse the spirv
-    /// </summary>
-    public class SpirvVariableDefinition
+        }
+
+        /// <summary>
+        /// Information on a variable to help parse the spirv
+        /// </summary>
+        public class SpirvVariableDefinition
     {
         public Format Format = Format.Undefined;
         public int Count = 1;

@@ -141,6 +141,11 @@ namespace MiniEngine.AssetImporters
             {
                 string code = GlslHelper.Expand(_assetManager.GetString(kv.Value), AssetManager.GetDirectoryName(kv.Value));
                 shaderDefinition.StageCodes.Add(kv.Key, code);
+
+#if DEBUG
+                if (Directory.Exists(@"C:\Projects\Temp\Shaders"))
+                    File.WriteAllText(@"C:\Projects\Temp\Shaders\"+ Path.GetFileName(name), code);
+#endif
             }
 
             shaderDefinition.VariableDefinitions = variableDefinitions;
