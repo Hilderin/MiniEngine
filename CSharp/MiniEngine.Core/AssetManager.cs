@@ -76,12 +76,7 @@ namespace MiniEngine
         /// <summary>
         /// Root path for the current project
         /// </summary>
-        private string _rootPathCurrentProject;
-
-        /// <summary>
-        /// Root path for the MiniEngineCore
-        /// </summary>
-        private string _rootPathMiniEngineCore;
+        private List<string> _rootPaths = new List<string>();
 
         /// <summary>
         /// Current asset manager
@@ -94,8 +89,9 @@ namespace MiniEngine
         protected AssetManager()
         {
 
-            _rootPathCurrentProject = GetRootPathCurrentProject();
-            _rootPathMiniEngineCore = GetRootPathMiniEngineCore();
+            _rootPaths.Add(GetRootPathCurrentProject());
+            AddRootPathMiniEngine("MiniEngine.Core");
+            AddRootPathMiniEngine("MiniEngine.Rendering.Vulkan");
 
             //Assert importers...
             _assetImporters.Add(typeof(Texture2D), new Texture2DImporter(this));
@@ -158,25 +154,20 @@ namespace MiniEngine
 
             string path = RemovePrefix(assetUri);
 
-            if (!path.StartsWith(_rootPathCurrentProject, StringComparison.OrdinalIgnoreCase))
+            string folder = Path.GetDirectoryName(path);
+            if (!_fileWatchers.ContainsKey(folder) && Directory.Exists(folder))
             {
-                //Only if we are watching...
-                string folder = Path.GetDirectoryName(path);
-                if (!_fileWatchers.ContainsKey(folder) && Directory.Exists(folder))
-                {
-                    FileSystemWatcher fsw = new FileSystemWatcher(folder);
-                    //fsw.IncludeSubdirectories = true;
+                FileSystemWatcher fsw = new FileSystemWatcher(folder);
+                //fsw.IncludeSubdirectories = true;
 
-                    fsw.Changed += Fsw_Changed;
-                    fsw.Created += Fsw_Changed;
-                    fsw.Deleted += Fsw_Changed;
-                    fsw.Renamed += Fsw_Renamed;
+                fsw.Changed += Fsw_Changed;
+                fsw.Created += Fsw_Changed;
+                fsw.Deleted += Fsw_Changed;
+                fsw.Renamed += Fsw_Renamed;
 
-                    fsw.EnableRaisingEvents = true;
+                fsw.EnableRaisingEvents = true;
 
-                    _fileWatchers.Add(folder, fsw);
-                }
-
+                _fileWatchers.Add(folder, fsw);
             }
 
 
@@ -311,18 +302,14 @@ namespace MiniEngine
                 }
             }
 
-            path = Path.Combine(_rootPathCurrentProject, name);
-            if (File.Exists(path))
+            foreach (string folder in _rootPaths)
             {
-                assetUri = PREFIX_URI_FILE + path;
-                return true;
-            }
-
-            path = Path.Combine(_rootPathMiniEngineCore, name);
-            if (File.Exists(path))
-            {
-                assetUri = PREFIX_URI_FILE + path;
-                return true;
+                path = Path.Combine(folder, name);
+                if (File.Exists(path))
+                {
+                    assetUri = PREFIX_URI_FILE + path;
+                    return true;
+                }
             }
 
             //Not found... check in resources...
@@ -465,23 +452,23 @@ namespace MiniEngine
         /// <summary>
         /// Calculate the root path for MiniEngine.Core
         /// </summary>
-        private string GetRootPathMiniEngineCore()
+        private void AddRootPathMiniEngine(string projectName)
         {
 
             string rootPath = GetRootPathCurrentProject();
 
             while (rootPath.Length > 4)
             {
-                string corePath = Path.GetFullPath(Path.Combine(rootPath, "..\\MiniEngine.Core"));
+                string corePath = Path.GetFullPath(Path.Combine(rootPath, "..\\" + projectName));
                 if (Directory.Exists(corePath))
-                    return corePath;
+                {
+                    _rootPaths.Add(corePath);
+                    return;
+                }
 
                 //Continue looking parents...
                 rootPath = Path.GetDirectoryName(rootPath);
             }
-
-            //Not found...
-            return null;
 
         }
 
@@ -493,9 +480,9 @@ namespace MiniEngine
         {
             if (_rootFsw == null)
             {
-                if (Directory.Exists(_rootPathCurrentProject))
+                foreach(string folder in _rootPaths)
                 {
-                    _rootFsw = new FileSystemWatcher(_rootPathCurrentProject);
+                    _rootFsw = new FileSystemWatcher(folder);
                     _rootFsw.IncludeSubdirectories = true;
 
                     _rootFsw.Changed += Fsw_Changed;

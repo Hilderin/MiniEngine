@@ -12,18 +12,18 @@
     <None Remove="Resources\PixelAqua.bmp" />
     <None Remove="Resources\PixelMagenta.bmp" />
     <None Remove="Resources\PixelWhite.bmp" />
-    <None Remove="Resources\Shaders\render_structs.glsl" />
-    <None Remove="Resources\Shaders\Unlit.frag" />
-    <None Remove="Resources\Shaders\Unlit.vert" />
+    <None Remove="Shaders\render_structs.glsl" />
+    <None Remove="Shaders\Unlit.frag" />
+    <None Remove="Shaders\Unlit.vert" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\PixelAqua.bmp" />
     <EmbeddedResource Include="Resources\PixelMagenta.bmp" />
     <EmbeddedResource Include="Resources\PixelWhite.bmp" />
-    <EmbeddedResource Include="Resources\Shaders\render_structs.glsl" />
-    <EmbeddedResource Include="Resources\Shaders\unlit.frag" />
-    <EmbeddedResource Include="Resources\Shaders\unlit.vert" />
+    <EmbeddedResource Include="Shaders\render_structs.glsl" />
+    <EmbeddedResource Include="Shaders\unlit.frag" />
+    <EmbeddedResource Include="Shaders\unlit.vert" />
   </ItemGroup>
 
   <ItemGroup>

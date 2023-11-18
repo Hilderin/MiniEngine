@@ -88,7 +88,7 @@ namespace MiniEngine.AssetImporters
         {
             //Shader on disk...
             if (!_assetManager.TryFindAssetUri(name, String.Empty, true, out string assetPath))
-                throw new FormatException($"Shader not fould: '{name}'");
+                throw new FormatException($"Shader not found: '{name}'");
 
 
             Dictionary<ShaderStage, string> stageUris = new Dictionary<ShaderStage, string>();
@@ -133,6 +133,8 @@ namespace MiniEngine.AssetImporters
 
             }
 
+            if (stageUris.Count == 0)
+                throw new Exception($"No shader file found: {name}");
 
 
             ShaderDefinition shaderDefinition = new ShaderDefinition();

@@ -87,5 +87,10 @@ namespace MiniEngine
         /// </summary>
         void EnableGui();
 
+        /// <summary>
+        /// Add an extension
+        /// </summary>
+        void AddExtension(IRendererExtension extension);
+
     }
 }

@@ -132,6 +132,8 @@ namespace MiniEngine.Rendering.Vulkan
         private uint _computeQueueIndex;
         //private Queue _transferQueue;
 
+        private List<IRendererExtension> _extensions = new List<IRendererExtension>();
+
 
 
         #endregion
@@ -270,6 +272,13 @@ namespace MiniEngine.Rendering.Vulkan
             _objectsBuffer = CreateBufferWrapper<ObjectInstanceData>(NB_OBJECTS_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
             _meshLetInstancesBuffer = CreateBufferWrapper<MeshLetInstanceData>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _drawCallsCountsBuffer = CreateBufferWrapper<uint>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+
+
+            //Initialize the extension...
+            foreach (IRendererExtension extension in _extensions)
+                extension.Init(this);
+
+
             _initialized = true;
 
             return this;
@@ -672,7 +681,16 @@ namespace MiniEngine.Rendering.Vulkan
             _actionsBeforeNextFrameAsync.Enqueue(action);
         }
 
+        /// <summary>
+        /// Add an extension
+        /// </summary>
+        public void AddExtension(IRendererExtension extension)
+        {
+            if (_initialized)
+                throw new InvalidOperationException("Impossible to add an extension after the renderer has been initialized.");
 
+            _extensions.Add(extension);
+        }
 
         /// <summary>
         /// Destruction

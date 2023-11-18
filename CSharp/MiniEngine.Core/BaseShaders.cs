@@ -41,7 +41,7 @@ namespace MiniEngine
                     {
                         if (_unlit == null)
                         {
-                            _unlit = AssetManager.Current.Get<Shader>("Resources/Shaders/unlit.vert");
+                            _unlit = AssetManager.Current.Get<Shader>("Shaders/unlit.vert");
                             //string vertexCode = GlslHelper.Expand(ResourceUtils.GetString("MiniEngine.Resources.Shaders.unlit.vert"), String.Empty);
                             //string fragmentCode = GlslHelper.Expand(ResourceUtils.GetString("MiniEngine.Resources.Shaders.unlit.frag"), String.Empty);
 
