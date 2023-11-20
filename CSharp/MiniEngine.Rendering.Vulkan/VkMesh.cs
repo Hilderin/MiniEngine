@@ -21,7 +21,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         public bool IsLoaded { get; private set; }
 
-        public Meshlet[] MeshLets;
+        public VkMeshlet[] MeshLets;
 
         /// <summary>
         /// Constructor
@@ -42,10 +42,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public override Mesh Load(MeshDefinition meshDef)
         {
-            List<Meshlet> oldmeshLets = null;
+            List<VkMeshlet> oldmeshLets = null;
             
             if(MeshLets != null)
-                oldmeshLets = new List<Meshlet>(MeshLets);
+                oldmeshLets = new List<VkMeshlet>(MeshLets);
 
             Init(meshDef);
 
@@ -83,7 +83,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Dispose mesh data
         /// </summary>
-        private void DisposeMeshLet(Meshlet meshLet)
+        private void DisposeMeshLet(VkMeshlet meshLet)
         {
             //TODO: release memory from GPU buffer
             //meshLet.VertexBuffer?.Dispose();
@@ -99,11 +99,11 @@ namespace MiniEngine.Rendering.Vulkan
         {
             List<SubMeshDefinition> subMeshes = meshDef.SubMeshes;
 
-            Meshlet[] newmeshLets = new Meshlet[subMeshes.Count];
+            VkMeshlet[] newmeshLets = new VkMeshlet[subMeshes.Count];
 
             for (int i = 0; i < subMeshes.Count; i++)
             {
-                Meshlet meshlet = new Meshlet();
+                VkMeshlet meshlet = new VkMeshlet();
 
                 CreateVertexBuffer(subMeshes[i], ref meshlet.MeshLetData);
                 CreateIndexBuffer(subMeshes[i], ref meshlet.MeshLetData);
@@ -131,21 +131,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void CreateVertexBuffer(SubMeshDefinition submeshLet, ref MeshletData meshLet)
         {
-            Vertex[] vertices = new Vertex[submeshLet.Positions.Length];
-
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i] = new Vertex()
-                {
-                    Pos = new Vector3(submeshLet.Positions[i].X, submeshLet.Positions[i].Y, submeshLet.Positions[i].Z),
-                    //Color = submeshLet.Colors[i],
-                    TexCoord = submeshLet.TexCoords[i]
-                };
-            }
-
-            //meshLet.vertexBuffer = _vi.Device.CreateBuffer(vertices, BufferUsageFlags.VertexBuffer);
-            _renderer.VerticesBuffer.Append(vertices, out meshLet.VerticesBufferIndex);
-            //meshLet.VertexBuffer = _renderer.CreateBufferWrapper(vertices, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _renderer.VerticesBuffer.Append(submeshLet.Vertices, out meshLet.VerticesBufferIndex);
 
         }
 
@@ -164,7 +150,7 @@ namespace MiniEngine.Rendering.Vulkan
     /// <summary>
     /// Information on MeshLet
     /// </summary>
-    public class Meshlet
+    public class VkMeshlet
     {
         public uint MeshLetIndex;
         public MeshletData MeshLetData;

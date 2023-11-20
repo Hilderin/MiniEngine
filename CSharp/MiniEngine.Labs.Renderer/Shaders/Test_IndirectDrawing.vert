@@ -21,8 +21,8 @@ struct meshlet_instance_data
     uint texture_index;
 };
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 tex_coord;
+#include "../../MiniEngine.Core/Shaders/vertex_layout.glsl"
+
 
 layout(std430, binding = 2) readonly buffer _objects {
     object_instance_data objects[];

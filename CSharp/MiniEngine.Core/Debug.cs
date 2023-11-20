@@ -1,5 +1,8 @@
 ﻿
 using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace MiniEngine
 {
@@ -53,5 +56,32 @@ namespace MiniEngine
             else
                 System.Diagnostics.Debug.WriteLine("WARN: " + message);
         }
+
+        /// <summary>
+        /// Ensure that a condition is true in debug.
+        /// </summary>
+        [Conditional("DEBUG")]
+        public static void Assert([DoesNotReturnIf(false)] bool condition) =>
+            Assert(condition, string.Empty, string.Empty);
+
+        /// <summary>
+        /// Ensure that a condition is true in debug.
+        /// </summary>
+        [Conditional("DEBUG")]
+        public static void Assert([DoesNotReturnIf(false)] bool condition, string message) =>
+            Assert(condition, message, string.Empty);
+
+        /// <summary>
+        /// Ensure that a condition is true in debug.
+        /// </summary>
+        [Conditional("DEBUG")]
+        public static void Assert([DoesNotReturnIf(false)] bool condition, string message, string detailMessage)
+        {
+            if (!condition)
+            {
+                System.Diagnostics.Debug.Fail(message, detailMessage);
+            }
+        }
+
     }
 }

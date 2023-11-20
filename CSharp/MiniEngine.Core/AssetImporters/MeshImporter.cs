@@ -173,7 +173,7 @@ namespace MiniEngine.AssetImporters
 
 
         /// <summary>
-        /// Load mesh definition
+        /// Create the mesh definition from an mesh asset definition
         /// </summary>
         private MeshDefinition CreateMeshDefinition(MeshAssetDefinition meshAssetDef)
         {
@@ -274,27 +274,37 @@ namespace MiniEngine.AssetImporters
         /// </summary>
         private void LoadMesh(Assimp.Mesh mesh, MeshDefinition meshDef, ref Matrix4x4 transformMatrix)
         {
-            Vector3[] positions = new Vector3[mesh.Vertices.Count];
-            Vector3[] normals = new Vector3[mesh.Vertices.Count];
-            Vector2[] texCoords = new Vector2[mesh.Vertices.Count];
+            Vertex[] vertices = new Vertex[mesh.Vertices.Count];
+            //Vector3[] normals = new Vector3[mesh.Vertices.Count];
+            //Vector2[] texCoords = new Vector2[mesh.Vertices.Count];
             uint[] indices = new uint[mesh.FaceCount * 3];
+
+            bool hasNormals = mesh.HasNormals;
+            bool hasTexCoords = mesh.HasTextureCoords(0);
+            List<Vector3D> texCoords = null;
+            if (hasTexCoords)
+                texCoords = mesh.TextureCoordinateChannels[0];
 
             for (int i = 0; i < mesh.Vertices.Count; i++)
             {
                 var vector = transformMatrix * mesh.Vertices[i];
 
-                //positions[i] = transformMatrix * new Vector3(mesh.Vertices[i].X, mesh.Vertices[i].Y, mesh.Vertices[i].Z);
-                positions[i] = new Vector3(vector.X, vector.Y, vector.Z);
+                vertices[i].Pos.X = vector.X;
+                vertices[i].Pos.Y = vector.Y;
+                vertices[i].Pos.Z = vector.Z;
 
-                if (mesh.HasNormals)
-                    normals[i] = new Vector3(mesh.Normals[i].X, mesh.Normals[i].Y, mesh.Normals[i].Z);
-                else
-                    normals[i] = Vector3.Up;
+                if (hasNormals)
+                {
+                    vertices[i].Normal.X = mesh.Normals[i].X;
+                    vertices[i].Normal.Y = mesh.Normals[i].Y;
+                    vertices[i].Normal.X = mesh.Normals[i].X;
+                }
 
-                if (mesh.HasTextureCoords(0))
-                    texCoords[i] = new Vector2(mesh.TextureCoordinateChannels[0][i].X, -mesh.TextureCoordinateChannels[0][i].Y);
-                else
-                    texCoords[i] = Vector2.Zero;
+                if (hasTexCoords)
+                {
+                    vertices[i].TexCoord.X = texCoords[i].X;
+                    vertices[i].TexCoord.Y = -texCoords[i].Y;
+                }
             }
 
             int indexIndice = 0;
@@ -310,10 +320,8 @@ namespace MiniEngine.AssetImporters
 
             meshDef.SubMeshes.Add(new SubMeshDefinition()
             {
-                Positions = positions,
+                Vertices = vertices,
                 Indices = indices,
-                TexCoords = texCoords,
-                Normals = normals,
                 MaterialIndex = (uint)mesh.MaterialIndex
             });
 

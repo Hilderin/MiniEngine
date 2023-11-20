@@ -10,6 +10,7 @@ namespace MiniEngine
     {
         public Vector3 Pos;
         public Vector2 TexCoord;
+        public Vector3 Normal;
 
         public Vertex(float x, float y)
         {

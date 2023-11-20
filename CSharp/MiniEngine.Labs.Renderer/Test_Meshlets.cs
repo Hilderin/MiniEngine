@@ -36,7 +36,7 @@ namespace MiniEngine.Labs.Renderer
 
 
             //Mesh cubeMesh = Primitives.CreateCubeMesh();
-            Mesh mesh = Context.Asset.Get<Mesh>(@"C:\Projects\ogldev\Content\antique_ceramic_vase_01_4k.blend\antique_ceramic_vase_01_4k.obj");
+            Mesh mesh = Context.Asset.Get<Mesh>(@"..\..\Assets\Tests\AntiqueCeramicVase\antique_ceramic_vase_01_4k.obj");
 
 
             _cube = Scene.Add(new MeshObject() { Mesh = mesh }

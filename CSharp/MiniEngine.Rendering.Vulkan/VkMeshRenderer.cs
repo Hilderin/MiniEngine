@@ -59,7 +59,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Add a meshlet to render and return the MeshLetInstanceIndex
         /// </summary>
-        public uint AddMeshLetInstance(uint objectIndex, VkMaterial mat, ref Meshlet meshLet)
+        public uint AddMeshLetInstance(uint objectIndex, VkMaterial mat, ref VkMeshlet meshLet)
         {
 
             MeshLetInstance meshLetInstance;
@@ -124,7 +124,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Remove a mesh instance from the scene
         /// </summary>
-        public void UpdateMeshInstance(uint meshLetInstanceIndex, VkMaterial mat, ref Meshlet meshLet)
+        public void UpdateMeshInstance(uint meshLetInstanceIndex, VkMaterial mat, ref VkMeshlet meshLet)
         {
             MeshLetInstance meshLetInstance = _meshLetInstances[meshLetInstanceIndex];
             IndirectCommand indirectCommand = _drawCallsPerMeshLetInstance[meshLetInstanceIndex];

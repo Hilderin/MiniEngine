@@ -6,6 +6,7 @@ layout(binding = 1) uniform sampler2D _sampler_diffuse[];
 layout(location = 0) in vec2 frag_tex_coord;
 layout(location = 1) in flat uint texture_index;
 
+
 layout(location = 0) out vec4 out_color;
 
 

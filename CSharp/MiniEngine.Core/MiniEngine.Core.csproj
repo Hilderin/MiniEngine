@@ -15,12 +15,14 @@
     <None Remove="Shaders\render_structs.glsl" />
     <None Remove="Shaders\Unlit.frag" />
     <None Remove="Shaders\Unlit.vert" />
+    <None Remove="Shaders\vertex_layout.glsl" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\PixelAqua.bmp" />
     <EmbeddedResource Include="Resources\PixelMagenta.bmp" />
     <EmbeddedResource Include="Resources\PixelWhite.bmp" />
+    <EmbeddedResource Include="Shaders\vertex_layout.glsl" />
     <EmbeddedResource Include="Shaders\render_structs.glsl" />
     <EmbeddedResource Include="Shaders\unlit.frag" />
     <EmbeddedResource Include="Shaders\unlit.vert" />
