@@ -14,6 +14,11 @@ namespace MiniEngine.Tests.Mocks
 
         public bool IsDisposing { get; set; }
 
+        /// <summary>
+        /// Get if the renderer supports async asset loading
+        /// </summary>
+        public bool SupportAsyncAssetLoading => false;
+
         public MockRenderer()
         {
             Renderer.Current = this;
@@ -31,7 +36,7 @@ namespace MiniEngine.Tests.Mocks
 
         public Material CreateMaterial(MaterialDefinition matDef)
         {
-            throw new NotImplementedException();
+            return new MockMaterial();
         }
 
         public Mesh CreateMesh()
@@ -41,12 +46,12 @@ namespace MiniEngine.Tests.Mocks
 
         public Shader CreateShader()
         {
-            throw new NotImplementedException();
+            return new MockShader();
         }
 
         public Texture2D CreateTexture2D(Texture2DDefinition texDef)
         {
-            throw new NotImplementedException();
+            return new MockTexture2D();
         }
 
         public void Dispose()

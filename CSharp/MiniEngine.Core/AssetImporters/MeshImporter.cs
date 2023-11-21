@@ -1,5 +1,6 @@
 ﻿using Assimp;
 using MiniEngine.AssetDefinitions;
+using MiniEngine.Core.MeshOptimization;
 using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
@@ -50,9 +51,18 @@ namespace MiniEngine.AssetImporters
                 {
                     mesh = Renderer.Current.CreateMesh();
 
-                    LoadMeshAsync(name, mesh);
+                    if (Renderer.Current.SupportAsyncAssetLoading)
+                    {
+                        LoadMeshAsync(name, mesh);
+                    }
+                    else
+                    {
+                        MeshAssetDefinition meshAssetDef = GetMeshAssetDefinition(name, mesh);
+                        MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
+                        mesh.Load(meshDef);
+                    }
 
-                }
+                    }
                 catch (Exception ex)
                 {
                     Debug.Error(ex);
@@ -266,6 +276,9 @@ namespace MiniEngine.AssetImporters
             }
 
             return meshDef;
+            //MeshletGenerator meshletGenerator = new MeshletGenerator();
+
+            //return meshletGenerator.Convert(meshDef);
         }
 
 

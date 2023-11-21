@@ -58,6 +58,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public uint[] MaxComputeWorkgroupSize { get; private set; } = new uint[] { 128, 128, 128 };
 
+        /// <summary>
+        /// Get if the renderer supports async asset loading
+        /// </summary>
+        public bool SupportAsyncAssetLoading => true;
 
         public Device Device => _device;
         public SwapchainWrapper Swapchain => _swapchain;

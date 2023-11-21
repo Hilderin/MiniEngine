@@ -38,8 +38,7 @@ namespace MiniEngine.Core.MeshOptimization
                 SubMeshDefinition newSubMesh = new SubMeshDefinition();
                 newSubMesh.MaterialIndex = meshDef.SubMeshes[i].MaterialIndex;
                 newSubMesh.Vertices = new_vertices.ToArray();
-                newSubMesh.Indices = new uint[meshlets[meshlets.Count - 1].indices_offset + meshlets[meshlets.Count - 1].indices_count];
-                Array.Copy(meshlet_indices, newSubMesh.Indices, newSubMesh.Indices.Length);
+                newSubMesh.Indices = meshlet_indices;
                 newSubMesh.Meshlets = meshlets.ToArray();
 
                 newMeshDef.SubMeshes.Add(newSubMesh);
@@ -70,7 +69,7 @@ namespace MiniEngine.Core.MeshOptimization
             TriangleAdjacency adjacency = BuildTriangleAdjacency(subMeshDef);
 
             uint[] live_vertices = new uint[vertex_count];
-            Array.Copy(adjacency.counts, live_vertices, live_vertices.Length);
+            Array.Copy(adjacency.vertices_usage_count, live_vertices, live_vertices.Length);
 
 
             byte[] emitted_flags = new byte[face_count];
@@ -134,9 +133,11 @@ namespace MiniEngine.Core.MeshOptimization
                 Debug.Assert(a < vertex_count && b < vertex_count && c < vertex_count);
 
                 // add meshlet to the output; when the current meshlet is full we reset the accumulated bounds
-                if (AppendMeshlet(meshlet, a, b, c, used, meshlets, subMeshDef))
+                if (AppendMeshlet(ref meshlet, a, b, c, used, meshlets, subMeshDef))
                 {
                     meshlet_cone_acc = new Cone();
+
+                    
                 }
 
                 live_vertices[a]--;
@@ -150,7 +151,7 @@ namespace MiniEngine.Core.MeshOptimization
                     uint index = subMeshDef.Indices[best_triangle * 3 + k];
 
                     uint neighbors_index = adjacency.offsets[index];
-                    uint neighbors_size = adjacency.counts[index];
+                    uint neighbors_size = adjacency.vertices_usage_count[index];
 
                     for (int i = 0; i < neighbors_size; ++i)
                     {
@@ -159,7 +160,7 @@ namespace MiniEngine.Core.MeshOptimization
                         if (tri == best_triangle)
                         {
                             adjacency.triangle_indices[neighbors_index + i] = adjacency.triangle_indices[neighbors_index + neighbors_size - 1];
-                            adjacency.counts[index]--;
+                            adjacency.vertices_usage_count[index]--;
                             break;
                         }
                     }
@@ -198,7 +199,7 @@ namespace MiniEngine.Core.MeshOptimization
                 meshlet_triangles[offset++] = 0;
         }
 
-        private bool AppendMeshlet(Meshlet meshlet, uint a, uint b, uint c, byte[] used, List<Meshlet> meshlets, SubMeshDefinition subMeshDef)
+        private bool AppendMeshlet(ref Meshlet meshlet, uint a, uint b, uint c, byte[] used, List<Meshlet> meshlets, SubMeshDefinition subMeshDef)
         {
             byte av = used[a];
             byte bv = used[b];
@@ -219,15 +220,24 @@ namespace MiniEngine.Core.MeshOptimization
             {
                 meshlets.Add(meshlet);
 
+
                 for (int j = 0; j < meshlet.vertex_count; ++j)
                     used[meshlet_vertices[meshlet.vertex_offset + j]] = byte.MaxValue;
 
                 FinishMeshlet(meshlet, meshlet_indices);
 
-                meshlet.vertex_offset += meshlet.vertex_count;
-                meshlet.indices_offset += (uint)((meshlet.indices_count + 3) & ~3); // 4b padding
-                meshlet.vertex_count = 0;
-                meshlet.indices_count = 0;
+                var newMeshlet = new Meshlet();
+                newMeshlet.vertex_offset = newMeshlet.vertex_offset + meshlet.vertex_count;
+                newMeshlet.indices_offset = newMeshlet.indices_offset + meshlet.indices_count;
+
+                meshlet = newMeshlet;
+
+                
+
+                //meshlet.vertex_offset += meshlet.vertex_count;
+                //meshlet.indices_offset += (uint)((meshlet.indices_count + 3) & ~3); // 4b padding
+                //meshlet.vertex_count = 0;
+                //meshlet.indices_count = 0;
 
                 result = true;
             }
@@ -279,7 +289,7 @@ namespace MiniEngine.Core.MeshOptimization
             TriangleAdjacency adjacency = new TriangleAdjacency();
 
             // allocate arrays
-            adjacency.counts = new uint[vertex_count];
+            adjacency.vertices_usage_count = new uint[vertex_count];
             adjacency.offsets = new uint[vertex_count];
             adjacency.triangle_indices = new uint[index_count];
 
@@ -288,7 +298,7 @@ namespace MiniEngine.Core.MeshOptimization
             {
                 Debug.Assert(indices[i] < vertex_count);
 
-                adjacency.counts[indices[i]]++;
+                adjacency.vertices_usage_count[indices[i]]++;
             }
 
             // fill offset table
@@ -297,7 +307,7 @@ namespace MiniEngine.Core.MeshOptimization
             for (int i = 0; i < vertex_count; ++i)
             {
                 adjacency.offsets[i] = offset;
-                offset += adjacency.counts[i];
+                offset += adjacency.vertices_usage_count[i];
             }
 
             Debug.Assert(offset == index_count);
@@ -307,6 +317,8 @@ namespace MiniEngine.Core.MeshOptimization
             {
                 uint a = indices[i * 3], b = indices[i * 3 + 1], c = indices[i * 3 + 2];
 
+                //Set the triangle index for each vertex index. 
+                //that wa, we known each vertex is used in which triangle
                 adjacency.triangle_indices[adjacency.offsets[a]++] = (uint)i;
                 adjacency.triangle_indices[adjacency.offsets[b]++] = (uint)i;
                 adjacency.triangle_indices[adjacency.offsets[c]++] = (uint)i;
@@ -315,9 +327,9 @@ namespace MiniEngine.Core.MeshOptimization
             // fix offsets that have been disturbed by the previous pass
             for (int i = 0; i < vertex_count; ++i)
             {
-                Debug.Assert(adjacency.offsets[i] >= adjacency.counts[i]);
+                Debug.Assert(adjacency.offsets[i] >= adjacency.vertices_usage_count[i]);
 
-                adjacency.offsets[i] -= adjacency.counts[i];
+                adjacency.offsets[i] -= adjacency.vertices_usage_count[i];
             }
 
             return adjacency;
@@ -532,7 +544,7 @@ namespace MiniEngine.Core.MeshOptimization
                 uint index = meshlet_vertices[meshlet.vertex_offset + i];
 
                 uint neighbors_index = adjacency.offsets[index];
-                uint neighbors_size = adjacency.counts[index];
+                uint neighbors_size = adjacency.vertices_usage_count[index];
 
                 for (int j = 0; j < neighbors_size; ++j)
                 {
@@ -656,7 +668,10 @@ namespace MiniEngine.Core.MeshOptimization
 
         private class TriangleAdjacency
         {
-            public uint[] counts;
+            /// <summary>
+            /// Number of times that a vertex is used
+            /// </summary>
+            public uint[] vertices_usage_count;
             public uint[] offsets;
             public uint[] triangle_indices;
         }
@@ -703,7 +718,7 @@ namespace MiniEngine.Core.MeshOptimization
             {
                 return new Cone()
                 {
-                    px = this.py,
+                    px = this.px,
                     py = this.py,
                     pz = this.pz,
                     nx = this.nx,

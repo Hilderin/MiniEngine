@@ -23,6 +23,11 @@ namespace MiniEngine
         bool IsDisposing { get; }
 
         /// <summary>
+        /// Get if the renderer supports async asset loading
+        /// </summary>
+        bool SupportAsyncAssetLoading { get; }
+
+        /// <summary>
         /// Initialize the rendering engine
         /// </summary>
         void Init();
