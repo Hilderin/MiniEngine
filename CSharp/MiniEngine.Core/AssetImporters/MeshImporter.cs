@@ -1,6 +1,6 @@
 ﻿using Assimp;
 using MiniEngine.AssetDefinitions;
-using MiniEngine.Core.MeshOptimization;
+using MiniEngine.MeshOptimization;
 using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;

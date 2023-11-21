@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace MiniEngine.Core.MeshOptimization
+namespace MiniEngine.MeshOptimization
 {
     /// <summary>
     /// Generates meshlet from mesh
@@ -23,29 +23,36 @@ namespace MiniEngine.Core.MeshOptimization
 
         private List<Vertex> new_vertices;
         private uint[] meshlet_vertices;
-        private uint[] meshlet_indices;
+        private byte[] meshlet_indices;
 
-        public MeshDefinition Convert(MeshDefinition meshDef)
+        /// <summary>
+        /// Generates meshlets for a mesh
+        /// </summary>
+        public MeshLetContainer[] Generate(MeshDefinition meshDef)
         {
-            MeshDefinition newMeshDef = new MeshDefinition();
-            newMeshDef.Materials.AddRange(meshDef.Materials);
+
+            MeshLetContainer[] containers = new MeshLetContainer[meshDef.SubMeshes.Count];
 
             for (int i = 0; i < meshDef.SubMeshes.Count; i++)
             {
+                
+
+                SubMeshDefinition subMesh = meshDef.SubMeshes[i];
 
                 List<Meshlet> meshlets = new List<Meshlet>();
-                Generate(meshDef.SubMeshes[i], meshlets);
+                Generate(subMesh, meshlets);
 
-                SubMeshDefinition newSubMesh = new SubMeshDefinition();
-                newSubMesh.MaterialIndex = meshDef.SubMeshes[i].MaterialIndex;
-                newSubMesh.Vertices = new_vertices.ToArray();
-                newSubMesh.Indices = meshlet_indices;
-                newSubMesh.Meshlets = meshlets.ToArray();
 
-                newMeshDef.SubMeshes.Add(newSubMesh);
+                MeshLetContainer container = new MeshLetContainer();
+                container.Meshlets = meshlets.ToArray();
+                container.Indices = meshlet_indices;
+                container.Vertices = new_vertices.ToArray();
+
+                containers[i] = container;
             }
 
-            return newMeshDef;
+            return containers;
+
         }
 
         private void Generate(SubMeshDefinition subMeshDef, List<Meshlet> meshlets)
@@ -55,7 +62,7 @@ namespace MiniEngine.Core.MeshOptimization
             int vertex_count = subMeshDef.Vertices.Length;
             int face_count = index_count / 3;
             meshlet_vertices = new uint[subMeshDef.Indices.Length];
-            meshlet_indices = new uint[subMeshDef.Indices.Length];
+            meshlet_indices = new byte[subMeshDef.Indices.Length];
             new_vertices = new List<Vertex>(subMeshDef.Indices.Length);
 
             Debug.Assert(index_count % 3 == 0);
@@ -104,13 +111,13 @@ namespace MiniEngine.Core.MeshOptimization
 
             while (true)
             {
-                Cone meshlet_cone = GetMeshletCone(meshlet_cone_acc, meshlet.indices_count);
+                Cone meshlet_cone = GetMeshletCone(meshlet_cone_acc, meshlet.IndicesCount);
 
                 uint best_extra;
                 uint best_triangle = GetNeighborTriangle(subMeshDef, meshlet, meshlet_cone, adjacency, cones, live_vertices, used, meshlet_expected_radius, out best_extra);
 
                 // if the best triangle doesn't fit into current meshlet, the spatial scoring we've used is not very meaningful, so we re-select using topological scoring
-                if (best_triangle != uint.MaxValue && (meshlet.vertex_count + best_extra > max_vertices || meshlet.indices_count >= max_triangles))
+                if (best_triangle != uint.MaxValue && (meshlet.VertexCount + best_extra > max_vertices || meshlet.IndicesCount >= max_triangles))
                 {
                     best_triangle = GetNeighborTriangle(subMeshDef, meshlet, null, adjacency, cones, live_vertices, used, meshlet_expected_radius, out _);
                 }
@@ -180,7 +187,7 @@ namespace MiniEngine.Core.MeshOptimization
                 
             }
 
-            if (meshlet.indices_count > 0)
+            if (meshlet.IndicesCount > 0)
             {
                 FinishMeshlet(meshlet, meshlet_indices);
                 meshlets.Add(meshlet);
@@ -191,13 +198,13 @@ namespace MiniEngine.Core.MeshOptimization
         }
 
 
-        private void FinishMeshlet(Meshlet meshlet, uint[] meshlet_triangles)
+        private void FinishMeshlet(Meshlet meshlet, byte[] meshlet_indices)
         {
-            int offset = (int)(meshlet.indices_offset + meshlet.indices_count);
+            int offset = (int)(meshlet.IndicesOffset + meshlet.IndicesCount);
 
             // fill 4b padding with 0
             while ((offset & 3) != 0)
-                meshlet_triangles[offset++] = 0;
+                meshlet_indices[offset++] = 0;
         }
 
         private bool AppendMeshlet(ref Meshlet meshlet, uint a, uint b, uint c, byte[] used, List<Meshlet> meshlets, SubMeshDefinition subMeshDef)
@@ -217,60 +224,54 @@ namespace MiniEngine.Core.MeshOptimization
                 used_extra++;
 
 
-            if (meshlet.vertex_count + used_extra > max_vertices || meshlet.indices_count >= max_triangles)
+            if (meshlet.VertexCount + used_extra > max_vertices || meshlet.IndicesCount >= max_triangles)
             {
                 meshlets.Add(meshlet);
 
 
-                for (int j = 0; j < meshlet.vertex_count; ++j)
-                    used[meshlet_vertices[meshlet.vertex_offset + j]] = byte.MaxValue;
+                for (int j = 0; j < meshlet.VertexCount; ++j)
+                    used[meshlet_vertices[meshlet.VertexOffset + j]] = byte.MaxValue;
 
                 FinishMeshlet(meshlet, meshlet_indices);
 
                 var newMeshlet = new Meshlet();
-                newMeshlet.vertex_offset = newMeshlet.vertex_offset + meshlet.vertex_count;
-                newMeshlet.indices_offset = newMeshlet.indices_offset + meshlet.indices_count;
+                newMeshlet.VertexOffset = newMeshlet.VertexOffset + meshlet.VertexCount;
+                newMeshlet.IndicesOffset = newMeshlet.IndicesOffset + (uint)((meshlet.IndicesCount + 3) & ~3); // 4 bytes padding
 
                 meshlet = newMeshlet;
 
-                
-
-                //meshlet.vertex_offset += meshlet.vertex_count;
-                //meshlet.indices_offset += (uint)((meshlet.indices_count + 3) & ~3); // 4b padding
-                //meshlet.vertex_count = 0;
-                //meshlet.indices_count = 0;
 
                 result = true;
             }
 
             if (av == byte.MaxValue)
             {
-                av = (byte)meshlet.vertex_count;
-                meshlet_vertices[meshlet.vertex_offset + meshlet.vertex_count++] = a;
+                av = (byte)meshlet.VertexCount;
+                meshlet_vertices[meshlet.VertexOffset + meshlet.VertexCount++] = a;
                 new_vertices.Add(subMeshDef.Vertices[a]);
                 used[a] = av;
             }
 
             if (bv == byte.MaxValue)
             {
-                bv = (byte)meshlet.vertex_count;
-                meshlet_vertices[meshlet.vertex_offset + meshlet.vertex_count++] = b;
+                bv = (byte)meshlet.VertexCount;
+                meshlet_vertices[meshlet.VertexOffset + meshlet.VertexCount++] = b;
                 new_vertices.Add(subMeshDef.Vertices[b]);
                 used[b] = bv;
             }
 
             if (cv == byte.MaxValue)
             {
-                cv = (byte)meshlet.vertex_count;
-                meshlet_vertices[meshlet.vertex_offset + meshlet.vertex_count++] = c;
+                cv = (byte)meshlet.VertexCount;
+                meshlet_vertices[meshlet.VertexOffset + meshlet.VertexCount++] = c;
                 new_vertices.Add(subMeshDef.Vertices[c]);
                 used[c] = cv;
             }
 
-            meshlet_indices[meshlet.indices_offset + meshlet.indices_count + 0] = av;
-            meshlet_indices[meshlet.indices_offset + meshlet.indices_count + 1] = bv;
-            meshlet_indices[meshlet.indices_offset + meshlet.indices_count + 2] = cv;
-            meshlet.indices_count += 3;
+            meshlet_indices[meshlet.IndicesOffset + meshlet.IndicesCount + 0] = av;
+            meshlet_indices[meshlet.IndicesOffset + meshlet.IndicesCount + 1] = bv;
+            meshlet_indices[meshlet.IndicesOffset + meshlet.IndicesCount + 2] = cv;
+            meshlet.IndicesCount += 3;
 
             return result;
         }
@@ -539,10 +540,10 @@ namespace MiniEngine.Core.MeshOptimization
             uint best_extra = 5;
             float best_score = float.MaxValue;
 
-            for (int i = 0; i < meshlet.vertex_count; ++i)
+            for (int i = 0; i < meshlet.VertexCount; ++i)
             {
 
-                uint index = meshlet_vertices[meshlet.vertex_offset + i];
+                uint index = meshlet_vertices[meshlet.VertexOffset + i];
 
                 uint neighbors_index = adjacency.offsets[index];
                 uint neighbors_size = adjacency.vertices_usage_count[index];

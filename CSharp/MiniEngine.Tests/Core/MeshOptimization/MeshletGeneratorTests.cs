@@ -1,6 +1,6 @@
 using MiniEngine.AssetDefinitions;
 using MiniEngine.AssetImporters;
-using MiniEngine.Core.MeshOptimization;
+using MiniEngine.MeshOptimization;
 using MiniEngine.Drivers.Vulkan;
 using MiniEngine.Rendering.Vulkan;
 using MiniEngine.Tests.Mocks;
@@ -35,14 +35,14 @@ namespace MiniEngine.Tests.Core.MeshOptimization
             MeshletGenerator meshletGenerator = new MeshletGenerator();
 
             var originalMesh = Primitives.CreateCubeMeshDefinition();
-            var newMesh = meshletGenerator.Convert(originalMesh);
+            var meshLetContainers = meshletGenerator.Generate(originalMesh);
 
 
-            Assert.AreEqual(1, newMesh.SubMeshes.Count);
-            Assert.AreEqual(1, newMesh.SubMeshes[0].Meshlets.Length);
-            Assert.AreEqual(originalMesh.SubMeshes[0].Indices.Length, newMesh.SubMeshes[0].Indices.Length);
-            Assert.AreEqual((uint)36, newMesh.SubMeshes[0].Meshlets[0].indices_count);
-            Assert.AreEqual((uint)8, newMesh.SubMeshes[0].Meshlets[0].vertex_count);
+            Assert.AreEqual(1, meshLetContainers.Length);
+            Assert.AreEqual(1, meshLetContainers[0].Meshlets.Length);
+            Assert.AreEqual(originalMesh.SubMeshes[0].Indices.Length, meshLetContainers[0].Indices.Length);
+            Assert.AreEqual((ushort)36, meshLetContainers[0].Meshlets[0].IndicesCount);
+            Assert.AreEqual((byte)8, meshLetContainers[0].Meshlets[0].VertexCount);
 
         }
 
@@ -57,13 +57,13 @@ namespace MiniEngine.Tests.Core.MeshOptimization
 
             MeshletGenerator meshletGenerator = new MeshletGenerator();
 
-            var newMesh = meshletGenerator.Convert(mesh.MeshDefinition);
+            var meshLetContainers = meshletGenerator.Generate(mesh.MeshDefinition);
 
-            Assert.AreEqual(1, newMesh.SubMeshes.Count);
-            Assert.AreEqual(21, newMesh.SubMeshes[0].Meshlets.Length);
-            Assert.AreEqual(mesh.MeshDefinition.SubMeshes[0].Indices.Length, newMesh.SubMeshes[0].Indices.Length);
-            Assert.AreEqual((uint)513, newMesh.SubMeshes[0].Meshlets[0].indices_count);
-            Assert.AreEqual((uint)108, newMesh.SubMeshes[0].Meshlets[0].vertex_count);
+            Assert.AreEqual(1, meshLetContainers.Length);
+            Assert.AreEqual(21, meshLetContainers[0].Meshlets.Length);
+            Assert.AreEqual(mesh.MeshDefinition.SubMeshes[0].Indices.Length, meshLetContainers[0].Indices.Length);
+            Assert.AreEqual((uint)513, meshLetContainers[0].Meshlets[0].IndicesCount);
+            Assert.AreEqual((uint)108, meshLetContainers[0].Meshlets[0].VertexCount);
 
         }
     }

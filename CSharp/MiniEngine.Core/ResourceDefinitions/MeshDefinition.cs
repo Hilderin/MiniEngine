@@ -32,25 +32,6 @@ namespace MiniEngine.ResourceDefinitions
         public Vertex[] Vertices;
         public uint[] Indices;
         public uint MaterialIndex;
-        public Meshlet[] Meshlets;
     }
 
-    /// <summary>
-    /// Representation of a meshlet
-    /// </summary>
-    public class Meshlet
-    {
-        //public Vertex[] Vertices;
-
-        //public byte[] Indices;
-
-        /* offsets within meshlet_vertices and meshlet_triangles arrays with meshlet data */
-        public uint vertex_offset;
-        public uint indices_offset;
-
-        /* number of vertices and triangles used in the meshlet; data is stored in consecutive range defined by offset and count */
-        public uint vertex_count;
-        public uint indices_count;
-
-    }
 }
