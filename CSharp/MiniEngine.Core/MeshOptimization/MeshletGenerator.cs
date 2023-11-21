@@ -7,6 +7,7 @@ namespace MiniEngine.Core.MeshOptimization
 {
     /// <summary>
     /// Generates meshlet from mesh
+    /// Based on MeshOptimizer from https://github.com/zeux/meshoptimizer
     /// </summary>
     public class MeshletGenerator
     {
