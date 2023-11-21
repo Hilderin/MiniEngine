@@ -1,4 +1,5 @@
 ﻿using MiniEngine.Drivers.Vulkan;
+using MiniEngine.MeshOptimization;
 using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
@@ -22,6 +23,8 @@ namespace MiniEngine.Rendering.Vulkan
         public bool IsLoaded { get; private set; }
 
         public VkMeshlet[] MeshLets;
+
+        private MeshLetContainer[] _meshletContainers;
 
         /// <summary>
         /// Constructor
@@ -97,26 +100,38 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void Init(MeshDefinition meshDef)
         {
+
+            MeshletGenerator meshletGenerator = new MeshletGenerator();
+
+            _meshletContainers = meshletGenerator.Generate(meshDef);
+
             List<SubMeshDefinition> subMeshes = meshDef.SubMeshes;
 
-            VkMeshlet[] newmeshLets = new VkMeshlet[subMeshes.Count];
+            List<VkMeshlet> newmeshLets = new List<VkMeshlet>();
 
             for (int i = 0; i < subMeshes.Count; i++)
             {
-                VkMeshlet meshlet = new VkMeshlet();
 
-                CreateVertexBuffer(subMeshes[i], ref meshlet.MeshLetData);
-                CreateIndexBuffer(subMeshes[i], ref meshlet.MeshLetData);
+                var container = _meshletContainers[i];
 
-                meshlet.MaterialIndex = subMeshes[i].MaterialIndex;
+                _renderer.VerticesBuffer.Append(container.Vertices, out uint verticesIndex);
+                _renderer.IndicesBuffer.Append(container.Indices, out uint indicesIndex);
 
-                _renderer.MeshLetsBuffer.Append(ref meshlet.MeshLetData, out meshlet.MeshLetIndex);
+                for (int im = 0; im < container.Meshlets.Length; im++)
+                {
+                    VkMeshlet meshlet = new VkMeshlet();
+                    meshlet.MaterialIndex = subMeshes[i].MaterialIndex;
+                    meshlet.MeshLetData.VerticesBufferIndex = verticesIndex + container.Meshlets[im].VertexOffset;
+                    meshlet.MeshLetData.IndicesBufferIndex = indicesIndex + container.Meshlets[im].IndicesOffset;
+                    meshlet.MeshLetData.NbIndices = container.Meshlets[im].IndicesCount;
 
-                newmeshLets[i] = meshlet;
+                    newmeshLets.Add(meshlet);
+
+                }
             }
 
             //All good, we can switch it now...
-            MeshLets = newmeshLets;
+            MeshLets = newmeshLets.ToArray();
 
             //Create default materials slots
             Materials = meshDef.Materials.ToArray();
@@ -125,25 +140,6 @@ namespace MiniEngine.Rendering.Vulkan
             IsLoaded = true;
         }
 
-
-        /// <summary>
-        /// Create the vertex buffer
-        /// </summary>
-        private void CreateVertexBuffer(SubMeshDefinition submeshLet, ref MeshletData meshLet)
-        {
-            _renderer.VerticesBuffer.Append(submeshLet.Vertices, out meshLet.VerticesBufferIndex);
-
-        }
-
-        /// <summary>
-        /// Create the index buffer
-        /// </summary>
-        private void CreateIndexBuffer(SubMeshDefinition submeshLet, ref MeshletData meshLet)
-        {
-            meshLet.NbIndices = (uint)submeshLet.Indices.Length;
-            meshLet.IndicesBufferIndex = _renderer.IndicesBuffer.Append(submeshLet.Indices) / sizeof(uint);
-
-        }
 
     }
 

@@ -629,7 +629,11 @@ namespace MiniEngine.Drivers.Vulkan
 	{
 		Uint16 = 0,
 		Uint32 = 1,
-	}
+        // Provided by VK_KHR_acceleration_structure
+        NoneKHR = 1000165000,
+        // Provided by VK_EXT_index_type_uint8
+        Uint8 = 1000265000
+    }
 
 	public enum LogicOp : int
 	{
@@ -1067,7 +1071,8 @@ namespace MiniEngine.Drivers.Vulkan
 		ImportMemoryHostPointerInfoExt = 1000178000,
 		MemoryHostPointerPropertiesExt = 1000178001,
 		PhysicalDeviceExternalMemoryHostPropertiesExt = 1000178002,
-	}
+        PhysicalDeviceIndexTypeUint8FeaturesExt = 1000265000
+    }
 
 	public enum SystemAllocationScope : int
 	{

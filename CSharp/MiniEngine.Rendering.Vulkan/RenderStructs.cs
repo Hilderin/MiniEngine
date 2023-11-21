@@ -51,7 +51,7 @@ namespace MiniEngine.Rendering.Vulkan
     {
         public uint VerticesBufferIndex;
         public uint IndicesBufferIndex;
-        public uint NbIndices;
+        public ushort NbIndices;
     }
 
 

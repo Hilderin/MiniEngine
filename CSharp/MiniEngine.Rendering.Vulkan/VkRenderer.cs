@@ -76,7 +76,7 @@ namespace MiniEngine.Rendering.Vulkan
         public VkResourceFactory ResourceFactory => _resourceFactory;
         public BufferWrapper<SceneData> SceneBuffer => _sceneBuffer;
         public BufferWrapper<Vertex> VerticesBuffer => _verticesBuffer;
-        public BufferWrapper<uint> IndicesBuffer => _indicesBuffer;
+        public BufferWrapper<ushort> IndicesBuffer => _indicesBuffer;
         public BufferWrapper<MeshletData> MeshLetsBuffer => _meshLetsBuffer;
         public BufferWrapper<ObjectInstanceData> ObjectsBuffer => _objectsBuffer;
         public BufferWrapper<MeshLetInstanceData> MeshLetInstancesBuffer => _meshLetInstancesBuffer;
@@ -123,7 +123,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         private BufferWrapper<SceneData> _sceneBuffer;
         private BufferWrapper<Vertex> _verticesBuffer;
-        private BufferWrapper<uint> _indicesBuffer;
+        private BufferWrapper<ushort> _indicesBuffer;
         private BufferWrapper<MeshletData> _meshLetsBuffer;
         private BufferWrapper<ObjectInstanceData> _objectsBuffer;
         private BufferWrapper<MeshLetInstanceData> _meshLetInstancesBuffer;
@@ -271,7 +271,7 @@ namespace MiniEngine.Rendering.Vulkan
             //TODO: Dynamiccaly calculate best size
             _sceneBuffer = CreateBufferWrapper<SceneData>(1, BufferUsageFlags.UniformBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
             _verticesBuffer = CreateBufferWrapper<Vertex>(NB_VERTICES_MAX, BufferUsageFlags.VertexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-            _indicesBuffer = CreateBufferWrapper<uint>(NB_VERTICES_MAX, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _indicesBuffer = CreateBufferWrapper<ushort>(NB_VERTICES_MAX, BufferUsageFlags.IndexBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _meshLetsBuffer = CreateBufferWrapper<MeshletData>(NB_MESHLET_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _objectsBuffer = CreateBufferWrapper<ObjectInstanceData>(NB_OBJECTS_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
             _meshLetInstancesBuffer = CreateBufferWrapper<MeshLetInstanceData>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
@@ -780,8 +780,13 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private unsafe Device CreateDevice()
         {
-            var features12 = _physicalDevice.GetFeatures2Vulkan12(out var vulkan12Features);
+            PhysicalDeviceVulkan12Features vulkan12Features = new PhysicalDeviceVulkan12Features();
+            //PhysicalDeviceIndexTypeUint8FeaturesEXT indexTypeUint8Features = new PhysicalDeviceIndexTypeUint8FeaturesEXT();
 
+            var features12 = _physicalDevice.GetFeatures2(vulkan12Features);
+            //var features12 = _physicalDevice.GetFeatures2Vulkan12(out var vulkan12Features);
+            //var featuresIndexTypeInt8 = _physicalDevice.GetFeaturesIndexTypeUint8EXT(out var indexTypeUint8Features);
+            //features12.Next = 
             //Get the PhysicalDeviceDescriptorIndexingFeatures feature....
             //var featuresIndexing = _physicalDevice.GetFeatures2Indexing(out var indexingFeatures);
 
@@ -917,7 +922,7 @@ namespace MiniEngine.Rendering.Vulkan
             if (Camera != null)
             {
                 commandBuffer.CmdBindVertexBuffer(0, _verticesBuffer, 0);
-                commandBuffer.CmdBindIndexBuffer(_indicesBuffer, 0, IndexType.Uint32);
+                commandBuffer.CmdBindIndexBuffer(_indicesBuffer, 0, IndexType.Uint16);
 
                 foreach (var meshRenderer in _meshRenderers)
                     meshRenderer.PopulateCommandBuffers(commandBuffer);

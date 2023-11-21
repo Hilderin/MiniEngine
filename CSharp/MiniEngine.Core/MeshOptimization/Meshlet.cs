@@ -12,7 +12,7 @@ namespace MiniEngine.MeshOptimization
     public class MeshLetContainer
     {
         public Vertex[] Vertices;
-        public byte[] Indices;          //byte because we never have more then 255 vertices in a meshlet
+        public ushort[] Indices;          //byte because we never have more then 255 vertices in a meshlet
         public Meshlet[] Meshlets;
     }
 

@@ -17,6 +17,12 @@ namespace MiniEngine.Drivers.Vulkan
 {
     public delegate bool DebugReportCallback(DebugReportFlagsExt flags, DebugReportObjectTypeExt objectType, int messageCode, string message);
 
+    public interface INext
+    {
+        IntPtr Handle { get; }
+        IntPtr Next { get; set; }
+    }
+
     unsafe public partial struct Offset2D
 	{
 		public Int32 X;
@@ -8420,8 +8426,8 @@ namespace MiniEngine.Drivers.Vulkan
 
 	}
 
-	unsafe public partial class PhysicalDeviceFeatures2 : MarshalledObject
-	{
+	unsafe public partial class PhysicalDeviceFeatures2 : MarshalledObject, INext
+    {
 		public PhysicalDeviceFeatures Features {
 			get { return m->Features; }
 			set { m->Features = value; }
@@ -8519,7 +8525,7 @@ namespace MiniEngine.Drivers.Vulkan
 
     }
 
-    unsafe public partial class PhysicalDeviceVulkan12Features : MarshalledObject
+    unsafe public partial class PhysicalDeviceVulkan12Features : MarshalledObject, INext
     {
 
         public IntPtr Next
@@ -8601,6 +8607,46 @@ namespace MiniEngine.Drivers.Vulkan
         internal void Initialize()
         {
             m->SType = StructureType.PhysicalDeviceVulkan12Features;
+        }
+
+    }
+
+    unsafe public partial class PhysicalDeviceIndexTypeUint8FeaturesEXT : MarshalledObject, INext
+    {
+
+        public IntPtr Next
+        {
+            get { return m->Next; }
+            set { m->Next = value; }
+        }
+
+        public Bool32 IndexTypeUint8 { get { return m->IndexTypeUint8; } }
+
+        internal Interop.PhysicalDeviceIndexTypeUint8FeaturesEXT* m
+        {
+
+            get
+            {
+                return (Interop.PhysicalDeviceIndexTypeUint8FeaturesEXT*)native.Handle;
+            }
+        }
+
+        public PhysicalDeviceIndexTypeUint8FeaturesEXT()
+        {
+            native = Interop.Structure.Allocate(typeof(Interop.PhysicalDeviceIndexTypeUint8FeaturesEXT));
+            Initialize();
+        }
+
+        internal PhysicalDeviceIndexTypeUint8FeaturesEXT(NativePointer pointer)
+        {
+            native = pointer;
+            Initialize();
+        }
+
+
+        internal void Initialize()
+        {
+            m->SType = StructureType.PhysicalDeviceIndexTypeUint8FeaturesExt;
         }
 
     }

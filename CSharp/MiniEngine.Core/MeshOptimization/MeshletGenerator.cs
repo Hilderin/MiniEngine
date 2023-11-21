@@ -15,15 +15,18 @@ namespace MiniEngine.MeshOptimization
         private const int kMeshletMaxVertices = 255;
 
         // A reasonable limit is around 2*max_vertices or less
-        private const int kMeshletMaxTriangles = 512;
+        // better to be a multiple of 3 (3 points per triangles) and a multiple of 4 (padding with 4 bytes the index buffer)
+        private const int kMeshletMaxIndices = 516;
+
+        private const int LEAF_SIZE = 8;
 
         private int max_vertices = kMeshletMaxVertices;
-        private int max_triangles = kMeshletMaxTriangles;
+        private int max_indices = kMeshletMaxIndices;
         private float cone_weight = 1f;
 
         private List<Vertex> new_vertices;
         private uint[] meshlet_vertices;
-        private byte[] meshlet_indices;
+        private ushort[] meshlet_indices;
 
         /// <summary>
         /// Generates meshlets for a mesh
@@ -62,14 +65,14 @@ namespace MiniEngine.MeshOptimization
             int vertex_count = subMeshDef.Vertices.Length;
             int face_count = index_count / 3;
             meshlet_vertices = new uint[subMeshDef.Indices.Length];
-            meshlet_indices = new byte[subMeshDef.Indices.Length];
+            meshlet_indices = new ushort[subMeshDef.Indices.Length];
             new_vertices = new List<Vertex>(subMeshDef.Indices.Length);
 
             Debug.Assert(index_count % 3 == 0);
 
             Debug.Assert(max_vertices >= 3 && max_vertices <= kMeshletMaxVertices);
-            Debug.Assert(max_triangles >= 1 && max_triangles <= kMeshletMaxTriangles);
-            Debug.Assert(max_triangles % 4 == 0); // ensures the caller will compute output space properly as index data is 4b aligned
+            Debug.Assert(max_indices >= 1 && max_indices <= kMeshletMaxIndices);
+            Debug.Assert(max_indices % 4 == 0); // ensures the caller will compute output space properly as index data is 4b aligned
 
             Debug.Assert(cone_weight >= 0 && cone_weight <= 1);
 
@@ -88,7 +91,7 @@ namespace MiniEngine.MeshOptimization
 
             // assuming each meshlet is a square patch, expected radius is sqrt(expected area)
             float triangle_area_avg = face_count == 0 ? 0f : mesh_area / face_count * 0.5f;
-            float meshlet_expected_radius = Math.Sqrt(triangle_area_avg * max_triangles) * 0.5f;
+            float meshlet_expected_radius = Math.Sqrt(triangle_area_avg * max_indices) * 0.5f;
 
             // build a kd-tree for nearest neighbor lookup
             uint[] kdindices = new uint[face_count];
@@ -117,7 +120,7 @@ namespace MiniEngine.MeshOptimization
                 uint best_triangle = GetNeighborTriangle(subMeshDef, meshlet, meshlet_cone, adjacency, cones, live_vertices, used, meshlet_expected_radius, out best_extra);
 
                 // if the best triangle doesn't fit into current meshlet, the spatial scoring we've used is not very meaningful, so we re-select using topological scoring
-                if (best_triangle != uint.MaxValue && (meshlet.VertexCount + best_extra > max_vertices || meshlet.IndicesCount >= max_triangles))
+                if (best_triangle != uint.MaxValue && (meshlet.VertexCount + best_extra > max_vertices || meshlet.IndicesCount >= max_indices))
                 {
                     best_triangle = GetNeighborTriangle(subMeshDef, meshlet, null, adjacency, cones, live_vertices, used, meshlet_expected_radius, out _);
                 }
@@ -135,7 +138,20 @@ namespace MiniEngine.MeshOptimization
                 }
 
                 if (best_triangle == uint.MaxValue)
+                {
+#if DEBUG
+                    for (int i = 0; i < adjacency.vertices_usage_count.Length; i++)
+                    {
+                        if (adjacency.vertices_usage_count[i] > 0)
+                        {
+                            //Problem with the algo..
+                            Debug.Error("Missing some triangles");
+                        }
+                    }
+#endif
+
                     break;
+                }
 
                 uint a = subMeshDef.Indices[best_triangle * 3 + 0], b = subMeshDef.Indices[best_triangle * 3 + 1], c = subMeshDef.Indices[best_triangle * 3 + 2];
                 Debug.Assert(a < vertex_count && b < vertex_count && c < vertex_count);
@@ -198,7 +214,7 @@ namespace MiniEngine.MeshOptimization
         }
 
 
-        private void FinishMeshlet(Meshlet meshlet, byte[] meshlet_indices)
+        private void FinishMeshlet(Meshlet meshlet, ushort[] meshlet_indices)
         {
             int offset = (int)(meshlet.IndicesOffset + meshlet.IndicesCount);
 
@@ -224,7 +240,7 @@ namespace MiniEngine.MeshOptimization
                 used_extra++;
 
 
-            if (meshlet.VertexCount + used_extra > max_vertices || meshlet.IndicesCount >= max_triangles)
+            if (meshlet.VertexCount + used_extra > max_vertices || meshlet.IndicesCount >= max_indices)
             {
                 meshlets.Add(meshlet);
 
@@ -235,10 +251,16 @@ namespace MiniEngine.MeshOptimization
                 FinishMeshlet(meshlet, meshlet_indices);
 
                 var newMeshlet = new Meshlet();
-                newMeshlet.VertexOffset = newMeshlet.VertexOffset + meshlet.VertexCount;
-                newMeshlet.IndicesOffset = newMeshlet.IndicesOffset + (uint)((meshlet.IndicesCount + 3) & ~3); // 4 bytes padding
+                newMeshlet.VertexOffset = meshlet.VertexOffset + meshlet.VertexCount;
+                uint ajustedCount = (uint)((meshlet.IndicesCount + 3) & ~3);    // 4 bytes padding
+                newMeshlet.IndicesOffset = meshlet.IndicesOffset + ajustedCount; 
 
                 meshlet = newMeshlet;
+
+                //It's for sure 3 new vertices...
+                av = byte.MaxValue;
+                bv = byte.MaxValue;
+                cv = byte.MaxValue;
 
 
                 result = true;
@@ -398,7 +420,7 @@ namespace MiniEngine.MeshOptimization
             Debug.Assert(stop_index > 0);
             Debug.Assert(offset < nodes.Length);
 
-            if (stop_index <= 1)
+            if (stop_index - start_index <= LEAF_SIZE)
                 return KDTreeBuildLeaf(offset, nodes, kdindices, start_index, stop_index);
 
             Vector3 mean = Vector3.Zero;
@@ -433,8 +455,11 @@ namespace MiniEngine.MeshOptimization
             float split = mean[axis];
             int middle = KDTreePartition(cones, kdindices, start_index, stop_index, axis, split);
 
+            if (middle < start_index)
+                Debug.Info("ici");
+
             // when the partition is degenerate simply consolidate the points into a single node
-            if (middle <= 0 || middle >= stop_index)
+            if (middle <= start_index + LEAF_SIZE / 2 || middle >= stop_index - LEAF_SIZE / 2)
                 return KDTreeBuildLeaf(offset, nodes, kdindices, start_index, stop_index);
 
             KDNode result = nodes[offset];
@@ -448,7 +473,7 @@ namespace MiniEngine.MeshOptimization
             // distance to the right subtree is represented explicitly
             result.children = next_offset - offset - 1;
 
-            return KDTreeBuild(next_offset, nodes, cones, kdindices, middle, stop_index - middle);
+            return KDTreeBuild(next_offset, nodes, cones, kdindices, middle, stop_index);
         }
 
 
@@ -456,7 +481,7 @@ namespace MiniEngine.MeshOptimization
         private int KDTreePartition(List<Cone> cones, uint[] kdindices, int start_index, int stop_index, int axis, float pivot)
         {
 
-            int m = 0;
+            int m = start_index;
 
             // invariant: elements in range [0, m) are < pivot, elements in range [m, i) are >= pivot
             for (int i = start_index; i < stop_index; ++i)
@@ -483,16 +508,20 @@ namespace MiniEngine.MeshOptimization
 
         private int KDTreeBuildLeaf(int offset, KDNode[] nodes, uint[] kdindices, int start_index, int stop_index)
         {
-            Debug.Assert(offset + stop_index <= nodes.Length);
+            
 
             KDNode result = nodes[offset];
+            int count = stop_index - start_index;
+
+            Debug.Assert(offset + count <= nodes.Length);
 
             result.index = kdindices[start_index];
             result.axis = 3;
-            result.children = stop_index - 1;
+            result.children = count - 1;
 
             // all remaining points are stored in nodes immediately following the leaf
-            for (int i = start_index + 1; i < stop_index; ++i)
+            
+            for (int i = 1; i < count; ++i)
             {
                 KDNode tail = nodes[offset + i];
 
@@ -501,7 +530,7 @@ namespace MiniEngine.MeshOptimization
                 tail.children = Int32.MaxValue;
             }
 
-            return offset + stop_index;
+            return offset + count;
         }
 
 

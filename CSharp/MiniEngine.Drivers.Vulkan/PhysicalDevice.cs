@@ -566,6 +566,28 @@ namespace MiniEngine.Drivers.Vulkan
             }
         }
 
+        public PhysicalDeviceFeatures2 GetFeatures2(params INext[] features)
+        {
+            PhysicalDeviceFeatures2 pFeatures;
+            unsafe
+            {
+
+                pFeatures = new PhysicalDeviceFeatures2();
+
+                INext parent = pFeatures;
+                foreach (var feature in features)
+                {
+                    parent.Next = feature.Handle;
+                    parent = feature;
+                }
+
+                Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
+
+                return pFeatures;
+
+            }
+        }
+
 
         public PhysicalDeviceFeatures2 GetFeatures2Indexing(out PhysicalDeviceDescriptorIndexingFeatures indexingFeatures)
         {
@@ -595,6 +617,24 @@ namespace MiniEngine.Drivers.Vulkan
                 vulkan12Features = new PhysicalDeviceVulkan12Features();
 
                 pFeatures.Next = vulkan12Features.Handle;
+
+                Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
+
+                return pFeatures;
+
+            }
+        }
+
+        public PhysicalDeviceFeatures2 GetFeaturesIndexTypeUint8EXT(out PhysicalDeviceIndexTypeUint8FeaturesEXT indexTypeUint8Features)
+        {
+            PhysicalDeviceFeatures2 pFeatures;
+            unsafe
+            {
+
+                pFeatures = new PhysicalDeviceFeatures2();
+                indexTypeUint8Features = new PhysicalDeviceIndexTypeUint8FeaturesEXT();
+
+                pFeatures.Next = indexTypeUint8Features.Handle;
 
                 Interop.NativeMethods.vkGetPhysicalDeviceFeatures2(this.m, pFeatures.m);
 

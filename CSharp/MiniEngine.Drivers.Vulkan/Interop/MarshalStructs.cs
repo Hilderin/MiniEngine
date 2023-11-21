@@ -1261,6 +1261,13 @@ namespace MiniEngine.Drivers.Vulkan.Interop
         public Bool32 SubgroupBroadcastDynamicId;
     }
 
+    internal partial struct PhysicalDeviceIndexTypeUint8FeaturesEXT
+    {
+        public StructureType SType;
+        public IntPtr Next;
+        public Bool32 IndexTypeUint8;
+    }
+
     internal partial struct PhysicalDeviceProperties2Khr
     {
         internal StructureType SType;

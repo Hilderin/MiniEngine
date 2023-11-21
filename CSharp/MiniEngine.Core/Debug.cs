@@ -16,6 +16,7 @@ namespace MiniEngine
         /// <summary>
         /// Print a debug info message
         /// </summary>
+        [Conditional("DEBUG")]
         public static void Info(string message)
         {
             if (DebugTraceListener != null)
@@ -27,6 +28,7 @@ namespace MiniEngine
         /// <summary>
         /// Print a debug error message
         /// </summary>
+        [Conditional("DEBUG")]
         public static void Error(string message)
         {
             if (DebugTraceListener != null)
@@ -38,6 +40,7 @@ namespace MiniEngine
         /// <summary>
         /// Print a debug error message from the Exception
         /// </summary>
+        [Conditional("DEBUG")]
         public static void Error(Exception ex)
         {
             if (DebugTraceListener != null)
@@ -49,6 +52,7 @@ namespace MiniEngine
         /// <summary>
         /// Print a debug warning message
         /// </summary>
+        [Conditional("DEBUG")]
         public static void Warning(string message)
         {
             if (DebugTraceListener != null)
@@ -79,6 +83,9 @@ namespace MiniEngine
         {
             if (!condition)
             {
+                if (String.IsNullOrEmpty(message))
+                    message = "Assert fail: " + Environment.StackTrace;
+
                 System.Diagnostics.Debug.Fail(message, detailMessage);
             }
         }

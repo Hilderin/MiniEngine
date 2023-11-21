@@ -60,10 +60,10 @@ namespace MiniEngine.Tests.Core.MeshOptimization
             var meshLetContainers = meshletGenerator.Generate(mesh.MeshDefinition);
 
             Assert.AreEqual(1, meshLetContainers.Length);
-            Assert.AreEqual(21, meshLetContainers[0].Meshlets.Length);
+            Assert.AreEqual(55, meshLetContainers[0].Meshlets.Length);
             Assert.AreEqual(mesh.MeshDefinition.SubMeshes[0].Indices.Length, meshLetContainers[0].Indices.Length);
-            Assert.AreEqual((uint)513, meshLetContainers[0].Meshlets[0].IndicesCount);
-            Assert.AreEqual((uint)108, meshLetContainers[0].Meshlets[0].VertexCount);
+            Assert.AreEqual((uint)516, meshLetContainers[0].Meshlets[0].IndicesCount);
+            Assert.AreEqual((uint)123, meshLetContainers[0].Meshlets[0].VertexCount);
 
         }
     }
