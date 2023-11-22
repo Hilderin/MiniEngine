@@ -27,18 +27,20 @@ namespace MiniEngine.MeshOptimization
         private List<Vertex> new_vertices;
         private uint[] meshlet_vertices;
         private ushort[] meshlet_indices;
+        private List<Vector3> points = new List<Vector3>();
+        private List<Vector3> normals = new List<Vector3>();
 
         /// <summary>
         /// Generates meshlets for a mesh
         /// </summary>
-        public MeshLetContainer[] Generate(MeshDefinition meshDef)
+        public MeshletContainer[] Generate(MeshDefinition meshDef)
         {
 
-            MeshLetContainer[] containers = new MeshLetContainer[meshDef.SubMeshes.Count];
+            MeshletContainer[] containers = new MeshletContainer[meshDef.SubMeshes.Count];
 
             for (int i = 0; i < meshDef.SubMeshes.Count; i++)
             {
-                
+
 
                 SubMeshDefinition subMesh = meshDef.SubMeshes[i];
 
@@ -46,10 +48,11 @@ namespace MiniEngine.MeshOptimization
                 Generate(subMesh, meshlets);
 
 
-                MeshLetContainer container = new MeshLetContainer();
+                MeshletContainer container = new MeshletContainer();
                 container.Meshlets = meshlets.ToArray();
                 container.Indices = meshlet_indices;
                 container.Vertices = new_vertices.ToArray();
+
 
                 containers[i] = container;
             }
@@ -58,6 +61,9 @@ namespace MiniEngine.MeshOptimization
 
         }
 
+        /// <summary>
+        /// Generate meshlets
+        /// </summary>
         private void Generate(SubMeshDefinition subMeshDef, List<Meshlet> meshlets)
         {
 
@@ -156,12 +162,12 @@ namespace MiniEngine.MeshOptimization
                 uint a = subMeshDef.Indices[best_triangle * 3 + 0], b = subMeshDef.Indices[best_triangle * 3 + 1], c = subMeshDef.Indices[best_triangle * 3 + 2];
                 Debug.Assert(a < vertex_count && b < vertex_count && c < vertex_count);
 
-                // add meshlet to the output; when the current meshlet is full we reset the accumulated bounds
+                // add meshlet to the output; when the current meshlet is full we reset the accumulated meshlet.Bounds
                 if (AppendMeshlet(ref meshlet, a, b, c, used, meshlets, subMeshDef))
                 {
                     meshlet_cone_acc = new Cone();
-
                     
+
                 }
 
                 live_vertices[a]--;
@@ -198,9 +204,11 @@ namespace MiniEngine.MeshOptimization
                 meshlet_cone_acc.ny += cones[(int)best_triangle].ny;
                 meshlet_cone_acc.nz += cones[(int)best_triangle].nz;
 
+                normals.Add(new Vector3(cones[(int)best_triangle].nx, cones[(int)best_triangle].ny, cones[(int)best_triangle].nz));
+
                 emitted_flags[best_triangle] = 1;
-                
-                
+
+
             }
 
             if (meshlet.IndicesCount > 0)
@@ -221,7 +229,13 @@ namespace MiniEngine.MeshOptimization
             // fill 4b padding with 0
             while ((offset & 3) != 0)
                 meshlet_indices[offset++] = 0;
+
+            ComputeMeshletBounds(meshlet, points, normals);
+
+            normals.Clear();
+            points.Clear();
         }
+
 
         private bool AppendMeshlet(ref Meshlet meshlet, uint a, uint b, uint c, byte[] used, List<Meshlet> meshlets, SubMeshDefinition subMeshDef)
         {
@@ -253,7 +267,7 @@ namespace MiniEngine.MeshOptimization
                 var newMeshlet = new Meshlet();
                 newMeshlet.VertexOffset = meshlet.VertexOffset + meshlet.VertexCount;
                 uint ajustedCount = (uint)((meshlet.IndicesCount + 3) & ~3);    // 4 bytes padding
-                newMeshlet.IndicesOffset = meshlet.IndicesOffset + ajustedCount; 
+                newMeshlet.IndicesOffset = meshlet.IndicesOffset + ajustedCount;
 
                 meshlet = newMeshlet;
 
@@ -294,6 +308,10 @@ namespace MiniEngine.MeshOptimization
             meshlet_indices[meshlet.IndicesOffset + meshlet.IndicesCount + 1] = bv;
             meshlet_indices[meshlet.IndicesOffset + meshlet.IndicesCount + 2] = cv;
             meshlet.IndicesCount += 3;
+
+            points.Add(subMeshDef.Vertices[a].Pos);
+            points.Add(subMeshDef.Vertices[b].Pos);
+            points.Add(subMeshDef.Vertices[c].Pos);
 
             return result;
         }
@@ -508,7 +526,7 @@ namespace MiniEngine.MeshOptimization
 
         private int KDTreeBuildLeaf(int offset, KDNode[] nodes, uint[] kdindices, int start_index, int stop_index)
         {
-            
+
 
             KDNode result = nodes[offset];
             int count = stop_index - start_index;
@@ -520,7 +538,7 @@ namespace MiniEngine.MeshOptimization
             result.children = count - 1;
 
             // all remaining points are stored in nodes immediately following the leaf
-            
+
             for (int i = 1; i < count; ++i)
             {
                 KDNode tail = nodes[offset + i];
@@ -688,6 +706,180 @@ namespace MiniEngine.MeshOptimization
                     KDTreeNearest(nodes, root + 1 + second, cones, emitted_flags, ref position, ref result, ref limit);
             }
         }
+
+        /// <summary>
+        /// Compute meshlet meshlet.Bounds
+        /// </summary>
+        private void ComputeMeshletBounds(Meshlet meshlet, List<Vector3> points, List<Vector3> normals)
+        {
+            
+            // compute cluster bounding sphere; we'll use the center to determine normal cone apex as well
+            ComputeBoundingSphere(points.ToArray(), out Vector3 meshCenter, out float meshRadius);
+
+            // treating triangle normals as points, find the bounding sphere - the sphere center determines the optimal cone axis
+            ComputeBoundingSphere(normals.ToArray(), out Vector3 axis, out float normalRadius);
+
+            float axislength = axis.Length();
+            float invaxislength = axislength == 0.0f ? 0.0f : 1.0f / axislength;
+            axis *= invaxislength;
+
+
+            // compute a tight cone around all normals, mindp = cos(angle/2)
+            float mindp = 1.0f;
+
+            for (int i = 0; i < normals.Count; ++i)
+            {
+                float dp = normals[i].X * axis.X + normals[i].Y * axis.Y + normals[i].Z * axis.Z;
+
+                mindp = (dp < mindp) ? dp : mindp;
+            }
+
+            // fill bounding sphere info; note that below we can return meshlet.Bounds without cone information for degenerate cones
+            meshlet.Bounds.center = meshCenter;
+            meshlet.Bounds.radius = meshRadius;
+
+            // degenerate cluster, normal cone is larger than a hemisphere => trivial accept
+            // note that if mindp is positive but close to 0, the triangle intersection code below gets less stable
+            // we arbitrarily decide that if a normal cone is ~168 degrees wide or more, the cone isn't useful
+            if (mindp <= 0.1f)
+            {
+                meshlet.Bounds.cone_cutoff = 1;
+                meshlet.Bounds.cone_cutoff_s8 = 127;
+                return;
+            }
+
+            float maxt = 0;
+
+            // we need to find the point on center-t*axis ray that lies in negative half-space of all triangles
+            for (int i = 0; i < normals.Count; ++i)
+            {
+                // dot(center-t*axis-corner, trinormal) = 0
+                // dot(center-corner, trinormal) - t * dot(axis, trinormal) = 0
+                float cx = meshCenter.X - points[i * 3].X;
+                float cy = meshCenter.Y - points[i * 3].Y;
+                float cz = meshCenter.Z - points[i * 3].Z;
+
+                float dc = cx * normals[i].X + cy * normals[i].Y + cz * normals[i].Z;
+                float dn = axis.X * normals[i].X + axis.Y * normals[i].Y + axis.Z * normals[i].Z;
+
+                // dn should be larger than mindp cutoff above
+                Debug.Assert(dn > 0.0f);
+                float t = dc / dn;
+
+                maxt = (t > maxt) ? t : maxt;
+            }
+
+            // cone apex should be in the negative half-space of all cluster triangles by construction
+            meshlet.Bounds.cone_apex.X = meshCenter.X - axis.X * maxt;
+            meshlet.Bounds.cone_apex.Y = meshCenter.Y - axis.Y * maxt;
+            meshlet.Bounds.cone_apex.Z = meshCenter.Z - axis.Z * maxt;
+
+            // note: this axis is the axis of the normal cone, but our test for perspective camera effectively negates the axis
+            meshlet.Bounds.cone_axis.X = axis.X;
+            meshlet.Bounds.cone_axis.Y = axis.Y;
+            meshlet.Bounds.cone_axis.Z = axis.Z;
+
+            // cos(a) for normal cone is mindp; we need to add 90 degrees on both sides and invert the cone
+            // which gives us -cos(a+90) = -(-sin(a)) = sin(a) = sqrt(1 - cos^2(a))
+            meshlet.Bounds.cone_cutoff = Math.Sqrt(1 - mindp * mindp);
+
+            // quantize axis & cutoff to 8-bit SNORM format
+            meshlet.Bounds.cone_axis_s8_x = (byte)(QuantizeSnorm(meshlet.Bounds.cone_axis.X, 8));
+            meshlet.Bounds.cone_axis_s8_y = (byte)(QuantizeSnorm(meshlet.Bounds.cone_axis.Y, 8));
+            meshlet.Bounds.cone_axis_s8_z = (byte)(QuantizeSnorm(meshlet.Bounds.cone_axis.Z, 8));
+
+            // for the 8-bit test to be conservative, we need to adjust the cutoff by measuring the max. error
+            float cone_axis_s8_e0 = Math.Abs(meshlet.Bounds.cone_axis_s8_x / 127.0f - meshlet.Bounds.cone_axis.X);
+            float cone_axis_s8_e1 = Math.Abs(meshlet.Bounds.cone_axis_s8_y / 127.0f - meshlet.Bounds.cone_axis.Y);
+            float cone_axis_s8_e2 = MathF.Abs(meshlet.Bounds.cone_axis_s8_z / 127.0f - meshlet.Bounds.cone_axis.Z);
+
+            // note that we need to round this up instead of rounding to nearest, hence +1
+            int cone_cutoff_s8 = (int)(127 * (meshlet.Bounds.cone_cutoff + cone_axis_s8_e0 + cone_axis_s8_e1 + cone_axis_s8_e2) + 1);
+
+            meshlet.Bounds.cone_cutoff_s8 = (cone_cutoff_s8 > 127) ? (byte)127 : (byte)(cone_cutoff_s8);
+
+        }
+
+        private int QuantizeSnorm(float v, int N)
+        {
+            float scale = (float)((1 << (N - 1)) - 1);
+
+            float round = (v >= 0 ? 0.5f : -0.5f);
+
+            v = (v >= -1) ? v : -1;
+            v = (v <= +1) ? v : +1;
+
+            return (int)(v * scale + round);
+        }
+
+
+        /// <summary>
+        /// Compute bounding sphere from a points array
+        /// </summary>
+        private void ComputeBoundingSphere(Vector3[] points, out Vector3 center, out float radius)
+        {
+
+            // find extremum points along all 3 axes; for each axis we get a pair of points with min/max coordinates
+            uint[] pmin = { 0, 0, 0 };
+            uint[] pmax = { 0, 0, 0 };
+
+            for (int i = 0; i < points.Length; ++i)
+            {
+                ref Vector3 p = ref points[i];
+
+                for (int axis = 0; axis < 3; ++axis)
+                {
+                    pmin[axis] = (p[axis] < points[pmin[axis]][axis]) ? (uint)i : pmin[axis];
+                    pmax[axis] = (p[axis] > points[pmax[axis]][axis]) ? (uint)i : pmax[axis];
+                }
+            }
+
+            // find the pair of points with largest distance
+            float paxisd2 = 0;
+            int paxis = 0;
+
+            for (int axis = 0; axis < 3; ++axis)
+            {
+                ref Vector3 px1 = ref points[pmin[axis]];
+                ref Vector3 px2 = ref points[pmax[axis]];
+
+                float d2 = (px2[0] - px1[0]) * (px2[0] - px1[0]) + (px2[1] - px1[1]) * (px2[1] - px1[1]) + (px2[2] - px1[2]) * (px2[2] - px1[2]);
+
+                if (d2 > paxisd2)
+                {
+                    paxisd2 = d2;
+                    paxis = axis;
+                }
+            }
+
+            // use the longest segment as the initial sphere diameter
+            ref Vector3 p1 = ref points[pmin[paxis]];
+            ref Vector3 p2 = ref points[pmax[paxis]];
+
+            center = new((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2, (p1[2] + p2[2]) / 2);
+            radius = Math.Sqrt(paxisd2) / 2;
+
+            // iteratively adjust the sphere up until all points fit
+            for (uint i = 0; i < points.Length; ++i)
+            {
+                ref Vector3 p = ref points[i];
+                float d2 = (p[0] - center[0]) * (p[0] - center[0]) + (p[1] - center[1]) * (p[1] - center[1]) + (p[2] - center[2]) * (p[2] - center[2]);
+
+                if (d2 > radius * radius)
+                {
+                    float d = Math.Sqrt(d2);
+
+                    float k = 0.5f + (radius / d) / 2;
+
+                    center[0] = center[0] * k + p[0] * (1 - k);
+                    center[1] = center[1] * k + p[1] * (1 - k);
+                    center[2] = center[2] * k + p[2] * (1 - k);
+                    radius = (radius + d) / 2;
+                }
+            }
+
+        }
+
 
         public float GetMeshletScore(float distance2, float spread, float cone_weight, float expected_radius)
         {

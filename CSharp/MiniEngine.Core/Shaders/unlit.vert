@@ -27,6 +27,7 @@ layout(std430, binding = 3) readonly buffer _meshlet_instances {
 //Outs variables
 layout(location = 0) out vec2 frag_tex_coord;
 layout(location = 1) flat out uint texture_index;
+layout(location = 2) flat out uint instance_index;
 
 
 //-----------------------
@@ -38,4 +39,5 @@ void main() {
         
     frag_tex_coord = tex_coord;
     texture_index = meshlet_instances[gl_InstanceIndex].texture_index;
+    instance_index = gl_InstanceIndex;
 }

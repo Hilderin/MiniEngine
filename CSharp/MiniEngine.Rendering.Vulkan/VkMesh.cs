@@ -24,7 +24,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         public VkMeshlet[] MeshLets;
 
-        private MeshLetContainer[] _meshletContainers;
+        private MeshletContainer[] _meshletContainers;
 
         /// <summary>
         /// Constructor
