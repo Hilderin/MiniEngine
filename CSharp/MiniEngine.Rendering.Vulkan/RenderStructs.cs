@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniEngine.MeshOptimization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -47,11 +48,32 @@ namespace MiniEngine.Rendering.Vulkan
     /// <summary>
     /// Information on MeshLet in the GPU buffer
     /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 48)]
     public struct MeshletData
     {
+        [FieldOffset(0)]
         public uint VerticesBufferIndex;
+        [FieldOffset(4)]
         public uint IndicesBufferIndex;
-        public ushort NbIndices;
+        [FieldOffset(8)]
+        public uint NbIndices;
+
+
+        /* bounding sphere, useful for frustum and occlusion culling */
+        [FieldOffset(16)]
+        public Vector3 center;
+        [FieldOffset(28)]
+        public float radius;
+
+        /* normal cone axis and cutoff, stored in 8-bit SNORM format; decode using x/127.0 */
+        [FieldOffset(32)]
+        public byte cone_axis_s8_x;
+        [FieldOffset(33)]
+        public byte cone_axis_s8_y;
+        [FieldOffset(34)]
+        public byte cone_axis_s8_z;
+        [FieldOffset(35)]
+        public byte cone_cutoff_s8;
     }
 
 

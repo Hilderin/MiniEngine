@@ -51,19 +51,19 @@ namespace MiniEngine.Labs.Renderer
 
             //_cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }));
 
-            //int spread = 10;
-            //for (int i = 0; i < 10000; i++)
-            //{
-            //    _cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }
-            //                                    .MoveTo(new Vector3(Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread)))
-            //                                    //.SetScale(new Vector3(Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f)))
-            //                                    .SetMaterial(BaseMaterials.Aqua, 0)
-            //         //.RotatePitch(10f)
-            //         //.RotateYaw(11f)
-            //         //.RotateRoll(12f)
-            //         //.SetMaterial(mats[Math.RandomInt(0, mats.Count)], 0)
-            //         ));
-            //}
+            int spread = 10;
+            for (int i = 0; i < 100; i++)
+            {
+                _cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }
+                                                .MoveTo(new Vector3(Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread)))
+                                                //.SetScale(new Vector3(Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f), Math.RandomFloat(-.5f, 1.5f)))
+                                                .SetMaterial(BaseMaterials.Aqua, 0)
+                     //.RotatePitch(10f)
+                     //.RotateYaw(11f)
+                     //.RotateRoll(12f)
+                     //.SetMaterial(mats[Math.RandomInt(0, mats.Count)], 0)
+                     ));
+            }
 
             //InitCullingCompute();            //int spread = 10;
             //for (int i = 0; i < 10000; i++)

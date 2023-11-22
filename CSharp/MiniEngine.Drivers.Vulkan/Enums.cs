@@ -912,6 +912,7 @@ namespace MiniEngine.Drivers.Vulkan
 		MemoryBarrier = 46,
 		LoaderInstanceCreateInfo = 47,
 		LoaderDeviceCreateInfo = 48,
+        PhysicalDeviceVulkan11Features = 49,
         PhysicalDeviceVulkan12Features = 51,
         SwapchainCreateInfoKhr = 1000001000,
 		PresentInfoKhr = 1000001001,

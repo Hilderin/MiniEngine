@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using YamlDotNet.Serialization;
 
 namespace MiniEngine
 {
@@ -169,9 +170,8 @@ namespace MiniEngine
         /// </summary>
         public static uint RoundUp(uint value, uint multipleOf)
         {
-            uint size_difference = multipleOf - (((value - 1) % multipleOf) + 1);
-
-            return value + size_difference;
+            return value + (multipleOf - (((value - 1) % multipleOf) + 1));
+            
         }
 
 

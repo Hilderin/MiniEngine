@@ -1,4 +1,7 @@
 //? #version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : enable
+#extension GL_EXT_shader_explicit_arithmetic_types_int16 : enable
+
 
 //-----------------------
 //Structs
@@ -41,6 +44,15 @@ struct meshlet_data
     uint vertices_buffer_index;
     uint indices_buffer_index;
     uint nb_indices;
+    
+    vec3    center;
+    float   radius;
+
+    uint8_t  cone_axis_x;
+    uint8_t  cone_axis_y;
+    uint8_t  cone_axis_z;
+    uint8_t  cone_cutoff;
+
 };
 
 // Indirect draw call (VkDrawIndexedIndirectCommand)

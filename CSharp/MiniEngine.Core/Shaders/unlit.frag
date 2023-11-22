@@ -37,6 +37,6 @@ vec4 basic_colors[] = {
 //-----------------------
 //Main
 void main() {
-    out_color = basic_colors[instance_index % basic_colors.length()];
-    //out_color = texture(_sampler_diffuse[texture_index], frag_tex_coord);
+    //out_color = basic_colors[instance_index % basic_colors.length()];
+    out_color = texture(_sampler_diffuse[texture_index], frag_tex_coord);
 }

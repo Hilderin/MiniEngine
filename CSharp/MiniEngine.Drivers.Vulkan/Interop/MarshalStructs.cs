@@ -1208,6 +1208,24 @@ namespace MiniEngine.Drivers.Vulkan.Interop
         public Bool32 RuntimeDescriptorArray;
     }
 
+    internal partial struct PhysicalDeviceVulkan11Features
+    {
+        public StructureType SType;
+        public IntPtr Next;
+        public Bool32 StorageBuffer16BitAccess;
+        public Bool32 UniformAndStorageBuffer16BitAccess;
+        public Bool32 StoragePushConstant16;
+        public Bool32 StorageInputOutput16;
+        public Bool32 Multiview;
+        public Bool32 MultiviewGeometryShader;
+        public Bool32 MultiviewTessellationShader;
+        public Bool32 VariablePointersStorageBuffer;
+        public Bool32 VariablePointers;
+        public Bool32 ProtectedMemory;
+        public Bool32 SamplerYcbcrConversion;
+        public Bool32 ShaderDrawParameters;
+    }
+
     internal partial struct PhysicalDeviceVulkan12Features
     {
         public StructureType SType;

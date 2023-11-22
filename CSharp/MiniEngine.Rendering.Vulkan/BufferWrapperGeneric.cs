@@ -32,7 +32,12 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public BufferWrapper(VkRenderer renderer, uint size, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags): base(renderer, size, usageFlags, memoryPropertyFlags)
         {
-            ElementSize = VkSizeOfHelper.SizeOf<T>();
+            ElementSize = (uint)Unsafe.SizeOf<T>();
+
+            //An array has a base alignment equal to the base alignment of its element type, rounded up to a multiple of 16.
+            if (usageFlags.HasFlag(BufferUsageFlags.UniformBuffer))
+                //Roundmap to 16...
+                ElementSize = Math.RoundUp(ElementSize, 16);
         }
 
         /// <summary>
@@ -40,9 +45,15 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public static BufferWrapper<T> Create(VkRenderer renderer, T[] values, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
-            uint size = VkSizeOfHelper.SizeOf<T>(1) * (uint)values.Length;
+            uint sizeElement = VkSizeOfHelper.SizeOf<T>();
 
-            BufferWrapper<T> buffer = new BufferWrapper<T>(renderer, size, usageFlags, memoryPropertyFlags);
+
+            //An array has a base alignment equal to the base alignment of its element type, rounded up to a multiple of 16.
+            if (usageFlags.HasFlag(BufferUsageFlags.UniformBuffer))
+                //Roundmap to 16...
+                sizeElement = Math.RoundUp(sizeElement, 16);
+
+            BufferWrapper<T> buffer = new BufferWrapper<T>(renderer, sizeElement * (uint)values.Length, usageFlags, memoryPropertyFlags);
 
             buffer.Update(values);
 
@@ -55,9 +66,14 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public static BufferWrapper<T> Create(VkRenderer renderer, int count, BufferUsageFlags usageFlags, MemoryPropertyFlags memoryPropertyFlags)
         {
-            uint size = VkSizeOfHelper.SizeOf<T>() * (uint)count;
+            uint sizeElement = VkSizeOfHelper.SizeOf<T>();
 
-            BufferWrapper<T> buffer = new BufferWrapper<T>(renderer, size, usageFlags, memoryPropertyFlags);
+            //An array has a base alignment equal to the base alignment of its element type, rounded up to a multiple of 16.
+            if (usageFlags.HasFlag(BufferUsageFlags.UniformBuffer))
+                //Roundmap to 16...
+                sizeElement = Math.RoundUp(sizeElement, 16);
+            
+            BufferWrapper<T> buffer = new BufferWrapper<T>(renderer, sizeElement * (uint)count, usageFlags, memoryPropertyFlags);
 
             return buffer;
         }

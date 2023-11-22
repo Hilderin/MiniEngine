@@ -8525,6 +8525,57 @@ namespace MiniEngine.Drivers.Vulkan
 
     }
 
+    unsafe public partial class PhysicalDeviceVulkan11Features : MarshalledObject, INext
+    {
+
+        public IntPtr Next
+        {
+            get { return m->Next; }
+            set { m->Next = value; }
+        }
+
+        public Bool32 StorageBuffer16BitAccess { get { return m->StorageBuffer16BitAccess; } }
+        public Bool32 UniformAndStorageBuffer16BitAccess { get { return m->UniformAndStorageBuffer16BitAccess; } }
+        public Bool32 StoragePushConstant16 { get { return m->StoragePushConstant16; } }
+        public Bool32 StorageInputOutput16 { get { return m->StorageInputOutput16; } }
+        public Bool32 Multiview { get { return m->Multiview; } }
+        public Bool32 MultiviewGeometryShader { get { return m->MultiviewGeometryShader; } }
+        public Bool32 MultiviewTessellationShader { get { return m->MultiviewTessellationShader; } }
+        public Bool32 VariablePointersStorageBuffer { get { return m->VariablePointersStorageBuffer; } }
+        public Bool32 VariablePointers { get { return m->VariablePointers; } }
+        public Bool32 ProtectedMemory { get { return m->ProtectedMemory; } }
+        public Bool32 SamplerYcbcrConversion { get { return m->SamplerYcbcrConversion; } }
+        public Bool32 ShaderDrawParameters { get { return m->ShaderDrawParameters; } }
+
+        internal Interop.PhysicalDeviceVulkan11Features* m
+        {
+
+            get
+            {
+                return (Interop.PhysicalDeviceVulkan11Features*)native.Handle;
+            }
+        }
+
+        public PhysicalDeviceVulkan11Features()
+        {
+            native = Interop.Structure.Allocate(typeof(Interop.PhysicalDeviceVulkan11Features));
+            Initialize();
+        }
+
+        internal PhysicalDeviceVulkan11Features(NativePointer pointer)
+        {
+            native = pointer;
+            Initialize();
+        }
+
+
+        internal void Initialize()
+        {
+            m->SType = StructureType.PhysicalDeviceVulkan11Features;
+        }
+
+    }
+
     unsafe public partial class PhysicalDeviceVulkan12Features : MarshalledObject, INext
     {
 

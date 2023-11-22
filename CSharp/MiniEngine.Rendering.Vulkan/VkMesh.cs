@@ -125,6 +125,15 @@ namespace MiniEngine.Rendering.Vulkan
                     meshlet.MeshLetData.IndicesBufferIndex = indicesIndex + container.Meshlets[im].IndicesOffset;
                     meshlet.MeshLetData.NbIndices = container.Meshlets[im].IndicesCount;
 
+                    meshlet.MeshLetData.center = container.Meshlets[im].Bounds.center;
+                    meshlet.MeshLetData.radius = container.Meshlets[im].Bounds.radius;
+                    meshlet.MeshLetData.cone_axis_s8_x = container.Meshlets[im].Bounds.cone_axis_s8_x;
+                    meshlet.MeshLetData.cone_axis_s8_y = container.Meshlets[im].Bounds.cone_axis_s8_y;
+                    meshlet.MeshLetData.cone_axis_s8_z = container.Meshlets[im].Bounds.cone_axis_s8_z;
+                    meshlet.MeshLetData.cone_cutoff_s8 = container.Meshlets[im].Bounds.cone_cutoff_s8;
+
+                    _renderer.MeshLetsBuffer.Append(ref meshlet.MeshLetData, out meshlet.MeshLetIndex);
+
                     newmeshLets.Add(meshlet);
 
                 }

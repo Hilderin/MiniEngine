@@ -780,15 +780,19 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private unsafe Device CreateDevice()
         {
+            PhysicalDeviceVulkan11Features vulkan11Features = new PhysicalDeviceVulkan11Features();
             PhysicalDeviceVulkan12Features vulkan12Features = new PhysicalDeviceVulkan12Features();
             //PhysicalDeviceIndexTypeUint8FeaturesEXT indexTypeUint8Features = new PhysicalDeviceIndexTypeUint8FeaturesEXT();
 
-            var features12 = _physicalDevice.GetFeatures2(vulkan12Features);
+            var features12 = _physicalDevice.GetFeatures2(vulkan11Features, vulkan12Features);
             //var features12 = _physicalDevice.GetFeatures2Vulkan12(out var vulkan12Features);
             //var featuresIndexTypeInt8 = _physicalDevice.GetFeaturesIndexTypeUint8EXT(out var indexTypeUint8Features);
             //features12.Next = 
             //Get the PhysicalDeviceDescriptorIndexingFeatures feature....
             //var featuresIndexing = _physicalDevice.GetFeatures2Indexing(out var indexingFeatures);
+
+            if (!vulkan11Features.StorageBuffer16BitAccess)
+                throw new NotSupportedException("Your graphic card does not support StorageBuffer16BitAccess.");
 
             //Check if the graphic card is compatible with bindless rendering...
             if (!vulkan12Features.DescriptorBindingPartiallyBound)

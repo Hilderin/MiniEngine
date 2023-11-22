@@ -66,27 +66,20 @@ namespace MiniEngine
         /// </summary>
         [Conditional("DEBUG")]
         public static void Assert([DoesNotReturnIf(false)] bool condition) =>
-            Assert(condition, string.Empty, string.Empty);
+            Assert(condition, string.Empty);
 
         /// <summary>
         /// Ensure that a condition is true in debug.
         /// </summary>
         [Conditional("DEBUG")]
-        public static void Assert([DoesNotReturnIf(false)] bool condition, string message) =>
-            Assert(condition, message, string.Empty);
-
-        /// <summary>
-        /// Ensure that a condition is true in debug.
-        /// </summary>
-        [Conditional("DEBUG")]
-        public static void Assert([DoesNotReturnIf(false)] bool condition, string message, string detailMessage)
+        public static void Assert([DoesNotReturnIf(false)] bool condition, string message)
         {
             if (!condition)
             {
                 if (String.IsNullOrEmpty(message))
-                    message = "Assert fail: " + Environment.StackTrace;
+                    message = "Assert fail";
 
-                System.Diagnostics.Debug.Fail(message, detailMessage);
+                throw new InvalidOperationException(message);
             }
         }
 
