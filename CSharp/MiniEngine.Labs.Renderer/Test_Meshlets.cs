@@ -52,7 +52,7 @@ namespace MiniEngine.Labs.Renderer
             //_cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }));
 
             int spread = 10;
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 _cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }
                                                 .MoveTo(new Vector3(Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread)))

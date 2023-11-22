@@ -1,0 +1,3 @@
+StagePaths:
+  Vertex: unlit.vert
+  Fragment: unlit_color.frag

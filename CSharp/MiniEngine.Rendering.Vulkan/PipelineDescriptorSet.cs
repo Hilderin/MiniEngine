@@ -59,6 +59,17 @@ namespace MiniEngine.Rendering.Vulkan
             return _descriptorSetsPerName.Keys;
         }
 
+        /// <summary>
+        /// Get the size of a binding
+        /// </summary>
+        public uint GetSize(string name)
+        {
+            if (!_descriptorSetsPerName.TryGetValue(name, out var descriptorData))
+                throw new InvalidOperationException($"Descriptor name not found '{name}'");
+
+            return descriptorData.Size;
+        }
+
 
         /// <summary>
         /// Set the default buffers from the renderer
@@ -91,7 +102,8 @@ namespace MiniEngine.Rendering.Vulkan
                         Set(ShaderVariableNames.DrawCallCounts, _renderer.DrawCallsCountsBuffer);
                         break;
                     default:
-                        Debug.Warning($"Descriptor name not supported in shader: {name}");
+                        if(name.StartsWith("_"))
+                            Debug.Warning($"Descriptor name not supported in shader: {name}");
                         break;
                 }
             }
@@ -363,7 +375,8 @@ namespace MiniEngine.Rendering.Vulkan
                             DescriptorSet = DescriptorSets[iSet],
                             DescriptorType = binding.DescriptorType,
                             Binding = binding.Binding,
-                            IsArray = binding.IsArray
+                            IsArray = binding.IsArray,
+                            Size = binding.Size
                         });
                     }
                 }
@@ -425,6 +438,7 @@ namespace MiniEngine.Rendering.Vulkan
             //public ImageView ImageView;
             //public Sampler Sampler;
             public uint Binding;
+            public uint Size;
         }
 
         /// <summary>

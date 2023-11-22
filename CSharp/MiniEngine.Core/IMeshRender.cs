@@ -11,5 +11,9 @@ namespace MiniEngine
     /// </summary>
     public interface IRenderHandle
     {
+        /// <summary>
+        /// Set a shader variable
+        /// </summary>
+        void SetShaderVariable<T>(string name, int materialIndex, T value);
     }
 }

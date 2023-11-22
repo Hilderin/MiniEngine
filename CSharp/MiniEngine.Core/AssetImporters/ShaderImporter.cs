@@ -39,7 +39,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Import a shader...
         /// </summary>
-        public object Import(string name)
+        public object Import(string name, string workingFolderUri)
         {
 
             if (!_cache.TryGetValue(name, out Shader shader))
@@ -57,7 +57,7 @@ namespace MiniEngine.AssetImporters
 
                         shader = Renderer.Current.CreateShader();
 
-                        LoadShader(name, shader);
+                        LoadShader(name, workingFolderUri, shader);
 
 
                     }
@@ -84,10 +84,10 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Load the shader
         /// </summary>
-        private void LoadShader(string name, Shader shader)
+        private void LoadShader(string name, string workingFolderUri, Shader shader)
         {
             //Shader on disk...
-            if (!_assetManager.TryFindAssetUri(name, String.Empty, true, out string assetPath))
+            if (!_assetManager.TryFindAssetUri(name, workingFolderUri, true, out string assetPath))
                 throw new FormatException($"Shader not found: '{name}'");
 
 
@@ -155,7 +155,7 @@ namespace MiniEngine.AssetImporters
             shader.Load(shaderDefinition);
 
             foreach (string uri in urisToWatch)
-                _assetManager.AssetUriToWatch(uri, () => LoadShader(name, shader));
+                _assetManager.AssetUriToWatch(uri, () => LoadShader(name, workingFolderUri, shader));
 
         }
 

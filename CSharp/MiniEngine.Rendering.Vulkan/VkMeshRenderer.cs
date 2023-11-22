@@ -2,14 +2,18 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace MiniEngine.Rendering.Vulkan
 {
     /// <summary>
     /// Renderer for the meshes
     /// </summary>
-    public unsafe class VkMeshRenderer : IDisposable, IRenderHandle
+    public unsafe class VkMeshRenderer : IDisposable
     {
         private VkRenderer _renderer;
         private VkShader _shader;
@@ -18,9 +22,10 @@ namespace MiniEngine.Rendering.Vulkan
         private uint _maxDrawCall;
 
         private bool _drawCallsBufferUpdatedByCompute = false;
-        
+
         private BufferWrapper<DrawIndexedIndirectCommand> _drawCallsBuffer;
-        
+        private Dictionary<string, BufferWrapper> _shaderVariables;
+
         private PipelineWrapper _pipeline;
         private PipelineDescriptorSet _descriptorSet;
         private uint _drawCount = 0;
@@ -30,7 +35,8 @@ namespace MiniEngine.Rendering.Vulkan
         private ConcurrentDictionary<uint, IndirectCommand> _drawCallsPerMeshLetInstance = new ConcurrentDictionary<uint, IndirectCommand>();
         private ConcurrentQueue<MeshLetInstance> _availableMeshLetInstances = new ConcurrentQueue<MeshLetInstance>();
         private ConcurrentQueue<IndirectCommand> _availableDrawCalls = new ConcurrentQueue<IndirectCommand>();
-
+        private ConcurrentDictionary<uint, ObjectIndexInfo> _objectIndexInfos = new ConcurrentDictionary<uint, ObjectIndexInfo>();
+        private uint _lastObjectIndexInfosIndex = 0;
 
 
         /// <summary>
@@ -47,11 +53,29 @@ namespace MiniEngine.Rendering.Vulkan
             _maxDrawCall = _drawCallsBuffer.Size / _drawCallsBuffer.ElementSize;
 
 
+
             _pipeline = _renderer.GetPipeline(_shader);
 
             _descriptorSet = _pipeline.CreateDescriptorSet();
 
+            //Render buffers...
             _descriptorSet.SetRendererBuffers();
+
+            //Custom name...
+            foreach (string name in _descriptorSet.GetNames().Where(n => !n.StartsWith("_")))
+            {
+                if (_shaderVariables == null)
+                    _shaderVariables = new Dictionary<string, BufferWrapper>();
+
+                uint size = _descriptorSet.GetSize(name);
+                //TODO: Dynamic buffer resize...
+                var buffer = new BufferWrapper(_renderer, Math.RoundUp(size * 100, 16), BufferUsageFlags.UniformBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+
+                _shaderVariables.Add(name, buffer);
+                _descriptorSet.Set(name, buffer);
+            }
+
+
 
         }
 
@@ -71,15 +95,34 @@ namespace MiniEngine.Rendering.Vulkan
             meshLetInstance.InstanceData.ObjectIndex = objectIndex;
             meshLetInstance.InstanceData.MeshLetIndex = meshLet.MeshLetIndex;
             meshLetInstance.InstanceData.DrawCallsBufferIndex = _drawCallsBufferIndex;
-            meshLetInstance.InstanceData.TextureIndex = GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
+            if (mat.VkDiffuseTexture != null)
+                meshLetInstance.InstanceData.TextureIndex = GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
+
 
             //Reserve the space for the MeshLetInstanceData...
-            if(meshLetInstance.BufferOffset == uint.MaxValue)
+            if (meshLetInstance.BufferOffset == uint.MaxValue)
                 //New instance...
                 meshLetInstance.BufferOffset = _renderer.MeshLetInstancesBuffer.Reserve(out meshLetInstance.MeshLetInstanceIndex);
-            
+
 
             _meshLetInstances.TryAdd(meshLetInstance.MeshLetInstanceIndex, meshLetInstance);
+
+            //Adding the object...
+            if (!_objectIndexInfos.TryGetValue(objectIndex, out var objectIndexInfo))
+            {
+                objectIndexInfo = new ObjectIndexInfo();
+                lock (_objectIndexInfos)
+                {
+                    objectIndexInfo.ShaderVariableBufferIndex = _lastObjectIndexInfosIndex++;
+                }
+                objectIndexInfo.MeshletInstanceCount = 1;
+                _objectIndexInfos.TryAdd(objectIndex, objectIndexInfo);
+            }
+            else
+            {
+                objectIndexInfo.MeshletInstanceCount++;
+            }
+
 
 
             //Draw call....
@@ -104,7 +147,7 @@ namespace MiniEngine.Rendering.Vulkan
                 else
                     indirectCommand.BufferOffset = _drawCallsBuffer.Append(ref indirectCommand.Command, out indirectCommand.DrawCallIndex);
             }
-            else if(!_drawCallsBufferUpdatedByCompute)
+            else if (!_drawCallsBufferUpdatedByCompute)
                 //update...
                 _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
 
@@ -131,7 +174,10 @@ namespace MiniEngine.Rendering.Vulkan
 
             //Update the mesh instance...
             meshLetInstance.InstanceData.MeshLetIndex = meshLet.MeshLetIndex;
-            meshLetInstance.InstanceData.TextureIndex = GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
+            if (mat.VkDiffuseTexture != null)
+                meshLetInstance.InstanceData.TextureIndex = GetOrAddBindlessIndex(mat.VkDiffuseTexture.ImageWrapper.ImageView, _renderer.DefaultSampler);
+            else
+                meshLetInstance.InstanceData.TextureIndex = 0;
             _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstance.BufferOffset);
 
             if (!_drawCallsBufferUpdatedByCompute)
@@ -153,6 +199,16 @@ namespace MiniEngine.Rendering.Vulkan
         {
             MeshLetInstance meshLetInstance = _meshLetInstances[meshLetInstanceIndex];
             IndirectCommand indirectCommand = _drawCallsPerMeshLetInstance[meshLetInstanceIndex];
+
+
+
+            //Removing the object...
+            if (_objectIndexInfos.TryGetValue(meshLetInstance.InstanceData.ObjectIndex, out var objectIndexInfo))
+            {
+                objectIndexInfo.MeshletInstanceCount--;
+                if (objectIndexInfo.MeshletInstanceCount <= 0)
+                    _objectIndexInfos.TryRemove(meshLetInstance.InstanceData.ObjectIndex, out _);
+            }
 
             //Reset everything...
             meshLetInstance.InstanceData.ObjectIndex = uint.MaxValue;
@@ -177,6 +233,22 @@ namespace MiniEngine.Rendering.Vulkan
 
             _availableMeshLetInstances.Enqueue(meshLetInstance);
             _availableDrawCalls.Enqueue(indirectCommand);
+        }
+
+        /// <summary>
+        /// Set a variable for an object
+        /// </summary>
+        public unsafe void SetShaderVariable<T>(uint objectIndex, string name, T value)
+        {
+            if (!_shaderVariables.TryGetValue(name, out var buffer))
+                throw new InvalidOperationException($"Shader variable does not exists: {name}");
+
+            if (_objectIndexInfos.TryGetValue(objectIndex, out var objectIndexInfo))
+            {
+                buffer.Update(&value, objectIndexInfo.ShaderVariableBufferIndex, VkSizeOfHelper.SizeOf<T>());
+            }
+            else
+                throw new InvalidOperationException($"ObjectIndex does not exists: {objectIndex}");
         }
 
         /// <summary>
@@ -236,7 +308,7 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
 
-        
+
 
 
         private class IndirectCommand
@@ -252,6 +324,13 @@ namespace MiniEngine.Rendering.Vulkan
             public uint MeshLetInstanceIndex = uint.MaxValue;
             public uint BufferOffset = uint.MaxValue;
             public MeshLetInstanceData InstanceData;
+        }
+
+        private class ObjectIndexInfo
+        {
+            public uint MeshletInstanceCount;
+            public uint ShaderVariableBufferIndex;
+
         }
 
     }

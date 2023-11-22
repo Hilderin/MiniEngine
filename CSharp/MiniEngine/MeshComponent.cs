@@ -61,6 +61,13 @@ namespace MiniEngine
             get { return _materials; }
         }
 
+        /// <summary>
+        /// Set a shader variable
+        /// </summary>
+        public void SetShaderVariable<T>(string name, int materialIndex, T value)
+        {
+            RendererHandle.SetShaderVariable(name, materialIndex, value);
+        }
 
 
         /// <summary>

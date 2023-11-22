@@ -151,6 +151,23 @@ namespace MiniEngine.Rendering.Vulkan
             CreateInternalObjects();
         }
 
+
+        /// <summary>
+        /// Reserve space into the buffer for a struct and return the start offset
+        /// </summary>
+        public uint Reserve(uint size)
+        {
+            uint startIndex;
+            lock (this)
+            {
+                startIndex = _position;
+                _position += size;
+            }
+
+            return startIndex;
+
+        }
+
         /// <summary>
         /// Dispose the buffer
         /// </summary>

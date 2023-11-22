@@ -40,7 +40,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Import a texture...
         /// </summary>
-        public object Import(string name)
+        public object Import(string name, string workingFolderUri)
         {
 
             if (!_cache.TryGetValue(name, out Texture2D texture))
@@ -49,7 +49,7 @@ namespace MiniEngine.AssetImporters
 
                 try
                 {
-                    if(!_assetManager.TryFindAssetUri(name, String.Empty, false, out assetPath))
+                    if(!_assetManager.TryFindAssetUri(name, workingFolderUri, false, out assetPath))
                         throw new FileNotFoundException($"Texture not found '{name}'.");
 
 

@@ -27,6 +27,9 @@ namespace MiniEngine.Rendering.Vulkan
 
         public WorldTransform Transform => _transform;
 
+        private bool _initialized = false;
+        private List<Action> _actionsAfterInit = new List<Action>();
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -45,8 +48,9 @@ namespace MiniEngine.Rendering.Vulkan
             
             _offsetIndex = _renderer.ObjectsBuffer.Append(ref _objectData, out _objectIndex);
 
-            //The Mesh_OnReload just do the trick...
-            //_renderer.AddActionsBeforeNextFrameAsync(Init);
+            //The Mesh_OnReload just do the trick unless the mesh is already loaded!
+            if(_mesh.IsLoaded)
+                _renderer.AddActionsBeforeNextFrameAsync(Init);
 
             _transform.OnChanged += Transform_OnChanged;
 
@@ -84,7 +88,7 @@ namespace MiniEngine.Rendering.Vulkan
                                 //Material not found...
                                 mat = (VkMaterial)BaseMaterials.Magenta;
 
-                            if (mat.VkDiffuseTexture.IsLoaded)
+                            if (mat.VkDiffuseTexture == null || mat.VkDiffuseTexture.IsLoaded)
                             {
                                 renderDatas[i].MeshRenderer = _renderer.GetMeshRenderer(mat.Shader);
                                 renderDatas[i].MeshLetInstanceIndex = renderDatas[i].MeshRenderer.AddMeshLetInstance(_objectIndex, mat, ref _mesh.MeshLets[i]);
@@ -102,9 +106,52 @@ namespace MiniEngine.Rendering.Vulkan
                 allLoaded = false;
             }
 
-            if(!allLoaded)
+            if (allLoaded)
+            {
+                _initialized = true;
+
+                foreach (var action in _actionsAfterInit)
+                {
+                    try
+                    {
+                        action();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.Error(ex);
+                    }
+                }
+                _actionsAfterInit.Clear();
+            }
+            else
                 //Trying again next frame...
                 _renderer.AddActionsBeforeNextFrameAsync(Init);
+        }
+
+        /// <summary>
+        /// Set a shader variable
+        /// </summary>
+        public void SetShaderVariable<T>(string name, int materialIndex, T value)
+        {
+            if (!_initialized)
+            {
+                _actionsAfterInit.Add(() => SetShaderVariable(name, materialIndex, value));
+            }
+            else
+            {
+                VkMaterial mat;
+                if (_materials.Count > materialIndex && _materials[(int)materialIndex] != null)
+                    mat = (VkMaterial)_materials[(int)materialIndex];
+                //Default mat?
+                else if (_mesh.Materials != null && _mesh.Materials.Length > materialIndex && _mesh.Materials[materialIndex] != null)
+                    mat = (VkMaterial)_mesh.Materials[materialIndex];
+                else
+                    //Material not found...
+                    mat = (VkMaterial)BaseMaterials.Magenta;
+
+                var meshRenderer = _renderer.GetMeshRenderer(mat.Shader);
+                meshRenderer.SetShaderVariable(_objectIndex, name, value);
+            }
         }
 
         /// <summary>

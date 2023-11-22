@@ -159,7 +159,7 @@ namespace MiniEngine
         /// <summary>
         /// Create a cube mesh definition
         /// </summary>
-        public static MeshDefinition CreateCubeMeshDefinition()
+        public static MeshDefinition CreateCubeMeshDefinition(Material mat = null)
         {
             MeshDefinition meshDef = new MeshDefinition();
 
@@ -200,7 +200,9 @@ namespace MiniEngine
                 Indices = indices
             });
 
-            if(Renderer.Current != null)
+            if (mat != null)
+                meshDef.Materials.Add(mat);
+            else if (Renderer.Current != null)
                 meshDef.Materials.Add(BaseMaterials.Default);
 
             return meshDef;
@@ -209,10 +211,10 @@ namespace MiniEngine
         /// <summary>
         /// Create a cube mesh
         /// </summary>
-        public static Mesh CreateCubeMesh()
+        public static Mesh CreateCubeMesh(Material material = null)
         {
             return Renderer.Current.CreateMesh()
-                                   .Load(CreateCubeMeshDefinition());
+                                   .Load(CreateCubeMeshDefinition(material));
         }
 
 

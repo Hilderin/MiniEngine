@@ -11,7 +11,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Import an asset
         /// </summary>
-        object Import(string name);
+        object Import(string name, string workingFolderUri);
 
         /// <summary>
         /// Reset the cache

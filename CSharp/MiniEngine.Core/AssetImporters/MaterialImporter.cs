@@ -33,7 +33,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Import a material...
         /// </summary>
-        public object Import(string name)
+        public object Import(string name, string workingFolderUri)
         {
 
             if (!_cache.TryGetValue(name, out Material mat))
@@ -42,7 +42,7 @@ namespace MiniEngine.AssetImporters
                 {
                     string assetPath;
 
-                    if (!_assetManager.TryFindAssetUri(name, String.Empty, true, out assetPath))
+                    if (!_assetManager.TryFindAssetUri(name, workingFolderUri, true, out assetPath))
                         throw new FileNotFoundException($"Material asset file not found '{name}'");
 
                     string extension = Path.GetExtension(assetPath).ToLower();
@@ -51,22 +51,22 @@ namespace MiniEngine.AssetImporters
                     {
                         var assetInfo = _assetManager.DeserializeAsset<MaterialAssetDefinition>(assetPath);
 
-                        if (String.IsNullOrEmpty(assetInfo.DiffuseTexture))
-                            throw new FormatException($"DiffuseTexture not set in '{assetPath}'");
+                        //if (String.IsNullOrEmpty(assetInfo.DiffuseTexture))
+                        //    throw new FormatException($"DiffuseTexture not set in '{assetPath}'");
                         if (String.IsNullOrEmpty(assetInfo.Shader))
                             throw new FormatException($"Shader not set in '{assetPath}'");
 
 
                         mat = Renderer.Current.CreateMaterial(new()
                         {
-                            DiffuseTexture = _assetManager.Get<Texture2D>(assetInfo.DiffuseTexture),
-                            Shader = _assetManager.Get<Shader>(assetInfo.Shader),
+                            DiffuseTexture = assetInfo.DiffuseTexture != null ?_assetManager.Get<Texture2D>(assetInfo.DiffuseTexture, workingFolderUri) : null,
+                            Shader = _assetManager.Get<Shader>(assetInfo.Shader, AssetManager.GetDirectoryName(assetPath)),
                         });
                     }
                     else if (Texture2DImporter.SUPPORTED_EXTENSIONS.Contains(extension))
                     {
                         //It's only a texture ...
-                        var texture = _assetManager.Get<Texture2D>(name);
+                        var texture = _assetManager.Get<Texture2D>(name, AssetManager.GetDirectoryName(assetPath));
 
                         mat = Renderer.Current.CreateMaterial(new()
                         {

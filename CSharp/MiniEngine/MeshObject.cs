@@ -48,6 +48,13 @@ namespace MiniEngine
             return this;
         }
 
+        /// <summary>
+        /// Set a shader variable
+        /// </summary>
+        public void SetShaderVariable<T>(string name, int materialIndex, T value)
+        {
+            MeshComponent.SetShaderVariable(name, materialIndex, value);
+        }
 
     }
 

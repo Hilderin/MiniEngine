@@ -9,19 +9,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Materials\mat_unlit_color.asset" />
     <None Remove="Resources\PixelAqua.bmp" />
     <None Remove="Resources\PixelMagenta.bmp" />
     <None Remove="Resources\PixelWhite.bmp" />
     <None Remove="Shaders\render_structs.glsl" />
     <None Remove="Shaders\Unlit.frag" />
     <None Remove="Shaders\Unlit.vert" />
+    <None Remove="Shaders\unlit_color.asset" />
+    <None Remove="Shaders\unlit_color.frag" />
     <None Remove="Shaders\vertex_layout.glsl" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Materials\mat_unlit_color.asset" />
     <EmbeddedResource Include="Resources\PixelAqua.bmp" />
     <EmbeddedResource Include="Resources\PixelMagenta.bmp" />
     <EmbeddedResource Include="Resources\PixelWhite.bmp" />
+    <EmbeddedResource Include="Shaders\unlit_color.asset" />
+    <EmbeddedResource Include="Shaders\unlit_color.frag" />
     <EmbeddedResource Include="Shaders\vertex_layout.glsl" />
     <EmbeddedResource Include="Shaders\render_structs.glsl" />
     <EmbeddedResource Include="Shaders\unlit.frag" />

@@ -42,7 +42,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Import a mesh...
         /// </summary>
-        public object Import(string name)
+        public object Import(string name, string workingFolderUri)
         {
 
             if (!_cache.TryGetValue(name, out Mesh mesh))
@@ -53,11 +53,11 @@ namespace MiniEngine.AssetImporters
 
                     if (Renderer.Current.SupportAsyncAssetLoading)
                     {
-                        LoadMeshAsync(name, mesh);
+                        LoadMeshAsync(name, workingFolderUri, mesh);
                     }
                     else
                     {
-                        MeshAssetDefinition meshAssetDef = GetMeshAssetDefinition(name, mesh);
+                        MeshAssetDefinition meshAssetDef = GetMeshAssetDefinition(name, workingFolderUri, mesh);
                         MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
                         mesh.Load(meshDef);
                     }
@@ -87,7 +87,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Load the mesh async
         /// </summary>
-        private void LoadMeshAsync(string name, Mesh mesh)
+        private void LoadMeshAsync(string name, string workingFolderUri, Mesh mesh)
         {
 
 
@@ -95,7 +95,7 @@ namespace MiniEngine.AssetImporters
             {
                 try
                 {
-                    MeshAssetDefinition meshAssetDef = GetMeshAssetDefinition(name, mesh);
+                    MeshAssetDefinition meshAssetDef = GetMeshAssetDefinition(name, workingFolderUri, mesh);
                     MeshDefinition meshDef = CreateMeshDefinition(meshAssetDef);
                     mesh.Load(meshDef);
                 }
@@ -111,7 +111,7 @@ namespace MiniEngine.AssetImporters
         /// <summary>
         /// Load the mesh asset definition from disk
         /// </summary>
-        private MeshAssetDefinition GetMeshAssetDefinition(string name, Mesh mesh)
+        private MeshAssetDefinition GetMeshAssetDefinition(string name, string workingFolderUri, Mesh mesh)
         {
 
             string meshAssetPath;
@@ -120,14 +120,14 @@ namespace MiniEngine.AssetImporters
 
             try
             {
-                if (!_assetManager.TryFindAssetUri(name, String.Empty, true, out meshAssetPath))
+                if (!_assetManager.TryFindAssetUri(name, workingFolderUri, true, out meshAssetPath))
                     throw new FileNotFoundException($"Mesh not found: {name}");
 
                 string extension = Path.GetExtension(meshAssetPath).ToLower();
 
                 if (extension == AssetManager.ASSET_EXTENSION_FILE)
                 {
-                    _assetManager.AssetUriToWatch(meshAssetPath, () => LoadMeshAsync(name, mesh));
+                    _assetManager.AssetUriToWatch(meshAssetPath, () => LoadMeshAsync(name, workingFolderUri, mesh));
 
                     //We have a definition file...
                     assetMeshDef = _assetManager.DeserializeAsset<MeshAssetDefinition>(meshAssetPath);
@@ -141,7 +141,7 @@ namespace MiniEngine.AssetImporters
 
                     assetMeshDef.ModelAssetUri = modelAssetUri;
 
-                    _assetManager.AssetUriToWatch(assetMeshDef.ModelAssetUri, () => LoadMeshAsync(name, mesh));
+                    _assetManager.AssetUriToWatch(assetMeshDef.ModelAssetUri, () => LoadMeshAsync(name, workingFolderUri, mesh));
                 }
                 else
                 {
@@ -150,7 +150,7 @@ namespace MiniEngine.AssetImporters
                     assetMeshDef.MeshPath = Path.GetFileName(meshAssetPath);
                     assetMeshDef.ModelAssetUri = meshAssetPath;
 
-                    _assetManager.AssetUriToWatch(meshAssetPath, () => LoadMeshAsync(name, mesh));
+                    _assetManager.AssetUriToWatch(meshAssetPath, () => LoadMeshAsync(name, workingFolderUri, mesh));
 
                     //Create a .asset file..
                     if (meshAssetPath.StartsWith(AssetManager.PREFIX_URI_FILE))
@@ -428,7 +428,7 @@ namespace MiniEngine.AssetImporters
             if (matIndex < meshAssetDef.MaterialNames.Count)
             {
                 //We have a material name...
-                return _assetManager.Get<Material>(meshAssetDef.MaterialNames[matIndex]);
+                return _assetManager.Get<Material>(meshAssetDef.MaterialNames[matIndex], workingDirectory);
             }
             else
             {
@@ -473,7 +473,7 @@ namespace MiniEngine.AssetImporters
                     string assetDefPath = assTexture.FilePath;
                     if (Path.IsPathRooted(assetDefPath))
                         assetDefPath = Path.GetFileName(assetDefPath);
-                    return _assetManager.Get<Material>(AssetManager.CombineUri(workingDirectory, assetDefPath));
+                    return _assetManager.Get<Material>(AssetManager.CombineUri(workingDirectory, assetDefPath), workingDirectory);
                 }
             }
 

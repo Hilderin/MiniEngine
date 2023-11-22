@@ -207,15 +207,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public unsafe uint Reserve()
         {
-            uint startIndex;
-            lock (this)
-            {
-                startIndex = _position;
-                _position += ElementSize;
-            }
-
-            return startIndex;
-
+            return Reserve(ElementSize);
         }
 
         /// <summary>

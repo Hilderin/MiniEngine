@@ -48,11 +48,11 @@ namespace MiniEngine
         /// <summary>
         /// Create a cube mesh actor
         /// </summary>
-        public static MeshObject CreateCubeMeshObject()
+        public static MeshObject CreateCubeMeshObject(Material material = null)
         {
             return new MeshObject()
             {
-                Mesh = Primitives.CreateCubeMesh()
+                Mesh = Primitives.CreateCubeMesh(material)
             };
         }
     }

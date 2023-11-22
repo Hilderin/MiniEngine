@@ -109,10 +109,18 @@ namespace MiniEngine
         /// </summary>
         public T Get<T>(string name)
         {
+            return Get<T>(name, String.Empty);
+        }
+
+        /// <summary>
+        /// Get an asset
+        /// </summary>
+        public T Get<T>(string name, string workingFolderUri)
+        {
             if (!_assetImporters.TryGetValue(typeof(T), out IAssetImporter importer))
                 throw new InvalidOperationException($"Asset type not supported: {typeof(T).Name}");
 
-            return (T)importer.Import(name);
+            return (T)importer.Import(name, workingFolderUri);
         }
 
         /// <summary>
