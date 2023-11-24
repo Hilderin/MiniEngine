@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using MiniEngine.Profiling;
 using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
@@ -96,6 +97,11 @@ namespace MiniEngine.Tests.Mocks
         }
 
         public void AddActionsBeforeEachFrame(Action updateAction)
+        {
+            
+        }
+
+        public void SetFrameProfiler(Profiler profiler)
         {
             
         }

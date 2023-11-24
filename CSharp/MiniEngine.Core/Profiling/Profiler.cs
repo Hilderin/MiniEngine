@@ -153,20 +153,23 @@ namespace MiniEngine.Profiling
 
             if (ImGui.Begin(Name))
             {
-                if (ImGui.BeginTable(Name, 5))
+                if (ImGui.BeginTable(Name, 7))
                 {
 
 
 
                     ImGui.TableSetupColumn("Step");
                     ImGui.TableSetupColumn("Last time (ms)");
+                    ImGui.TableSetupColumn("Last time (%)");
                     ImGui.TableSetupColumn("NbCalls");
                     ImGui.TableSetupColumn("Avg time (ms)");
+                    ImGui.TableSetupColumn("Avg time (%)");
                     ImGui.TableSetupColumn("Total time (ms)");
                     ImGui.TableHeadersRow();
 
                     float totalLastMs = 0;
                     float totaltotalMs = 0;
+                    float totalAvgTime = NbFrame > 0 ? (TotalMilliseconds / NbFrame) : 0;
                     foreach (var step in _steps)
                     {
                         ImGui.TableNextRow();
@@ -175,18 +178,31 @@ namespace MiniEngine.Profiling
                         ImGui.Text(step.Name);
 
                         ImGui.TableSetColumnIndex(1);
+
                         ImGui.Text(step.LastMilliseconds.ToString("0.000"));
 
                         ImGui.TableSetColumnIndex(2);
-                        ImGui.Text(step.NbCalls.ToString());
+                        if (LastMilliseconds > 0)
+                            ImGui.Text((step.LastMilliseconds / LastMilliseconds * 100f).ToString("0") + "%%");
+                        else
+                            ImGui.Text("---");
 
                         ImGui.TableSetColumnIndex(3);
+                        ImGui.Text(step.NbCalls.ToString());
+
+                        ImGui.TableSetColumnIndex(4);
                         if (step.NbCalls > 0)
                             ImGui.Text((step.TotalMilliseconds / step.NbCalls).ToString("0.000"));
                         else
                             ImGui.Text("---");
 
-                        ImGui.TableSetColumnIndex(4);
+                        ImGui.TableSetColumnIndex(5);
+                        if (totalAvgTime > 0 && step.NbCalls > 0)
+                            ImGui.Text(((step.TotalMilliseconds / step.NbCalls) / totalAvgTime * 100f).ToString("0") + "%%");
+                        else
+                            ImGui.Text("---");
+
+                        ImGui.TableSetColumnIndex(6);
                         ImGui.Text(step.TotalMilliseconds.ToString("0.000"));
 
                         totalLastMs += step.LastMilliseconds;
@@ -204,15 +220,27 @@ namespace MiniEngine.Profiling
                     ImGui.Text((LastMilliseconds - totalLastMs).ToString("0.000"));
 
                     ImGui.TableSetColumnIndex(2);
-                    ImGui.Text(NbFrame.ToString());
+                    if (LastMilliseconds > 0)
+                        ImGui.Text(((LastMilliseconds - totalLastMs) * 100f).ToString("0") + "%%");
+                    else
+                        ImGui.Text("---");
 
                     ImGui.TableSetColumnIndex(3);
+                    ImGui.Text(NbFrame.ToString());
+
+                    ImGui.TableSetColumnIndex(4);
                     if (NbFrame > 0)
                         ImGui.Text(((TotalMilliseconds - totaltotalMs) / NbFrame).ToString("0.000"));
                     else
                         ImGui.Text("---");
 
-                    ImGui.TableSetColumnIndex(4);
+                    ImGui.TableSetColumnIndex(5);
+                    if (totalAvgTime > 0 && NbFrame > 0)
+                        ImGui.Text((((TotalMilliseconds - totaltotalMs) / NbFrame) / totalAvgTime * 100f).ToString("0") + "%%");
+                    else
+                        ImGui.Text("---");
+
+                    ImGui.TableSetColumnIndex(6);
                     ImGui.Text((TotalMilliseconds - totaltotalMs).ToString("0.000"));
 
 
@@ -226,15 +254,21 @@ namespace MiniEngine.Profiling
                     ImGui.Text(LastMilliseconds.ToString("0.000"));
 
                     ImGui.TableSetColumnIndex(2);
-                    ImGui.Text(NbFrame.ToString());
+                    ImGui.Text("100%%");
 
                     ImGui.TableSetColumnIndex(3);
+                    ImGui.Text(NbFrame.ToString());
+
+                    ImGui.TableSetColumnIndex(4);
                     if (NbFrame > 0)
                         ImGui.Text((TotalMilliseconds / NbFrame).ToString("0.000"));
                     else
                         ImGui.Text("---");
 
-                    ImGui.TableSetColumnIndex(4);
+                    ImGui.TableSetColumnIndex(5);
+                    ImGui.Text("100%%");
+
+                    ImGui.TableSetColumnIndex(6);
                     ImGui.Text(TotalMilliseconds.ToString("0.000"));
 
                     ImGui.EndTable();
