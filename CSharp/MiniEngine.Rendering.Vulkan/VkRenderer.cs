@@ -1,5 +1,6 @@
 ﻿using MiniEngine.Drivers.Vulkan;
 using MiniEngine.Drivers.Vulkan.Windows;
+using MiniEngine.Profiling;
 using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Concurrent;
@@ -52,6 +53,8 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public Camera Camera { get; set; } = new Camera();
 
+        
+
         /// <summary>
         /// Max compute wordgroupe size (index 0 = x, 1 = y, 2 = z).
         /// 128 is the minimum for this maximum value
@@ -65,6 +68,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         public Device Device => _device;
         public SwapchainWrapper Swapchain => _swapchain;
+        public Profiler FrameProfiler => _frameProfiler;
         public bool IsDisposing => _isDisposing;
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
         public QueueWrapper GraphicsQueue => _graphicsQueue;
@@ -84,7 +88,7 @@ namespace MiniEngine.Rendering.Vulkan
         public List<BufferWrapper> DrawCallsBuffers => _drawCallsBuffers;
         public BufferWrapper<uint> DrawCallsCountsBuffer => _drawCallsCountsBuffer;
 
-        //public BufferWrapper IndirectDrawBuffer => _indirectDrawBuffer;
+        
 
         #endregion
 
@@ -137,6 +141,15 @@ namespace MiniEngine.Rendering.Vulkan
         //private Queue _transferQueue;
 
         private List<IRendererExtension> _extensions = new List<IRendererExtension>();
+
+
+        //Profiler...
+        private Profiler _frameProfiler;
+        private ProfilerStep _updateSceneDataProfilerStep;
+        private ProfilerStep _beforeEachFrameProfilerStep;
+        private ProfilerStep _createCommandBuffersProfilerStep;
+        private ProfilerStep _imGuiRenderProfilerStep;
+        private ProfilerInfo _meshletCountProfilerInfo;
 
 
 
@@ -192,14 +205,6 @@ namespace MiniEngine.Rendering.Vulkan
         {
             _imGui ??= new ImGuiRenderer(this);
             return this;
-        }
-
-        /// <summary>
-        /// Update the input for the mouse and the keyboard to ImGui
-        /// </summary>
-        public void UpdateImGuiInput(InputManager input)
-        {
-            _imGui.UpdateImGuiInput(input);
         }
 
         /// <summary>
@@ -367,6 +372,21 @@ namespace MiniEngine.Rendering.Vulkan
         }
 
         /// <summary>
+        /// Set the current frame profiler
+        /// </summary>
+        public void SetFrameProfiler(Profiler profiler)
+        {
+            _frameProfiler = profiler;
+            _updateSceneDataProfilerStep = profiler.AddStep($"{nameof(VkRenderer)}.{nameof(UpdateSceneData)}");
+            _beforeEachFrameProfilerStep = profiler.AddStep($"{nameof(VkRenderer)}.BeforeEachFrame");
+            _createCommandBuffersProfilerStep = profiler.AddStep($"{nameof(VkRenderer)}.CreateCommandBuffers");
+            _imGuiRenderProfilerStep = profiler.AddStep($"{nameof(VkRenderer)}.ImGuiRender");
+            _meshletCountProfilerInfo = profiler.AddInfo($"Meshlets Count");
+            
+
+        }
+
+        /// <summary>
         /// Add a mesh on the screen
         /// </summary>
         public IRenderHandle AddMesh(Mesh mesh, List<Material> materials, WorldTransform transform)
@@ -399,12 +419,18 @@ namespace MiniEngine.Rendering.Vulkan
             if (!_initialized)
                 Init();
 
+            _meshletCountProfilerInfo?.Update(_meshLetInstancesBuffer.Count.ToString());
+
             //If no camera... nothing to render...
+            _updateSceneDataProfilerStep?.Begin();
             if (Camera != null)
             {
                 UpdateSceneData();
             }
+            _updateSceneDataProfilerStep?.End();
 
+
+            _beforeEachFrameProfilerStep?.Begin();
 
             //Action before each frame...
             for (int i = 0; i < _actionsBeforeEachFrame.Count; i++)
@@ -436,6 +462,7 @@ namespace MiniEngine.Rendering.Vulkan
             while (_actionsBeforeNextFrame.TryDequeue(out var action))
                 action();
 
+            _beforeEachFrameProfilerStep?.End();
 
             //Render the frame...
             RenderFrame();
@@ -917,6 +944,8 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         private void RenderFrame()
         {
+            _createCommandBuffersProfilerStep?.Begin();
+
             RenderCommandBuffer commandBuffer = _swapchain.GetNextRenderCommandBuffer();
 
             commandBuffer.Begin();
@@ -932,8 +961,14 @@ namespace MiniEngine.Rendering.Vulkan
                     meshRenderer.PopulateCommandBuffers(commandBuffer);
             }
 
+            _createCommandBuffersProfilerStep?.End();
+
+            _imGuiRenderProfilerStep?.Begin();
+
             //Rendering of ImGui...
             _imGui?.Render(commandBuffer);
+
+            _imGuiRenderProfilerStep?.End();
 
 
             commandBuffer.End();
@@ -941,6 +976,8 @@ namespace MiniEngine.Rendering.Vulkan
 
             //Execute the command buffer and show the results on surface...
             _swapchain.Present();
+
+
         }
 
 

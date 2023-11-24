@@ -38,15 +38,15 @@ namespace MiniEngine.Labs.Renderer
 
                 using (Context context = new Context())
                 {
-                    var t = new Test_ShaderWithVariables();
+                    var t = new Test_Meshlets();
 
                     using (var render = new VkRenderer(t.GetType().Name, "1.0.0"))
                     using (var window = new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
                     {
 
-                        //if (!(t is Test_FrustumCulling))
-                        //    //Add default culling for all...
-                        //    render.AddCullingCompute();
+                        if (!(t is Test_FrustumCulling))
+                            //Add default culling for all...
+                            render.AddCullingCompute();
 
                         context.SetRenderer(render)
                                .EnableDebug(enableDebug)

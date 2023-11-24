@@ -31,7 +31,6 @@ namespace MiniEngine.Labs.Renderer
 
         public void Update()
         {
-            ((VkRenderer)Context.Renderer).UpdateImGuiInput(Context.Input);
 
             //Debug.Info("DeltaTime: " + Time.DeltaTime + ", LastFrame: " + Time.LastFrameGenerationTime.TotalMilliseconds);
             //Context.Current.SetMaxFramerate(60);

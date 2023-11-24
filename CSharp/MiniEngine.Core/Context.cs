@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using MiniEngine.Profiling;
 using MiniEngine.ResourceDefinitions;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -19,8 +20,14 @@ namespace MiniEngine
         private bool _isDisposed = false;
         private IWindow _window;
         private IRenderer _renderer;
+        private InputManager _input;
+        private AssetManager _assetManager;
         private DebugCallback _debugCallback;
         private FrameLoop _frameLoop;
+        private Profiler _frameProfiler;
+        private ProfilerStep _recalculateFrameProfilerStep;
+        private ProfilerStep _windowDoEventsProfilerStep;
+        public bool _debugEnabled;
 
         /// <summary>
         /// Current context
@@ -41,50 +48,48 @@ namespace MiniEngine
 
         #region Public properties
 
-
-        ///// <summary>
-        ///// Scene to render
-        ///// </summary>
-        //public Scene Scene;
-
-        /// <summary>
-        /// AssetManager
-        /// </summary>
-        public AssetManager Asset;
-
-
         /// <summary>
         /// Current context
         /// </summary>
         public static Context Current
-        { 
+        {
             get
             {
                 _current ??= new Context();
                 return _current;
-            } 
+            }
         }
+
+        /// <summary>
+        /// AssetManager
+        /// </summary>
+        public AssetManager Asset => _assetManager;
+
 
         /// <summary>
         /// Renderer
         /// </summary>
-        public IRenderer Renderer { get { return _renderer; } }
+        public IRenderer Renderer => _renderer;
 
         /// <summary>
         /// Input manager
         /// </summary>
-        public readonly InputManager Input;
+        public InputManager Input => _input;
 
         /// <summary>
         /// Indicate if we are in debug mode
         /// </summary>
-        public bool DebugEnabled;
+        public bool DebugEnabled => _debugEnabled;
 
         /// <summary>
         /// Window
         /// </summary>
-        public IWindow Window { get { return _window; } }
+        public IWindow Window => _window;
 
+        /// <summary>
+        /// Frame profiler
+        /// </summary>
+        public Profiler FrameProfiler => _frameProfiler;
 
         #endregion
 
@@ -95,13 +100,18 @@ namespace MiniEngine
         {
             _current = this;
 
-            Input = new InputManager(this);
+            _input = new InputManager(this);
 
-            Asset = AssetManager.Current;
+            _assetManager = AssetManager.Current;
 
-            Asset.StartWatchUpdateContent();
+            _assetManager.StartWatchUpdateContent();
 
             _frameLoop = new FrameLoop();
+
+            _frameProfiler = new Profiler("Frame profiler");
+            _recalculateFrameProfilerStep = _frameProfiler.AddStep(nameof(RecalculateNextFrame));
+            _windowDoEventsProfilerStep = _frameProfiler.AddStep($"{nameof(Window)}.{nameof(Window.DoEvents)}");
+
         }
 
         /// <summary>
@@ -115,7 +125,7 @@ namespace MiniEngine
 
                 _renderer?.EnableDebug(RendererDebugCallback);
 
-                DebugEnabled = true;
+                _debugEnabled = true;
 
                 //Replacing de defaults DebugTrace...
                 System.Diagnostics.Trace.Listeners.Clear();
@@ -136,8 +146,10 @@ namespace MiniEngine
             if (_window != null)
                 _renderer.SetWindow(_window);
 
-            if (DebugEnabled)
+            if (_debugEnabled)
                 _renderer.EnableDebug(RendererDebugCallback);
+
+            _renderer.SetFrameProfiler(_frameProfiler);
 
             return this;
         }
@@ -286,25 +298,35 @@ namespace MiniEngine
         /// </summary>
         private bool RunOneFrame(Action runHandler)
         {
-           
-            //Custom run code...
-            if (runHandler != null)
-                runHandler();
+            try
+            {
+                _frameProfiler.BeginNewFrame();
 
-            if (_window.IsClosing)
-                return false;
+                //Custom run code...
+                if (runHandler != null)
+                    runHandler();
 
-            RecalculateNextFrame();
+                if (_window.IsClosing)
+                    return false;
 
-            //Rendering...
-            Renderer.Render();
+                RecalculateNextFrame();
+
+                //Rendering...
+                Renderer.Render();
 
 
-            //Indicate a new frame...
-            Input.OnNewFrame();
+                //Get new mouse and keyboard pulls
+                ProcessInputs();
 
-            //Get new mouse and keyboard pulls
-            _window.DoEvents();
+            }
+            catch (Exception ex)
+            {
+                Debug.Error(ex);
+            }
+            finally
+            {
+                _frameProfiler.EndNewFrame();
+            }
 
             return true;
         }
@@ -389,6 +411,8 @@ namespace MiniEngine
             //TODO: Check if we really want to activate it always
             _renderer.EnableGui();
 
+            _renderer.AddActionsBeforeEachFrame(_frameProfiler.ShowProfilerWindow);
+
             _isInitialized = true;
 
 
@@ -433,6 +457,8 @@ namespace MiniEngine
         private void RecalculateNextFrame()
         {
 
+            _recalculateFrameProfilerStep.Begin();
+
             //-------------------
             //Executes onces...
             if (_onces.Count > 0)
@@ -452,6 +478,32 @@ namespace MiniEngine
                 _updates[i]();
             }
 
+            _recalculateFrameProfilerStep.End();
+        }
+
+
+        /// <summary>
+        /// Process inputs
+        /// </summary>
+        private void ProcessInputs()
+        {
+            _windowDoEventsProfilerStep.Begin();
+            //Indicate the beginning of a new frame so we can keep track of new keys, mouse buttons, etc...
+            _input.OnNewFrame();
+
+            //This will fires OnKey, OnMouse, etc... and the InputManager should received these events and update itself.
+            _window.DoEvents();
+
+            //Now that we have the new inputs... we will tell ImGui about it so it can update the GUI
+            _input.UpdateImGuiInput();
+
+            if (_debugEnabled)
+            {
+                if (_input.IsJustKeyDown(Keys.F1))
+                    _frameProfiler.ToggleWindowVisibility();
+            }
+
+            _windowDoEventsProfilerStep.End();
         }
 
     }

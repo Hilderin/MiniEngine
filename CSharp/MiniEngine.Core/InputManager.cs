@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ImGuiNET;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -114,6 +115,21 @@ namespace MiniEngine
             _context = context;
         }
 
+
+
+
+        /// <summary>
+        /// Indicate a new frame
+        /// </summary>
+        internal void OnNewFrame()
+        {
+            _newlyKeyDowns.Clear();
+            _newlyKeyUps.Clear();
+            _newlyMouseDowns.Clear();
+            _newlyMouseUps.Clear();
+            IsJustMouseMoved = false;
+            MouseMovement = Vector2.Zero;
+        }
 
 
         /// <summary>
@@ -321,18 +337,266 @@ namespace MiniEngine
             return movement;
         }
 
+
+
         /// <summary>
-        /// Indicate a new frame
+        /// Update the input for the mouse and the keyboard to ImGui
         /// </summary>
-        internal void OnNewFrame()
+        public void UpdateImGuiInput()
         {
-            _newlyKeyDowns.Clear();
-            _newlyKeyUps.Clear();
-            _newlyMouseDowns.Clear();
-            _newlyMouseUps.Clear();
-            IsJustMouseMoved = false;
-            MouseMovement = Vector2.Zero;
+            ImGuiIOPtr io = ImGui.GetIO();
+            //io.ClearInputKeys();
+
+            io.AddMousePosEvent(MousePosition.X, MousePosition.Y);
+            io.AddMouseButtonEvent(0, IsMouseDown(MouseButton.Left));
+            io.AddMouseButtonEvent(1, IsMouseDown(MouseButton.Right));
+            io.AddMouseButtonEvent(2, IsMouseDown(MouseButton.Middle));
+            io.AddMouseButtonEvent(3, IsMouseDown(MouseButton.Button1));
+            io.AddMouseButtonEvent(4, IsMouseDown(MouseButton.Button2));
+            io.AddMouseWheelEvent(0f, MouseScrollDelta.Y);
+
+            for (int i = 0; i < NewlyKeyDowns.Count; i++)
+                ImGuiProcessKeyState(NewlyKeyDowns[i], true, io);
+
+            for (int i = 0; i < NewlyKeyUps.Count; i++)
+                ImGuiProcessKeyState(NewlyKeyUps[i], false, io);
+
+
         }
+
+
+        /// <summary>
+        /// Process a key state...
+        /// </summary>
+        private void ImGuiProcessKeyState(Keys key, bool down, ImGuiIOPtr io)
+        {
+            if (ImGuiTryMapKey(key, out bool isTextInput, out ImGuiKey imguikey))
+            {
+                io.AddKeyEvent(imguikey, down);
+            }
+
+            if (down && isTextInput)
+                io.AddInputCharacter((uint)key);
+        }
+
+
+        /// <summary>
+        /// Try mapping a key with ImGui keys
+        /// </summary>
+        private bool ImGuiTryMapKey(Keys key, out bool isTextInput, out ImGuiKey result)
+        {
+            static ImGuiKey keyToImGuiKeyShortcut(Keys keyToConvert, Keys startKey1, ImGuiKey startKey2)
+            {
+                int changeFromStart1 = (int)keyToConvert - (int)startKey1;
+                return startKey2 + changeFromStart1;
+            }
+
+            if (key >= Keys.F1 && key <= Keys.F12)
+            {
+                result = keyToImGuiKeyShortcut(key, Keys.F1, ImGuiKey.F1);
+                isTextInput = false;
+                return true;
+            }
+            else if (key >= Keys.Numpad0 && key <= Keys.Numpad9)
+            {
+                result = keyToImGuiKeyShortcut(key, Keys.Numpad0, ImGuiKey.Keypad0);
+                isTextInput = true;
+                return true;
+            }
+            else if (key >= Keys.A && key <= Keys.Z)
+            {
+                result = keyToImGuiKeyShortcut(key, Keys.A, ImGuiKey.A);
+                isTextInput = true;
+                return true;
+            }
+            else if (key >= Keys.Number0 && key <= Keys.Number9)
+            {
+                result = keyToImGuiKeyShortcut(key, Keys.Number0, ImGuiKey._0);
+                isTextInput = true;
+                return true;
+            }
+
+            switch (key)
+            {
+                case Keys.ShiftLeft:
+                case Keys.ShiftRight:
+                    result = ImGuiKey.ModShift;
+                    isTextInput = false;
+                    return true;
+                case Keys.ControlLeft:
+                case Keys.ControlRight:
+                    result = ImGuiKey.ModCtrl;
+                    isTextInput = false;
+                    return true;
+                case Keys.AltLeft:
+                case Keys.AltRight:
+                    result = ImGuiKey.ModAlt;
+                    isTextInput = false;
+                    return true;
+                case Keys.LeftSuper:
+                case Keys.RightSuper:
+                    result = ImGuiKey.ModSuper;
+                    isTextInput = false;
+                    return true;
+                case Keys.Menu:
+                    result = ImGuiKey.Menu;
+                    isTextInput = false;
+                    return true;
+                case Keys.Up:
+                    result = ImGuiKey.UpArrow;
+                    isTextInput = false;
+                    return true;
+                case Keys.Down:
+                    result = ImGuiKey.DownArrow;
+                    isTextInput = false;
+                    return true;
+                case Keys.Left:
+                    result = ImGuiKey.LeftArrow;
+                    isTextInput = false;
+                    return true;
+                case Keys.Right:
+                    result = ImGuiKey.RightArrow;
+                    isTextInput = false;
+                    return true;
+                case Keys.Enter:
+                    result = ImGuiKey.Enter;
+                    isTextInput = false;
+                    return true;
+                case Keys.Escape:
+                    result = ImGuiKey.Escape;
+                    isTextInput = false;
+                    return true;
+                case Keys.Space:
+                    result = ImGuiKey.Space;
+                    isTextInput = true;
+                    return true;
+                case Keys.Tab:
+                    result = ImGuiKey.Tab;
+                    isTextInput = false;
+                    return true;
+                case Keys.Backspace:
+                    result = ImGuiKey.Backspace;
+                    isTextInput = false;
+                    return true;
+                case Keys.Insert:
+                    result = ImGuiKey.Insert;
+                    isTextInput = false;
+                    return true;
+                case Keys.Delete:
+                    result = ImGuiKey.Delete;
+                    isTextInput = false;
+                    return true;
+                case Keys.PageUp:
+                    result = ImGuiKey.PageUp;
+                    isTextInput = false;
+                    return true;
+                case Keys.PageDown:
+                    result = ImGuiKey.PageDown;
+                    isTextInput = false;
+                    return true;
+                case Keys.Home:
+                    result = ImGuiKey.Home;
+                    isTextInput = false;
+                    return true;
+                case Keys.End:
+                    result = ImGuiKey.End;
+                    isTextInput = false;
+                    return true;
+                case Keys.CapsLock:
+                    result = ImGuiKey.CapsLock;
+                    isTextInput = false;
+                    return true;
+                case Keys.ScrollLock:
+                    result = ImGuiKey.ScrollLock;
+                    isTextInput = false;
+                    return true;
+                case Keys.PrintScreen:
+                    result = ImGuiKey.PrintScreen;
+                    isTextInput = false;
+                    return true;
+                case Keys.Pause:
+                    result = ImGuiKey.Pause;
+                    isTextInput = false;
+                    return true;
+                case Keys.NumLock:
+                    result = ImGuiKey.NumLock;
+                    isTextInput = false;
+                    return true;
+                case Keys.NumpadDivide:
+                    result = ImGuiKey.KeypadDivide;
+                    isTextInput = false;
+                    return true;
+                case Keys.NumpadMultiply:
+                    result = ImGuiKey.KeypadMultiply;
+                    isTextInput = true;
+                    return true;
+                case Keys.NumpadSubtract:
+                    result = ImGuiKey.KeypadSubtract;
+                    isTextInput = true;
+                    return true;
+                case Keys.NumpadAdd:
+                    result = ImGuiKey.KeypadAdd;
+                    isTextInput = true;
+                    return true;
+                case Keys.NumpadDecimal:
+                    result = ImGuiKey.KeypadDecimal;
+                    isTextInput = true;
+                    return true;
+                case Keys.NumpadEnter:
+                    result = ImGuiKey.KeypadEnter;
+                    isTextInput = false;
+                    return true;
+                case Keys.GraveAccent:
+                    result = ImGuiKey.GraveAccent;
+                    isTextInput = true;
+                    return true;
+                case Keys.Minus:
+                    result = ImGuiKey.Minus;
+                    isTextInput = true;
+                    return true;
+                case Keys.Equal:
+                    result = ImGuiKey.Equal;
+                    isTextInput = true;
+                    return true;
+                case Keys.BracketLeft:
+                    result = ImGuiKey.LeftBracket;
+                    isTextInput = true;
+                    return true;
+                case Keys.BracketRight:
+                    result = ImGuiKey.RightBracket;
+                    isTextInput = true;
+                    return true;
+                case Keys.Semicolon:
+                    result = ImGuiKey.Semicolon;
+                    isTextInput = true;
+                    return true;
+                case Keys.Apostrophe:
+                    result = ImGuiKey.Apostrophe;
+                    isTextInput = true;
+                    return true;
+                case Keys.Comma:
+                    result = ImGuiKey.Comma;
+                    isTextInput = true;
+                    return true;
+                case Keys.Period:
+                    result = ImGuiKey.Period;
+                    isTextInput = true;
+                    return true;
+                case Keys.Slash:
+                    result = ImGuiKey.Slash;
+                    isTextInput = true;
+                    return true;
+                case Keys.Backslash:
+                    result = ImGuiKey.Backslash;
+                    isTextInput = true;
+                    return true;
+                default:
+                    result = ImGuiKey.None;
+                    isTextInput = false;
+                    return false;
+            }
+        }
+
 
     }
 }

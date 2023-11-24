@@ -1,4 +1,5 @@
-﻿using MiniEngine.ResourceDefinitions;
+﻿using MiniEngine.Profiling;
+using MiniEngine.ResourceDefinitions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,11 @@ namespace MiniEngine
         /// Set the window handle for win32 (Windows)
         /// </summary>
         void SetWindow32Handle(IntPtr handle);
+
+        /// <summary>
+        /// Set the current frame profiler
+        /// </summary>
+        void SetFrameProfiler(Profiler profiler);
 
         /// <summary>
         /// Render the scene
@@ -96,6 +102,12 @@ namespace MiniEngine
         /// Add an extension
         /// </summary>
         void AddExtension(IRendererExtension extension);
+
+
+        /// <summary>
+        /// Register an action to execute before each frame
+        /// </summary>
+        void AddActionsBeforeEachFrame(Action updateAction);
 
     }
 }

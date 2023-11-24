@@ -94,5 +94,10 @@ namespace MiniEngine.Tests.Mocks
         {
             throw new NotImplementedException();
         }
+
+        public void AddActionsBeforeEachFrame(Action updateAction)
+        {
+            
+        }
     }
 }

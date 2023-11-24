@@ -1,4 +1,5 @@
 ﻿using MiniEngine.Drivers.Vulkan;
+using MiniEngine.Profiling;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,6 +38,9 @@ namespace MiniEngine.Rendering.Vulkan
         private SubmitInfo[] _submitInfos;
         private PresentInfoKhr[] _presentInfos;
 
+
+        private ProfilerStep _queueSubmitStep;
+        private ProfilerStep _presentStep;
 
 
         public Device Device => _device;
@@ -125,14 +129,17 @@ namespace MiniEngine.Rendering.Vulkan
             // the command will begin only when the semaphore is available
             // the queue will wait until the fence is up.
             // the fence will be up when the commandbuffer is all done.
+            _queueSubmitStep?.Begin();
             _fence.Reset();
             _queue.Submit(_submitInfos[_indexNextImage], _fence);
             _queue.WaitIdle();
             _fence.Wait();
-
+            _queueSubmitStep?.End();
 
             //And we show the image on the surface...
+            _presentStep.Begin();
             var result = _queue.PresentKHRReturnsResult(_presentInfos[_indexNextImage]);
+            
             if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr || _windowSizeChanged)
             {
                 //The screen was resized...
@@ -145,6 +152,7 @@ namespace MiniEngine.Rendering.Vulkan
                 _windowSizeChanged = false;
             }
 
+            _presentStep.End();
         }
 
         /// <summary>
@@ -219,7 +227,11 @@ namespace MiniEngine.Rendering.Vulkan
 
             CreateSwapChainObjects();
 
-            
+
+            _queueSubmitStep = _renderer.FrameProfiler?.AddStep($"{nameof(VkRenderer)}.QueueSubmit");
+            _presentStep = _renderer.FrameProfiler?.AddStep($"{nameof(VkRenderer)}.Present");
+
+
 
         }
 

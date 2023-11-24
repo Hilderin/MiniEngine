@@ -82,9 +82,9 @@ void main()
 
     uint visible = is_visible(object_index, meshlet_index);
 
-    if(meshlet_instances[meshlet_instance_index].visible != visible)
+    if(draw_calls[draw_buffer_index].calls[meshlet_instances[meshlet_instance_index].draw_call_index].instance_count != visible)
     {
-        meshlet_instances[meshlet_instance_index].visible = visible;
+        //meshlet_instances[meshlet_instance_index].visible = visible;
         draw_calls[draw_buffer_index].calls[meshlet_instances[meshlet_instance_index].draw_call_index].instance_count = visible;
     }
 
