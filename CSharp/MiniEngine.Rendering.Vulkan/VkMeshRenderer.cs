@@ -43,7 +43,7 @@ namespace MiniEngine.Rendering.Vulkan
         private uint _nbWorkGroup;
         private uint _drawCallsBufferElementSize;
         private uint _drawCallsCountsElementSize;
-
+        private CommandBuffer[] _secondaryCommandBuffers;
 
         /// <summary>
         /// Constructor
@@ -53,27 +53,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             _renderer = renderer;
             _shader = shader;
-            _nbWorkGroup = _renderer.MaxComputeWorkgroupSize[0];
-
-            //TODO: To allocate base on some graphic memory            
-            _drawCallsCountsElementSize = _renderer.DrawCallsCountsBuffer.ElementSize;
-
-            if (_drawCallsBufferManagementType == DrawCallManagementType.ComputeDrawCallBufferPerWorkgroup)
-            {
-                //Each workgroup will have less draw calls available...
-                _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(_nbWorkGroup, out _drawCallsBufferIndex, out _drawCallsCountsOffset);
-                _drawCallsBufferElementSize = _drawCallsBuffer.ElementSize;
-                _maxDrawCall = _drawCallsBuffer.Size / _drawCallsBufferElementSize / _nbWorkGroup;
-
-                //We will need a count per workgroup
-                
-            }
-            else
-            {
-                _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(1, out _drawCallsBufferIndex, out _drawCallsCountsOffset);
-                _drawCallsBufferElementSize = _drawCallsBuffer.ElementSize;
-                _maxDrawCall = _drawCallsBuffer.Size / _drawCallsBufferElementSize;
-            }
+            
 
 
             
@@ -102,6 +82,57 @@ namespace MiniEngine.Rendering.Vulkan
 
 
 
+            _nbWorkGroup = _renderer.MaxComputeWorkgroupSize[0];
+
+            //TODO: To allocate base on some graphic memory            
+            _drawCallsCountsElementSize = _renderer.DrawCallsCountsBuffer.ElementSize;
+
+            if (_drawCallsBufferManagementType == DrawCallManagementType.ComputeDrawCallBufferPerWorkgroup)
+            {
+                //Each workgroup will have less draw calls available...
+                _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(_nbWorkGroup, out _drawCallsBufferIndex, out _drawCallsCountsOffset);
+                _drawCallsBufferElementSize = _drawCallsBuffer.ElementSize;
+                _maxDrawCall = _drawCallsBuffer.Size / _drawCallsBufferElementSize / _nbWorkGroup;
+
+
+
+                _renderer.AddActionsBeforeNextFrame(InitSecondaryCommandBuffers);
+            }
+            else
+            {
+                _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(1, out _drawCallsBufferIndex, out _drawCallsCountsOffset);
+                _drawCallsBufferElementSize = _drawCallsBuffer.ElementSize;
+                _maxDrawCall = _drawCallsBuffer.Size / _drawCallsBufferElementSize;
+            }
+
+        }
+
+
+        private void InitSecondaryCommandBuffers()
+        {
+
+            _secondaryCommandBuffers = _renderer.Swapchain.CreateSecondaryCommandBuffers();
+
+            for (int ib = 0; ib < _secondaryCommandBuffers.Length; ib++)
+            {
+                _secondaryCommandBuffers[ib].Begin();
+
+                _secondaryCommandBuffers[ib].CmdBindVertexBuffer(0, _renderer.VerticesBuffer, 0);
+                _secondaryCommandBuffers[ib].CmdBindIndexBuffer(_renderer.IndicesBuffer, 0, IndexType.Uint16);
+
+                _secondaryCommandBuffers[ib].CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
+
+                //commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _pipeline.GetBindlessDescriptorSet().DescriptorSets, null);
+                _secondaryCommandBuffers[ib].CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _descriptorSet.DescriptorSets, null);
+
+
+                uint max = _nbWorkGroup;
+                for (uint i = 0; i < max; i++)
+                {
+                    _secondaryCommandBuffers[ib].CmdDrawIndexedIndirectCount(_drawCallsBuffer.Buffer, _drawCallsBufferElementSize * _maxDrawCall * i, _renderer.DrawCallsCountsBuffer, _drawCallsCountsOffset + (_drawCallsCountsElementSize * i), _maxDrawCall, _drawCallsBufferElementSize);
+                }
+                _secondaryCommandBuffers[ib].End();
+            }
         }
 
 
@@ -296,30 +327,34 @@ namespace MiniEngine.Rendering.Vulkan
             if (_nb_meshlets == 0)
                 return;
 
-            commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
-
-            //commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _pipeline.GetBindlessDescriptorSet().DescriptorSets, null);
-            commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _descriptorSet.DescriptorSets, null);
-
-
-            //Matrix4 matrixVP = _renderer.MatrixViewProjection; // * _transform.GetMatrix();
-
-            //Constants...
-            _pipeline.UpdatePushConstants(commandBuffer);
-
+            
 
             if (_drawCallsBufferManagementType == DrawCallManagementType.ComputeDrawCallBufferPerWorkgroup)
             {
                 //We create a draw indexed indirect per workgroup....
-                uint max = (_nb_meshlets > _nbWorkGroup ? _nbWorkGroup : _nb_meshlets);
-                for (uint i = 0; i < max; i++)
-                {
-                    commandBuffer.CmdDrawIndexedIndirectCount(_drawCallsBuffer.Buffer, _drawCallsBufferElementSize * _maxDrawCall * i, _renderer.DrawCallsCountsBuffer, _drawCallsCountsOffset + (_drawCallsCountsElementSize * i), _maxDrawCall, _drawCallsBufferElementSize);
-                }
+                //uint max = (_nb_meshlets > _nbWorkGroup ? _nbWorkGroup : _nb_meshlets);
+                //uint max = _nbWorkGroup;
+                //for (uint i = 0; i < max; i++)
+                //{
+                //    commandBuffer.CmdDrawIndexedIndirectCount(_drawCallsBuffer.Buffer, _drawCallsBufferElementSize * _maxDrawCall * i, _renderer.DrawCallsCountsBuffer, _drawCallsCountsOffset + (_drawCallsCountsElementSize * i), _maxDrawCall, _drawCallsBufferElementSize);
+                //}
+                commandBuffer.CmdExecuteCommand(_secondaryCommandBuffers[((RenderCommandBuffer)commandBuffer).ImageIndex]);
 
             }
             else
             {
+                commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
+
+                //commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _pipeline.GetBindlessDescriptorSet().DescriptorSets, null);
+                commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _descriptorSet.DescriptorSets, null);
+
+
+                //Matrix4 matrixVP = _renderer.MatrixViewProjection; // * _transform.GetMatrix();
+
+                //Constants...
+                _pipeline.UpdatePushConstants(commandBuffer);
+
+
                 commandBuffer.CmdDrawIndexedIndirectCount(_drawCallsBuffer.Buffer, 0, _renderer.DrawCallsCountsBuffer, _drawCallsCountsOffset, _maxDrawCall, _drawCallsBufferElementSize);
             }
         }

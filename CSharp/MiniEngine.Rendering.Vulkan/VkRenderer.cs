@@ -283,7 +283,7 @@ namespace MiniEngine.Rendering.Vulkan
             _meshLetsBuffer = CreateBufferWrapper<MeshletData>(NB_MESHLET_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _objectsBuffer = CreateBufferWrapper<ObjectInstanceData>(NB_OBJECTS_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
             _meshLetInstancesBuffer = CreateBufferWrapper<MeshLetInstanceData>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-            _drawCallsCountsBuffer = CreateBufferWrapper<uint>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
+            _drawCallsCountsBuffer = CreateBufferWrapper<uint>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst | BufferUsageFlags.TransferSrc, MemoryPropertyFlags.DeviceLocal);
             _lastMaxDrawBufferIndex = CreateBufferWrapper<int>((int)MaxComputeWorkgroupSize[0], BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
             //Initialize the extension...
@@ -976,8 +976,8 @@ namespace MiniEngine.Rendering.Vulkan
             //If no camera, nothing to render... in 3D
             if (Camera != null)
             {
-                commandBuffer.CmdBindVertexBuffer(0, _verticesBuffer, 0);
-                commandBuffer.CmdBindIndexBuffer(_indicesBuffer, 0, IndexType.Uint16);
+                //commandBuffer.CmdBindVertexBuffer(0, _verticesBuffer, 0);
+                //commandBuffer.CmdBindIndexBuffer(_indicesBuffer, 0, IndexType.Uint16);
 
                 foreach (var meshRenderer in _meshRenderers)
                     meshRenderer.PopulateCommandBuffers(commandBuffer);

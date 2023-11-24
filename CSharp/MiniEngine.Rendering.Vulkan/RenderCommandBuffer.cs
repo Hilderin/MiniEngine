@@ -14,6 +14,8 @@ namespace MiniEngine.Rendering.Vulkan
 
         private RenderPassBeginInfo _renderPassBeginInfo;
 
+        public int ImageIndex => _imageIndex;
+
 
         /// <summary>
         /// Constructor
@@ -59,7 +61,7 @@ namespace MiniEngine.Rendering.Vulkan
             _renderPassBeginInfo.Framebuffer = _swapchain.Framebuffers[_imageIndex];
             _renderPassBeginInfo.RenderArea = new Rect2D { Extent = _swapchain.CurrentExtent };
 
-            CmdBeginRenderPass(_renderPassBeginInfo, SubpassContents.Inline);
+            CmdBeginRenderPass(_renderPassBeginInfo, SubpassContents.SecondaryCommandBuffers);
         }
 
 

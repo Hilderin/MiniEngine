@@ -74,13 +74,13 @@ void main()
 	uint meshlet_instance_index = gl_GlobalInvocationID.x;
     uint workgroup_size = 1024;     //TODO: take in specialized constant
     uint must_rebuild = 0;
-    int max_buffer_index = last_max_draw_buffer_index[gl_GlobalInvocationID.x];
-    for(int i = 0; i <= max_buffer_index; i++)
+    int last_buffer_index = last_max_draw_buffer_index[gl_GlobalInvocationID.x];
+    for(int i = 0; i <= last_buffer_index; i++)
     {
         draw_calls_counts[(i * 1024) + gl_GlobalInvocationID.x] = 0;
     }
 
-    max_buffer_index = -1;
+    int max_buffer_index = -1;
     while(meshlet_instance_index < scene.nb_meshlet_instances)
     {
     
@@ -126,6 +126,7 @@ void main()
         meshlet_instance_index += workgroup_size;
     }
 
-    last_max_draw_buffer_index[gl_GlobalInvocationID.x] = max_buffer_index;
+    if(last_buffer_index != max_buffer_index)
+        last_max_draw_buffer_index[gl_GlobalInvocationID.x] = max_buffer_index;
 
 }

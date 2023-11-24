@@ -169,6 +169,18 @@ namespace MiniEngine.Rendering.Vulkan
 
         }
 
+
+        /// <summary>
+        /// Create a secondary command buffers
+        /// </summary>
+        public CommandBuffer[] CreateSecondaryCommandBuffers()
+        {
+            int imageIndex = 0;
+            return _commandPool.AllocateCommandBuffers(CommandBufferLevel.Secondary, _swapchainImages.Length, () => new SecondaryRenderCommandBuffer(this, imageIndex++, _commandPool));
+
+        }
+
+
         /// <summary>
         /// Dispose of the Swapchain
         /// </summary>

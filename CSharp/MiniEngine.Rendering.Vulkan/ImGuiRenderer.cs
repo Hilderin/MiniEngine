@@ -32,6 +32,7 @@ namespace MiniEngine.Rendering.Vulkan
         private Extent2D _currentExtent;
         private Stopwatch _stopWatch;
         private float _lastRenderTime = 0f;
+        private CommandBuffer[] _secondaryCommandBuffers;
 
         public Device Device => _device;
 
@@ -70,6 +71,8 @@ namespace MiniEngine.Rendering.Vulkan
             _fontTextureSet = _pipeline.CreateDescriptorSet(1);
             _textureSet = _pipeline.CreateDescriptorSet(1);
 
+            _secondaryCommandBuffers = _renderer.Swapchain.CreateSecondaryCommandBuffers();
+
             UpdateDisplaySize();
 
             RecreateFontDeviceTexture();
@@ -95,6 +98,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void Render(CommandBuffer commandBuffer)
         {
+            CommandBuffer secCommandBuffer = _secondaryCommandBuffers[((RenderCommandBuffer)commandBuffer).ImageIndex];
+
+            secCommandBuffer.Begin();
+
             ImGuiIOPtr io = ImGui.GetIO();
             float newTime = (float)_stopWatch.Elapsed.TotalSeconds;
             io.DeltaTime = newTime - _lastRenderTime; // DeltaTime is in seconds.
@@ -129,11 +136,11 @@ namespace MiniEngine.Rendering.Vulkan
                     indexOffsetInElements += (uint)cmd_list.IdxBuffer.Size;
                 }
 
-                commandBuffer.CmdBindVertexBuffer(0, _vertexBuffer, 0);
-                commandBuffer.CmdBindIndexBuffer(_indexBuffer, 0, IndexType.Uint16);
-                commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
+                secCommandBuffer.CmdBindVertexBuffer(0, _vertexBuffer, 0);
+                secCommandBuffer.CmdBindIndexBuffer(_indexBuffer, 0, IndexType.Uint16);
+                secCommandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
 
-                commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _mainSet.DescriptorSets, null);
+                secCommandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 0, _mainSet.DescriptorSets, null);
 
                 //draw_data.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale);
 
@@ -156,7 +163,7 @@ namespace MiniEngine.Rendering.Vulkan
                             {
                                 if (pcmd.TextureId == _fontAtlasID)
                                 {
-                                    commandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 1, _fontTextureSet.DescriptorSets, null);
+                                    secCommandBuffer.CmdBindDescriptorSets(PipelineBindPoint.Graphics, _pipeline.PipelineLayout, 1, _fontTextureSet.DescriptorSets, null);
                                 }
                                 else
                                 {
@@ -166,9 +173,9 @@ namespace MiniEngine.Rendering.Vulkan
                             }
 
                             //Scissor to clip what exceeds the window...
-                            commandBuffer.CmdSetScissor(0, new Rect2D((int)pcmd.ClipRect.X, (int)pcmd.ClipRect.Y, (int)(pcmd.ClipRect.Z - pcmd.ClipRect.X), (int)(pcmd.ClipRect.W - pcmd.ClipRect.Y)));
+                            secCommandBuffer.CmdSetScissor(0, new Rect2D((int)pcmd.ClipRect.X, (int)pcmd.ClipRect.Y, (int)(pcmd.ClipRect.Z - pcmd.ClipRect.X), (int)(pcmd.ClipRect.W - pcmd.ClipRect.Y)));
 
-                            commandBuffer.CmdDrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
+                            secCommandBuffer.CmdDrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
                         }
                     }
 
@@ -176,6 +183,10 @@ namespace MiniEngine.Rendering.Vulkan
                     vtx_offset += cmd_list.VtxBuffer.Size;
                 }
             }
+
+            secCommandBuffer.End();
+
+            commandBuffer.CmdExecuteCommand(secCommandBuffer);
 
 
             ImGui.NewFrame();
