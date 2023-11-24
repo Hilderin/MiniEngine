@@ -1,0 +1,131 @@
+﻿#version 450
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_KHR_shader_subgroup_ballot: enable
+
+#include "../../MiniEngine.Core/Shaders/render_structs.glsl"
+
+
+//-----------------------
+//Structs
+
+
+
+
+//-----------------------
+//Bindings
+layout(binding = 1) readonly uniform _scene {
+    scene_data scene;
+};
+layout(std430, binding = 2) buffer _draw_calls_buffers {
+    draw_call calls[]; 
+} draw_calls[];
+
+layout(std430, binding = 3) readonly buffer _objects {
+    object_instance_data objects[];
+};
+layout(std430, binding = 4) buffer _meshlet_instances {
+    meshlet_instance_data meshlet_instances[];
+};
+layout(std430, binding = 5) buffer _meshlets {
+    meshlet_data meshlets[];
+};
+layout(std430, binding = 6) buffer _draw_calls_counts {
+    uint draw_calls_counts[];
+};
+layout(std430, binding = 7) buffer _last_max_draw_buffer_index {
+    int last_max_draw_buffer_index[];
+};
+
+//-----------------------
+//Compute config
+layout (local_size_x_id = 0, local_size_y = 1, local_size_z = 1) in;
+
+
+//-----------------------
+//Functions
+
+// Calculate if an object is visible
+uint is_visible(uint object_index, uint meshlet_index)
+{
+	//grab sphere cull data from the object buffer
+    //the technique is very simple, the viewprojection matrix is already set to return coords between -1 and 1 on x and y axis when divided by w (depth in opengl/vulkan)
+    //so we just redo here what the vertex shader and the rasterizer will do and check if the object is on screen using the radius
+    
+    //vec4 sphereBounds = vec4(objects[object_index].location + meshlets[meshlet_index].center, 1);
+	
+    vec4 center4 = scene.matrix_vp * objects[object_index].transform_matrix * vec4(meshlets[meshlet_index].center, 1);
+    vec3 center = center4.xyz / center4.w;
+    float radius = meshlets[meshlet_index].radius / center4.w;
+
+    if(center.x + radius * objects[object_index].scale.x < -1.0 || center.x - radius * objects[object_index].scale.x > 1.0)
+        return 0;
+    if(center.y + radius * objects[object_index].scale.y < -1.0 || center.y - radius * objects[object_index].scale.y > 1.0)
+        return 0;
+    if(center.z + radius * objects[object_index].scale.y < 0 || center.z - radius * objects[object_index].scale.y > 1)
+        return 0;
+
+	return 1;
+}
+
+//-----------------------
+//Main
+void main()
+{
+	uint meshlet_instance_index = gl_GlobalInvocationID.x;
+    uint workgroup_size = 1024;     //TODO: take in specialized constant
+    uint must_rebuild = 0;
+    int max_buffer_index = last_max_draw_buffer_index[gl_GlobalInvocationID.x];
+    for(int i = 0; i <= max_buffer_index; i++)
+    {
+        draw_calls_counts[(i * 1024) + gl_GlobalInvocationID.x] = 0;
+    }
+
+    max_buffer_index = -1;
+    while(meshlet_instance_index < scene.nb_meshlet_instances)
+    {
+    
+	    uint object_index = meshlet_instances[meshlet_instance_index].object_index;
+        uint meshlet_index = meshlet_instances[meshlet_instance_index].meshlet_index;
+        uint draw_buffer_index = meshlet_instances[meshlet_instance_index].draw_calls_buffer_index;
+        
+        uint visible = is_visible(object_index, meshlet_index);
+
+        
+        if(meshlet_instances[meshlet_instance_index].visible != visible)
+        {
+            must_rebuild = 1;            
+        }
+
+        
+        if(visible == 1)
+        {
+            uint draw_calls_count_index = (draw_buffer_index * 1024) + gl_GlobalInvocationID.x;
+            uint draw_call_index = draw_calls_counts[draw_calls_count_index]++;
+
+            if(must_rebuild == 1)
+            {
+                //uint draw_call_index = draw_calls_counts[draw_calls_count_index]++;
+                draw_calls_counts[draw_calls_count_index] = draw_call_index + 1;
+                uint draw_call_index_with_offset = (gl_GlobalInvocationID.x * 1024) + draw_call_index;
+
+                draw_calls[draw_buffer_index].calls[draw_call_index_with_offset].index_count = meshlets[meshlet_index].nb_indices;
+                draw_calls[draw_buffer_index].calls[draw_call_index_with_offset].instance_count = 1;
+                draw_calls[draw_buffer_index].calls[draw_call_index_with_offset].first_index = meshlets[meshlet_index].indices_buffer_index;
+                draw_calls[draw_buffer_index].calls[draw_call_index_with_offset].vertex_offset = meshlets[meshlet_index].vertices_buffer_index;
+                draw_calls[draw_buffer_index].calls[draw_call_index_with_offset].first_instance = meshlet_instance_index;
+
+                meshlet_instances[meshlet_instance_index].visible = visible;
+                //draw_calls[draw_buffer_index].calls[meshlet_instances[meshlet_instance_index].draw_call_index].instance_count = visible;
+            }
+        }
+        
+        if(max_buffer_index < int(draw_buffer_index))
+            max_buffer_index = int(draw_buffer_index);
+
+        //Next compute...
+        meshlet_instance_index += workgroup_size;
+    }
+
+    last_max_draw_buffer_index[gl_GlobalInvocationID.x] = max_buffer_index;
+
+}

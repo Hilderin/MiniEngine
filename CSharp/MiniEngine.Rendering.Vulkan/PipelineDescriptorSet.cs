@@ -101,6 +101,9 @@ namespace MiniEngine.Rendering.Vulkan
                     case ShaderVariableNames.DrawCallCounts:
                         Set(ShaderVariableNames.DrawCallCounts, _renderer.DrawCallsCountsBuffer);
                         break;
+                    case ShaderVariableNames.LastMaxDrawBufferIndex:
+                        Set(ShaderVariableNames.LastMaxDrawBufferIndex, _renderer.LastMaxDrawBufferIndex);
+                        break;                        
                     default:
                         if(name.StartsWith("_"))
                             Debug.Warning($"Descriptor name not supported in shader: {name}");

@@ -10,6 +10,7 @@ using System.Threading;
 
 namespace MiniEngine.Rendering.Vulkan
 {
+   
     /// <summary>
     /// Renderer for the meshes
     /// </summary>
@@ -21,7 +22,7 @@ namespace MiniEngine.Rendering.Vulkan
         private uint _drawCallsCountsOffset;
         private uint _maxDrawCall;
 
-        private bool _drawCallsBufferUpdatedByCompute = false;
+        private DrawCallManagementType _drawCallsBufferManagementType = DrawCallManagementType.ComputeDrawCallBufferPerWorkgroup;
 
         private BufferWrapper<DrawIndexedIndirectCommand> _drawCallsBuffer;
         private Dictionary<string, BufferWrapper> _shaderVariables;
@@ -29,6 +30,7 @@ namespace MiniEngine.Rendering.Vulkan
         private PipelineWrapper _pipeline;
         private PipelineDescriptorSet _descriptorSet;
         private uint _drawCount = 0;
+        private uint _nb_meshlets = 0;
 
         private Dictionary<int, uint> _imageSamplerBindlessIndex = new Dictionary<int, uint>();
         private ConcurrentDictionary<uint, MeshLetInstance> _meshLetInstances = new ConcurrentDictionary<uint, MeshLetInstance>();
@@ -37,6 +39,10 @@ namespace MiniEngine.Rendering.Vulkan
         private ConcurrentQueue<IndirectCommand> _availableDrawCalls = new ConcurrentQueue<IndirectCommand>();
         private ConcurrentDictionary<uint, ObjectIndexInfo> _objectIndexInfos = new ConcurrentDictionary<uint, ObjectIndexInfo>();
         private uint _lastObjectIndexInfosIndex = 0;
+
+        private uint _nbWorkGroup;
+        private uint _drawCallsBufferElementSize;
+        private uint _drawCallsCountsElementSize;
 
 
         /// <summary>
@@ -47,11 +53,30 @@ namespace MiniEngine.Rendering.Vulkan
 
             _renderer = renderer;
             _shader = shader;
+            _nbWorkGroup = _renderer.MaxComputeWorkgroupSize[0];
 
-            //TODO: To allocate base on some graphic memory
-            _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(out _drawCallsBufferIndex, out _drawCallsCountsOffset);
-            _maxDrawCall = _drawCallsBuffer.Size / _drawCallsBuffer.ElementSize;
+            //TODO: To allocate base on some graphic memory            
+            _drawCallsCountsElementSize = _renderer.DrawCallsCountsBuffer.ElementSize;
 
+            if (_drawCallsBufferManagementType == DrawCallManagementType.ComputeDrawCallBufferPerWorkgroup)
+            {
+                //Each workgroup will have less draw calls available...
+                _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(_nbWorkGroup, out _drawCallsBufferIndex, out _drawCallsCountsOffset);
+                _drawCallsBufferElementSize = _drawCallsBuffer.ElementSize;
+                _maxDrawCall = _drawCallsBuffer.Size / _drawCallsBufferElementSize / _nbWorkGroup;
+
+                //We will need a count per workgroup
+                
+            }
+            else
+            {
+                _drawCallsBuffer = _renderer.CreateDrawCallsBuffer(1, out _drawCallsBufferIndex, out _drawCallsCountsOffset);
+                _drawCallsBufferElementSize = _drawCallsBuffer.ElementSize;
+                _maxDrawCall = _drawCallsBuffer.Size / _drawCallsBufferElementSize;
+            }
+
+
+            
 
 
             _pipeline = _renderer.GetPipeline(_shader);
@@ -106,6 +131,8 @@ namespace MiniEngine.Rendering.Vulkan
 
 
             _meshLetInstances.TryAdd(meshLetInstance.MeshLetInstanceIndex, meshLetInstance);
+            lock(_meshLetInstances)
+                _nb_meshlets = (uint)_meshLetInstances.Count;
 
             //Adding the object...
             if (!_objectIndexInfos.TryGetValue(objectIndex, out var objectIndexInfo))
@@ -139,17 +166,22 @@ namespace MiniEngine.Rendering.Vulkan
             indirectCommand.MeshLetInstance = meshLetInstance;
 
             //Updating the meshlet instance data with the draw call index at the same time...
-            if (indirectCommand.BufferOffset == uint.MaxValue)
+            if (_drawCallsBufferManagementType != DrawCallManagementType.ComputeDrawCallBufferPerWorkgroup)
             {
-                //new draw call...
-                if (_drawCallsBufferUpdatedByCompute)
-                    indirectCommand.BufferOffset = _drawCallsBuffer.Reserve(out indirectCommand.DrawCallIndex);
-                else
-                    indirectCommand.BufferOffset = _drawCallsBuffer.Append(ref indirectCommand.Command, out indirectCommand.DrawCallIndex);
+                if (indirectCommand.BufferOffset == uint.MaxValue)
+                {
+                    //new draw call...
+                    if (_drawCallsBufferManagementType == DrawCallManagementType.ComputeCreatePackedDrawCallsBuffer)
+                        //We need to reserve the space for the compute to add the draw call command
+                        indirectCommand.BufferOffset = _drawCallsBuffer.Reserve(out indirectCommand.DrawCallIndex);
+                    else
+                        //We need to add the draw call command
+                        indirectCommand.BufferOffset = _drawCallsBuffer.Append(ref indirectCommand.Command, out indirectCommand.DrawCallIndex);
+                }
+                else if (_drawCallsBufferManagementType == DrawCallManagementType.ComputeAdjustDrawCountOnly)
+                    //Update the draw call buffer...
+                    _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
             }
-            else if (!_drawCallsBufferUpdatedByCompute)
-                //update...
-                _drawCallsBuffer.Update(ref indirectCommand.Command, indirectCommand.BufferOffset);
 
             //And now that all the informations on MeshLetInstance are calculated, we can upload to the GPU...
             meshLetInstance.InstanceData.DrawCallIndex = indirectCommand.DrawCallIndex;
@@ -157,8 +189,11 @@ namespace MiniEngine.Rendering.Vulkan
 
             _drawCallsPerMeshLetInstance.TryAdd(meshLetInstance.MeshLetInstanceIndex, indirectCommand);
 
-            _drawCount++;
-            _renderer.DrawCallsCountsBuffer.Update(ref _drawCount, _drawCallsCountsOffset);
+            if (_drawCallsBufferManagementType != DrawCallManagementType.ComputeDrawCallBufferPerWorkgroup)
+            {
+                _drawCount++;
+                _renderer.DrawCallsCountsBuffer.Update(ref _drawCount, _drawCallsCountsOffset);
+            }
 
             return meshLetInstance.MeshLetInstanceIndex;
 
@@ -180,7 +215,7 @@ namespace MiniEngine.Rendering.Vulkan
                 meshLetInstance.InstanceData.TextureIndex = 0;
             _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstance.BufferOffset);
 
-            if (!_drawCallsBufferUpdatedByCompute)
+            if (_drawCallsBufferManagementType == DrawCallManagementType.ComputeAdjustDrawCountOnly)
             {
                 //Update the draw call...
                 indirectCommand.Command.IndexCount = (uint)meshLet.NbIndices;
@@ -217,7 +252,7 @@ namespace MiniEngine.Rendering.Vulkan
             meshLetInstance.InstanceData.TextureIndex = uint.MaxValue;
             _renderer.MeshLetInstancesBuffer.Update(ref meshLetInstance.InstanceData, meshLetInstance.BufferOffset);
 
-            if (!_drawCallsBufferUpdatedByCompute)
+            if (_drawCallsBufferManagementType == DrawCallManagementType.ComputeAdjustDrawCountOnly)
             {
                 //Update drawcall...
                 indirectCommand.Command.InstanceCount = 0;
@@ -230,6 +265,8 @@ namespace MiniEngine.Rendering.Vulkan
 
             _meshLetInstances.TryRemove(meshLetInstanceIndex, out _);
             _drawCallsPerMeshLetInstance.TryRemove(meshLetInstanceIndex, out _);
+            lock (_meshLetInstances)
+                _nb_meshlets = (uint)_meshLetInstances.Count;
 
             _availableMeshLetInstances.Enqueue(meshLetInstance);
             _availableDrawCalls.Enqueue(indirectCommand);
@@ -256,7 +293,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public void PopulateCommandBuffers(CommandBuffer commandBuffer)
         {
-            if (_drawCount == 0)
+            if (_nb_meshlets == 0)
                 return;
 
             commandBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline.Pipeline);
@@ -271,8 +308,20 @@ namespace MiniEngine.Rendering.Vulkan
             _pipeline.UpdatePushConstants(commandBuffer);
 
 
-            //commandBuffer.CmdDrawIndexedIndirect(_drawCallsBuffer.Buffer, 0, _drawCount, _drawCallsBuffer.ElementSize);
-            commandBuffer.CmdDrawIndexedIndirectCount(_drawCallsBuffer.Buffer, 0, _renderer.DrawCallsCountsBuffer, _drawCallsCountsOffset, _maxDrawCall, _drawCallsBuffer.ElementSize);
+            if (_drawCallsBufferManagementType == DrawCallManagementType.ComputeDrawCallBufferPerWorkgroup)
+            {
+                //We create a draw indexed indirect per workgroup....
+                uint max = (_nb_meshlets > _nbWorkGroup ? _nbWorkGroup : _nb_meshlets);
+                for (uint i = 0; i < max; i++)
+                {
+                    commandBuffer.CmdDrawIndexedIndirectCount(_drawCallsBuffer.Buffer, _drawCallsBufferElementSize * _maxDrawCall * i, _renderer.DrawCallsCountsBuffer, _drawCallsCountsOffset + (_drawCallsCountsElementSize * i), _maxDrawCall, _drawCallsBufferElementSize);
+                }
+
+            }
+            else
+            {
+                commandBuffer.CmdDrawIndexedIndirectCount(_drawCallsBuffer.Buffer, 0, _renderer.DrawCallsCountsBuffer, _drawCallsCountsOffset, _maxDrawCall, _drawCallsBufferElementSize);
+            }
         }
 
         /// <summary>
@@ -331,6 +380,13 @@ namespace MiniEngine.Rendering.Vulkan
             public uint MeshletInstanceCount;
             public uint ShaderVariableBufferIndex;
 
+        }
+
+        private enum DrawCallManagementType
+        {
+            ComputeAdjustDrawCountOnly,
+            ComputeCreatePackedDrawCallsBuffer,
+            ComputeDrawCallBufferPerWorkgroup
         }
 
     }

@@ -57,6 +57,11 @@ namespace MiniEngine.Rendering.Vulkan
         public const string DrawCallCounts = "_draw_calls_counts";
 
         /// <summary>
+        /// Last max draw buffer index per workgroup
+        /// </summary>
+        public const string LastMaxDrawBufferIndex = "_last_max_draw_buffer_index";
+
+        /// <summary>
         /// SceneData
         /// </summary>
         public const string Scene = "_scene";

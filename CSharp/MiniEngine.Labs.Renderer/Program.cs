@@ -46,7 +46,7 @@ namespace MiniEngine.Labs.Renderer
 
                         if (!(t is Test_FrustumCulling))
                             //Add default culling for all...
-                            render.AddCullingCompute();
+                            render.AddCullingWithBufferPerWorkgroupCompute();
 
                         context.SetRenderer(render)
                                .EnableDebug(enableDebug)

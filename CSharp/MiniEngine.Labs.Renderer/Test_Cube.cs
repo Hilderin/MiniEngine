@@ -19,14 +19,25 @@ namespace MiniEngine.Labs.Renderer
 
             _currentMesh = PrimitiveObjects.CreateCubeMeshObject()
                                            .MoveTo(new Vector3(0f, 0f, 0f));
-                                           //.AddMaterial(Context.Renderer.CreateMaterial(new()
-                                           //             {
-                                           //                 DiffuseTexture = BaseTextures.White,
-                                           //                 Shader = shader
-                                           //             }));
-
+            //.AddMaterial(Context.Renderer.CreateMaterial(new()
+            //             {
+            //                 DiffuseTexture = BaseTextures.White,
+            //                 Shader = shader
+            //             }));
 
             Scene.Add(_currentMesh);
+
+            Scene.Add(PrimitiveObjects.CreateCubeMeshObject()
+                                           .MoveTo(new Vector3(-2f, 0f, 0f))
+                     );
+            //.AddMaterial(Context.Renderer.CreateMaterial(new()
+            //             {
+            //                 DiffuseTexture = BaseTextures.White,
+            //                 Shader = shader
+            //             }));
+
+
+            
 
         }
 

@@ -87,8 +87,10 @@ namespace MiniEngine.Rendering.Vulkan
         public List<VkMeshRenderer> MeshRenderers => _meshRenderers;
         public List<BufferWrapper> DrawCallsBuffers => _drawCallsBuffers;
         public BufferWrapper<uint> DrawCallsCountsBuffer => _drawCallsCountsBuffer;
-
+        public BufferWrapper<int> LastMaxDrawBufferIndex => _lastMaxDrawBufferIndex;
         
+
+
 
         #endregion
 
@@ -132,7 +134,8 @@ namespace MiniEngine.Rendering.Vulkan
         private BufferWrapper<ObjectInstanceData> _objectsBuffer;
         private BufferWrapper<MeshLetInstanceData> _meshLetInstancesBuffer;
         private BufferWrapper<uint> _drawCallsCountsBuffer;
-        
+        private BufferWrapper<int> _lastMaxDrawBufferIndex;
+
 
         private uint _graphicsQueueIndex;
         private QueueWrapper _graphicsQueue;
@@ -281,7 +284,7 @@ namespace MiniEngine.Rendering.Vulkan
             _objectsBuffer = CreateBufferWrapper<ObjectInstanceData>(NB_OBJECTS_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.HostVisible);
             _meshLetInstancesBuffer = CreateBufferWrapper<MeshLetInstanceData>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
             _drawCallsCountsBuffer = CreateBufferWrapper<uint>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
-
+            _lastMaxDrawBufferIndex = CreateBufferWrapper<int>((int)MaxComputeWorkgroupSize[0], BufferUsageFlags.StorageBuffer | BufferUsageFlags.TransferDst, MemoryPropertyFlags.DeviceLocal);
 
             //Initialize the extension...
             foreach (IRendererExtension extension in _extensions)
@@ -620,7 +623,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Create a draw call buffer
         /// </summary>
-        public BufferWrapper<DrawIndexedIndirectCommand> CreateDrawCallsBuffer(out uint drawCallIndex, out uint drawCallsCountsOffset)
+        public BufferWrapper<DrawIndexedIndirectCommand> CreateDrawCallsBuffer(uint nbDrawCallsToReserve, out uint drawCallIndex, out uint drawCallsCountsOffset)
         {
             //TODO: To allocate base on some graphic memory
             var buffer = CreateBufferWrapper<DrawIndexedIndirectCommand>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.TransferDst | BufferUsageFlags.StorageBuffer, MemoryPropertyFlags.DeviceLocal);
@@ -629,7 +632,25 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 drawCallIndex = (uint)_drawCallsBuffers.Count;
                 _drawCallsBuffers.Add(buffer);
-                drawCallsCountsOffset = _drawCallsCountsBuffer.Reserve(out _);
+                drawCallsCountsOffset = _drawCallsCountsBuffer.Reserve(_drawCallsCountsBuffer.ElementSize * nbDrawCallsToReserve);
+            }
+
+            return buffer;
+
+        }
+
+        /// <summary>
+        /// Create a draw call buffer but not the draw calls counts
+        /// </summary>
+        public BufferWrapper<DrawIndexedIndirectCommand> CreateDrawCallsBuffer(out uint drawCallIndex)
+        {
+            //TODO: To allocate base on some graphic memory
+            var buffer = CreateBufferWrapper<DrawIndexedIndirectCommand>(NB_MESHLET_INSTANCES_MAX, BufferUsageFlags.IndirectBuffer | BufferUsageFlags.TransferDst | BufferUsageFlags.StorageBuffer, MemoryPropertyFlags.DeviceLocal);
+
+            lock (_drawCallsBuffers)
+            {
+                drawCallIndex = (uint)_drawCallsBuffers.Count;
+                _drawCallsBuffers.Add(buffer);
             }
 
             return buffer;
@@ -763,6 +784,7 @@ namespace MiniEngine.Rendering.Vulkan
             _indicesBuffer?.Dispose();
             _meshLetsBuffer?.Dispose();
             _drawCallsCountsBuffer?.Dispose();
+            _lastMaxDrawBufferIndex?.Dispose();
             _swapchain?.Dispose();
 
             if (_surface != null)
