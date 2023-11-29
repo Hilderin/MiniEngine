@@ -67,7 +67,7 @@ namespace MiniEngine.Rendering.Vulkan
             {
                 //Pipeline creation...
                 if (_renderDatas == null)
-                    _renderDatas = new RenderData[_mesh.MeshLets.Length];
+                    _renderDatas = new RenderData[_mesh.MeshletDatas.Length];
 
                 RenderData[] renderDatas = _renderDatas;
 
@@ -75,15 +75,15 @@ namespace MiniEngine.Rendering.Vulkan
                 {
                     if (renderDatas[i].MeshRenderer == null)
                     {
-                        if (_mesh.MeshLets[i].MaterialIndex >= 0)
+                        if (_mesh.MeshletDatas[i].MaterialIndex >= 0)
                         {
                             VkMaterial mat;
 
-                            if (_materials.Count > _mesh.MeshLets[i].MaterialIndex && _materials[(int)_mesh.MeshLets[i].MaterialIndex] != null)
-                                mat = (VkMaterial)_materials[(int)_mesh.MeshLets[i].MaterialIndex];
+                            if (_materials.Count > _mesh.MeshletDatas[i].MaterialIndex && _materials[(int)_mesh.MeshletDatas[i].MaterialIndex] != null)
+                                mat = (VkMaterial)_materials[(int)_mesh.MeshletDatas[i].MaterialIndex];
                             //Default mat?
-                            else if (_mesh.Materials != null && _mesh.Materials.Length > _mesh.MeshLets[i].MaterialIndex && _mesh.Materials[_mesh.MeshLets[i].MaterialIndex] != null)
-                                mat = (VkMaterial)_mesh.Materials[_mesh.MeshLets[i].MaterialIndex];
+                            else if (_mesh.Materials != null && _mesh.Materials.Length > _mesh.MeshletDatas[i].MaterialIndex && _mesh.Materials[_mesh.MeshletDatas[i].MaterialIndex] != null)
+                                mat = (VkMaterial)_mesh.Materials[_mesh.MeshletDatas[i].MaterialIndex];
                             else
                                 //Material not found...
                                 mat = (VkMaterial)BaseMaterials.Magenta;
@@ -91,7 +91,7 @@ namespace MiniEngine.Rendering.Vulkan
                             if (mat.VkDiffuseTexture == null || mat.VkDiffuseTexture.IsLoaded)
                             {
                                 renderDatas[i].MeshRenderer = _renderer.GetMeshRenderer(mat.Shader);
-                                renderDatas[i].MeshLetInstanceIndex = renderDatas[i].MeshRenderer.AddMeshLetInstance(_objectIndex, mat, ref _mesh.MeshLets[i]);
+                                renderDatas[i].MeshLetFirstInstanceIndex = renderDatas[i].MeshRenderer.AddMeshLetInstance(_objectIndex, mat, ref _mesh.MeshletDatas[i]);
                             }
                             else
                             {
@@ -167,7 +167,7 @@ namespace MiniEngine.Rendering.Vulkan
                 {
                     if (renderDatas[i].MeshRenderer != null)
                     {
-                        renderDatas[i].MeshRenderer.RemoveMeshInstance(renderDatas[i].MeshLetInstanceIndex);
+                        renderDatas[i].MeshRenderer.RemoveMeshInstance(renderDatas[i].MeshLetFirstInstanceIndex);
                     }
                 }
             }
@@ -248,7 +248,7 @@ namespace MiniEngine.Rendering.Vulkan
             //public uint BindlessVertexBufferIndex;
             public uint BindlessDiffuseTextureIndex;
             public VkMeshRenderer MeshRenderer;
-            public uint MeshLetInstanceIndex;
+            public uint MeshLetFirstInstanceIndex;
         }
     }
 }

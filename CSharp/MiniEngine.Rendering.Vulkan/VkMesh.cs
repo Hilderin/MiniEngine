@@ -22,7 +22,7 @@ namespace MiniEngine.Rendering.Vulkan
 
         public bool IsLoaded { get; private set; }
 
-        public VkMeshlet[] MeshLets;
+        public VkMeshletData[] MeshletDatas;
 
         private MeshletContainer[] _meshletContainers;
 
@@ -45,10 +45,10 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         public override Mesh Load(MeshDefinition meshDef)
         {
-            List<VkMeshlet> oldmeshLets = null;
+            List<VkMeshletData> oldmeshLets = null;
             
-            if(MeshLets != null)
-                oldmeshLets = new List<VkMeshlet>(MeshLets);
+            if(MeshletDatas != null)
+                oldmeshLets = new List<VkMeshletData>(MeshletDatas);
 
             Init(meshDef);
 
@@ -70,9 +70,9 @@ namespace MiniEngine.Rendering.Vulkan
         /// </summary>
         protected override void Destroy()
         {
-            if (MeshLets != null)
+            if (MeshletDatas != null)
             {
-                foreach (var submeshLet in MeshLets)
+                foreach (var submeshLet in MeshletDatas)
                 {
                     DisposeMeshLet(submeshLet);
                 }
@@ -86,7 +86,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Dispose mesh data
         /// </summary>
-        private void DisposeMeshLet(VkMeshlet meshLet)
+        private void DisposeMeshLet(VkMeshletData meshLet)
         {
             //TODO: release memory from GPU buffer
             //meshLet.VertexBuffer?.Dispose();
@@ -106,41 +106,69 @@ namespace MiniEngine.Rendering.Vulkan
             _meshletContainers = meshletGenerator.Generate(meshDef);
 
             List<SubMeshDefinition> subMeshes = meshDef.SubMeshes;
+            List<VkMeshletData> newmeshLets = new List<VkMeshletData>();
 
-            List<VkMeshlet> newmeshLets = new List<VkMeshlet>();
+            //We want to create an array of VkMeshletData per material index, so we can regroup meshlets ot optimize memory transferts
+            uint maxMaterialIndex = subMeshes.Max(s => s.MaterialIndex);
 
+            int[] nbMeshLetsPerMats = new int[(int)maxMaterialIndex + 1];
             for (int i = 0; i < subMeshes.Count; i++)
             {
+                nbMeshLetsPerMats[subMeshes[i].MaterialIndex] += _meshletContainers[i].Meshlets.Length;
+            }
 
-                var container = _meshletContainers[i];
 
-                _renderer.VerticesBuffer.Append(container.Vertices, out uint verticesIndex);
-                _renderer.IndicesBuffer.Append(container.Indices, out uint indicesIndex);
+            for (int matIndex = 0; matIndex <= maxMaterialIndex; matIndex++)
+            {
+                int nbMeshLets = nbMeshLetsPerMats[matIndex];
 
-                for (int im = 0; im < container.Meshlets.Length; im++)
+                if (nbMeshLets == 0)
+                    continue;
+
+                MeshletData[] meshletDatas = new MeshletData[nbMeshLets];
+                uint offset = _renderer.MeshLetsBuffer.Reserve((uint)nbMeshLets, out uint firstElementIndex);
+
+                for (int i = 0; i < subMeshes.Count; i++)
                 {
-                    VkMeshlet meshlet = new VkMeshlet();
-                    meshlet.MaterialIndex = subMeshes[i].MaterialIndex;
-                    meshlet.MeshLetData.VerticesBufferIndex = verticesIndex + container.Meshlets[im].VertexOffset;
-                    meshlet.MeshLetData.IndicesBufferIndex = indicesIndex + container.Meshlets[im].IndicesOffset;
-                    meshlet.MeshLetData.NbIndices = container.Meshlets[im].IndicesCount;
+                    if (subMeshes[i].MaterialIndex != matIndex)
+                        continue;
 
-                    meshlet.MeshLetData.center = container.Meshlets[im].Bounds.center;
-                    meshlet.MeshLetData.radius = container.Meshlets[im].Bounds.radius;
-                    meshlet.MeshLetData.cone_axis_s8_x = container.Meshlets[im].Bounds.cone_axis_s8_x;
-                    meshlet.MeshLetData.cone_axis_s8_y = container.Meshlets[im].Bounds.cone_axis_s8_y;
-                    meshlet.MeshLetData.cone_axis_s8_z = container.Meshlets[im].Bounds.cone_axis_s8_z;
-                    meshlet.MeshLetData.cone_cutoff_s8 = container.Meshlets[im].Bounds.cone_cutoff_s8;
+                    var container = _meshletContainers[i];
 
-                    _renderer.MeshLetsBuffer.Append(ref meshlet.MeshLetData, out meshlet.MeshLetIndex);
+                    _renderer.VerticesBuffer.Append(container.Vertices, out uint verticesIndex);
+                    _renderer.IndicesBuffer.Append(container.Indices, out uint indicesIndex);
 
-                    newmeshLets.Add(meshlet);
+                    for (int im = 0; im < container.Meshlets.Length; im++)
+                    {
+                        meshletDatas[im].VerticesBufferIndex = verticesIndex + container.Meshlets[im].VertexOffset;
+                        meshletDatas[im].IndicesBufferIndex = indicesIndex + container.Meshlets[im].IndicesOffset;
+                        meshletDatas[im].NbIndices = container.Meshlets[im].IndicesCount;
+                        meshletDatas[im].center = container.Meshlets[im].Bounds.center;
+                        meshletDatas[im].radius = container.Meshlets[im].Bounds.radius;
+                        meshletDatas[im].cone_axis_s8_x = container.Meshlets[im].Bounds.cone_axis_s8_x;
+                        meshletDatas[im].cone_axis_s8_y = container.Meshlets[im].Bounds.cone_axis_s8_y;
+                        meshletDatas[im].cone_axis_s8_z = container.Meshlets[im].Bounds.cone_axis_s8_z;
+                        meshletDatas[im].cone_cutoff_s8 = container.Meshlets[im].Bounds.cone_cutoff_s8;
+
+                    }
 
                 }
+
+
+                //And now we can update the meshlet buffer all at once...
+                _renderer.MeshLetsBuffer.Update(meshletDatas, offset);
+
+
+                VkMeshletData meshlet = new VkMeshletData();
+                meshlet.MaterialIndex = (uint)matIndex;
+                meshlet.FirstMeshLetIndex = firstElementIndex;
+                meshlet.NbMeshLets = (uint)nbMeshLets;
+                newmeshLets.Add(meshlet);
+
             }
 
             //All good, we can switch it now...
-            MeshLets = newmeshLets.ToArray();
+            MeshletDatas = newmeshLets.ToArray();
 
             //Create default materials slots
             Materials = meshDef.Materials.ToArray();
@@ -153,27 +181,12 @@ namespace MiniEngine.Rendering.Vulkan
     }
 
     /// <summary>
-    /// Information on MeshLet
+    /// Information on meshlet
     /// </summary>
-    public class VkMeshlet
+    public class VkMeshletData
     {
-        public uint MeshLetIndex;
-        public MeshletData MeshLetData;
+        public uint FirstMeshLetIndex;
+        public uint NbMeshLets;
         public uint MaterialIndex;
-
-        public uint VertexBufferIndex
-        {
-            get { return this.MeshLetData.VerticesBufferIndex; }
-        }
-
-        public uint IndexBufferIndex
-        {
-            get { return this.MeshLetData.IndicesBufferIndex; }
-        }
-
-        public uint NbIndices
-        {
-            get { return this.MeshLetData.NbIndices; }
-        }
     }
 }

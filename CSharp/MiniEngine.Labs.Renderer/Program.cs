@@ -44,9 +44,8 @@ namespace MiniEngine.Labs.Renderer
                     using (var window = new GlfwWindow(WIDTH, HEIGHT, TITLE, context))
                     {
 
-                        if (!(t is Test_FrustumCulling))
-                            //Add default culling for all...
-                            render.AddCullingWithBufferPerWorkgroupCompute();
+                        //Add default culling for all...
+                        render.AddCullingCompute();
 
                         context.SetRenderer(render)
                                .EnableDebug(enableDebug)

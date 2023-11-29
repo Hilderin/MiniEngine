@@ -223,6 +223,19 @@ namespace MiniEngine.Rendering.Vulkan
 
         }
 
+        /// <summary>
+        /// Reserve space into the buffer for a number of structs and return the start offset and element index of the first element
+        /// </summary>
+        public unsafe uint Reserve(uint nbElements, out uint firstElementIndex)
+        {
+            uint startIndex = Reserve(nbElements * ElementSize);
+
+            firstElementIndex = startIndex / ElementSize;
+
+            return startIndex;
+
+        }
+
 
         /// <summary>
         /// Copy the buffer to an array

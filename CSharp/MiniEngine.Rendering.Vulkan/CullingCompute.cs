@@ -1,4 +1,5 @@
 ﻿using MiniEngine.Drivers.Vulkan;
+using MiniEngine.Profiling;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace MiniEngine.Rendering.Vulkan
     /// <summary>
     /// Compute culling
     /// </summary>
-    public class CullingCompute: IRendererExtension
+    public class CullingCompute : IRendererExtension
     {
         
         private VkRenderer _renderer;
@@ -19,6 +20,7 @@ namespace MiniEngine.Rendering.Vulkan
         private PipelineDescriptorSet _cullingDescriptorSet;
         private int _lastDrawCallsBuffersCount = 0;
         private uint _workgroupSize;
+        private ProfilerInfo _drawCountInfo;
 
 
         /// <summary>
@@ -27,7 +29,7 @@ namespace MiniEngine.Rendering.Vulkan
         public void Init(IRenderer renderer)
         {
             _renderer = (VkRenderer)renderer;
-
+            _drawCountInfo = _renderer.FrameProfiler?.AddInfo("Draw count");
 
             var cullingShader = (VkShader)AssetManager.Current.Get<Shader>("Shaders/culling.comp");
 
@@ -73,7 +75,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             if (_lastDrawCallsBuffersCount > 0)
             {
-                uint nbGroupX = (_renderer.MeshLetInstancesBuffer.Count / _workgroupSize) + 1;
+                uint nbGroupX = 1;      // (_renderer.MeshLetInstancesBuffer.Count / _workgroupSize) + 1;
 
                 //if (nbGroupX > 96)
                 //    nbGroupX = 96;
@@ -85,6 +87,18 @@ namespace MiniEngine.Rendering.Vulkan
                     cb.CmdBindDescriptorSets(PipelineBindPoint.Compute, _cullingPipeline, 0, _cullingDescriptorSet, null);
                     cb.CmdDispatch(nbGroupX, 1, 1);
                 });
+
+
+
+                uint[] counts = new uint[_workgroupSize];
+                _renderer.DrawCallsCountsBuffer.CopyTo(counts);
+
+                uint nbVisible = 0;
+                for (int i = 0; i < counts.Length; i++)
+                {
+                    nbVisible += counts[i];
+                }
+                _drawCountInfo.Update(nbVisible.ToString());
             }
 
         }

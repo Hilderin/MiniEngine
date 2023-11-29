@@ -85,8 +85,11 @@ namespace MiniEngine.Rendering.Vulkan
         public uint ObjectIndex;
         public uint MeshLetIndex;
         public uint TextureIndex;
+        /// <summary>
+        /// Index of the drawcallbuffer. Each shader has a difference drawcallbuffer. So it's basiclly the shader index.
+        /// </summary>
         public uint DrawCallsBufferIndex;
-        public uint DrawCallIndex;
+
         public uint Visible;
     }
 

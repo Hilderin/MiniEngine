@@ -9,11 +9,9 @@
 
   <ItemGroup>
     <None Remove="Shaders\culling.comp" />
-    <None Remove="Shaders\culling_buffer_per_workgroup.comp" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Shaders\culling_buffer_per_workgroup.comp" />
     <EmbeddedResource Include="Shaders\culling.comp" />
   </ItemGroup>
 

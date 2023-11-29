@@ -34,7 +34,6 @@ struct meshlet_instance_data
     uint meshlet_index;
     uint texture_index;
     uint draw_calls_buffer_index;
-    uint draw_call_index;
     uint visible;
 };
 
