@@ -25,7 +25,7 @@ namespace MiniEngine.Rendering.Vulkan
         /// <summary>
         /// Number of elements
         /// </summary>
-        public uint Count { get { return _position / ElementSize; } }
+        public uint Count { get; private set; }
 
         /// <summary>
         /// Constructor
@@ -128,8 +128,7 @@ namespace MiniEngine.Rendering.Vulkan
 
             }
 
-            if (_position < offset + ElementSize)
-                _position = offset + ElementSize;
+            SetPosition(offset + ElementSize);
 
         }
 
@@ -143,8 +142,8 @@ namespace MiniEngine.Rendering.Vulkan
             uint startIndex;
             lock (this)
             {
-                startIndex = _position;
-                _position += size;
+                startIndex = this.Position;
+                SetPosition(startIndex + size);
             }
 
             Update(values, startIndex);
@@ -177,8 +176,8 @@ namespace MiniEngine.Rendering.Vulkan
             uint startIndex;
             lock (this)
             {
-                startIndex = _position;
-                _position += ElementSize;
+                startIndex = this.Position;
+                SetPosition(startIndex + ElementSize);
             }
 
             Update(ref value, startIndex);
@@ -253,6 +252,13 @@ namespace MiniEngine.Rendering.Vulkan
 
         }
 
-
+        /// <summary>
+        /// Set the position and update the Count
+        /// </summary>
+        protected override void SetPosition(uint position)
+        {
+            base.SetPosition(position);
+            this.Count = this.Position / this.ElementSize;
+        }
     }
 }

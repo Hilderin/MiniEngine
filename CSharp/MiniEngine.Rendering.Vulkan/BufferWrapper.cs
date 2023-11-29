@@ -17,9 +17,9 @@ namespace MiniEngine.Rendering.Vulkan
     /// </summary>
     public class BufferWrapper : IDisposable
     {
-        private protected VkRenderer _renderer;
-        private protected Device _device;
-        private protected uint _position;
+        protected VkRenderer _renderer;
+        protected Device _device;
+        private uint _position;
 
         public uint Position => _position;
 
@@ -91,7 +91,7 @@ namespace MiniEngine.Rendering.Vulkan
             }
 
             if (_position < destOffset + size)
-                _position = destOffset + size;
+                SetPosition(destOffset + size);
         }
 
         
@@ -161,7 +161,7 @@ namespace MiniEngine.Rendering.Vulkan
             lock (this)
             {
                 startIndex = _position;
-                _position += size;
+                SetPosition(_position + size);
             }
 
             return startIndex;
@@ -177,7 +177,15 @@ namespace MiniEngine.Rendering.Vulkan
 
         }
 
+        /// <summary>
+        /// Set the current position
+        /// </summary>
+        protected virtual void SetPosition(uint position)
+        {
 
+            if (_position < position)
+                _position = position;
+        }
 
         /// <summary>
         /// Create a buffer on the GPU

@@ -140,17 +140,20 @@ namespace MiniEngine.Rendering.Vulkan
             if (meshLetInstance.BufferOffset == uint.MaxValue)
             {
                 //New instance...
-                meshLetInstance.BufferOffset = _renderer.MeshLetInstancesBuffer.Reserve(meshLet.NbMeshLets, out meshLetInstance.MeshLetFirstInstanceIndex);
+                meshLetInstance.BufferOffset = _renderer.MeshLetInstancesBuffer.Append(instanceDatas, out meshLetInstance.MeshLetFirstInstanceIndex);
                 meshLetInstance.AvailableMeshLetCount = meshLet.NbMeshLets;     //Number in the buffer available
             }
-
+            else
+            {
+                //And now that all the informations on MeshLetInstance are calculated, we can upload to the GPU...
+                _renderer.MeshLetInstancesBuffer.Update(instanceDatas, meshLetInstance.BufferOffset);
+            }
 
             //Keep some informations on the object...
             meshLetInstance.ObjectIndex = objectIndex;
             meshLetInstance.NbMeshLets = meshLet.NbMeshLets;
 
-            //And now that all the informations on MeshLetInstance are calculated, we can upload to the GPU...
-            _renderer.MeshLetInstancesBuffer.Update(instanceDatas, meshLetInstance.BufferOffset);
+
 
 
 
@@ -208,12 +211,12 @@ namespace MiniEngine.Rendering.Vulkan
                 instanceDatas[i].DrawCallsBufferIndex = uint.MaxValue;
                 instanceDatas[i].TextureIndex = uint.MaxValue;
             }
-            
+
             _renderer.MeshLetInstancesBuffer.Update(instanceDatas, meshLetInstance.BufferOffset);
 
             meshLetInstance.NbMeshLets = 0;
             meshLetInstance.ObjectIndex = uint.MaxValue;
-            lock(_availableMeshLetInstances)
+            lock (_availableMeshLetInstances)
                 _availableMeshLetInstances.Add(meshLetInstance);
         }
 
