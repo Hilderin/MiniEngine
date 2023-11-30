@@ -75,17 +75,11 @@ namespace MiniEngine.Rendering.Vulkan
 
             if (_lastDrawCallsBuffersCount > 0)
             {
-                uint nbGroupX = 1;      // (_renderer.MeshLetInstancesBuffer.Count / _workgroupSize) + 1;
-
-                //if (nbGroupX > 96)
-                //    nbGroupX = 96;
-
-
                 _computeQueue.ExecuteAndWait(cb =>
                 {
                     cb.CmdBindPipeline(PipelineBindPoint.Compute, _cullingPipeline);
                     cb.CmdBindDescriptorSets(PipelineBindPoint.Compute, _cullingPipeline, 0, _cullingDescriptorSet, null);
-                    cb.CmdDispatch(nbGroupX, 1, 1);
+                    cb.CmdDispatch(1, 1, 1);
                 });
 
 

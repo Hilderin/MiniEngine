@@ -152,12 +152,12 @@ namespace MiniEngine.AssetImporters
 
                     _assetManager.AssetUriToWatch(meshAssetPath, () => LoadMeshAsync(name, workingFolderUri, mesh));
 
-                    //Create a .asset file..
-                    if (meshAssetPath.StartsWith(AssetManager.PREFIX_URI_FILE))
-                    {
-                        string assetDefPath = meshAssetPath + AssetManager.ASSET_EXTENSION_FILE;
-                        _assetManager.SerializeFile(assetMeshDef, assetDefPath);
-                    }
+                    ////Create a .asset file..
+                    //if (meshAssetPath.StartsWith(AssetManager.PREFIX_URI_FILE))
+                    //{
+                    //    string assetDefPath = meshAssetPath + AssetManager.ASSET_EXTENSION_FILE;
+                    //    _assetManager.SerializeFile(assetMeshDef, AssetManager.RemovePrefix(assetDefPath));
+                    //}
 
                 }
 

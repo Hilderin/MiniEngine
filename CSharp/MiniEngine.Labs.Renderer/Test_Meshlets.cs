@@ -49,10 +49,12 @@ namespace MiniEngine.Labs.Renderer
                                                 .SetMaterial(BaseMaterials.White, 0)
                      );
 
-            //_cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }));
+            Scene.Add(PrimitiveObjects.CreateSphereMeshObject());
 
-            int spread = 10;
-            for (int i = 0; i < 10000; i++)
+           //_cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }));
+
+           int spread = 10;
+            for (int i = 0; i < 100; i++)
             {
                 _cubes.Add(Scene.Add(new MeshObject() { Mesh = mesh }
                                                 .MoveTo(new Vector3(Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread), Math.RandomFloat(-spread, spread)))

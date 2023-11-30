@@ -149,7 +149,6 @@ namespace MiniEngine.Rendering.Vulkan
                         meshletDatas[im].cone_axis_s8_y = container.Meshlets[im].Bounds.cone_axis_s8_y;
                         meshletDatas[im].cone_axis_s8_z = container.Meshlets[im].Bounds.cone_axis_s8_z;
                         meshletDatas[im].cone_cutoff_s8 = container.Meshlets[im].Bounds.cone_cutoff_s8;
-
                     }
 
                 }

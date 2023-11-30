@@ -217,6 +217,20 @@ namespace MiniEngine
                                    .Load(CreateCubeMeshDefinition(material));
         }
 
+        /// <summary>
+        /// Create a sphere
+        /// </summary>
+        public static Mesh CreateSphereMesh(Material material = null)
+        {
+            Mesh mesh = AssetManager.Current.Get<Mesh>("Resources/MeshSphere.obj");
+
+            if (material != null)
+                mesh.Materials[0] = material;
+
+            return mesh;
+        }
+        
+
 
         /// <summary>
         /// Create a empty mesh definition

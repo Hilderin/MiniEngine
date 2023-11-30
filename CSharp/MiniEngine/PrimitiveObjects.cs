@@ -13,7 +13,7 @@ namespace MiniEngine
     public static class PrimitiveObjects
     {
         /// <summary>
-        /// Create a Triangle mesh actor
+        /// Create a Triangle mesh object
         /// </summary>
         public static MeshObject CreateTriangleMeshObject()
         {
@@ -24,7 +24,7 @@ namespace MiniEngine
         }
 
         /// <summary>
-        /// Create a Pyramid mesh actor
+        /// Create a Pyramid mesh object
         /// </summary>
         public static MeshObject CreatePyramidMeshObject()
         {
@@ -35,7 +35,7 @@ namespace MiniEngine
         }
 
         /// <summary>
-        /// Create a Plane mesh actor
+        /// Create a Plane mesh object
         /// </summary>
         public static MeshObject CreatePlaneMeshObject()
         {
@@ -46,13 +46,24 @@ namespace MiniEngine
         }
 
         /// <summary>
-        /// Create a cube mesh actor
+        /// Create a cube mesh object
         /// </summary>
         public static MeshObject CreateCubeMeshObject(Material material = null)
         {
             return new MeshObject()
             {
                 Mesh = Primitives.CreateCubeMesh(material)
+            };
+        }
+
+        /// <summary>
+        /// Create a sphere mesh object
+        /// </summary>
+        public static MeshObject CreateSphereMeshObject(Material material = null)
+        {
+            return new MeshObject()
+            {
+                Mesh = Primitives.CreateSphereMesh(material)
             };
         }
     }

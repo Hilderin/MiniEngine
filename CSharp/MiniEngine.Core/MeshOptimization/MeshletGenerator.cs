@@ -145,18 +145,29 @@ namespace MiniEngine.MeshOptimization
 
                 if (best_triangle == uint.MaxValue)
                 {
-#if DEBUG
+
+                    bool missingTriangles = false;
                     for (int i = 0; i < adjacency.vertices_usage_count.Length; i++)
                     {
                         if (adjacency.vertices_usage_count[i] > 0)
                         {
                             //Problem with the algo..
-                            Debug.Error("Missing some triangles");
+                            if (emitted_flags[i / 3] == 0)
+                            {
+                                best_triangle = (uint)i / 3;
+                                break;
+                            }
+
+                            missingTriangles = true;
                         }
                     }
-#endif
 
-                    break;
+                    if (best_triangle == uint.MaxValue)
+                    {
+                        if(missingTriangles)
+                            Debug.Error("Missing some triangles");
+                        break;
+                    }
                 }
 
                 uint a = subMeshDef.Indices[best_triangle * 3 + 0], b = subMeshDef.Indices[best_triangle * 3 + 1], c = subMeshDef.Indices[best_triangle * 3 + 2];
@@ -227,8 +238,8 @@ namespace MiniEngine.MeshOptimization
             int offset = (int)(meshlet.IndicesOffset + meshlet.IndicesCount);
 
             // fill 4b padding with 0
-            while ((offset & 3) != 0)
-                meshlet_indices[offset++] = 0;
+            //while ((offset & 3) != 0)
+            //    meshlet_indices[offset++] = 0;
 
             ComputeMeshletBounds(meshlet, points, normals);
 
@@ -266,8 +277,9 @@ namespace MiniEngine.MeshOptimization
 
                 var newMeshlet = new Meshlet();
                 newMeshlet.VertexOffset = meshlet.VertexOffset + meshlet.VertexCount;
-                uint ajustedCount = (uint)((meshlet.IndicesCount + 3) & ~3);    // 4 bytes padding
-                newMeshlet.IndicesOffset = meshlet.IndicesOffset + ajustedCount;
+                //uint ajustedCount = (uint)((meshlet.IndicesCount + 3) & ~3);    // 4 bytes padding
+                //newMeshlet.IndicesOffset = meshlet.IndicesOffset + ajustedCount;
+                newMeshlet.IndicesOffset = meshlet.IndicesOffset + meshlet.IndicesCount;
 
                 meshlet = newMeshlet;
 

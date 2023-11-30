@@ -66,5 +66,27 @@ namespace MiniEngine.Tests.Core.MeshOptimization
             Assert.AreEqual((uint)123, meshLetContainers[0].Meshlets[0].VertexCount);
 
         }
+
+        /// <summary>
+        /// BasicSphereTest
+        /// </summary>
+        [TestMethod]
+        public void BasicSphereTest()
+        {
+
+            MeshletGenerator meshletGenerator = new MeshletGenerator();
+
+            var originalMesh = (MockMesh)Primitives.CreateSphereMesh();
+            var meshLetContainers = meshletGenerator.Generate(originalMesh.MeshDefinition);
+
+
+            Assert.AreEqual(1, meshLetContainers.Length);
+            Assert.AreEqual(16, meshLetContainers[0].Meshlets.Length);
+            Assert.AreEqual(originalMesh.MeshDefinition.SubMeshes[0].Indices.Length, meshLetContainers[0].Indices.Length);
+            Assert.AreEqual((ushort)255, meshLetContainers[0].Meshlets[0].IndicesCount);
+            Assert.AreEqual((byte)255, meshLetContainers[0].Meshlets[0].VertexCount);
+
+        }
+
     }
 }
